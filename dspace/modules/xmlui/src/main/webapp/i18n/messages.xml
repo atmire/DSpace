@@ -2375,9 +2375,6 @@
     <message key="xmlui.mirage2.page-structure.heroUnit.title">About This Repository</message>
     <message key="xmlui.mirage2.page-structure.heroUnit.content">To add your own content to this page, edit webapps/xmlui/themes/Mirage2/lib/xsl/core/page-structure.xsl and add your own content to the title, trail, and body. If you wish to add additional pages, you will need to create an additional xsl:when block and match the request-uri to whatever page you are adding. Currently, static pages created through altering XSL are only available under the URI prefix of page/.</message>
 
-
-    <message key="xmlui.mirage2.item-view.readAccessAvailableFor">Read access available for</message>
-
     <message key="xmlui.mirage2.navigation.rss.feed">feed</message>
 
     <message key="xmlui.mirage2.choice-authority-control.loading">Loading...</message>
