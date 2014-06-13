@@ -97,7 +97,7 @@ module.exports = function (grunt) {
         'coffee', 'handlebars', 'useminPrepare:prod','concat','uglify','usemin'
     ]);
     grunt.registerTask('no-compass-dev', [
-        'coffee', 'handlebars', 'useminPrepare:dev','concat','uglify','usemin'
+        'coffee', 'handlebars', 'useminPrepare:dev','concat','uglify:generated'
     ]);
     grunt.registerTask('prod', [
         'compass:prod', 'no-compass-prod'
