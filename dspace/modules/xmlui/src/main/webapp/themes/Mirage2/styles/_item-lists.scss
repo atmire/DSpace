@@ -1,0 +1,35 @@
+.artifact-title {
+    font-size: $artifact-title-font-size;
+    margin-bottom: 0px;
+}
+
+.artifact-abstract {
+    text-align: justify;
+}
+
+.thumbnail {
+    .glyphicon.glyphicon-file {
+        color: $gray-lighter;
+        margin-left: -10px;
+        font-size: 120px;
+
+        @media (min-width: $screen-sm-min) {
+            font-size: 107px;
+        }
+
+        @media (min-width: $screen-md-min) {
+            font-size: 107px;
+        }
+
+        @media (min-width: $screen-lg-min) {
+            font-size: 140px;
+        }
+    }
+}
+
+.item-wrapper.row {
+    @media(max-width: $screen-xs-max) {
+        padding-bottom: 5px;
+        border-bottom: 1px solid $gray-lighter;
+    }
+}

@@ -1,0 +1,16 @@
+.ui-autocomplete .ui-state-focus{
+    text-decoration: none;
+    color: $dropdown-link-hover-color;
+    background-color: $dropdown-link-hover-bg;
+}
+
+.ui-helper-hidden-accessible{
+    display: none;
+}
+
+input[type='text'].ui-autocomplete-loading{
+    background-image: url("../images/authority_control/lookup-indicator.gif");
+    background-repeat: no-repeat;
+    background-position: 99% 50%;
+    background-size: 25px 25px;
+}

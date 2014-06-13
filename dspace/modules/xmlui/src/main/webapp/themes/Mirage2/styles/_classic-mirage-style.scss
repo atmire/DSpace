@@ -1,0 +1,24 @@
+// variables
+@import "bootstrap_variables";
+
+// Bootstrap
+@function twbs-font-path($font-name) {
+    @return "../vendor/bootstrap-sass-official/vendor/assets/fonts/" + $font-name
+}
+@import "../vendor/bootstrap-sass-official/vendor/assets/stylesheets/bootstrap";
+
+@import "dspace_variables";
+
+// DSpace theme
+@import "utils";
+@import "style";
+@import "forms";
+@import "discovery";
+@import "community-list";
+@import "community-view";
+@import "item-lists";
+@import "item-view";
+@import "authority-control";
+@import "vocabulary-support";
+
+@import "jquery_ui";

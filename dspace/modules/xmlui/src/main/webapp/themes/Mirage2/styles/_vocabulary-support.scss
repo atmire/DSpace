@@ -1,0 +1,22 @@
+ul.vocabulary {
+    margin-left: 0;
+    margin-top: 10px ;
+    padding-left:  ($grid-gutter-width / 2);
+    padding-right: ($grid-gutter-width / 2);
+}
+
+ul.vocabulary,
+ul.vocabulary ul,
+ul.vocabulary li
+{
+    list-style: none;
+}
+
+ul.vocabulary div.vocabulary-node-icon{
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+#aspect_submission_ControlledVocabularyTransformer_list_filter-list .alert{
+    margin-top: 15px;
+}

@@ -1,0 +1,19 @@
+.simple-item-view-description {
+    text-align: justify;
+}
+
+.item-page-field-wrapper {
+    margin-bottom: 25px;
+    word-break: break-word;
+
+    h5 {
+        margin-bottom: 3px;
+    }
+}
+
+.simple-item-view-collections {
+    .ds-referenceSet-list {
+        list-style: none;
+        padding-left: 0;
+    }
+}

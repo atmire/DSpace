@@ -1,0 +1,27 @@
+//.ds-form-item.row {
+//    margin-bottom: 15px;
+//}
+
+.submission .ds-form-item {
+    margin-bottom: 30px;
+}
+
+.submission .panel .ds-form-item {
+    margin-bottom: 5px;
+}
+
+.submission .panel .ds-form-item:last-child {
+    margin-bottom: 0px;
+}
+
+.needs-xs-spacing {
+    margin-bottom: 5px;
+}
+
+.control-label.required::after {
+    content: "*";
+}
+
+.submission .ds-add-button {
+    min-width: 100%;
+}
