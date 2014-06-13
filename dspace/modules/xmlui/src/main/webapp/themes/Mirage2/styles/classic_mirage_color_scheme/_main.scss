@@ -1,0 +1,28 @@
+@import "compass";
+// variables
+@import "classic_mirage_color_scheme/bootstrap_variables";
+
+// Bootstrap
+@function twbs-font-path($font-name) {
+    @return "../vendor/bootstrap-sass-official/vendor/assets/fonts/" + $font-name
+}
+@import "../vendor/bootstrap-sass-official/vendor/assets/stylesheets/bootstrap";
+
+@import "classic_mirage_color_scheme/dspace_variables";
+
+// DSpace theme
+@import "classic_mirage_color_scheme/utils";
+@import "classic_mirage_color_scheme/general";
+@import "classic_mirage_color_scheme/forms";
+@import "classic_mirage_color_scheme/discovery";
+@import "classic_mirage_color_scheme/community-list";
+@import "classic_mirage_color_scheme/community-view";
+@import "classic_mirage_color_scheme/item-lists";
+@import "classic_mirage_color_scheme/item-view";
+@import "classic_mirage_color_scheme/authority-control";
+@import "classic_mirage_color_scheme/vocabulary-support";
+
+@import "classic_mirage_color_scheme/jquery_ui";
+@import "shared/dspace-bootstrap-tweaks";
+@import "shared/jquery-ui-1.10.3.custom.css";
+@import "style";

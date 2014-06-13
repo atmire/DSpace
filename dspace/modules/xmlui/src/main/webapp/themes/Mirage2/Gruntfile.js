@@ -9,18 +9,18 @@ module.exports = function (grunt) {
 
     grunt.initConfig({
         copy: {
-            classic_mirage_style: {
+            classic_mirage_color_scheme: {
                 files: [
                     {
-                        src: ['styles/_main_classic_mirage_style.scss'],
+                        src: ['styles/classic_mirage_color_scheme/_main.scss'],
                         dest: 'styles/main.scss'
                     }
                 ]
             },
-            bootstrap_style: {
+            bootstrap_color_scheme: {
                 files: [
                     {
-                        src: ['styles/_main_bootstrap_style.scss'],
+                        src: ['styles/bootstrap_color_scheme/_main.scss'],
                         dest: 'styles/main.scss'
                     }
                 ]
@@ -87,11 +87,11 @@ module.exports = function (grunt) {
     });
 
 
-    grunt.registerTask('classic_mirage_style', [
-        'copy:classic_mirage_style'
+    grunt.registerTask('classic_mirage_color_scheme', [
+        'copy:classic_mirage_color_scheme'
     ]);
-    grunt.registerTask('bootstrap_style', [
-        'copy:bootstrap_style'
+    grunt.registerTask('bootstrap_color_scheme', [
+        'copy:bootstrap_color_scheme'
     ]);
     grunt.registerTask('no-compass-prod', [
         'coffee', 'handlebars', 'useminPrepare:prod','concat','uglify','usemin'
@@ -106,7 +106,7 @@ module.exports = function (grunt) {
         'compass:dev', 'no-compass-dev'
     ]);
     grunt.registerTask('default', [
-        'classic_mirage_style',
+        'classic_mirage_color_scheme',
         'prod'
     ]);
 };

@@ -20,7 +20,7 @@
        <!-- This is the path to the root [dspace-src] directory. -->
        <root.basedir>${basedir}/../../..</root.basedir>
        <grunt.environment>prod</grunt.environment>
-       <grunt.color.scheme>classic_mirage_style</grunt.color.scheme>
+       <grunt.color.scheme>classic_mirage_color_scheme</grunt.color.scheme>
        <mirage2.deps.included>true</mirage2.deps.included>
    </properties>
 
@@ -349,15 +349,15 @@
            </build>
        </profile>
        <profile>
-           <id>grunt_dev</id>
+           <id>mirage2_dev</id>
            <properties>
                <grunt.environment>dev</grunt.environment>
            </properties>
        </profile>
        <profile>
-           <id>grunt_bootstrap_style</id>
+           <id>mirage2_bootstrap_color_scheme</id>
            <properties>
-               <grunt.color.scheme>bootstrap_style</grunt.color.scheme>
+               <grunt.color.scheme>bootstrap_color_scheme</grunt.color.scheme>
            </properties>
       </profile>
    </profiles>
