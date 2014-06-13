@@ -185,12 +185,11 @@ Make sure its environment variables are set in system variables
 
 Open computer properties:
 
-![Step 1](http://gitlab.atmire.com/contributions/mirage-2/raw/master/images/documentation/sysvars1.png)
-
+![Step 1](https://github.com/atmire/DSpace/raw/mirage2/dspace/modules/xmlui/src/main/webapp/themes/Mirage2/images/documentation/sysvars1.png)
 
 Open "advanced sytem settings". Open "Advanced" tab, and click "environment variables":
 
-![Step 2](http://gitlab.atmire.com/contributions/mirage-2/raw/master/images/documentation/sysvars2.png)
+![Step 2](https://github.com/atmire/DSpace/raw/mirage2/dspace/modules/xmlui/src/main/webapp/themes/Mirage2/images/documentation/sysvars2.png)
 
 
 
