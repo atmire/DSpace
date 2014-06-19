@@ -673,23 +673,6 @@
     </xsl:template>
 
 
-
-
-
-    <!-- Generate the info about the item from the metadata section -->
-    <xsl:template match="dim:dim" mode="itemSummaryView-DIM">
-        <table class="ds-includeSet-table">
-            <xsl:call-template name="itemSummaryView-DIM-fields">
-            </xsl:call-template>
-        </table>
-        <span class="Z3988">
-            <xsl:attribute name="title">
-                <xsl:call-template name="renderCOinS"/>
-            </xsl:attribute>
-            &#xFEFF; <!-- non-breaking space to force separating the end tag -->
-        </span>
-    </xsl:template>
-
     <!-- render each field on a row, alternating phase between odd and even -->
     <!-- recursion needed since not every row appears for each Item. -->
     <xsl:template name="itemSummaryView-DIM-fields">
