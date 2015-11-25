@@ -507,7 +507,7 @@ public class MetadataImport
         // Compare from current->csv
         for (int v = 0; v < fromCSV.length; v++) {
             String value = fromCSV[v];
-            BulkEditMetadataValue dcv = getBulkEditValueFromCSV(language, schema, element, qualifier, value, fromAuthority);
+            BulkEditMetadataValue dcv = getBulkEditValueFromCSV(md, language, schema, element, qualifier, value, fromAuthority);
             if (fromAuthority!=null) {
                 value = dcv.getValue() + csv.getAuthoritySeparator() + dcv.getAuthority() + csv.getAuthoritySeparator() + dcv.getConfidence();
                 fromCSV[v] = value;
@@ -830,7 +830,7 @@ public class MetadataImport
         // Add all the values
         for (String value : fromCSV)
         {
-            BulkEditMetadataValue dcv = getBulkEditValueFromCSV(language, schema, element, qualifier, value, fromAuthority);
+            BulkEditMetadataValue dcv = getBulkEditValueFromCSV(md, language, schema, element, qualifier, value, fromAuthority);
             if(fromAuthority!=null){
                 value = dcv.getValue() + csv.getAuthoritySeparator() + dcv.getAuthority() + csv.getAuthoritySeparator() + dcv.getConfidence();
             }
@@ -843,7 +843,7 @@ public class MetadataImport
         }
     }
 
-    protected BulkEditMetadataValue getBulkEditValueFromCSV(String language, String schema, String element, String qualifier, String value, AuthorityValue fromAuthority) {
+    protected BulkEditMetadataValue getBulkEditValueFromCSV(String md,String language, String schema, String element, String qualifier, String value, AuthorityValue fromAuthority) {
         // Look to see if it should be removed
         BulkEditMetadataValue dcv = new BulkEditMetadataValue();
         dcv.setSchema(schema);
@@ -856,7 +856,7 @@ public class MetadataImport
             }
 
             // look up the value and authority in solr
-            List<AuthorityValue> byValue = authorityValueService.findByValue(c, schema, element, qualifier, value);
+            List<AuthorityValue> byValue = authorityValueService.findByExactValue(c, md, value);
             AuthorityValue authorityValue = null;
             if (byValue.isEmpty()) {
                 String toGenerate = fromAuthority.generateString() + value;

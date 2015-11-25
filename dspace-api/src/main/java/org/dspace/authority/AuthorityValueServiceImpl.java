@@ -127,7 +127,7 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
 
     @Override
     public List<AuthorityValue> findByValue(Context context, String field, String value) {
-        String queryString = "value:" + value + " AND field:" + field;
+        String queryString = "value:\"" + value + "\" AND field:" + field;
         return find(context, queryString);
     }
 
@@ -140,7 +140,7 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
 
     @Override
     public List<AuthorityValue> findByExactValue(Context context, String field, String value) {
-        String queryString = "value:\"" + value + "\" AND field:" + field;
+        String queryString = "value_keyword:\"" + value + "\" AND field:" + field;
         return find(context, queryString);
     }
 
@@ -153,14 +153,14 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
     @Override
     public List<AuthorityValue> findByName(Context context, String schema, String element, String qualifier, String name) {
         String field = fieldParameter(schema, element, qualifier);
-        String queryString = "first_name:" + name + " OR last_name:" + name + " OR name_variant:" + name + " AND field:" + field;
+        String queryString = "first_name:\"" + name + "\" OR last_name:\"" + name + "\" OR name_variant:\"" + name + "\" AND field:" + field;
         return find(context, queryString);
     }
 
     @Override
     public List<AuthorityValue> findByAuthorityMetadata(Context context, String schema, String element, String qualifier, String value) {
         String field = fieldParameter(schema, element, qualifier);
-        String queryString = "all_Labels:" + value + " AND field:" + field;
+        String queryString = "all_Labels:\"" + value + "\" AND field:" + field;
         return find(context, queryString);
     }
 
@@ -173,6 +173,22 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
     @Override
     public List<AuthorityValue> findAll(Context context) {
         String queryString = "*:*";
+        int rows = 1000;
+        int start = 0;
+        boolean hasMore = true;
+        List<AuthorityValue> allAuthorityValues = new ArrayList<>();
+
+        while(hasMore){
+            List<AuthorityValue> authorityValuesPart = find(context, queryString, start, rows);
+
+            if (authorityValuesPart.size()<rows) {
+                hasMore = false;
+            }
+
+            allAuthorityValues.addAll(authorityValuesPart);
+            start+=rows;
+        }
+
         return find(context, queryString);
     }
 
@@ -195,11 +211,17 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
         return fromAuthority;
     }
 
-    protected List<AuthorityValue> find(Context context, String queryString) {
+    protected List<AuthorityValue> find(Context context, String queryString){
+        return find(context,queryString,0,10);
+    }
+
+    protected List<AuthorityValue> find(Context context, String queryString, int start, int rows) {
         List<AuthorityValue> findings = new ArrayList<AuthorityValue>();
         try {
             SolrQuery solrQuery = new SolrQuery();
             solrQuery.setQuery(filtered(queryString));
+            solrQuery.setStart(start);
+            solrQuery.setRows(rows);
             log.debug("AuthorityValueFinder makes the query: " + queryString);
             QueryResponse queryResponse = SolrAuthority.getSearchService().search(solrQuery);
             if (queryResponse != null && queryResponse.getResults() != null && 0 < queryResponse.getResults().getNumFound()) {
