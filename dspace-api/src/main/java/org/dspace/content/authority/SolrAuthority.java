@@ -48,7 +48,15 @@ public class SolrAuthority implements ChoiceAuthority {
         if (text == null || text.trim().equals("")) {
             queryArgs.setQuery("*:*");
         } else {
-            String searchField = "value";
+            String searchField;
+
+            if(bestMatch){
+                searchField = "value_keyword";
+            }
+            else {
+                searchField = "value";
+            }
+
             String localSearchField = "";
             try {
                 //A downside of the authors is that the locale is sometimes a number, make sure that this isn't one
@@ -61,9 +69,9 @@ public class SolrAuthority implements ChoiceAuthority {
                 localSearchField = searchField + "_" + locale;
             }
 
-            String query = "(" + toQuery(searchField, text) + ") ";
+            String query = "(" + toQuery(searchField, text, bestMatch) + ") ";
             if (!localSearchField.equals("")) {
-                query += " or (" + toQuery(localSearchField, text) + ")";
+                query += " or (" + toQuery(localSearchField, text, bestMatch) + ")";
             }
             queryArgs.setQuery(query);
         }
@@ -173,8 +181,14 @@ public class SolrAuthority implements ChoiceAuthority {
         }
     }
 
-    private String toQuery(String searchField, String text) {
-        return searchField + ":\"" + text.toLowerCase().replaceAll(":", "\\:") + "*\" or " + searchField + ":\"" + text.toLowerCase().replaceAll(":", "\\:")+"\"";
+    private String toQuery(String searchField, String text, boolean bestMatch) {
+        String query = searchField + ":\"" + text.toLowerCase().replaceAll(":", "\\:") + "\"";
+
+        if(!bestMatch) {
+            query += " or " + searchField + ":\"" + text.toLowerCase().replaceAll(":", "\\:") + "*\"";
+        }
+
+        return query;
     }
 
     @Override
@@ -184,7 +198,7 @@ public class SolrAuthority implements ChoiceAuthority {
 
     @Override
     public Choices getBestMatch(String field, String text, Collection collection, String locale) {
-        Choices matches = getMatches(field, text, collection, 0, 1, locale, false);
+        Choices matches = getMatches(field, text, collection, 0, 1, locale, true);
         if (matches.values.length !=0 && !matches.values[0].value.equalsIgnoreCase(text)) {
             matches = new Choices(false);
         }
