@@ -7,10 +7,6 @@
  */
 package org.dspace.content.authority;
 
-import org.dspace.authority.AuthoritySearchService;
-import org.dspace.authority.AuthorityValue;
-import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.authority.rest.RestSource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -18,7 +14,10 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CommonParams;
-import org.dspace.authority.service.AuthorityValueService;
+import org.dspace.authority.AuthoritySearchService;
+import org.dspace.authority.AuthorityValue;
+import org.dspace.authority.factory.AuthorityServiceFactory;
+import org.dspace.authority.rest.RestSource;
 import org.dspace.content.Collection;
 import org.dspace.core.ConfigurationManager;
 import org.dspace.services.factory.DSpaceServicesFactory;
@@ -40,7 +39,6 @@ public class SolrAuthority implements ChoiceAuthority {
     private static final Logger log = Logger.getLogger(SolrAuthority.class);
     protected RestSource source = DSpaceServicesFactory.getInstance().getServiceManager().getServiceByName("AuthoritySource", RestSource.class);
     protected boolean externalResults = false;
-    protected final AuthorityValueService authorityValueService = AuthorityServiceFactory.getInstance().getAuthorityValueService();
 
     public Choices getMatches(String field, String text, Collection collection, int start, int limit, String locale, boolean bestMatch) {
         if(limit == 0)
@@ -104,7 +102,7 @@ public class SolrAuthority implements ChoiceAuthority {
                 for (int i = 0; i < maxDocs; i++) {
                     SolrDocument solrDocument = authDocs.get(i);
                     if (solrDocument != null) {
-                        AuthorityValue val = authorityValueService.fromSolr(solrDocument);
+                        AuthorityValue val = AuthorityServiceFactory.getInstance().getAuthorityValueService().fromSolr(solrDocument);
 
                         Map<String, String> extras = val.choiceSelectMap();
                         extras.put("insolr", val.getId());

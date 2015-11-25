@@ -70,7 +70,7 @@
           <xsl:text>', '</xsl:text>
           <!-- Confidence Indicator's ID so lookup can frob it -->
           <xsl:value-of select="$confIndicator"/>
-          <xsl:text>', </xsl:text>
+          <xsl:text>', '</xsl:text>
           <!-- Collection ID for context -->
           <xsl:choose>
             <xsl:when test="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='choice'][@qualifier='collection']">
@@ -80,7 +80,7 @@
               <xsl:text>-1</xsl:text>
             </xsl:otherwise>
           </xsl:choose>
-          <xsl:text>, </xsl:text>
+          <xsl:text>', </xsl:text>
           <!-- isName -->
           <xsl:value-of select="$isName"/>
           <xsl:text>, </xsl:text>
@@ -108,7 +108,7 @@
                 </xsl:choose>
                 <xsl:text>', '</xsl:text>
                 <xsl:value-of select="@n"/>
-                <xsl:text>', </xsl:text>
+                <xsl:text>', '</xsl:text>
                 <!-- Collection ID for context -->
                 <xsl:choose>
                     <xsl:when test="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='choice'][@qualifier='collection']">
@@ -120,7 +120,7 @@
                         <xsl:text>-1</xsl:text>
                     </xsl:otherwise>
                 </xsl:choose>
-                <xsl:text>);</xsl:text>
+                <xsl:text>');</xsl:text>
             </xsl:attribute>
             <i18n:text>xmlui.ChoiceLookupTransformer.lookup</i18n:text>
         </button>
