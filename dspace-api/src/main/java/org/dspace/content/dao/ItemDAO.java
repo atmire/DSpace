@@ -28,6 +28,9 @@ import java.util.UUID;
  */
 public interface ItemDAO extends DSpaceObjectLegacySupportDAO<Item>
 {
+    // find all items
+    public Iterator<Item> findAll(Context context) throws SQLException;
+
     public Iterator<Item> findAll(Context context, boolean archived) throws SQLException;
 
     public Iterator<Item> findAll(Context context, boolean archived, boolean withdrawn) throws SQLException;

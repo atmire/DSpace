@@ -11,6 +11,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CommonParams;
@@ -182,13 +183,26 @@ public class SolrAuthority implements ChoiceAuthority {
     }
 
     private String toQuery(String searchField, String text, boolean bestMatch) {
-        String query = searchField + ":\"" + text.toLowerCase().replaceAll(":", "\\:") + "\"";
-
-        if(!bestMatch) {
-            query += " or " + searchField + ":\"" + text.toLowerCase().replaceAll(":", "\\:") + "*\"";
-        }
-
+            if (text.matches("^\".*\"$") || bestMatch) {
+                //Searching for a full string
+                return searchField + ":" + text.toLowerCase();
+            } else {
+            String query = "";
+                String[] words = StringUtils.split(text, " ");
+            for (int i = 0; i < words.length; i++)
+            {
+                    String word = words[i];
+                    if (StringUtils.isNotBlank(query)) {
+                        query += " AND ";
+                    }
+                    if (i == words.length - 1) {
+                    query += "((" + searchField + ":" + ClientUtils.escapeQueryChars(word) + "*) OR (" + searchField + ":" + ClientUtils.escapeQueryChars(word) + "))";
+                    } else {
+                        query += "(" + searchField + ":" + ClientUtils.escapeQueryChars(word) + ")";
+                    }
+                }
         return query;
+        }
     }
 
     @Override

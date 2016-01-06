@@ -32,19 +32,9 @@ public interface AuthorityValueService
 
     public AuthorityValue findByUID(Context context, String authorityID);
 
-    public List<AuthorityValue> findByValue(Context context, String field, String value);
-
     public AuthorityValue findByOrcidID(Context context, String orcid_id);
 
-    public List<AuthorityValue> findByName(Context context, String schema, String element, String qualifier, String name);
-
-    public List<AuthorityValue> findByAuthorityMetadata(Context context, String schema, String element, String qualifier, String value);
-
     public List<AuthorityValue> findByExactValue(Context context, String field, String value);
-
-    public List<AuthorityValue> findByValue(Context context, String schema, String element, String qualifier, String value);
-
-    public List<AuthorityValue> findOrcidHolders(Context context);
 
     public List<AuthorityValue> findAll(Context context);
 

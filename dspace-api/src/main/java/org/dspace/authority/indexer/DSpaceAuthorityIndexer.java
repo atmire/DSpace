@@ -94,7 +94,7 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
     @Override
     public void init(Context context, boolean useCache) {
         try {
-            this.itemIterator = itemService.findAll(context);
+            this.itemIterator = itemService.findAllIncludeNotArchived(context);
             currentItem = this.itemIterator.next();
         } catch (SQLException e) {
             log.error("Error while retrieving all items in the metadata indexer");

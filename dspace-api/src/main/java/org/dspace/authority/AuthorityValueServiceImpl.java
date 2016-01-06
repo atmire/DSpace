@@ -126,12 +126,6 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
     }
 
     @Override
-    public List<AuthorityValue> findByValue(Context context, String field, String value) {
-        String queryString = "value:\"" + value + "\" AND field:" + field;
-        return find(context, queryString);
-    }
-
-    @Override
     public AuthorityValue findByOrcidID(Context context, String orcid_id) {
         String queryString = "orcid_id:" + orcid_id;
         List<AuthorityValue> findings = find(context, queryString);
@@ -141,32 +135,6 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
     @Override
     public List<AuthorityValue> findByExactValue(Context context, String field, String value) {
         String queryString = "value_keyword:\"" + value + "\" AND field:" + field;
-        return find(context, queryString);
-    }
-
-    @Override
-    public List<AuthorityValue> findByValue(Context context, String schema, String element, String qualifier, String value) {
-        String field = fieldParameter(schema, element, qualifier);
-        return findByValue(context, field, qualifier);
-    }
-
-    @Override
-    public List<AuthorityValue> findByName(Context context, String schema, String element, String qualifier, String name) {
-        String field = fieldParameter(schema, element, qualifier);
-        String queryString = "first_name:\"" + name + "\" OR last_name:\"" + name + "\" OR name_variant:\"" + name + "\" AND field:" + field;
-        return find(context, queryString);
-    }
-
-    @Override
-    public List<AuthorityValue> findByAuthorityMetadata(Context context, String schema, String element, String qualifier, String value) {
-        String field = fieldParameter(schema, element, qualifier);
-        String queryString = "all_Labels:\"" + value + "\" AND field:" + field;
-        return find(context, queryString);
-    }
-
-    @Override
-    public List<AuthorityValue> findOrcidHolders(Context context) {
-        String queryString = "orcid_id:*";
         return find(context, queryString);
     }
 
@@ -189,7 +157,7 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
             start+=rows;
         }
 
-        return find(context, queryString);
+        return allAuthorityValues;
     }
 
     @Override

@@ -69,6 +69,8 @@ public interface ItemService extends DSpaceObjectService<Item>, DSpaceObjectLega
      */
     public Iterator<Item> findAll(Context context) throws SQLException;
 
+    public Iterator<Item> findAllIncludeNotArchived(Context context) throws SQLException;
+
     /**
      * Get all "final" items in the archive, both archived ("in archive" flag) or
      * withdrawn items are included. The order of the list is indeterminate.
