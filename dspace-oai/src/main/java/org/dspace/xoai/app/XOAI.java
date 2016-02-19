@@ -208,7 +208,7 @@ public class XOAI {
                 try {
                     server.add(this.index(iterator.next()));
                 } catch (SQLException | MetadataBindException | ParseException
-                        | XMLStreamException | WritingXmlException ex) {
+                        | XMLStreamException | WritingXmlException | SolrServerException | IOException ex  ) {
                     log.error(ex.getMessage(), ex);
                 }
                 i++;
