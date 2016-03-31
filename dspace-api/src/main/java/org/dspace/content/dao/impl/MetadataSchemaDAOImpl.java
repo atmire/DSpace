@@ -48,7 +48,7 @@ public class MetadataSchemaDAOImpl extends AbstractHibernateDAO<MetadataSchema> 
         criteria.add(Restrictions.eq("namespace", namespace));
         criteria.setCacheable(true);
 
-        return uniqueResult(criteria);
+        return singleResult(criteria);
     }
 
     @Override
@@ -80,7 +80,7 @@ public class MetadataSchemaDAOImpl extends AbstractHibernateDAO<MetadataSchema> 
         ));
         criteria.setCacheable(true);
 
-        return uniqueResult(criteria) == null;
+        return singleResult(criteria) == null;
     }
 
     /**
@@ -101,7 +101,7 @@ public class MetadataSchemaDAOImpl extends AbstractHibernateDAO<MetadataSchema> 
         ));
         criteria.setCacheable(true);
 
-        return uniqueResult(criteria) == null;
+        return singleResult(criteria) == null;
     }
 
     /**
@@ -123,6 +123,6 @@ public class MetadataSchemaDAOImpl extends AbstractHibernateDAO<MetadataSchema> 
         );
         criteria.setCacheable(true);
 
-        return uniqueResult(criteria);
+        return singleResult(criteria);
     }
 }
