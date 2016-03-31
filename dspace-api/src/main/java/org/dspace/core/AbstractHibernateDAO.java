@@ -149,6 +149,7 @@ public abstract class AbstractHibernateDAO<T> implements GenericDAO<T> {
      */
     public T singleResult(Criteria criteria)
     {
+        criteria.setMaxResults(1);
         List<T> list = list(criteria);
         if(CollectionUtils.isNotEmpty(list))
         {
