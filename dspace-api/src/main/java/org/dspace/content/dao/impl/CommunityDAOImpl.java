@@ -69,7 +69,7 @@ public class CommunityDAOImpl extends AbstractHibernateDSODAO<Community> impleme
         if(limit != null){
             query.setMaxResults(limit);
         }
-        query.setParameter(sortField.toString(), sortField.getFieldID());
+        query.setParameter(sortField.toString(), sortField.getID());
         return list(query);
     }
 
@@ -89,7 +89,7 @@ public class CommunityDAOImpl extends AbstractHibernateDSODAO<Community> impleme
         addMetadataSortQuery(queryBuilder, Arrays.asList(sortField), ListUtils.EMPTY_LIST);
 
         Query query = createQuery(context, queryBuilder.toString());
-        query.setParameter(sortField.toString(), sortField.getFieldID());
+        query.setParameter(sortField.toString(), sortField.getID());
 
         return findMany(context, query);
     }
