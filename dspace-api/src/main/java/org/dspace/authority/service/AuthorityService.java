@@ -7,11 +7,13 @@
  */
 package org.dspace.authority.service;
 
+import org.dspace.authority.AuthorityValue;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Item;
 import org.dspace.core.Context;
 
 import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * Service interface class for the Metadata Authority
@@ -25,4 +27,20 @@ public interface AuthorityService {
 
     public boolean isConfigurationValid();
 
+    /**
+     * Retrieve all authority values found in the authority cache. Returns a map with as key the identifier of the authority value
+     * and as value the authority value.
+     *
+     * @param context the dspace context
+     * @return A map containing all authority values
+     * @throws SQLException
+     * @throws AuthorizeException
+     */
+    public Map<String, AuthorityValue> getAllAuthorityValues(Context context) throws SQLException, AuthorizeException;
+
+    public void cleanIndex() throws Exception;
+
+    public void indexContent(AuthorityValue authorityValue);
+
+    public void commit();
 }

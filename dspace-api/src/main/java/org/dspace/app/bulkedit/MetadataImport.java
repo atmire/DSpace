@@ -13,6 +13,7 @@ import org.apache.commons.lang.StringUtils;
 
 import org.apache.log4j.Logger;
 import org.dspace.authority.factory.AuthorityServiceFactory;
+import org.dspace.authority.factory.AuthorityValueFactory;
 import org.dspace.authority.service.AuthorityValueService;
 import org.dspace.content.*;
 import org.dspace.content.Collection;
@@ -72,6 +73,8 @@ public class MetadataImport
 
     protected final AuthorityValueService authorityValueService;
 
+    protected final AuthorityValueFactory authorityValueFactory;
+
     protected final ItemService itemService;
     protected final InstallItemService installItemService;
     protected final CollectionService collectionService;
@@ -97,6 +100,7 @@ public class MetadataImport
         handleService = HandleServiceFactory.getInstance().getHandleService();
         authorityValueService = AuthorityServiceFactory.getInstance().getAuthorityValueService();
         workspaceItemService = ContentServiceFactory.getInstance().getWorkspaceItemService();
+        authorityValueFactory = AuthorityValueFactory.getInstance();
     }
 
     /**
@@ -452,7 +456,7 @@ public class MetadataImport
             language = bits[1].substring(0, bits[1].length() - 1);
         }
 
-        AuthorityValue fromAuthority = authorityValueService.getAuthorityValueType(md);
+        AuthorityValue fromAuthority = null; //authorityValueFactory.createEmptyAuthorityValue(md);
         if (md.indexOf(':') > 0) {
             md = md.substring(md.indexOf(':') + 1);
         }
@@ -802,7 +806,7 @@ public class MetadataImport
             String[] bits = md.split("\\[");
             language = bits[1].substring(0, bits[1].length() - 1);
         }
-        AuthorityValue fromAuthority = authorityValueService.getAuthorityValueType(md);
+        AuthorityValue fromAuthority = null; //authorityValueFactory.createEmptyAuthorityValue(md);
         if (md.indexOf(':') > 0) {
             md = md.substring(md.indexOf(':')+1);
         }

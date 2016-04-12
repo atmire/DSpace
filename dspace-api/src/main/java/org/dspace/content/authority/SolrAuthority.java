@@ -7,6 +7,7 @@
  */
 package org.dspace.content.authority;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -18,7 +19,7 @@ import org.apache.solr.common.params.CommonParams;
 import org.dspace.authority.AuthoritySearchService;
 import org.dspace.authority.AuthorityValue;
 import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.authority.rest.RestSource;
+import org.dspace.authority.service.AuthorityValueService;
 import org.dspace.content.Collection;
 import org.dspace.core.ConfigurationManager;
 import org.dspace.services.factory.DSpaceServicesFactory;
@@ -38,8 +39,9 @@ import java.util.Map;
 public class SolrAuthority implements ChoiceAuthority {
 
     private static final Logger log = Logger.getLogger(SolrAuthority.class);
-    protected RestSource source = DSpaceServicesFactory.getInstance().getServiceManager().getServiceByName("AuthoritySource", RestSource.class);
+
     protected boolean externalResults = false;
+    protected AuthorityValueService authorityValueService = AuthorityServiceFactory.getInstance().getAuthorityValueService();
 
     public Choices getMatches(String field, String text, Collection collection, int start, int limit, String locale, boolean bestMatch) {
         if(limit == 0)
@@ -123,7 +125,7 @@ public class SolrAuthority implements ChoiceAuthority {
                 if (externalResults && StringUtils.isNotBlank(text)) {
                     int sizeFromSolr = alreadyPresent.size();
                     int maxExternalResults = limit <= 10 ? Math.max(limit - sizeFromSolr, 2) : Math.max(limit - 10 - sizeFromSolr, 2) + limit - 10;
-                    addExternalResults(text, choices, alreadyPresent, maxExternalResults);
+                    addExternalResults(field, text, choices, alreadyPresent, maxExternalResults);
                 }
 
 
@@ -149,13 +151,13 @@ public class SolrAuthority implements ChoiceAuthority {
         return result;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    protected void addExternalResults(String text, ArrayList<Choice> choices, List<AuthorityValue> alreadyPresent, int max) {
-        if(source != null){
+    protected void addExternalResults(String field, String text, ArrayList<Choice> choices, List<AuthorityValue> alreadyPresent, int max) {
+        //TODO: find a better way to implement max
+        final List<AuthorityValue> authorityValues = authorityValueService.retrieveExternalResults(field, text, max * 2); // max*2 because results get filtered
+        if(CollectionUtils.isNotEmpty(authorityValues)){
             try {
-                List<AuthorityValue> values = source.queryAuthorities(text, max * 2); // max*2 because results get filtered
-
                 // filtering loop
-                Iterator<AuthorityValue> iterator = values.iterator();
+                Iterator<AuthorityValue> iterator = authorityValues.iterator();
                 while (iterator.hasNext()) {
                     AuthorityValue next = iterator.next();
                     if (alreadyPresent.contains(next)) {
@@ -165,7 +167,7 @@ public class SolrAuthority implements ChoiceAuthority {
 
                 // adding choices loop
                 int added = 0;
-                iterator = values.iterator();
+                iterator = authorityValues.iterator();
                 while (iterator.hasNext() && added < max) {
                     AuthorityValue val = iterator.next();
                     Map<String, String> extras = val.choiceSelectMap();

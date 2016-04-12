@@ -31,13 +31,7 @@ import java.util.*;
  * @author Ben Bosman (ben at atmire dot com)
  * @author Mark Diggory (markd at atmire dot com)
  */
-public class AuthorityValue {
-
-
-    /**
-     * The id of the record in solr
-     */
-    private String id;
+public abstract class AuthorityValue {
 
     /**
      * The metadata field that this authority value is for
@@ -64,19 +58,10 @@ public class AuthorityValue {
      */
     private Date lastModified;
 
-    @Autowired(required = true)
-    protected AuthorityTypes authorityTypes;
-
     public AuthorityValue() {
     }
 
-    public AuthorityValue(SolrDocument document) {
-        setValues(document);
-    }
-
-    public String getId() {
-        return id;
-    }
+    public abstract String getId();
 
     public String getField() {
         return field;
@@ -84,10 +69,6 @@ public class AuthorityValue {
 
     public String getValue() {
         return value;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public void setField(String field) {
@@ -130,7 +111,7 @@ public class AuthorityValue {
         this.deleted = deleted;
     }
 
-    protected void updateLastModifiedDate() {
+    public void updateLastModifiedDate() {
         this.lastModified = new Date();
     }
 
@@ -160,18 +141,6 @@ public class AuthorityValue {
         return doc;
     }
 
-    /**
-     * Initialize this instance based on a solr record
-     * @param document SolrDocument
-     */
-    public void setValues(SolrDocument document) {
-        this.id = String.valueOf(document.getFieldValue("id"));
-        this.field = String.valueOf(document.getFieldValue("field"));
-        this.value = String.valueOf(document.getFieldValue("value"));
-        this.deleted = (Boolean) document.getFieldValue("deleted");
-        this.creationDate = (Date) document.getFieldValue("creation_date");
-        this.lastModified = (Date) document.getFieldValue("last_modified_date");
-    }
 
     /**
      * Replace an item's DCValue with this authority
@@ -235,7 +204,7 @@ public class AuthorityValue {
     @Override
     public String toString() {
         return "AuthorityValue{" +
-                "id='" + id + '\'' +
+                "id='" + getId() + '\'' +
                 ", field='" + field + '\'' +
                 ", value='" + value + '\'' +
                 ", creationDate=" + creationDate +
@@ -244,23 +213,8 @@ public class AuthorityValue {
                 '}';
     }
 
-    /**
-     * Provides a string that will be allow a this AuthorityType to be recognized and provides information to create a new instance to be created using public AuthorityValue newInstance(String info).
-     * See the implementation of com.atmire.org.dspace.authority.AuthorityValueGenerator#generateRaw(java.lang.String, java.lang.String) for more precisions.
-     * @return 
-     */
-    public String generateString() {
-        return AuthorityValueServiceImpl.GENERATE;
-    }
+    public abstract String generateString();
 
-    /**
-     * Makes an instance of the AuthorityValue with the given information.
-     * @param info string info
-     * @return AuthorityValue
-     */
-    public AuthorityValue newInstance(String info) {
-        return new AuthorityValue();
-    }
 
     public String getAuthorityType() {
         return "internal";
@@ -289,7 +243,7 @@ public class AuthorityValue {
         if (field != null ? !field.equals(that.field) : that.field != null) {
             return false;
         }
-        if (id != null ? !id.equals(that.id) : that.id != null) {
+        if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) {
             return false;
         }
         if (value != null ? !value.equals(that.value) : that.value != null) {

@@ -7,6 +7,7 @@
  */
 package org.dspace.authority;
 
+import org.dspace.authority.indexer.AuthorityIndexerInterface;
 import org.dspace.authority.indexer.AuthorityIndexingService;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -15,10 +16,15 @@ import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrInputDocument;
+import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.Item;
 import org.dspace.core.ConfigurationManager;
+import org.dspace.core.Context;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,11 +68,12 @@ public class AuthoritySolrServiceImpl implements AuthorityIndexingService, Autho
     }
 
     @Override
-    public void indexContent(AuthorityValue value, boolean force) {
+    public void indexContent(AuthorityValue value) {
         SolrInputDocument doc = value.getSolrInputDocument();
 
         try{
             writeDocument(doc);
+            commit();
         }catch (Exception e){
             log.error("Error while writing authority value to the index: " + value.toString(), e);
         }

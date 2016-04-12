@@ -7,6 +7,7 @@
  */
 package org.dspace.authority;
 
+import org.dspace.authority.factory.AuthorityServiceFactory;
 import org.dspace.authority.indexer.AuthorityIndexerInterface;
 import org.dspace.authority.indexer.AuthorityIndexingService;
 import org.dspace.authority.service.AuthorityService;
@@ -16,7 +17,8 @@ import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.SQLException;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -32,7 +34,7 @@ public class AuthorityServiceImpl implements AuthorityService{
     @Autowired(required = true)
     protected AuthorityIndexingService indexingService;
     @Autowired(required = true)
-    protected List<AuthorityIndexerInterface> indexers;
+    protected AuthorityServiceFactory authorityServiceFactory;
 
     protected AuthorityServiceImpl()
     {
@@ -46,16 +48,16 @@ public class AuthorityServiceImpl implements AuthorityService{
             return;
         }
 
-        for (AuthorityIndexerInterface indexerInterface : indexers) {
 
-            indexerInterface.init(context , item);
-            while (indexerInterface.hasMore()) {
-                AuthorityValue authorityValue = indexerInterface.nextValue();
+        for (AuthorityIndexerInterface indexers : authorityServiceFactory.createAuthorityIndexers(context, item)) {
+            while (indexers.hasMore())
+            {
+                AuthorityValue authorityValue = indexers.nextValue();
                 if(authorityValue != null)
-                    indexingService.indexContent(authorityValue, true);
+                    indexingService.indexContent(authorityValue);
             }
             //Close up
-            indexerInterface.close();
+            indexers.close();
         }
         //Commit to our server
         indexingService.commit();
@@ -68,12 +70,48 @@ public class AuthorityServiceImpl implements AuthorityService{
             return false;
         }
 
-        for (AuthorityIndexerInterface indexerInterface : indexers) {
+        for (AuthorityIndexerInterface indexerInterface : authorityServiceFactory.createUninitialisedAuthorityIndexers())
+        {
             if(!indexerInterface.isConfiguredProperly()){
                 return false;
             }
         }
         return true;
     }
+
+    public Map<String, AuthorityValue> getAllAuthorityValues(Context context) throws SQLException, AuthorizeException {
+        Map<String, AuthorityValue> toIndexValues = new HashMap<>();
+
+        for (AuthorityIndexerInterface indexerInterface : authorityServiceFactory.createAuthorityIndexers(context, true))
+        {
+            while (indexerInterface.hasMore()) {
+                AuthorityValue authorityValue = indexerInterface.nextValue();
+                if(authorityValue != null){
+                    toIndexValues.put(authorityValue.getId(), authorityValue);
+                }
+            }
+            //Close up
+            indexerInterface.close();
+        }
+        return toIndexValues;
+    }
+
+    @Override
+    public void cleanIndex() throws Exception
+    {
+        indexingService.cleanIndex();
+    }
+
+    @Override
+    public void indexContent(AuthorityValue authorityValue)
+    {
+        indexingService.indexContent(authorityValue);
+    }
+
+    @Override
+    public void commit() {
+        indexingService.commit();
+    }
+
 
 }

@@ -8,11 +8,12 @@
 package org.dspace.authority.factory;
 
 import org.dspace.authority.AuthoritySearchService;
-import org.dspace.authority.AuthorityTypes;
 import org.dspace.authority.indexer.AuthorityIndexerInterface;
-import org.dspace.authority.indexer.AuthorityIndexingService;
 import org.dspace.authority.service.AuthorityService;
 import org.dspace.authority.service.AuthorityValueService;
+import org.dspace.content.Item;
+import org.dspace.core.Context;
+import org.dspace.utils.DSpace;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -28,33 +29,14 @@ public class AuthorityServiceFactoryImpl extends AuthorityServiceFactory {
     private AuthorityValueService authorityValueService;
 
     @Autowired(required = true)
-    private AuthorityTypes authorityTypes;
-
-    @Autowired(required = true)
     private AuthorityService authorityService;
-
-    @Autowired(required = true)
-    private AuthorityIndexingService authorityIndexingService;
 
     @Autowired(required = true)
     private AuthoritySearchService authoritySearchService;
 
-    @Autowired(required = true)
-    private List<AuthorityIndexerInterface> authorityIndexerInterfaces;
-
     @Override
     public AuthorityValueService getAuthorityValueService() {
         return authorityValueService;
-    }
-
-    @Override
-    public AuthorityTypes getAuthorTypes() {
-        return authorityTypes;
-    }
-
-    @Override
-    public AuthorityIndexingService getAuthorityIndexingService() {
-        return authorityIndexingService;
     }
 
     @Override
@@ -68,7 +50,41 @@ public class AuthorityServiceFactoryImpl extends AuthorityServiceFactory {
     }
 
     @Override
-    public List<AuthorityIndexerInterface> getAuthorityIndexers() {
-        return authorityIndexerInterfaces;
+    public List<AuthorityIndexerInterface> createAuthorityIndexers(Context context, boolean useCache)
+    {
+        final List<AuthorityIndexerInterface> authorityIndexers = createUninitialisedAuthorityIndexers();
+        for (AuthorityIndexerInterface authorityIndexerInterface : authorityIndexers) {
+            authorityIndexerInterface.init(context, useCache);
+        }
+        return authorityIndexers;
+    }
+
+    @Override
+    public List<AuthorityIndexerInterface> createAuthorityIndexers(Context context) {
+        final List<AuthorityIndexerInterface> authorityIndexers = createUninitialisedAuthorityIndexers();
+        for (AuthorityIndexerInterface authorityIndexerInterface : authorityIndexers) {
+            authorityIndexerInterface.init(context);
+        }
+        return authorityIndexers;
+    }
+
+    @Override
+    public List<AuthorityIndexerInterface> createAuthorityIndexers(Context context, Item item) {
+        final List<AuthorityIndexerInterface> authorityIndexers = createUninitialisedAuthorityIndexers();
+        for (AuthorityIndexerInterface authorityIndexerInterface : authorityIndexers) {
+            authorityIndexerInterface.init(context, item);
+        }
+        return authorityIndexers;
+    }
+
+
+    /**
+     * Retrieve a list of uninitialized authority indexers, the init method needs to be called in order to use these.
+     * @return a list of uninitialized authority indexers
+     */
+    @Override
+    public List<AuthorityIndexerInterface> createUninitialisedAuthorityIndexers()
+    {
+        return new DSpace().getServiceManager().getServicesByType(AuthorityIndexerInterface.class);
     }
 }

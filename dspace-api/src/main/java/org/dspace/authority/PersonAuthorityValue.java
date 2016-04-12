@@ -7,11 +7,13 @@
  */
 package org.dspace.authority;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,17 +28,22 @@ import java.util.Map;
  */
 public class PersonAuthorityValue extends AuthorityValue {
 
+    public static final String TYPE = "person";
     private String firstName;
     private String lastName;
-    private List<String> nameVariants = new ArrayList<String>();
+    private List<String> nameVariants = new ArrayList<>();
     private String institution;
-    private List<String> emails = new ArrayList<String>();
+    private List<String> emails = new ArrayList<>();
 
     public PersonAuthorityValue() {
     }
 
-    public PersonAuthorityValue(SolrDocument document) {
-        super(document);
+    @Override
+    public String getId() {
+        // A PersonValue is considered unique with the first & last name.
+        String nonDigestedIdentifier = PersonAuthorityValue.class.toString() + "field: " + getField() +  "lastName: " + lastName + ", firstName: " + firstName;
+        // We return an md5 digest of the toString, this will ensure a unique identifier for the same value each time
+        return DigestUtils.md5Hex(nonDigestedIdentifier);
     }
 
     public String getName() {
@@ -139,31 +146,6 @@ public class PersonAuthorityValue extends AuthorityValue {
     }
 
     @Override
-    public void setValues(SolrDocument document) {
-        super.setValues(document);
-        this.firstName = ObjectUtils.toString(document.getFieldValue("first_name"));
-        this.lastName = ObjectUtils.toString(document.getFieldValue("last_name"));
-        nameVariants = new ArrayList<String>();
-        Collection<Object> document_name_variant = document.getFieldValues("name_variant");
-        if (document_name_variant != null) {
-            for (Object name_variants : document_name_variant) {
-                addNameVariant(String.valueOf(name_variants));
-            }
-        }
-        if (document.getFieldValue("institution") != null) {
-            this.institution = String.valueOf(document.getFieldValue("institution"));
-        }
-
-        Collection<Object> emails = document.getFieldValues("email");
-        if (emails != null) {
-            for (Object email : emails) {
-                addEmail(String.valueOf(email));
-            }
-        }
-    }
-
-
-    @Override
     public Map<String, String> choiceSelectMap() {
 
         Map<String, String> map = super.choiceSelectMap();
@@ -198,20 +180,12 @@ public class PersonAuthorityValue extends AuthorityValue {
 
     @Override
     public String getAuthorityType() {
-        return "person";
+        return TYPE;
     }
 
     @Override
     public String generateString() {
-        return AuthorityValueServiceImpl.GENERATE + getAuthorityType() + AuthorityValueServiceImpl.SPLIT + getName();
-        // the part after "AuthorityValueGenerator.GENERATE + getAuthorityType() + AuthorityValueGenerator.SPLIT" is the value of the "info" parameter in public AuthorityValue newInstance(String info)
-    }
-
-    @Override
-    public AuthorityValue newInstance(String info) {
-        PersonAuthorityValue authorityValue = new PersonAuthorityValue();
-        authorityValue.setValue(info);
-        return authorityValue;
+        return new AuthorityKeyRepresentation(getAuthorityType(), getName()).toString();
     }
 
     @Override

@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
+import org.dspace.authority.factory.AuthorityValueFactory;
 import org.dspace.authority.service.AuthorityValueService;
 import org.dspace.content.authority.SolrAuthority;
 import org.dspace.core.Context;
@@ -32,74 +33,42 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
 
     private final Logger log = Logger.getLogger(AuthorityValueServiceImpl.class);
 
-    @Autowired(required = true)
-    protected AuthorityTypes authorityTypes;
+    @Autowired
+    protected AuthorityValueFactory authorityValueFactory;
 
     protected AuthorityValueServiceImpl()
     {
 
     }
 
+    //TODO: rename this method
     @Override
     public AuthorityValue generate(Context context, String authorityKey, String content, String field) {
-        AuthorityValue nextValue = null;
-
-        nextValue = generateRaw(authorityKey, content, field);
-
-
-        if (nextValue != null) {
-            //Only generate a new UUID if there isn't one offered OR if the identifier needs to be generated
-            if (StringUtils.isBlank(authorityKey)) {
-                // An existing metadata without authority is being indexed
-                // If there is an exact match in the index, reuse it before adding a new one.
-                List<AuthorityValue> byValue = findByExactValue(context, field, content);
-                if (byValue != null && !byValue.isEmpty()) {
-                    authorityKey = byValue.get(0).getId();
-                } else {
-                    authorityKey = UUID.randomUUID().toString();
-                }
-            } else if (StringUtils.startsWith(authorityKey, GENERATE)) {
-                authorityKey = UUID.randomUUID().toString();
-            }
-
-            nextValue.setId(authorityKey);
-            nextValue.updateLastModifiedDate();
-            nextValue.setCreationDate(new Date());
-            nextValue.setField(field);
-        }
+        AuthorityValue nextValue = generateRaw(authorityKey, content, field);
+        nextValue.updateLastModifiedDate();
+        nextValue.setCreationDate(new Date());
+        nextValue.setField(field);
 
         return nextValue;
     }
 
     protected AuthorityValue generateRaw(String authorityKey, String content, String field) {
         AuthorityValue nextValue;
-        if (authorityKey != null && authorityKey.startsWith(GENERATE)) {
-            String[] split = StringUtils.split(authorityKey, SPLIT);
-            String type = null, info = null;
-            if (split.length > 0) {
-                type = split[1];
-                if (split.length > 1) {
-                    info = split[2];
-                }
-            }
-            AuthorityValue authorityType = authorityTypes.getEmptyAuthorityValue(type);
-            nextValue = authorityType.newInstance(info);
+
+        AuthorityKeyRepresentation authorityKeyRepresentation = new AuthorityKeyRepresentation(authorityKey);
+        if (StringUtils.isNotBlank(authorityKeyRepresentation.getInternalIdentifier())) {
+            nextValue = authorityValueFactory.createAuthorityValue(authorityKeyRepresentation.getAuthorityType(), authorityKeyRepresentation.getInternalIdentifier(), content);
         } else {
-            Map<String, AuthorityValue> fieldDefaults = authorityTypes.getFieldDefaults();
-            nextValue = fieldDefaults.get(field).newInstance(null);
-            if (nextValue == null) {
-                nextValue = new AuthorityValue();
-            }
-            nextValue.setValue(content);
+            nextValue = authorityValueFactory.createAuthorityValue(field, content);
         }
         return nextValue;
     }
 
     @Override
     public AuthorityValue update(AuthorityValue value) {
+        //TODO: Rewrite this one.
         AuthorityValue updated = generateRaw(value.generateString(), value.getValue(), value.getField());
         if (updated != null) {
-            updated.setId(value.getId());
             updated.setCreationDate(value.getCreationDate());
             updated.setField(value.getField());
             if (updated.hasTheSameInformationAs(value)) {
@@ -121,13 +90,6 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
     public AuthorityValue findByUID(Context context, String authorityID) {
         //Ensure that if we use the full identifier to match on
         String queryString = "id:\"" + authorityID + "\"";
-        List<AuthorityValue> findings = find(context, queryString);
-        return findings.size() > 0 ? findings.get(0) : null;
-    }
-
-    @Override
-    public AuthorityValue findByOrcidID(Context context, String orcid_id) {
-        String queryString = "orcid_id:" + orcid_id;
         List<AuthorityValue> findings = find(context, queryString);
         return findings.size() > 0 ? findings.get(0) : null;
     }
@@ -161,22 +123,16 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
     }
 
     @Override
-    public AuthorityValue fromSolr(SolrDocument solrDocument) {
-        String type = (String) solrDocument.getFieldValue("authority_type");
-        AuthorityValue value = authorityTypes.getEmptyAuthorityValue(type);
-        value.setValues(solrDocument);
-        return value;
+    public List<AuthorityValue> retrieveExternalResults(String field, String text, int max)
+    {
+        return authorityValueFactory.retrieveExternalResults(field, text, max);
+
     }
 
     @Override
-    public AuthorityValue getAuthorityValueType(String metadataString) {
-        AuthorityValue fromAuthority = null;
-        for (AuthorityValue type : authorityTypes.getTypes()) {
-            if (StringUtils.startsWithIgnoreCase(metadataString,type.getAuthorityType())) {
-                fromAuthority = type;
-            }
-        }
-        return fromAuthority;
+    public AuthorityValue fromSolr(SolrDocument solrDocument) {
+        String type = (String) solrDocument.getFieldValue("authority_type");
+        return authorityValueFactory.loadAuthorityValue(type, solrDocument);
     }
 
     protected List<AuthorityValue> find(Context context, String queryString){

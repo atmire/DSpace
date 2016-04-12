@@ -7,18 +7,15 @@
  */
 package org.dspace.authority.orcid;
 
-import org.dspace.authority.AuthorityValue;
 import org.dspace.authority.orcid.model.Bio;
 import org.dspace.authority.orcid.model.Work;
 import org.dspace.authority.orcid.xml.XMLtoBio;
 import org.dspace.authority.orcid.xml.XMLtoWork;
-import org.dspace.authority.rest.RestSource;
+import org.dspace.authority.rest.RESTConnector;
 import org.apache.log4j.Logger;
-import org.dspace.services.factory.DSpaceServicesFactory;
 import org.w3c.dom.Document;
 
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,24 +25,20 @@ import java.util.List;
  * @author Ben Bosman (ben at atmire dot com)
  * @author Mark Diggory (markd at atmire dot com)
  */
-public class Orcid extends RestSource {
+public class OrcidConnector
+{
 
     /**
      * log4j logger
      */
-    private static Logger log = Logger.getLogger(Orcid.class);
+    private static Logger log = Logger.getLogger(OrcidConnector.class);
 
-    private static Orcid orcid;
+    protected RESTConnector restConnector;
 
-    public static Orcid getOrcid() {
-        if (orcid == null) {
-            orcid = DSpaceServicesFactory.getInstance().getServiceManager().getServiceByName("OrcidSource", Orcid.class);
-        }
-        return orcid;
-    }
 
-    private Orcid(String url) {
-        super(url);
+    private OrcidConnector(String url)
+    {
+        this.restConnector = new RESTConnector(url);
     }
 
     public Bio getBio(String id) {
@@ -68,19 +61,16 @@ public class Orcid extends RestSource {
         return converter.convert(bioDocument);
     }
 
-    @Override
-    public List<AuthorityValue> queryAuthorities(String text, int max) {
-        List<Bio> bios = queryBio(text, 0, max);
-        List<AuthorityValue> authorities = new ArrayList<AuthorityValue>();
-        for (Bio bio : bios) {
-            authorities.add(OrcidAuthorityValue.create(bio));
-        }
-        return authorities;
+    /**
+     * com.atmire.org.dspace.authority.rest.RestSource#queryAuthorities -> add field, so the source can decide whether to query /users or something else.
+     * -> implement subclasses
+     * -> implement usages
+     */
+    public List<Bio> queryBio(String text, int max) {
+        return queryBio(text, 0, max);
     }
 
-    @Override
-    public AuthorityValue queryAuthorityID(String id) {
-        Bio bio = getBio(id);
-        return OrcidAuthorityValue.create(bio);
+    public Bio queryAuthorityID(String id) {
+        return getBio(id);
     }
 }

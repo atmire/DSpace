@@ -7,6 +7,8 @@
  */
 package org.dspace.authority.orcid;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.dspace.authority.AuthorityKeyRepresentation;
 import org.dspace.authority.AuthorityValue;
 import org.dspace.authority.AuthorityValueServiceImpl;
 import org.dspace.authority.PersonAuthorityValue;
@@ -34,10 +36,11 @@ public class OrcidAuthorityValue extends PersonAuthorityValue {
      * log4j logger
      */
     private static Logger log = Logger.getLogger(OrcidAuthorityValue.class);
+    public static final String TYPE = "orcid";
+
 
     private String orcid_id;
     private Map<String, List<String>> otherMetadata = new HashMap<String, List<String>>();
-    private boolean update; // used in setValues(Bio bio)
 
 
     /**
@@ -45,11 +48,15 @@ public class OrcidAuthorityValue extends PersonAuthorityValue {
      * This is meant to be filled in with values from an existing record.
      * To create a brand new OrcidAuthorityValue, use create()
      */
-    public OrcidAuthorityValue() {
+    protected OrcidAuthorityValue() {
     }
-
-    public OrcidAuthorityValue(SolrDocument document) {
-        super(document);
+    @Override
+    public String getId()
+    {
+        //We consider an ORCID value to be unique based on the identifier retrieved from ORCID.
+        final String nonDigestedIdentifier = OrcidAuthorityValue.class.toString() + " field, " + getField() + ", OrcidIdentifier: " + getOrcid_id();
+        // We return an md5 digest of the toString, this will ensure a unique identifier for the same value each time
+        return DigestUtils.md5Hex(nonDigestedIdentifier);
     }
 
     public String getOrcid_id() {
@@ -67,7 +74,7 @@ public class OrcidAuthorityValue extends PersonAuthorityValue {
     public void addOtherMetadata(String label, String data) {
         List<String> strings = otherMetadata.get(label);
         if (strings == null) {
-            strings = new ArrayList<String>();
+            strings = new ArrayList<>();
         }
         strings.add(data);
         otherMetadata.put(label, strings);
@@ -89,129 +96,13 @@ public class OrcidAuthorityValue extends PersonAuthorityValue {
         return doc;
     }
 
-    @Override
-    public void setValues(SolrDocument document) {
-        super.setValues(document);
-        this.orcid_id = String.valueOf(document.getFieldValue("orcid_id"));
-
-        otherMetadata = new HashMap<String, List<String>>();
-        for (String fieldName : document.getFieldNames()) {
-            String labelPrefix = "label_";
-            if (fieldName.startsWith(labelPrefix)) {
-                String label = fieldName.substring(labelPrefix.length());
-                List<String> list = new ArrayList<String>();
-                Collection<Object> fieldValues = document.getFieldValues(fieldName);
-                for (Object o : fieldValues) {
-                    list.add(String.valueOf(o));
-                }
-                otherMetadata.put(label, list);
-            }
-        }
-    }
-
-    public static OrcidAuthorityValue create() {
-        OrcidAuthorityValue orcidAuthorityValue = new OrcidAuthorityValue();
-        orcidAuthorityValue.setId(UUID.randomUUID().toString());
-        orcidAuthorityValue.updateLastModifiedDate();
-        orcidAuthorityValue.setCreationDate(new Date());
-        return orcidAuthorityValue;
-    }
-
-    /**
-     * Create an authority based on a given orcid bio
-     * @param bio Bio
-     * @return OrcidAuthorityValue
-     */
-    public static OrcidAuthorityValue create(Bio bio) {
-        OrcidAuthorityValue authority = OrcidAuthorityValue.create();
-
-        authority.setValues(bio);
-
-        return authority;
-    }
-
-    public boolean setValues(Bio bio) {
-        BioName name = bio.getName();
-
-        if (updateValue(bio.getOrcid(), getOrcid_id())) {
-            setOrcid_id(bio.getOrcid());
-        }
-
-        if (updateValue(name.getFamilyName(), getLastName())) {
-            setLastName(name.getFamilyName());
-        }
-
-        if (updateValue(name.getGivenNames(), getFirstName())) {
-            setFirstName(name.getGivenNames());
-        }
-
-        if (StringUtils.isNotBlank(name.getCreditName())) {
-            if (!getNameVariants().contains(name.getCreditName())) {
-                addNameVariant(name.getCreditName());
-                update = true;
-            }
-        }
-        for (String otherName : name.getOtherNames()) {
-            if (!getNameVariants().contains(otherName)) {
-                addNameVariant(otherName);
-                update = true;
-            }
-        }
-
-        if (updateOtherMetadata("country", bio.getCountry())) {
-            addOtherMetadata("country", bio.getCountry());
-        }
-
-        for (String keyword : bio.getKeywords()) {
-            if (updateOtherMetadata("keyword", keyword)) {
-                addOtherMetadata("keyword", keyword);
-            }
-        }
-
-        for (BioExternalIdentifier externalIdentifier : bio.getBioExternalIdentifiers()) {
-            if (updateOtherMetadata("external_identifier", externalIdentifier.toString())) {
-                addOtherMetadata("external_identifier", externalIdentifier.toString());
-            }
-        }
-
-        for (BioResearcherUrl researcherUrl : bio.getResearcherUrls()) {
-            if (updateOtherMetadata("researcher_url", researcherUrl.toString())) {
-                addOtherMetadata("researcher_url", researcherUrl.toString());
-            }
-        }
-
-        if (updateOtherMetadata("biography", bio.getBiography())) {
-            addOtherMetadata("biography", bio.getBiography());
-        }
-
-        setValue(getName());
-
-        if (update) {
-            update();
-        }
-        boolean result = update;
-        update = false;
-        return result;
-    }
-
-    private boolean updateOtherMetadata(String label, String data) {
+    boolean isNewMetadata(String label, String data) {
         List<String> strings = getOtherMetadata().get(label);
         boolean update;
         if (strings == null) {
             update = StringUtils.isNotBlank(data);
         } else {
             update = !strings.contains(data);
-        }
-        if (update) {
-            this.update = true;
-        }
-        return update;
-    }
-
-    private boolean updateValue(String incoming, String resident) {
-        boolean update = StringUtils.isNotBlank(incoming) && !incoming.equals(resident);
-        if (update) {
-            this.update = true;
         }
         return update;
     }
@@ -228,31 +119,13 @@ public class OrcidAuthorityValue extends PersonAuthorityValue {
 
     @Override
     public String getAuthorityType() {
-        return "orcid";
+        return TYPE;
     }
 
     @Override
     public String generateString() {
-        String generateString = AuthorityValueServiceImpl.GENERATE + getAuthorityType() + AuthorityValueServiceImpl.SPLIT;
-        if (StringUtils.isNotBlank(getOrcid_id())) {
-            generateString += getOrcid_id();
-        }
-        return generateString;
+        return new AuthorityKeyRepresentation(getAuthorityType(), getOrcid_id()).toString();
     }
-
-
-    @Override
-    public AuthorityValue newInstance(String info) {
-        AuthorityValue authorityValue = null;
-        if (StringUtils.isNotBlank(info)) {
-            Orcid orcid = Orcid.getOrcid();
-            authorityValue = orcid.queryAuthorityID(info);
-        } else {
-            authorityValue = OrcidAuthorityValue.create();
-        }
-        return authorityValue;
-    }
-
 
     @Override
     public boolean equals(Object o) {

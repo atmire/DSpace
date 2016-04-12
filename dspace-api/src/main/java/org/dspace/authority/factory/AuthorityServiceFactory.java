@@ -8,11 +8,11 @@
 package org.dspace.authority.factory;
 
 import org.dspace.authority.AuthoritySearchService;
-import org.dspace.authority.AuthorityTypes;
 import org.dspace.authority.indexer.AuthorityIndexerInterface;
-import org.dspace.authority.indexer.AuthorityIndexingService;
 import org.dspace.authority.service.AuthorityService;
 import org.dspace.authority.service.AuthorityValueService;
+import org.dspace.content.Item;
+import org.dspace.core.Context;
 import org.dspace.services.factory.DSpaceServicesFactory;
 
 import java.util.List;
@@ -26,15 +26,17 @@ public abstract class AuthorityServiceFactory {
 
     public abstract AuthorityValueService getAuthorityValueService();
 
-    public abstract AuthorityTypes getAuthorTypes();
-
-    public abstract AuthorityIndexingService getAuthorityIndexingService();
-
     public abstract AuthoritySearchService getAuthoritySearchService();
 
     public abstract AuthorityService getAuthorityService();
 
-    public abstract List<AuthorityIndexerInterface> getAuthorityIndexers();
+    public abstract List<AuthorityIndexerInterface> createAuthorityIndexers(Context context, boolean useCache);
+
+    public abstract List<AuthorityIndexerInterface> createAuthorityIndexers(Context context);
+
+    public abstract List<AuthorityIndexerInterface> createAuthorityIndexers(Context context, Item item);
+
+    public abstract List<AuthorityIndexerInterface> createUninitialisedAuthorityIndexers();
 
     public static AuthorityServiceFactory getInstance()
     {

@@ -8,8 +8,7 @@
 package org.dspace.app.bulkedit;
 
 import org.dspace.authority.AuthorityValue;
-import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.authority.service.AuthorityValueService;
+import org.dspace.authority.factory.AuthorityValueFactory;
 
 import java.io.Serializable;
 import java.util.*;
@@ -27,28 +26,30 @@ public class DSpaceCSVLine implements Serializable
     /** The elements in this line in a hashtable, keyed by the metadata type */
     private final Map<String, ArrayList> items;
 
-    protected transient final AuthorityValueService authorityValueService
-            = AuthorityServiceFactory.getInstance().getAuthorityValueService();
+    protected transient final AuthorityValueFactory authorityValueFactory
+            = AuthorityValueFactory.getInstance();
 
     /** ensuring that the order-sensible columns of the csv are processed in the correct order */
     private transient final Comparator<? super String> headerComparator = new Comparator<String>() {
         @Override
         public int compare(String md1, String md2) {
+            //TODO: FIX THIS ONE
             // The metadata coming from an external source should be processed after the others
-            AuthorityValue source1 = authorityValueService.getAuthorityValueType(md1);
-            AuthorityValue source2 = authorityValueService.getAuthorityValueType(md2);
+//            AuthorityValue source1 = null;authorityValueFactory.createEmptyAuthorityValue(md1);
+//            AuthorityValue source2 = null; authorityValueFactory.createEmptyAuthorityValue(md2);
 
             int compare;
-            if (source1 == null && source2 != null) {
-                compare = -1;
-            }
-            else if (source1 != null && source2 == null) {
-                compare = 1;
-            } else {
-                // the order of the rest does not matter
-                compare = md1.compareTo(md2);
-            }
-            return compare;
+//            if (source1 == null && source2 != null) {
+//                compare = -1;
+//            }
+//            else if (source1 != null && source2 == null) {
+//                compare = 1;
+//            } else {
+//                // the order of the rest does not matter
+//                compare = md1.compareTo(md2);
+//            }
+//            return compare;
+            return 0;
         }
     };
 

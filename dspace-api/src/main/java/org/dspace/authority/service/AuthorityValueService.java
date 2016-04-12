@@ -23,8 +23,6 @@ import java.util.List;
  */
 public interface AuthorityValueService
 {
-    public static final String SPLIT = "::";
-    public static final String GENERATE = "will be generated" + SPLIT;
 
     public AuthorityValue generate(Context context, String authorityKey, String content, String field);
 
@@ -32,13 +30,11 @@ public interface AuthorityValueService
 
     public AuthorityValue findByUID(Context context, String authorityID);
 
-    public AuthorityValue findByOrcidID(Context context, String orcid_id);
-
     public List<AuthorityValue> findByExactValue(Context context, String field, String value);
 
     public List<AuthorityValue> findAll(Context context);
 
     public AuthorityValue fromSolr(SolrDocument solrDocument);
 
-    public AuthorityValue getAuthorityValueType(String metadataString);
+    public List<AuthorityValue> retrieveExternalResults(String field, String text, int max);
 }

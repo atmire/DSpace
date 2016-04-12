@@ -10,6 +10,7 @@ package org.dspace.app.bulkedit;
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.authority.AuthorityValue;
 import org.dspace.authority.factory.AuthorityServiceFactory;
+import org.dspace.authority.factory.AuthorityValueFactory;
 import org.dspace.authority.service.AuthorityValueService;
 import org.dspace.content.Collection;
 import org.dspace.content.Item;
@@ -75,7 +76,7 @@ public class DSpaceCSV implements Serializable
     protected transient final ItemService itemService = ContentServiceFactory.getInstance().getItemService();
     protected transient final MetadataSchemaService metadataSchemaService = ContentServiceFactory.getInstance().getMetadataSchemaService();
     protected transient final MetadataFieldService metadataFieldService = ContentServiceFactory.getInstance().getMetadataFieldService();
-    protected transient final AuthorityValueService authorityValueService = AuthorityServiceFactory.getInstance().getAuthorityValueService();
+    protected transient final AuthorityValueFactory authorityValueFactory = AuthorityValueFactory.getInstance();
 
 
     /** Whether to export all metadata such as handles and provenance information */
@@ -147,7 +148,7 @@ public class DSpaceCSV implements Serializable
                 else if (!"id".equals(element))
                 {
                     String authorityPrefix = "";
-                    AuthorityValue authorityValueType = authorityValueService.getAuthorityValueType(element);
+                    AuthorityValue authorityValueType = null; //authorityValueFactory.createEmptyAuthorityValue(element);
                     if (authorityValueType != null) {
                         String authorityType = authorityValueType.getAuthorityType();
                         authorityPrefix = element.substring(0, authorityType.length() + 1);

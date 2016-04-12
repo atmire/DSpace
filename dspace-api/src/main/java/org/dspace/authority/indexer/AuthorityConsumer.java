@@ -38,9 +38,6 @@ public class AuthorityConsumer implements Consumer {
     /** A set of all item IDs installed which need their authority updated **/
     protected Set<UUID> itemsToUpdateAuthority = null;
 
-    /** A set of item IDs who's metadata needs to be reindexed **/
-    protected Set<UUID> itemsToReindex = null;
-
     protected ItemService itemService;
 
     protected AuthorityService authorityService;
@@ -56,21 +53,12 @@ public class AuthorityConsumer implements Consumer {
     public void consume(Context ctx, Event event) throws Exception {
         if(itemsToUpdateAuthority == null){
             itemsToUpdateAuthority = new HashSet<>();
-            itemsToReindex = new HashSet<>();
         }
 
         DSpaceObject dso = event.getSubject(ctx);
         if(dso instanceof Item){
             Item item = (Item) dso;
-            if(item.isArchived()){
-                if(!itemsToReindex.contains(item.getID()))
-                    itemsToReindex.add(item.getID());
-            }
-
-            if(("ARCHIVED: " + true).equals(event.getDetail())){
-                itemsToUpdateAuthority.add(item.getID());
-            }
-
+            itemsToUpdateAuthority.add(item.getID());
         }
     }
 
@@ -85,18 +73,11 @@ public class AuthorityConsumer implements Consumer {
                 Item item = itemService.find(ctx, id);
                 authorityService.indexItem(ctx, item);
             }
-            //Loop over our items which need to be re indexed
-            for (UUID id : itemsToReindex) {
-                Item item = itemService.find(ctx, id);
-                authorityService.indexItem(ctx, item);
-
-            }
         } catch (Exception e){
             log.error("Error while consuming the authority consumer", e);
 
         } finally {
             itemsToUpdateAuthority = null;
-            itemsToReindex = null;
             ctx.restoreAuthSystemState();
         }
     }

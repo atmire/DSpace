@@ -8,6 +8,7 @@
 package org.dspace.authority.indexer;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.dspace.authority.AuthorityKeyRepresentation;
 import org.dspace.authority.AuthorityValue;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -69,7 +70,7 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
     public void afterPropertiesSet() throws Exception {
         int counter = 1;
         String field;
-        metadataFields = new ArrayList<String>();
+        metadataFields = new ArrayList<>();
         while ((field = configurationService.getProperty("authority.author.indexer.field." + counter)) != null) {
             metadataFields.add(field);
             counter++;
@@ -179,9 +180,9 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
         String content = value.getValue();
         String authorityKey = value.getAuthority();
         //We only want to update our item IF our UUID is not present or if we need to generate one.
-        boolean requiresItemUpdate = StringUtils.isBlank(authorityKey) || StringUtils.startsWith(authorityKey, AuthorityValueService.GENERATE);
+        boolean requiresItemUpdate = StringUtils.isBlank(authorityKey) || AuthorityKeyRepresentation.isAuthorityKeyRepresentation(authorityKey);
 
-        if (StringUtils.isNotBlank(authorityKey) && !authorityKey.startsWith(AuthorityValueService.GENERATE)) {
+        if (StringUtils.isNotBlank(authorityKey) && !AuthorityKeyRepresentation.isAuthorityKeyRepresentation(authorityKey)) {
             // !uid.startsWith(AuthorityValueGenerator.GENERATE) is not strictly necessary here but it prevents exceptions in solr
             nextValue = authorityValueService.findByUID(context, authorityKey);
         }
@@ -201,7 +202,7 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
             try {
                 itemService.update(context, currentItem);
             } catch (Exception e) {
-                log.error("Error creating a metadatavalue's authority", e);
+                log.error("Error creating a metadata value's authority", e);
             }
         }
         if (useCache) {
