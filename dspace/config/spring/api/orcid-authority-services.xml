@@ -11,10 +11,11 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
            http://www.springframework.org/schema/beans/spring-beans.xsd
            http://www.springframework.org/schema/context
-           http://www.springframework.org/schema/context/spring-context.xsd">
+           http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
     <context:annotation-config /> <!-- allows us to use spring annotations in beans -->
 
@@ -22,26 +23,44 @@
     <bean class="org.dspace.authority.AuthoritySolrServiceImpl" id="org.dspace.authority.AuthoritySearchService"/>
     <alias name="org.dspace.authority.AuthoritySearchService" alias="org.dspace.authority.indexer.AuthorityIndexingService"/>
 
-    <bean id="dspace.DSpaceAuthorityIndexer" class="org.dspace.authority.indexer.DSpaceAuthorityIndexer"/>
 
-    <bean name="AuthorityTypes" class="org.dspace.authority.AuthorityTypes">
-        <property name="types">
-            <list>
-                <bean class="org.dspace.authority.orcid.OrcidAuthorityValue"/>
-                <bean class="org.dspace.authority.PersonAuthorityValue"/>
-            </list>
+    <bean id="dspace.DSpaceAuthorityIndexer" class="org.dspace.authority.indexer.DSpaceAuthorityIndexer" autowire-candidate="false" scope="prototype"/>
+
+    <bean id="authorityValueFactoryImpl" class="org.dspace.authority.factory.AuthorityValueFactoryImpl">
+        <property name="authorityValueBuilders">
+            <util:map map-class="java.util.LinkedHashMap">
+                <entry key="#{T(org.dspace.authority.orcid.OrcidAuthorityValue).TYPE}" value-ref="org.dspace.authority.orcid.OrcidAuthorityValueBuilder"/>
+                <entry key="#{T(org.dspace.authority.PersonAuthorityValue).TYPE}" value-ref="org.dspace.authority.PersonAuthorityValueBuilder"/>
+            </util:map>
         </property>
-        <property name="fieldDefaults">
+        <property name="authorityValueBuilderDefaults">
             <map>
                 <entry key="dc_contributor_author">
-                    <bean class="org.dspace.authority.PersonAuthorityValue"/>
+                    <ref bean="org.dspace.authority.PersonAuthorityValueBuilder"/>
                 </entry>
             </map>
         </property>
     </bean>
 
-    <alias name="OrcidSource" alias="AuthoritySource"/>
-    <bean name="OrcidSource" class="org.dspace.authority.orcid.Orcid">
+    <bean id="org.dspace.authority.orcid.OrcidAuthorityValueBuilder" class="org.dspace.authority.orcid.OrcidAuthorityValueBuilder">
+        <property name="orcidConnector" ref="org.dspace.authority.orcid.OrcidConnector" />
+        <property name="metadataFields">
+            <list>
+                <value>dc_contributor_author</value>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="org.dspace.authority.PersonAuthorityValueBuilder" class="org.dspace.authority.PersonAuthorityValueBuilder">
+        <property name="metadataFields">
+            <list>
+                <value>dc_contributor_author</value>
+            </list>
+        </property>
+    </bean>
+
+
+    <bean name="org.dspace.authority.orcid.OrcidConnector" class="org.dspace.authority.orcid.OrcidConnector">
         <constructor-arg value="http://pub.orcid.org"/>
     </bean>
 
