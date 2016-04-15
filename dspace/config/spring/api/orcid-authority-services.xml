@@ -26,7 +26,7 @@
 
     <bean id="dspace.DSpaceAuthorityIndexer" class="org.dspace.authority.indexer.DSpaceAuthorityIndexer" autowire-candidate="false" scope="prototype"/>
 
-    <bean id="authorityValueFactoryImpl" class="org.dspace.authority.factory.AuthorityValueFactoryImpl">
+    <bean id="authorityValueFactory" class="org.dspace.authority.factory.AuthorityValueFactoryImpl">
         <property name="authorityValueBuilders">
             <util:map map-class="java.util.LinkedHashMap">
                 <entry key="#{T(org.dspace.authority.orcid.OrcidAuthorityValue).TYPE}" value-ref="org.dspace.authority.orcid.OrcidAuthorityValueBuilder"/>
@@ -47,6 +47,7 @@
         <property name="metadataFields">
             <list>
                 <value>dc_contributor_author</value>
+                <value>dc_contributor_other</value>
             </list>
         </property>
     </bean>
@@ -55,6 +56,7 @@
         <property name="metadataFields">
             <list>
                 <value>dc_contributor_author</value>
+                <value>dc_contributor_other</value>
             </list>
         </property>
     </bean>

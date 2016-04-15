@@ -42,7 +42,7 @@ public class AuthorityServiceImpl implements AuthorityService{
     }
 
     @Override
-    public void indexItem(Context context, Item item) throws SQLException, AuthorizeException {
+    public void processAuthorities(Context context, Item item) throws SQLException, AuthorizeException {
         if(!isConfigurationValid()){
             //Cannot index, configuration not valid
             return;

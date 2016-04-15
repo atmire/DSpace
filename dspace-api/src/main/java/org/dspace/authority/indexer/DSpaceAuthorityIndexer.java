@@ -7,23 +7,19 @@
  */
 package org.dspace.authority.indexer;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.dspace.authority.AuthorityKeyRepresentation;
-import org.dspace.authority.AuthorityValue;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.dspace.authority.service.AuthorityValueService;
-import org.dspace.authorize.AuthorizeException;
-import org.dspace.content.MetadataValue;
-import org.dspace.content.Item;
-import org.dspace.content.service.ItemService;
-import org.dspace.core.Context;
-import org.dspace.services.ConfigurationService;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
+import org.apache.commons.collections.*;
+import org.apache.log4j.*;
+import org.dspace.authority.*;
+import org.dspace.authority.service.*;
+import org.dspace.authorize.*;
+import org.dspace.content.*;
+import org.dspace.content.service.*;
+import org.dspace.core.*;
+import org.dspace.services.*;
+import org.springframework.beans.factory.*;
+import org.springframework.beans.factory.annotation.*;
 
 /**
  * DSpaceAuthorityIndexer is used in IndexClient, which is called by the AuthorityConsumer and the indexing-script.
@@ -96,7 +92,9 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
     public void init(Context context, boolean useCache) {
         try {
             this.itemIterator = itemService.findAllIncludeNotArchived(context);
-            currentItem = this.itemIterator.next();
+            if(this.itemIterator.hasNext()) {
+                currentItem = this.itemIterator.next();
+            }
         } catch (SQLException e) {
             log.error("Error while retrieving all items in the metadata indexer");
         }
@@ -130,7 +128,7 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
         String metadataField = metadataFields.get(currentFieldIndex);
         List<MetadataValue> values = itemService.getMetadataByMetadataString(currentItem, metadataField);
         if (currentMetadataIndex < values.size()) {
-            prepareNextValue(metadataField, values.get(currentMetadataIndex));
+            nextValue = authorityValueService.prepareNextValue(context, currentItem, metadataField, values.get(currentMetadataIndex));
 
             currentMetadataIndex++;
             return true;
@@ -161,54 +159,7 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
         }
     }
 
-    /**
-     * This method looks at the authority of a metadata.
-     * If the authority can be found in solr, that value is reused.
-     * Otherwise a new authority value will be generated that will be indexed in solr.
-     * If the authority starts with AuthorityValueGenerator.GENERATE, a specific type of AuthorityValue will be generated.
-     * Depending on the type this may involve querying an external REST service
-     *
-     * @param metadataField Is one of the fields defined in dspace.cfg to be indexed.
-     * @param value         Is one of the values of the given metadataField in one of the items being indexed.
-     * @throws SQLException if database error
-     * @throws AuthorizeException if authorization error
-     */
-    protected void prepareNextValue(String metadataField, MetadataValue value) throws SQLException, AuthorizeException {
 
-        nextValue = null;
-
-        String content = value.getValue();
-        String authorityKey = value.getAuthority();
-        //We only want to update our item IF our UUID is not present or if we need to generate one.
-        boolean requiresItemUpdate = StringUtils.isBlank(authorityKey) || AuthorityKeyRepresentation.isAuthorityKeyRepresentation(authorityKey);
-
-        if (StringUtils.isNotBlank(authorityKey) && !AuthorityKeyRepresentation.isAuthorityKeyRepresentation(authorityKey)) {
-            // !uid.startsWith(AuthorityValueGenerator.GENERATE) is not strictly necessary here but it prevents exceptions in solr
-            nextValue = authorityValueService.findByUID(context, authorityKey);
-        }
-        if (nextValue == null && StringUtils.isBlank(authorityKey) && useCache) {
-            // A metadata without authority is being indexed
-            // If there is an exact match in the cache, reuse it rather than adding a new one.
-            AuthorityValue cachedAuthorityValue = cache.get(content);
-            if (cachedAuthorityValue != null) {
-                nextValue = cachedAuthorityValue;
-            }
-        }
-        if (nextValue == null) {
-            nextValue = authorityValueService.generate(context, authorityKey, content, metadataField.replaceAll("\\.", "_"));
-        }
-        if (nextValue != null && requiresItemUpdate) {
-            nextValue.updateItem(context, currentItem, value);
-            try {
-                itemService.update(context, currentItem);
-            } catch (Exception e) {
-                log.error("Error creating a metadata value's authority", e);
-            }
-        }
-        if (useCache) {
-            cache.put(content, nextValue);
-        }
-    }
 
     @Override
     public void close() {

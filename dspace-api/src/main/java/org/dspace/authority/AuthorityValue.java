@@ -7,22 +7,20 @@
  */
 package org.dspace.authority;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrInputDocument;
-import org.dspace.authorize.AuthorizeException;
-import org.dspace.content.Item;
-import org.dspace.content.MetadataValue;
-import org.dspace.content.factory.ContentServiceFactory;
-import org.dspace.core.Context;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
+import java.util.Date;
+import org.apache.commons.lang.*;
+import org.apache.log4j.*;
+import org.apache.solr.common.*;
+import org.dspace.authorize.*;
+import org.dspace.content.*;
+import org.dspace.content.factory.*;
+import org.dspace.content.service.*;
+import org.dspace.core.*;
+import org.joda.time.*;
+import org.joda.time.format.*;
+import org.springframework.beans.factory.annotation.*;
 
 /**
  *
@@ -57,6 +55,9 @@ public abstract class AuthorityValue {
      * represents the last time that DSpace got updated information from its external source
      */
     private Date lastModified;
+
+    @Autowired(required = true)
+    protected ItemService itemService;
 
     public AuthorityValue() {
     }
@@ -152,8 +153,7 @@ public abstract class AuthorityValue {
      */
     public void updateItem(Context context, Item currentItem, MetadataValue value) throws SQLException, AuthorizeException {
         value.setValue(getValue());
-        value.setAuthority(getId());
-        ContentServiceFactory.getInstance().getMetadataValueService().update(context, value, true);
+        value.setAuthority(getId());ContentServiceFactory.getInstance().getItemService().update(context, currentItem);
     }
 
     /**

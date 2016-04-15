@@ -71,7 +71,7 @@ public class AuthorityConsumer implements Consumer {
             ctx.turnOffAuthorisationSystem();
             for (UUID id : itemsToUpdateAuthority) {
                 Item item = itemService.find(ctx, id);
-                authorityService.indexItem(ctx, item);
+                authorityService.processAuthorities(ctx, item);
             }
         } catch (Exception e){
             log.error("Error while consuming the authority consumer", e);

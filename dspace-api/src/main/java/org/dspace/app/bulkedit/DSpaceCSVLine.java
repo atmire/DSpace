@@ -35,21 +35,20 @@ public class DSpaceCSVLine implements Serializable
         public int compare(String md1, String md2) {
             //TODO: FIX THIS ONE
             // The metadata coming from an external source should be processed after the others
-//            AuthorityValue source1 = null;authorityValueFactory.createEmptyAuthorityValue(md1);
-//            AuthorityValue source2 = null; authorityValueFactory.createEmptyAuthorityValue(md2);
+            AuthorityValue source1 = null;authorityValueFactory.createEmptyAuthorityValueFromHeader(md1);
+            AuthorityValue source2 = null; authorityValueFactory.createEmptyAuthorityValueFromHeader(md2);
 
             int compare;
-//            if (source1 == null && source2 != null) {
-//                compare = -1;
-//            }
-//            else if (source1 != null && source2 == null) {
-//                compare = 1;
-//            } else {
-//                // the order of the rest does not matter
-//                compare = md1.compareTo(md2);
-//            }
-//            return compare;
-            return 0;
+            if (source1 == null && source2 != null) {
+                compare = -1;
+            }
+            else if (source1 != null && source2 == null) {
+                compare = 1;
+            } else {
+                // the order of the rest does not matter
+                compare = md1.compareTo(md2);
+            }
+            return compare;
         }
     };
 

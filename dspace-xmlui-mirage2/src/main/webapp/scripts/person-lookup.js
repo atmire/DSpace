@@ -170,12 +170,19 @@ function AuthorLookup(url, authorityInput, collectionID) {
                     vcard.find('.vcard-insolr span').text("0");
                 }
                 vcard.find('.vcard-add input').click(function() {
-                    if (authorityInput.indexOf('value_') != -1) {
+                    if (authorityInput.indexOf('value') != -1) {
                         // edit item
                         $('input[name=' + authorityInput + ']').val(vcard.find('.vcard-last-name span').text() + ', ' + vcard.find('.vcard-first-name span').text());
+                        if(authorityInput == 'value'){
+                            $('input[name=' + authorityInput + '_authority]').val(vcard.data('authorityID'));
+                            $('textarea[name=' + authorityInput + ']').val(vcard.data('name'));
+                            $('button[name=submit_add]').click();
+                        }
+                        else {
                         var oldAuthority = $('input[name=' + authorityInput + '_authority]');
                         oldAuthority.val(vcard.data('authorityID'));
                         $('textarea[name='+ authorityInput+']').val(vcard.data('name'));
+                    }
                     } else {
                         // submission
                         var lastName = $('input[name=' + authorityInput + '_last]');
@@ -321,3 +328,28 @@ function AuthorLookup(url, authorityInput, collectionID) {
         }
     });
 }
+
+//only show the lookup button for the selected field on the edit item metadata page 
+(function ($) {
+    $(document).ready(function () {
+        renderMainLookup();
+
+        $("#aspect_administrative_item_EditItemMetadataForm_field_field").change(function () {
+            renderMainLookup();
+        });
+
+        function renderMainLookup() {
+            var selectedField = $('#aspect_administrative_item_EditItemMetadataForm_field_field').find("option:selected").text();
+
+            $('#aspect_administrative_item_EditItemMetadataForm_list_addItemMetadata button[name^="lookup_"]').each(function () {
+                if($(this).attr('name')=='lookup_' + selectedField.replace(".", "_").replace(".", "_")){
+                    $(this).removeClass('hidden');
+                }
+                else {
+                    $(this).addClass('hidden');
+                }
+            });
+        }
+    });
+})(jQuery);
+

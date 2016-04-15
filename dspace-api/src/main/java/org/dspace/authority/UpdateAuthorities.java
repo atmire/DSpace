@@ -7,22 +7,17 @@
  */
 package org.dspace.authority;
 
+import java.io.*;
+import java.sql.*;
+import java.util.*;
 import org.apache.commons.cli.*;
-import org.apache.log4j.Logger;
-import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.authority.service.AuthorityValueService;
-import org.dspace.content.Item;
-import org.dspace.content.MetadataValue;
-import org.dspace.content.factory.ContentServiceFactory;
-import org.dspace.content.service.ItemService;
-import org.dspace.core.ConfigurationManager;
-import org.dspace.core.Context;
-
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import org.apache.log4j.*;
+import org.dspace.authority.factory.*;
+import org.dspace.authority.service.*;
+import org.dspace.content.*;
+import org.dspace.content.factory.*;
+import org.dspace.content.service.*;
+import org.dspace.core.*;
 
 /**
  *
@@ -65,8 +60,12 @@ public class UpdateAuthorities {
             }
             UpdateAuthorities.run();
 
+            c.complete();
+
+        } catch (SQLException e) {
+            log.error(e.getMessage(), e);
         } finally {
-            if (c != null) {
+            if (c != null && c.isValid()) {
                 c.abort();
             }
         }
@@ -122,8 +121,8 @@ public class UpdateAuthorities {
         if (selectedIDs != null && !selectedIDs.isEmpty()) {
             authorities = new ArrayList<AuthorityValue>();
             for (String selectedID : selectedIDs) {
-                AuthorityValue byUID = authorityValueService.findByUID(context, selectedID);
-                authorities.add(byUID);
+                AuthorityValue byID = authorityValueService.findByID(context, selectedID);
+                authorities.add(byID);
             }
         } else {
             authorities = authorityValueService.findAll(context);
@@ -144,7 +143,7 @@ public class UpdateAuthorities {
     protected void followUp(AuthorityValue authority) {
         print.println("Updated: " + authority.getValue() + " - " + authority.getId());
 
-        boolean updateItems = ConfigurationManager.getBooleanProperty("solrauthority", "auto-update-items");
+        boolean updateItems = ConfigurationManager.getBooleanProperty("auto-update-items");
         if (updateItems) {
             updateItems(authority);
         }
@@ -152,19 +151,25 @@ public class UpdateAuthorities {
 
     protected void updateItems(AuthorityValue authority) {
         try {
-            Iterator<Item> itemIterator = itemService.findByMetadataFieldAuthority(context, authority.getField(), authority.getId());
+            context.turnOffAuthorisationSystem();
+            String field = authority.getField().replaceAll("_", "\\.");
+            Iterator<Item> itemIterator = itemService.findByMetadataFieldAuthority(context, field, authority.getId());
             while (itemIterator.hasNext()) {
                 Item next = itemIterator.next();
-                List<MetadataValue> metadata = itemService.getMetadata(next, authority.getField(), authority.getId());
+                List<MetadataValue> metadata = itemService.getMetadata(next, field, authority.getId());
+                String valueBefore = metadata.get(0).getValue();
                 authority.updateItem(context, next, metadata.get(0)); //should be only one
-                List<MetadataValue> metadataAfter = itemService.getMetadata(next, authority.getField(), authority.getId());
-                if (!metadata.get(0).getValue().equals(metadataAfter.get(0).getValue())) {
-                    print.println("Updated item with handle " + next.getHandle());
+
+                if (!valueBefore.equals(metadata.get(0).getValue())) {
+                    print.println("Updated item with id " + next.getID());
                 }
             }
         } catch (Exception e) {
             log.error("Error updating item", e);
             print.println("Error updating item. " + Arrays.toString(e.getStackTrace()));
+        }
+        finally {
+            context.restoreAuthSystemState();
         }
     }
 

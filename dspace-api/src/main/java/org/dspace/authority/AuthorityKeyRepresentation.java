@@ -54,6 +54,11 @@ public class AuthorityKeyRepresentation
         {
             result += authorityType + SPLIT;
         }
+
+        if(org.apache.commons.lang3.StringUtils.isBlank(internalIdentifier)){
+            return result;
+        }
+
         return result + internalIdentifier;
     }
 }

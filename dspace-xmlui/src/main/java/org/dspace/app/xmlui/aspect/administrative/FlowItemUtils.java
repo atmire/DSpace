@@ -258,10 +258,11 @@ public class FlowItemUtils
 		String fieldID = request.getParameter("field");
 		String value = request.getParameter("value");
 		String language = request.getParameter("language");
+		String authorityId = request.getParameter("value_authority");
 		
 		MetadataField field = metadataFieldService.find(context,Integer.valueOf(fieldID));
 
-		itemService.addMetadata(context, item, field.getMetadataSchema().getName(), field.getElement(), field.getQualifier(), language, value);
+		itemService.addMetadata(context, item, field.getMetadataSchema().getName(), field.getElement(), field.getQualifier(), language, value, authorityId,  Choices.CF_ACCEPTED);
 		
 		itemService.update(context, item);
 

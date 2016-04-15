@@ -196,12 +196,16 @@ public class EditItemMetadataForm extends AbstractDSpaceTransformer {
                 addComposite.setLabel(T_value_label);
                 TextArea addValue = addComposite.addTextArea("value");
                 Text addLang = addComposite.addText("language");
+                addComposite.setAuthorityControlled();
 
                 addValue.setSize(4, 35);
                 addLang.setLabel(T_lang_label);
                 addLang.setSize(6);
 
-                addForm.addItem().addButton("submit_add").setValue(T_submit_add);
+                org.dspace.app.xmlui.wing.element.Item item1 = addForm.addItem();
+                item1.addButton("submit_add").setValue(T_submit_add);
+
+                addMainLookupSection(item1, fields);
 
                 
                 
@@ -308,7 +312,17 @@ public class EditItemMetadataForm extends AbstractDSpaceTransformer {
                 main.addHidden("administrative-continue").setValue(knot.getId());
         }
 
-
+    private void addMainLookupSection(org.dspace.app.xmlui.wing.element.Item item1, java.util.List<MetadataField> fields) throws WingException {
+        for (MetadataField field : fields) {
+            String fieldKey = metadataAuthorityService.makeFieldKey(field.getMetadataSchema().getName(), field.getElement(), field.getQualifier());
+            boolean isAuth = metadataAuthorityService.isAuthorityControlled(fieldKey);
+            if (isAuth) {
+                if(Params.PRESENTATION_AUTHORLOOKUP.equals(choiceAuthorityService.getPresentation(fieldKey))){
+                    item1.addHidden(fieldKey, Params.PRESENTATION_AUTHORLOOKUP).setValue(fieldKey);
+                }
+            }
+        }
+    }
 
         /**
          * Compare two metadata element's name so that they may be sorted.

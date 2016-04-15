@@ -23,7 +23,7 @@ import java.util.Map;
  */
 public interface AuthorityService {
 
-    public void indexItem(Context context, Item item) throws SQLException, AuthorizeException;
+    public void processAuthorities(Context context, Item item) throws SQLException, AuthorizeException;
 
     public boolean isConfigurationValid();
 

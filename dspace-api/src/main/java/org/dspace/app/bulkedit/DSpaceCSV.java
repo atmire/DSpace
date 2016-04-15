@@ -148,7 +148,7 @@ public class DSpaceCSV implements Serializable
                 else if (!"id".equals(element))
                 {
                     String authorityPrefix = "";
-                    AuthorityValue authorityValueType = null; //authorityValueFactory.createEmptyAuthorityValue(element);
+                    AuthorityValue authorityValueType = authorityValueFactory.createEmptyAuthorityValueFromHeader(element);
                     if (authorityValueType != null) {
                         String authorityType = authorityValueType.getAuthorityType();
                         authorityPrefix = element.substring(0, authorityType.length() + 1);

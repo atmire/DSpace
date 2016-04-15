@@ -1083,7 +1083,7 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
             throw new IllegalArgumentException("No such metadata field: schema=" + schema + ", element=" + element + ", qualifier=" + qualifier);
         }
 
-        return itemDAO.findByAuthorityValue(context, mdf, value, true);
+        return itemDAO.findByAuthorityValue(context, mdf, value);
     }
 
     @Override

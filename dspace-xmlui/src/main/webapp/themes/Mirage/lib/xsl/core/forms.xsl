@@ -251,6 +251,13 @@
         </xsl:if>
     </xsl:template>
 
+    <!--lookup button to add authority controlled value on the admin edit item page-->
+    <xsl:template match="dri:field[starts-with(@id,'aspect.administrative.item.EditItemMetadataForm.field') and @rend='authorLookup']">
+        <xsl:call-template name="addLookupButtonAuthor">
+            <xsl:with-param name="isName" select="'true'"/>
+        </xsl:call-template>
+    </xsl:template>
+
     <!--modified to differentiate beween selects with and without attribute 'multiple'-->
     <xsl:template name="fieldAttributes">
         <xsl:call-template name="standardAttributes">

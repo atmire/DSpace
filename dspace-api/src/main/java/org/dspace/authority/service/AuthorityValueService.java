@@ -7,11 +7,11 @@
  */
 package org.dspace.authority.service;
 
-import org.apache.solr.common.SolrDocument;
-import org.dspace.authority.AuthorityValue;
-import org.dspace.core.Context;
-
-import java.util.List;
+import java.util.*;
+import org.apache.solr.common.*;
+import org.dspace.authority.*;
+import org.dspace.content.*;
+import org.dspace.core.*;
 
 /**
  * This service contains all methods for using authority values
@@ -28,7 +28,7 @@ public interface AuthorityValueService
 
     public AuthorityValue update(AuthorityValue value);
 
-    public AuthorityValue findByUID(Context context, String authorityID);
+    public AuthorityValue findByID(Context context, String authorityID);
 
     public List<AuthorityValue> findByExactValue(Context context, String field, String value);
 
@@ -37,4 +37,6 @@ public interface AuthorityValueService
     public AuthorityValue fromSolr(SolrDocument solrDocument);
 
     public List<AuthorityValue> retrieveExternalResults(String field, String text, int max);
+
+    public AuthorityValue prepareNextValue(Context context, Item item, String metadataField, MetadataValue value);
 }

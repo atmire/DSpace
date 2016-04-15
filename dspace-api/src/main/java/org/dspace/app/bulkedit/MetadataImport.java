@@ -409,7 +409,7 @@ public class MetadataImport
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
 
         // Return the changes
@@ -456,7 +456,7 @@ public class MetadataImport
             language = bits[1].substring(0, bits[1].length() - 1);
         }
 
-        AuthorityValue fromAuthority = null; //authorityValueFactory.createEmptyAuthorityValue(md);
+        AuthorityValue fromAuthority = authorityValueFactory.createEmptyAuthorityValueFromHeader(md);
         if (md.indexOf(':') > 0) {
             md = md.substring(md.indexOf(':') + 1);
         }
@@ -806,7 +806,7 @@ public class MetadataImport
             String[] bits = md.split("\\[");
             language = bits[1].substring(0, bits[1].length() - 1);
         }
-        AuthorityValue fromAuthority = null; //authorityValueFactory.createEmptyAuthorityValue(md);
+        AuthorityValue fromAuthority = authorityValueFactory.createEmptyAuthorityValueFromHeader(md);
         if (md.indexOf(':') > 0) {
             md = md.substring(md.indexOf(':')+1);
         }
@@ -1163,6 +1163,10 @@ public class MetadataImport
      */
     private static boolean isAuthorityControlledField(String md)
     {
+        if(authorityControlled.contains(md)){
+            return true;
+        }
+
         String mdf = StringUtils.substringAfter(md, ":");
         mdf = StringUtils.substringBefore(mdf, "[");
         return authorityControlled.contains(mdf);

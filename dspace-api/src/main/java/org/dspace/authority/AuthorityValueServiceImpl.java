@@ -7,19 +7,21 @@
  */
 package org.dspace.authority;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
-import org.dspace.authority.factory.AuthorityValueFactory;
-import org.dspace.authority.service.AuthorityValueService;
-import org.dspace.content.authority.SolrAuthority;
-import org.dspace.core.Context;
-import org.dspace.core.LogManager;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.*;
+import org.apache.commons.lang.*;
+import org.apache.log4j.*;
+import org.apache.solr.client.solrj.*;
+import org.apache.solr.client.solrj.response.*;
+import org.apache.solr.common.*;
+import org.dspace.authority.factory.*;
+import org.dspace.authority.indexer.*;
+import org.dspace.authority.service.*;
+import org.dspace.content.*;
+import org.dspace.content.authority.*;
+import org.dspace.content.service.*;
+import org.dspace.core.*;
+import org.dspace.core.LogManager;
+import org.springframework.beans.factory.annotation.*;
 
 /**
  * This service contains all methods for using authority values
@@ -35,6 +37,15 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
 
     @Autowired
     protected AuthorityValueFactory authorityValueFactory;
+
+    @Autowired(required = true)
+    protected ItemService itemService;
+
+    @Autowired(required = true)
+    protected AuthorityIndexingService indexingService;
+
+    @Autowired(required = true)
+    protected AuthorityService authorityService;
 
     protected AuthorityValueServiceImpl()
     {
@@ -75,6 +86,7 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
                 updated.setLastModified(value.getLastModified());
             }else {
                 updated.updateLastModifiedDate();
+                authorityService.indexContent(updated);
             }
         }
         return updated;
@@ -87,7 +99,7 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
      * @return AuthorityValue
      */
     @Override
-    public AuthorityValue findByUID(Context context, String authorityID) {
+    public AuthorityValue findByID(Context context, String authorityID) {
         //Ensure that if we use the full identifier to match on
         String queryString = "id:\"" + authorityID + "\"";
         List<AuthorityValue> findings = find(context, queryString);
@@ -172,5 +184,43 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
 
     protected String fieldParameter(String schema, String element, String qualifier) {
         return schema + "_" + element + ((qualifier != null) ? "_" + qualifier : "");
+    }
+
+    /**
+     * This method looks at the authority of a metadata.
+     * If the authority can be found in solr, that value is reused.
+     * Otherwise a new authority value will be generated that will be indexed in solr.
+     * If the authority starts with AuthorityValueGenerator.GENERATE, a specific type of AuthorityValue will be generated.
+     * Depending on the type this may involve querying an external REST service
+     *
+     * @param metadataField Is one of the fields defined in dspace.cfg to be indexed.
+     * @param value         Is one of the values of the given metadataField in one of the items being indexed.
+     */
+    public AuthorityValue prepareNextValue(Context context, Item item, String metadataField, MetadataValue value)  {
+
+        AuthorityValue nextValue = null;
+
+        String content = value.getValue();
+        String authorityKey = value.getAuthority();
+        //We only want to update our item IF our ID is not present or if we need to generate one.
+        boolean requiresItemUpdate = StringUtils.isBlank(authorityKey) || AuthorityKeyRepresentation.isAuthorityKeyRepresentation(authorityKey);
+
+        if (StringUtils.isNotBlank(authorityKey) && !AuthorityKeyRepresentation.isAuthorityKeyRepresentation(authorityKey)) {
+            // !uid.startsWith(AuthorityValueGenerator.GENERATE) is not strictly necessary here but it prevents exceptions in solr
+            nextValue = findByID(context, authorityKey);
+        }
+        if (nextValue == null) {
+            nextValue = generate(context, authorityKey, content, metadataField.replaceAll("\\.", "_"));
+        }
+        if (nextValue != null && requiresItemUpdate) {
+            try {
+                nextValue.updateItem(context, item, value);
+                itemService.update(context, item);
+            } catch (Exception e) {
+                log.error("Error creating a metadata value's authority", e);
+            }
+        }
+
+        return nextValue;
     }
 }

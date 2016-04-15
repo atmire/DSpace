@@ -48,6 +48,25 @@ public class AuthorityValueFactoryImpl extends AuthorityValueFactory {
     }
 
     @Override
+    public AuthorityValue createEmptyAuthorityValue(String type)
+    {
+        //Retrieve the builder for this type
+        final AuthorityValueBuilder authorityValueBuilder = authorityValueBuilders.get(StringUtils.substringBefore(type, ":"));
+        if(authorityValueBuilder == null)
+        {
+            return null;
+        }
+        return authorityValueBuilder.buildAuthorityValue();
+    }
+
+    @Override
+    public AuthorityValue createEmptyAuthorityValueFromHeader(String header)
+    {
+        //Retrieve the builder for the header (used in the dspace metadata import, e.g. orcid:dc.contributor.author)
+        return createEmptyAuthorityValue(StringUtils.substringBefore(header, ":"));
+    }
+
+    @Override
     public AuthorityValue loadAuthorityValue(String type, SolrDocument solrDocument) {
         final AuthorityValueBuilder valueBuilder = authorityValueBuilders.get(type);
         if(valueBuilder == null)
