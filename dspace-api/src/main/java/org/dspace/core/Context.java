@@ -485,14 +485,7 @@ public class Context
         try
         {
             // Rollback if we have a database connection, and it is NOT Read Only
-            if (isValid() && !isReadOnly())
-            {
-                dbConnection.rollback();
-            }
-        }
-        catch (SQLException se)
-        {
-            log.error(se.getMessage(), se);
+          rollBack();
         }
         finally
         {
@@ -508,6 +501,20 @@ public class Context
                 log.error("Exception aborting context", ex);
             }
             events = null;
+        }
+    }
+
+    public void rollBack()  {
+        if (isValid() && !isReadOnly())
+        {
+            try
+            {
+                dbConnection.rollback();
+            }
+            catch (SQLException se)
+            {
+                log.error(se.getMessage(), se);
+            }
         }
     }
 
