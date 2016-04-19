@@ -215,14 +215,6 @@ function AuthorLookup(url, authorityInput, collectionID) {
                 wrapper.find('.vcard-wrapper .vcard:visible').hide();
                 wrapper.find('.vcard-wrapper .no-vcard-selected:hidden').show();
             }
-            $('#lookup-more-button').click(function () {
-                button = lessButton;
-                datatable.fnFilter($('.dataTables_filter > input').val());
-            });
-            $('#lookup-less-button').click(function () {
-                button = moreButton;
-                datatable.fnFilter($('.dataTables_filter > input').val());
-            });
         },
         "fnServerData": function (sSource, aoData, fnCallback) {
             var sEcho;
@@ -326,6 +318,15 @@ function AuthorLookup(url, authorityInput, collectionID) {
                 }
             });
         }
+    });
+
+    content.on('click', '#lookup-more-button', function () {
+        button = lessButton;
+        datatable.fnFilter($('.dataTables_filter > input').val());
+    });
+    content.on('click', '#lookup-less-button', function () {
+        button = moreButton;
+        datatable.fnFilter($('.dataTables_filter > input').val());
     });
 }
 

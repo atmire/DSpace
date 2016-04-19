@@ -477,18 +477,19 @@ public interface ItemService extends DSpaceObjectService<Item>, DSpaceObjectLega
      * @param schema metadata field schema
      * @param element metadata field element
      * @param qualifier metadata field qualifier
-     * @param value the value of authority key to look for
+     * @param authority the value of authority key to look for
+     * @param archivedOnly if true only archived items are found, otherwise all items (archived, workspace and workflow) are found
      * @return an iterator over the items matching that authority value
      * @throws SQLException if database error
      * @throws AuthorizeException if authorization error
      * @throws IOException if IO error
      */
     public Iterator<Item> findByAuthorityValue(Context context,
-                                               String schema, String element, String qualifier, String value)
+                                               String schema, String element, String qualifier, String authority, boolean archivedOnly)
             throws SQLException, AuthorizeException, IOException;
 
 
-    public Iterator<Item> findByMetadataFieldAuthority(Context context, String mdString, String authority) throws SQLException, AuthorizeException;
+    public Iterator<Item> findByMetadataFieldAuthority(Context context, String mdString, String authority, boolean archivedOnly) throws SQLException, AuthorizeException;
 
     /**
      * Service method for knowing if this Item should be visible in the item list.

@@ -7,20 +7,12 @@
  */
 package org.dspace.authority;
 
-import java.sql.*;
 import java.util.*;
-import java.util.Date;
 import org.apache.commons.lang.*;
 import org.apache.log4j.*;
 import org.apache.solr.common.*;
-import org.dspace.authorize.*;
-import org.dspace.content.*;
-import org.dspace.content.factory.*;
-import org.dspace.content.service.*;
-import org.dspace.core.*;
 import org.joda.time.*;
 import org.joda.time.format.*;
-import org.springframework.beans.factory.annotation.*;
 
 /**
  *
@@ -55,9 +47,6 @@ public abstract class AuthorityValue {
      * represents the last time that DSpace got updated information from its external source
      */
     private Date lastModified;
-
-    @Autowired(required = true)
-    protected ItemService itemService;
 
     public AuthorityValue() {
     }
@@ -140,20 +129,6 @@ public abstract class AuthorityValue {
         doc.addField("last_modified_date", getLastModified());
         doc.addField("authority_type", getAuthorityType());
         return doc;
-    }
-
-
-    /**
-     * Replace an item's DCValue with this authority
-     * @param context context
-     * @param value metadata value
-     * @param currentItem item
-     * @throws SQLException if database error
-     * @throws AuthorizeException if authorization error
-     */
-    public void updateItem(Context context, Item currentItem, MetadataValue value) throws SQLException, AuthorizeException {
-        value.setValue(getValue());
-        value.setAuthority(getId());ContentServiceFactory.getInstance().getItemService().update(context, currentItem);
     }
 
     /**

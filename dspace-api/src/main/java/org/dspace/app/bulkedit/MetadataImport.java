@@ -7,40 +7,29 @@
  */
 package org.dspace.app.bulkedit;
 
-import org.dspace.authority.AuthorityValue;
-import org.apache.commons.cli.*;
-import org.apache.commons.lang.StringUtils;
-
-import org.apache.log4j.Logger;
-import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.authority.factory.AuthorityValueFactory;
-import org.dspace.authority.service.AuthorityValueService;
-import org.dspace.content.*;
-import org.dspace.content.Collection;
-import org.dspace.content.authority.Choices;
-import org.dspace.content.factory.ContentServiceFactory;
-import org.dspace.content.service.CollectionService;
-import org.dspace.content.service.InstallItemService;
-import org.dspace.content.service.ItemService;
-import org.dspace.content.service.WorkspaceItemService;
-import org.dspace.core.ConfigurationManager;
-import org.dspace.core.Context;
-import org.dspace.core.Constants;
-import org.dspace.authorize.AuthorizeException;
-import org.dspace.core.LogManager;
-import org.dspace.eperson.EPerson;
-import org.dspace.eperson.factory.EPersonServiceFactory;
-import org.dspace.handle.factory.HandleServiceFactory;
-import org.dspace.handle.service.HandleService;
-import org.dspace.workflow.WorkflowService;
-import org.dspace.workflow.factory.WorkflowServiceFactory;
-
+import java.io.*;
+import java.sql.*;
 import java.util.*;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.sql.SQLException;
+import org.apache.commons.cli.*;
+import org.apache.commons.lang.*;
+import org.apache.log4j.*;
+import org.dspace.authority.*;
+import org.dspace.authority.factory.*;
+import org.dspace.authority.service.*;
+import org.dspace.authorize.*;
+import org.dspace.content.Collection;
+import org.dspace.content.*;
+import org.dspace.content.authority.*;
+import org.dspace.content.factory.*;
+import org.dspace.content.service.*;
+import org.dspace.core.*;
+import org.dspace.core.LogManager;
+import org.dspace.eperson.*;
+import org.dspace.eperson.factory.*;
+import org.dspace.handle.factory.*;
+import org.dspace.handle.service.*;
+import org.dspace.workflow.*;
+import org.dspace.workflow.factory.*;
 
 /**
  * Metadata importer to allow the batch import of metadata from a file
@@ -58,22 +47,11 @@ public class MetadataImport
     /** The lines to import */
     List<DSpaceCSVLine> toImport;
 
-    /** The authority controlled fields */
-    protected static Set<String> authorityControlled;
-    static
-    {
-        setAuthorizedMetadataFields();
-    }
-
-    /** The prefix of the authority controlled field */
-    protected static final String AC_PREFIX = "authority.controlled.";
-
     /** Logger */
     protected static final Logger log = Logger.getLogger(MetadataImport.class);
 
     protected final AuthorityValueService authorityValueService;
-
-    protected final AuthorityValueFactory authorityValueFactory;
+    protected static AuthorityService authorityService;
 
     protected final ItemService itemService;
     protected final InstallItemService installItemService;
@@ -99,8 +77,8 @@ public class MetadataImport
         collectionService = ContentServiceFactory.getInstance().getCollectionService();
         handleService = HandleServiceFactory.getInstance().getHandleService();
         authorityValueService = AuthorityServiceFactory.getInstance().getAuthorityValueService();
+        authorityService = AuthorityServiceFactory.getInstance().getAuthorityService();
         workspaceItemService = ContentServiceFactory.getInstance().getWorkspaceItemService();
-        authorityValueFactory = AuthorityValueFactory.getInstance();
     }
 
     /**
@@ -456,7 +434,6 @@ public class MetadataImport
             language = bits[1].substring(0, bits[1].length() - 1);
         }
 
-        AuthorityValue fromAuthority = authorityValueFactory.createEmptyAuthorityValueFromHeader(md);
         if (md.indexOf(':') > 0) {
             md = md.substring(md.indexOf(':') + 1);
         }
@@ -487,7 +464,8 @@ public class MetadataImport
                                        ",looking_for_qualifier=" + qualifier +
                                        ",looking_for_language=" + language));
         String[] dcvalues;
-        if(fromAuthority==null) {
+
+        if(org.apache.commons.lang3.StringUtils.isBlank(getAuthorityTypeFromHeader(md))) {
             List<MetadataValue> current = itemService.getMetadata(item, schema, element, qualifier, language);
             dcvalues = new String[current.size()];
             int i = 0;
@@ -507,12 +485,12 @@ public class MetadataImport
             dcvalues = line.get(md).toArray(new String[line.get(md).size()]);
         }
 
-
         // Compare from current->csv
         for (int v = 0; v < fromCSV.length; v++) {
             String value = fromCSV[v];
-            BulkEditMetadataValue dcv = getBulkEditValueFromCSV(md, language, schema, element, qualifier, value, fromAuthority);
-            if (fromAuthority!=null) {
+
+            BulkEditMetadataValue dcv = getBulkEditValueFromCSV(md, language, schema, element, qualifier, value, getAuthorityTypeFromHeader(md));
+            if (isAuthorityControlledField(md)) {
                 value = dcv.getValue() + csv.getAuthoritySeparator() + dcv.getAuthority() + csv.getAuthoritySeparator() + dcv.getConfidence();
                 fromCSV[v] = value;
             }
@@ -544,7 +522,7 @@ public class MetadataImport
                 dcv.setConfidence((parts.length > 2 ? Integer.valueOf(parts[2]) : Choices.CF_ACCEPTED));
             }
 
-            if ((value != null) && (!"".equals(value)) && (!contains(value, fromCSV)) && fromAuthority==null)
+            if ((value != null) && (!"".equals(value)) && (!contains(value, fromCSV)) && !isAuthorityControlledField(md))
             // fromAuthority==null: with the current implementation metadata values from external authority sources can only be used to add metadata, not to change or remove them
             // because e.g. an author that is not in the column "ORCID:dc.contributor.author" could still be in the column "dc.contributor.author" so don't remove it
             {
@@ -806,7 +784,7 @@ public class MetadataImport
             String[] bits = md.split("\\[");
             language = bits[1].substring(0, bits[1].length() - 1);
         }
-        AuthorityValue fromAuthority = authorityValueFactory.createEmptyAuthorityValueFromHeader(md);
+        String authorityType = getAuthorityTypeFromHeader(md);
         if (md.indexOf(':') > 0) {
             md = md.substring(md.indexOf(':')+1);
         }
@@ -834,8 +812,8 @@ public class MetadataImport
         // Add all the values
         for (String value : fromCSV)
         {
-            BulkEditMetadataValue dcv = getBulkEditValueFromCSV(md, language, schema, element, qualifier, value, fromAuthority);
-            if(fromAuthority!=null){
+            BulkEditMetadataValue dcv = getBulkEditValueFromCSV(md, language, schema, element, qualifier, value, authorityType);
+            if(org.apache.commons.lang3.StringUtils.isNotBlank(dcv.getAuthority())){
                 value = dcv.getValue() + csv.getAuthoritySeparator() + dcv.getAuthority() + csv.getAuthoritySeparator() + dcv.getConfidence();
             }
 
@@ -847,25 +825,31 @@ public class MetadataImport
         }
     }
 
-    protected BulkEditMetadataValue getBulkEditValueFromCSV(String md,String language, String schema, String element, String qualifier, String value, AuthorityValue fromAuthority) {
+    protected BulkEditMetadataValue getBulkEditValueFromCSV(String md,String language, String schema, String element, String qualifier, String value, String authorityType) throws SQLException {
         // Look to see if it should be removed
         BulkEditMetadataValue dcv = new BulkEditMetadataValue();
         dcv.setSchema(schema);
         dcv.setElement(element);
         dcv.setQualifier(qualifier);
         dcv.setLanguage(language);
-        if (fromAuthority != null) {
+
+        if (isAuthorityControlledField(md)) {
             if (value.indexOf(':') > 0) {
                 value = value.substring(0, value.indexOf(':'));
             }
 
             // look up the value and authority in solr
-            List<AuthorityValue> byValue = authorityValueService.findByExactValue(c, md, value);
+            String field = schema + "_" + element + (StringUtils.isNotBlank(qualifier) ? "_" + qualifier : "");
+            List<AuthorityValue> byValue = authorityValueService.findAuthorityValuesByExactValue(c, field, value);
             AuthorityValue authorityValue = null;
             if (byValue.isEmpty()) {
-                String toGenerate = fromAuthority.generateString() + value;
-                String field = schema + "_" + element + (StringUtils.isNotBlank(qualifier) ? "_" + qualifier : "");
-                authorityValue = authorityValueService.generate(c, toGenerate, value, field);
+                String toGenerate = null;
+
+                if(org.apache.commons.lang3.StringUtils.isNotBlank(authorityType)) {
+                    toGenerate = new AuthorityKeyRepresentation(authorityType, value).toString();
+                }
+
+                authorityValue = authorityValueService.createAuthorityValue(c, toGenerate, value, field);
                 dcv.setAuthority(toGenerate);
             } else {
                 authorityValue = byValue.get(0);
@@ -1163,32 +1147,13 @@ public class MetadataImport
      */
     private static boolean isAuthorityControlledField(String md)
     {
-        if(authorityControlled.contains(md)){
+        if(authorityService.isAuthorityControlledField(md)){
             return true;
         }
 
         String mdf = StringUtils.substringAfter(md, ":");
         mdf = StringUtils.substringBefore(mdf, "[");
-        return authorityControlled.contains(mdf);
-    }
-
-    /**
-     * Set authority controlled fields
-     *
-     */
-    private static void setAuthorizedMetadataFields()
-    {
-        authorityControlled = new HashSet<String>();
-        Enumeration propertyNames = ConfigurationManager.getProperties().propertyNames();
-        while(propertyNames.hasMoreElements())
-        {
-            String key = ((String) propertyNames.nextElement()).trim();
-            if (key.startsWith(AC_PREFIX)
-            && ConfigurationManager.getBooleanProperty(key, false))
-            {
-                authorityControlled.add(key.substring(AC_PREFIX.length())); 
-            }
-        }
+        return authorityService.isAuthorityControlledField(mdf);
     }
 
     /**
@@ -1417,5 +1382,13 @@ public class MetadataImport
             System.err.println("Aborting most recent changes.");
             System.exit(1);
         }
+    }
+
+    private String getAuthorityTypeFromHeader(String header) {
+        if(header.contains(":")) {
+            return org.apache.commons.lang.StringUtils.substringBefore(header, ":");
+        }
+
+        return null;
     }
 }

@@ -98,10 +98,11 @@
 
     <xsl:template name="addLookupButtonAuthor">
         <xsl:param name="isName" select="'missing value'"/>
+        <xsl:param name="value" select="@n"/>
         <input type="button" name="{concat('lookup_',@n)}" class="ds-button-field ds-add-button" >
             <xsl:attribute name="class">
                 <xsl:text>ds-button-field ds-add-button</xsl:text>
-                <xsl:if test="starts-with(@id,'aspect.administrative.item.EditItemMetadataForm.field') and @type='hidden'">
+                <xsl:if test="@type='hidden'">
                     <xsl:text> hidden</xsl:text>
                 </xsl:if>
             </xsl:attribute>
@@ -125,14 +126,8 @@
                     </xsl:otherwise>
                 </xsl:choose>
                 <xsl:text>', '</xsl:text>
-                <xsl:choose>
-                    <xsl:when test="starts-with(@id,'aspect.administrative.item.EditItemMetadataForm.field') and @type='hidden'">
-                        <xsl:text>value</xsl:text>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:value-of select="@n"/>
-                    </xsl:otherwise>
-                </xsl:choose>
+                <xsl:value-of select="$value"/>
+
                 <xsl:text>', '</xsl:text>
                 <!-- Collection ID for context -->
                 <xsl:choose>

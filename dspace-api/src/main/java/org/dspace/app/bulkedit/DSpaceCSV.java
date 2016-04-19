@@ -7,28 +7,19 @@
  */
 package org.dspace.app.bulkedit;
 
-import org.apache.commons.lang3.StringUtils;
-import org.dspace.authority.AuthorityValue;
-import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.authority.factory.AuthorityValueFactory;
-import org.dspace.authority.service.AuthorityValueService;
-import org.dspace.content.Collection;
-import org.dspace.content.Item;
-import org.dspace.content.MetadataField;
-import org.dspace.content.MetadataSchema;
-import org.dspace.content.MetadataValue;
-import org.dspace.content.factory.ContentServiceFactory;
-import org.dspace.content.service.ItemService;
-import org.dspace.content.service.MetadataFieldService;
-import org.dspace.content.service.MetadataSchemaService;
-import org.dspace.content.authority.Choices;
-import org.dspace.core.Context;
-import org.dspace.services.factory.DSpaceServicesFactory;
-
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 import java.io.*;
+import java.util.*;
+import java.util.regex.*;
+import org.apache.commons.lang3.*;
+import org.dspace.authority.factory.*;
+import org.dspace.authority.service.*;
+import org.dspace.content.Collection;
+import org.dspace.content.*;
+import org.dspace.content.authority.*;
+import org.dspace.content.factory.*;
+import org.dspace.content.service.*;
+import org.dspace.core.*;
+import org.dspace.services.factory.*;
 
 /**
  * Utility class to read and write CSV files
@@ -76,7 +67,7 @@ public class DSpaceCSV implements Serializable
     protected transient final ItemService itemService = ContentServiceFactory.getInstance().getItemService();
     protected transient final MetadataSchemaService metadataSchemaService = ContentServiceFactory.getInstance().getMetadataSchemaService();
     protected transient final MetadataFieldService metadataFieldService = ContentServiceFactory.getInstance().getMetadataFieldService();
-    protected transient final AuthorityValueFactory authorityValueFactory = AuthorityValueFactory.getInstance();
+    protected transient final AuthorityService authorityService = AuthorityServiceFactory.getInstance().getAuthorityService();
 
 
     /** Whether to export all metadata such as handles and provenance information */
@@ -148,11 +139,12 @@ public class DSpaceCSV implements Serializable
                 else if (!"id".equals(element))
                 {
                     String authorityPrefix = "";
-                    AuthorityValue authorityValueType = authorityValueFactory.createEmptyAuthorityValueFromHeader(element);
-                    if (authorityValueType != null) {
-                        String authorityType = authorityValueType.getAuthorityType();
-                        authorityPrefix = element.substring(0, authorityType.length() + 1);
-                        element = element.substring(authorityPrefix.length());
+                    if (authorityService.isAuthorityControlledField(getFieldFromHeader(element))) {
+                        String authorityType = getAuthorityTypeFromHeader(element);
+                        if(StringUtils.isNotBlank(authorityType)){
+                            authorityPrefix = authorityType + ":";
+                        }
+                        element = getFieldFromHeader(element);
                     }
 
                     // Verify that the heading is valid in the metadata registry
@@ -717,5 +709,25 @@ public class DSpaceCSV implements Serializable
 
     public String getEscapedAuthoritySeparator() {
         return escapedAuthoritySeparator;
+    }
+
+    private String getFieldFromHeader(String header) {
+        String field = header;
+
+        if(field.contains(":")) {
+            field = org.apache.commons.lang.StringUtils.substringAfter(field, ":");
+        }
+
+        field = org.apache.commons.lang.StringUtils.substringBefore(field, "[");
+
+        return field;
+    }
+
+    private String getAuthorityTypeFromHeader(String header) {
+        if(header.contains(":")) {
+            return org.apache.commons.lang.StringUtils.substringBefore(header, ":");
+        }
+
+        return null;
     }
 }

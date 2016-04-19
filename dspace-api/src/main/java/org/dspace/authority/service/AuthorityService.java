@@ -38,9 +38,12 @@ public interface AuthorityService {
      */
     public Map<String, AuthorityValue> getAllAuthorityValues(Context context) throws SQLException, AuthorizeException;
 
-    public void cleanIndex() throws Exception;
+    public void cleanAuthorityIndex() throws Exception;
 
-    public void indexContent(AuthorityValue authorityValue);
+    public void indexAuthorityValue(AuthorityValue authorityValue);
 
-    public void commit();
+    public void commitAuthorityIndex();
+
+    public boolean isAuthorityControlledField(String field);
+
 }

@@ -113,7 +113,7 @@ public class SolrAuthority implements ChoiceAuthority {
                 for (int i = 0; i < maxDocs; i++) {
                     SolrDocument solrDocument = authDocs.get(i);
                     if (solrDocument != null) {
-                        AuthorityValue val = AuthorityServiceFactory.getInstance().getAuthorityValueService().fromSolr(solrDocument);
+                        AuthorityValue val = AuthorityServiceFactory.getInstance().getAuthorityValueService().getAuthorityValueFromSolrDoc(solrDocument);
 
                         Map<String, String> extras = val.choiceSelectMap();
                         extras.put("insolr", val.getId());

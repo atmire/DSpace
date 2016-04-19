@@ -7,33 +7,32 @@
  */
 package org.dspace.app.xmlui.aspect.administrative;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.SQLException;
+import java.io.*;
+import java.sql.*;
 import java.util.*;
-
-import org.apache.cocoon.environment.Request;
-import org.apache.cocoon.servlet.multipart.Part;
-import org.apache.commons.lang.time.DateUtils;
-import org.dspace.app.util.Util;
-import org.dspace.app.xmlui.utils.UIException;
-import org.dspace.app.xmlui.wing.Message;
-import org.dspace.authorize.AuthorizeException;
-import org.dspace.authorize.factory.AuthorizeServiceFactory;
-import org.dspace.authorize.service.AuthorizeService;
+import java.util.Date;
+import javax.servlet.http.*;
+import org.apache.cocoon.environment.*;
+import org.apache.cocoon.servlet.multipart.*;
+import org.apache.commons.lang.time.*;
+import org.apache.commons.lang3.*;
+import org.dspace.app.util.*;
+import org.dspace.app.xmlui.utils.*;
+import org.dspace.app.xmlui.wing.*;
+import org.dspace.authorize.*;
+import org.dspace.authorize.factory.*;
+import org.dspace.authorize.service.*;
 import org.dspace.content.*;
 import org.dspace.content.Collection;
-import org.dspace.content.authority.Choices;
-import org.dspace.content.factory.ContentServiceFactory;
+import org.dspace.content.authority.*;
+import org.dspace.content.factory.*;
 import org.dspace.content.service.*;
-import org.dspace.services.factory.DSpaceServicesFactory;
-import org.dspace.core.Constants;
+import org.dspace.core.*;
 import org.dspace.core.Context;
-import org.dspace.curate.Curator;
-import org.dspace.handle.factory.HandleServiceFactory;
-import org.dspace.handle.service.HandleService;
-
-import javax.servlet.http.HttpServletRequest;
+import org.dspace.curate.*;
+import org.dspace.handle.factory.*;
+import org.dspace.handle.service.*;
+import org.dspace.services.factory.*;
 
 /**
  * Utility methods to processes actions on Groups. These methods are used
@@ -262,8 +261,13 @@ public class FlowItemUtils
 		
 		MetadataField field = metadataFieldService.find(context,Integer.valueOf(fieldID));
 
-		itemService.addMetadata(context, item, field.getMetadataSchema().getName(), field.getElement(), field.getQualifier(), language, value, authorityId,  Choices.CF_ACCEPTED);
-		
+		if(StringUtils.isNotBlank(authorityId)){
+			itemService.addMetadata(context, item, field.getMetadataSchema().getName(), field.getElement(), field.getQualifier(), language, value, authorityId,  Choices.CF_ACCEPTED);
+		}
+		else {
+			itemService.addMetadata(context, item, field.getMetadataSchema().getName(), field.getElement(), field.getQualifier(), language, value);
+		}
+
 		itemService.update(context, item);
 
 		result.setContinue(true);

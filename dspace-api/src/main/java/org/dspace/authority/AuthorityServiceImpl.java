@@ -7,18 +7,15 @@
  */
 package org.dspace.authority;
 
-import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.authority.indexer.AuthorityIndexerInterface;
-import org.dspace.authority.indexer.AuthorityIndexingService;
-import org.dspace.authority.service.AuthorityService;
-import org.dspace.authorize.AuthorizeException;
-import org.dspace.content.Item;
-import org.dspace.core.Context;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.*;
+import java.util.*;
+import org.dspace.authority.factory.*;
+import org.dspace.authority.indexer.*;
+import org.dspace.authority.service.*;
+import org.dspace.authorize.*;
+import org.dspace.content.*;
+import org.dspace.core.*;
+import org.springframework.beans.factory.annotation.*;
 
 
 /**
@@ -35,6 +32,11 @@ public class AuthorityServiceImpl implements AuthorityService{
     protected AuthorityIndexingService indexingService;
     @Autowired(required = true)
     protected AuthorityServiceFactory authorityServiceFactory;
+
+    /** The prefix of the authority controlled field */
+    protected static final String AC_PREFIX = "authority.controlled.";
+
+    protected Set<String> authorityControlled;
 
     protected AuthorityServiceImpl()
     {
@@ -97,20 +99,48 @@ public class AuthorityServiceImpl implements AuthorityService{
     }
 
     @Override
-    public void cleanIndex() throws Exception
+    public void cleanAuthorityIndex() throws Exception
     {
         indexingService.cleanIndex();
     }
 
     @Override
-    public void indexContent(AuthorityValue authorityValue)
+    public void indexAuthorityValue(AuthorityValue authorityValue)
     {
         indexingService.indexContent(authorityValue);
     }
 
     @Override
-    public void commit() {
+    public void commitAuthorityIndex() {
         indexingService.commit();
+    }
+
+    @Override
+    public boolean isAuthorityControlledField(String field) {
+        if(authorityControlled==null){
+            setAuthorizedMetadataFields();
+        }
+
+        return authorityControlled.contains(field);
+    }
+
+    /**
+     * Set authority controlled fields
+     *
+     */
+    private void setAuthorizedMetadataFields()
+    {
+        authorityControlled = new HashSet<String>();
+        Enumeration propertyNames = ConfigurationManager.getProperties().propertyNames();
+        while(propertyNames.hasMoreElements())
+        {
+            String key = ((String) propertyNames.nextElement()).trim();
+            if (key.startsWith(AC_PREFIX)
+                    && ConfigurationManager.getBooleanProperty(key, false))
+            {
+                authorityControlled.add(key.substring(AC_PREFIX.length()));
+            }
+        }
     }
 
 

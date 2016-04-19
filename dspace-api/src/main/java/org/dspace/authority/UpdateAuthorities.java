@@ -121,17 +121,17 @@ public class UpdateAuthorities {
         if (selectedIDs != null && !selectedIDs.isEmpty()) {
             authorities = new ArrayList<AuthorityValue>();
             for (String selectedID : selectedIDs) {
-                AuthorityValue byID = authorityValueService.findByID(context, selectedID);
+                AuthorityValue byID = authorityValueService.findAuthorityValueByID(context, selectedID);
                 authorities.add(byID);
             }
         } else {
-            authorities = authorityValueService.findAll(context);
+            authorities = authorityValueService.findAllAuthorityValues(context);
         }
 
         if (authorities != null) {
             print.println(authorities.size() + " authorities found.");
             for (AuthorityValue authority : authorities) {
-                AuthorityValue updated = authorityValueService.update(authority);
+                AuthorityValue updated = authorityValueService.updateAuthorityValue(authority);
                 if (!updated.getLastModified().equals(authority.getLastModified())) {
                     followUp(updated);
                 }
@@ -153,12 +153,12 @@ public class UpdateAuthorities {
         try {
             context.turnOffAuthorisationSystem();
             String field = authority.getField().replaceAll("_", "\\.");
-            Iterator<Item> itemIterator = itemService.findByMetadataFieldAuthority(context, field, authority.getId());
+            Iterator<Item> itemIterator = itemService.findByMetadataFieldAuthority(context, field, authority.getId(), false);
             while (itemIterator.hasNext()) {
                 Item next = itemIterator.next();
                 List<MetadataValue> metadata = itemService.getMetadata(next, field, authority.getId());
                 String valueBefore = metadata.get(0).getValue();
-                authority.updateItem(context, next, metadata.get(0)); //should be only one
+                authorityValueService.updateItemMetadataWithAuthority(context, next, metadata.get(0), authority); //should be only one
 
                 if (!valueBefore.equals(metadata.get(0).getValue())) {
                     print.println("Updated item with id " + next.getID());

@@ -7,8 +7,8 @@
  */
 package org.dspace.app.bulkedit;
 
-import org.dspace.authority.AuthorityValue;
-import org.dspace.authority.factory.AuthorityValueFactory;
+import org.dspace.authority.service.*;
+import org.dspace.authority.factory.*;
 
 import java.io.Serializable;
 import java.util.*;
@@ -26,8 +26,8 @@ public class DSpaceCSVLine implements Serializable
     /** The elements in this line in a hashtable, keyed by the metadata type */
     private final Map<String, ArrayList> items;
 
-    protected transient final AuthorityValueFactory authorityValueFactory
-            = AuthorityValueFactory.getInstance();
+    protected transient final AuthorityService authorityService
+            = AuthorityServiceFactory.getInstance().getAuthorityService();
 
     /** ensuring that the order-sensible columns of the csv are processed in the correct order */
     private transient final Comparator<? super String> headerComparator = new Comparator<String>() {
@@ -35,14 +35,15 @@ public class DSpaceCSVLine implements Serializable
         public int compare(String md1, String md2) {
             //TODO: FIX THIS ONE
             // The metadata coming from an external source should be processed after the others
-            AuthorityValue source1 = null;authorityValueFactory.createEmptyAuthorityValueFromHeader(md1);
-            AuthorityValue source2 = null; authorityValueFactory.createEmptyAuthorityValueFromHeader(md2);
+
+            boolean source1AuthorityControlled = authorityService.isAuthorityControlledField(md1);
+            boolean source2AuthorityControlled = authorityService.isAuthorityControlledField(md2);
 
             int compare;
-            if (source1 == null && source2 != null) {
+            if (!source2AuthorityControlled && source1AuthorityControlled) {
                 compare = -1;
             }
-            else if (source1 != null && source2 == null) {
+            else if (source1AuthorityControlled && !source2AuthorityControlled) {
                 compare = 1;
             } else {
                 // the order of the rest does not matter

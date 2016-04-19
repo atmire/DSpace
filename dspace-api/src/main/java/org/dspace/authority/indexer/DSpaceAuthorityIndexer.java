@@ -128,7 +128,7 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
         String metadataField = metadataFields.get(currentFieldIndex);
         List<MetadataValue> values = itemService.getMetadataByMetadataString(currentItem, metadataField);
         if (currentMetadataIndex < values.size()) {
-            nextValue = authorityValueService.prepareNextValue(context, currentItem, metadataField, values.get(currentMetadataIndex));
+            nextValue = authorityValueService.storeMetadataInAuthorityCache(context, currentItem, metadataField, values.get(currentMetadataIndex));
 
             currentMetadataIndex++;
             return true;

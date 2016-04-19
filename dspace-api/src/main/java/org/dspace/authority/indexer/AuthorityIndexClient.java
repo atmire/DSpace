@@ -11,12 +11,8 @@ import org.dspace.authority.AuthorityValue;
 import org.apache.log4j.Logger;
 import org.dspace.authority.factory.AuthorityServiceFactory;
 import org.dspace.authority.service.AuthorityService;
-import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -57,12 +53,12 @@ public class AuthorityIndexClient {
 
         log.info("Cleaning the old index");
         System.out.println("Cleaning the old index");
-        authorityService.cleanIndex();
+        authorityService.cleanAuthorityIndex();
         log.info("Writing new data");
         System.out.println("Writing new data");
         for(String id : toIndexValues.keySet()){
-            authorityService.indexContent(toIndexValues.get(id));
-            authorityService.commit();
+            authorityService.indexAuthorityValue(toIndexValues.get(id));
+            authorityService.commitAuthorityIndex();
         }
 
         context.complete();

@@ -255,6 +255,7 @@
     <xsl:template match="dri:field[starts-with(@id,'aspect.administrative.item.EditItemMetadataForm.field') and @rend='authorLookup']">
         <xsl:call-template name="addLookupButtonAuthor">
             <xsl:with-param name="isName" select="'true'"/>
+            <xsl:with-param name="value" select="'value'"/>
         </xsl:call-template>
     </xsl:template>
 

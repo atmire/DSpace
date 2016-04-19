@@ -7,7 +7,9 @@
  */
 package org.dspace.authority;
 
+import java.sql.*;
 import java.util.*;
+import java.util.Date;
 import org.apache.commons.lang.*;
 import org.apache.log4j.*;
 import org.apache.solr.client.solrj.*;
@@ -16,8 +18,10 @@ import org.apache.solr.common.*;
 import org.dspace.authority.factory.*;
 import org.dspace.authority.indexer.*;
 import org.dspace.authority.service.*;
+import org.dspace.authorize.*;
 import org.dspace.content.*;
 import org.dspace.content.authority.*;
+import org.dspace.content.factory.*;
 import org.dspace.content.service.*;
 import org.dspace.core.*;
 import org.dspace.core.LogManager;
@@ -52,9 +56,8 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
 
     }
 
-    //TODO: rename this method
     @Override
-    public AuthorityValue generate(Context context, String authorityKey, String content, String field) {
+    public AuthorityValue createAuthorityValue(Context context, String authorityKey, String content, String field) {
         AuthorityValue nextValue = generateRaw(authorityKey, content, field);
         nextValue.updateLastModifiedDate();
         nextValue.setCreationDate(new Date());
@@ -76,7 +79,7 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
     }
 
     @Override
-    public AuthorityValue update(AuthorityValue value) {
+    public AuthorityValue updateAuthorityValue(AuthorityValue value) {
         //TODO: Rewrite this one.
         AuthorityValue updated = generateRaw(value.generateString(), value.getValue(), value.getField());
         if (updated != null) {
@@ -86,7 +89,7 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
                 updated.setLastModified(value.getLastModified());
             }else {
                 updated.updateLastModifiedDate();
-                authorityService.indexContent(updated);
+                authorityService.indexAuthorityValue(updated);
             }
         }
         return updated;
@@ -99,7 +102,7 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
      * @return AuthorityValue
      */
     @Override
-    public AuthorityValue findByID(Context context, String authorityID) {
+    public AuthorityValue findAuthorityValueByID(Context context, String authorityID) {
         //Ensure that if we use the full identifier to match on
         String queryString = "id:\"" + authorityID + "\"";
         List<AuthorityValue> findings = find(context, queryString);
@@ -107,13 +110,13 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
     }
 
     @Override
-    public List<AuthorityValue> findByExactValue(Context context, String field, String value) {
+    public List<AuthorityValue> findAuthorityValuesByExactValue(Context context, String field, String value) {
         String queryString = "value_keyword:\"" + value + "\" AND field:" + field;
         return find(context, queryString);
     }
 
     @Override
-    public List<AuthorityValue> findAll(Context context) {
+    public List<AuthorityValue> findAllAuthorityValues(Context context) {
         String queryString = "*:*";
         int rows = 1000;
         int start = 0;
@@ -142,7 +145,7 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
     }
 
     @Override
-    public AuthorityValue fromSolr(SolrDocument solrDocument) {
+    public AuthorityValue getAuthorityValueFromSolrDoc(SolrDocument solrDocument) {
         String type = (String) solrDocument.getFieldValue("authority_type");
         return authorityValueFactory.loadAuthorityValue(type, solrDocument);
     }
@@ -162,7 +165,7 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
             QueryResponse queryResponse = SolrAuthority.getSearchService().search(solrQuery);
             if (queryResponse != null && queryResponse.getResults() != null && 0 < queryResponse.getResults().getNumFound()) {
                 for (SolrDocument document : queryResponse.getResults()) {
-                    AuthorityValue authorityValue = fromSolr(document);
+                    AuthorityValue authorityValue = getAuthorityValueFromSolrDoc(document);
                     findings.add(authorityValue);
                     log.debug("AuthorityValueFinder found: " + authorityValue.getValue());
                 }
@@ -186,17 +189,7 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
         return schema + "_" + element + ((qualifier != null) ? "_" + qualifier : "");
     }
 
-    /**
-     * This method looks at the authority of a metadata.
-     * If the authority can be found in solr, that value is reused.
-     * Otherwise a new authority value will be generated that will be indexed in solr.
-     * If the authority starts with AuthorityValueGenerator.GENERATE, a specific type of AuthorityValue will be generated.
-     * Depending on the type this may involve querying an external REST service
-     *
-     * @param metadataField Is one of the fields defined in dspace.cfg to be indexed.
-     * @param value         Is one of the values of the given metadataField in one of the items being indexed.
-     */
-    public AuthorityValue prepareNextValue(Context context, Item item, String metadataField, MetadataValue value)  {
+    public AuthorityValue storeMetadataInAuthorityCache(Context context, Item item, String metadataField, MetadataValue value)  {
 
         AuthorityValue nextValue = null;
 
@@ -207,14 +200,14 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
 
         if (StringUtils.isNotBlank(authorityKey) && !AuthorityKeyRepresentation.isAuthorityKeyRepresentation(authorityKey)) {
             // !uid.startsWith(AuthorityValueGenerator.GENERATE) is not strictly necessary here but it prevents exceptions in solr
-            nextValue = findByID(context, authorityKey);
+            nextValue = findAuthorityValueByID(context, authorityKey);
         }
         if (nextValue == null) {
-            nextValue = generate(context, authorityKey, content, metadataField.replaceAll("\\.", "_"));
+            nextValue = createAuthorityValue(context, authorityKey, content, metadataField.replaceAll("\\.", "_"));
         }
         if (nextValue != null && requiresItemUpdate) {
             try {
-                nextValue.updateItem(context, item, value);
+                updateItemMetadataWithAuthority(context, item, value, nextValue);
                 itemService.update(context, item);
             } catch (Exception e) {
                 log.error("Error creating a metadata value's authority", e);
@@ -222,5 +215,11 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
         }
 
         return nextValue;
+    }
+
+    public void updateItemMetadataWithAuthority(Context context, Item item, MetadataValue value, AuthorityValue authorityValue) throws SQLException, AuthorizeException {
+        value.setValue(authorityValue.getValue());
+        value.setAuthority(authorityValue.getId());
+        ContentServiceFactory.getInstance().getItemService().update(context, item);
     }
 }

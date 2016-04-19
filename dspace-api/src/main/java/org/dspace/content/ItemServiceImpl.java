@@ -1071,7 +1071,7 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
     }
 
     @Override
-    public Iterator<Item> findByAuthorityValue(Context context, String schema, String element, String qualifier, String value) throws SQLException, AuthorizeException {
+    public Iterator<Item> findByAuthorityValue(Context context, String schema, String element, String qualifier, String authority, boolean archivedOnly) throws SQLException, AuthorizeException {
         MetadataSchema mds = metadataSchemaService.find(context, schema);
         if (mds == null)
         {
@@ -1083,11 +1083,11 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
             throw new IllegalArgumentException("No such metadata field: schema=" + schema + ", element=" + element + ", qualifier=" + qualifier);
         }
 
-        return itemDAO.findByAuthorityValue(context, mdf, value);
+        return itemDAO.findByAuthorityValue(context, mdf, authority, archivedOnly);
     }
 
     @Override
-    public Iterator<Item> findByMetadataFieldAuthority(Context context, String mdString, String authority) throws SQLException, AuthorizeException {
+    public Iterator<Item> findByMetadataFieldAuthority(Context context, String mdString, String authority, boolean archivedOnly) throws SQLException, AuthorizeException {
         String[] elements = getElementsFilled(mdString);
         String schema = elements[0], element = elements[1], qualifier = elements[2];
         MetadataSchema mds = metadataSchemaService.find(context, schema);
@@ -1099,7 +1099,7 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
             throw new IllegalArgumentException(
                     "No such metadata field: schema=" + schema + ", element=" + element + ", qualifier=" + qualifier);
         }
-        return findByAuthorityValue(context, mds.getName(), mdf.getElement(), mdf.getQualifier(), authority);
+        return findByAuthorityValue(context, mds.getName(), mdf.getElement(), mdf.getQualifier(), authority, archivedOnly);
     }
 
     @Override

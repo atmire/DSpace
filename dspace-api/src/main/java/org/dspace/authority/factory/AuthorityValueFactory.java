@@ -25,10 +25,6 @@ public abstract class AuthorityValueFactory
      */
     public abstract AuthorityValue createAuthorityValue(String type, String identifier, String content);
 
-    public abstract AuthorityValue createEmptyAuthorityValue(String type);
-
-    public abstract AuthorityValue createEmptyAuthorityValueFromHeader(String type);
-
     /**
      * Load an intsance from an authority value from the solr document
      * @param type

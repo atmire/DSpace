@@ -47,7 +47,6 @@
         <property name="metadataFields">
             <list>
                 <value>dc_contributor_author</value>
-                <value>dc_contributor_other</value>
             </list>
         </property>
     </bean>
@@ -56,7 +55,6 @@
         <property name="metadataFields">
             <list>
                 <value>dc_contributor_author</value>
-                <value>dc_contributor_other</value>
             </list>
         </property>
     </bean>

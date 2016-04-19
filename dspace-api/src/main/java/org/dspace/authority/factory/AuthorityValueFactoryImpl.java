@@ -1,13 +1,11 @@
 package org.dspace.authority.factory;
 
-import org.apache.commons.collections.ListUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
-import org.apache.solr.common.SolrDocument;
-import org.dspace.authority.AuthorityValue;
-import org.springframework.beans.factory.annotation.Required;
-
 import java.util.*;
+import org.apache.commons.collections.*;
+import org.apache.log4j.*;
+import org.apache.solr.common.*;
+import org.dspace.authority.*;
+import org.springframework.beans.factory.annotation.*;
 
 /**
  * User: kevin (kevin at atmire.com)
@@ -45,25 +43,6 @@ public class AuthorityValueFactoryImpl extends AuthorityValueFactory {
             throw new IllegalArgumentException("Invalid authority type: " + type + ", check orcid-authority-services.xml");
         }
         return authorityValueBuilder.buildAuthorityValue(identifier, content);
-    }
-
-    @Override
-    public AuthorityValue createEmptyAuthorityValue(String type)
-    {
-        //Retrieve the builder for this type
-        final AuthorityValueBuilder authorityValueBuilder = authorityValueBuilders.get(StringUtils.substringBefore(type, ":"));
-        if(authorityValueBuilder == null)
-        {
-            return null;
-        }
-        return authorityValueBuilder.buildAuthorityValue();
-    }
-
-    @Override
-    public AuthorityValue createEmptyAuthorityValueFromHeader(String header)
-    {
-        //Retrieve the builder for the header (used in the dspace metadata import, e.g. orcid:dc.contributor.author)
-        return createEmptyAuthorityValue(StringUtils.substringBefore(header, ":"));
     }
 
     @Override
