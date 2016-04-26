@@ -24,6 +24,7 @@
         <entry key-ref="dc.date.issued" value-ref="pubmedDateContrib"/>
         <entry key-ref="dc.language.iso" value-ref="pubmedLanguageContrib"/>
         <entry key-ref="dc.subject" value-ref="pubmedKeywordContrib"/>
+        <entry key-ref="dc.identifier.uri" value-ref="pubmedUrlContrib"/>
 
     </util:map>
 
@@ -110,6 +111,14 @@
         <property name="field" ref="dc.language.iso"/>
         <property name="query" value="descendant::Language"/>
         <property name="prefixToNamespaceMapping" ref="prefixToNamespaceMapping"/>
+    </bean>
+
+    <bean id="pubmedUrlContrib" class="org.dspace.importer.external.metadatamapping.contributor.UrlMetadatumContributor">
+        <property name="field" ref="dc.identifier.uri"/>
+        <property name="query" value="descendant::MedlineCitation/PMID"/>
+        <property name="prefixToNamespaceMapping" ref="prefixToNamespaceMapping"/>
+        <property name="metadataFieldMapping" ref="PubmedMetadataFieldMapping" />
+        <property name="baseUrl" value="http://www.ncbi.nlm.nih.gov/pubmed/"/>
     </bean>
 
 

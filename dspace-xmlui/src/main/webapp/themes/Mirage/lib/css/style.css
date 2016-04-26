@@ -1495,7 +1495,7 @@ ol.ds-ordered-list ol.ds-ordered-list ol.ds-ordered-list {
 }
 
 .lookup-counter{
-    margin-top:35px
+    margin-top:35px;
     margin-bottom:35px
 }
 
@@ -1508,14 +1508,14 @@ ol.ds-ordered-list ol.ds-ordered-list ol.ds-ordered-list {
 }
 
 
-#aspect_submission_StepTransformer_div_StartSubmissionLookupStep #aspect_submission_StepTransformer_field_search {
-    width: 81%;
-    display: inline;
-}
+/*#aspect_submission_StepTransformer_div_StartSubmissionLookupStep #aspect_submission_StepTransformer_field_search {*/
+    /*width: 81%;*/
+    /*display: inline;*/
+/*}*/
 
-#aspect_submission_StepTransformer_div_StartSubmissionLookupStep #aspect_submission_StepTransformer_field_lookup {
-    width:19%
-}
+/*#aspect_submission_StepTransformer_div_StartSubmissionLookupStep #aspect_submission_StepTransformer_field_lookup {*/
+    /*width:19%*/
+/*}*/
 
 #aspect_submission_StepTransformer_div_StartSubmissionLookupStep .modal .modal-body {
     max-height: 500px;
@@ -1594,4 +1594,19 @@ ol.ds-ordered-list ol.ds-ordered-list ol.ds-ordered-list {
 #elsevier-embed-wrapper .checkmark{
     color: green;
     margin-right:3px;
+}
+
+.result-label {
+    float: left;
+    width: 95%;
+}
+
+.result-radio-button {
+    margin: 0;
+    width: 5%;
+    float: left;
+}
+
+.publication-records-modal>li {
+    margin: 1em 0;
 }

@@ -7,26 +7,39 @@
     http://www.dspace.org/license/
 
 -->
-<p>Showing records {{shownStart}}-{{shownCount}} of {{total}}</p>
+<p>{{message "ShowingRecords"}} {{shownStart}}-{{shownCount}} {{message "Of"}} {{total}}</p>
 <ul class="publication-records-modal">
-    <li>
-        <ul>
-            {{#each records}}
-                <li {{#if record.[imported]}}class="imported"{{/if}}>
-                    {{#each record.[dc.title]}}
-                        {{#ifCond @index "==" 0}}<span class="bold">{{this}}</span> {{/ifCond}}
-                    {{/each}}
-                </li>
-                <li {{#if record.[imported]}}class="imported"{{/if}}>
-                    {{#each record.[dc.contributor.author]}}
-                        {{#ifCond @index "<" 5}} <span>{{this}}{{#unless @last}}, {{/unless}} </span>{{/ifCond}}
-                        {{#ifCond @index "==" 5}}...{{/ifCond}}
-                    {{/each}}
-                </li>
-                <li {{#if record.[imported]}}class="imported"{{/if}}>
-                    <button id="publication-records-import-{{record.[dc.identifier.other]}}" class="ds-button-field btn btn-default publication-records-import-btn float-right" name="import" type="submit">Import</button>
-                </li>
-            {{/each}}
-        </ul>
-    </li>
+
+    {{#each records}}
+        <li>
+            <div class="row">
+                <div class="col-xs-1">
+                    <input type="radio" name="publication_id" id="{{record.[identifier]}}" value="{{record.[identifier]}}" />
+                </div>
+                <div class="col-xs-11">
+                    <label for="{{record.[identifier]}}">
+                        <ul {{#if record.[imported]}}class="imported"{{/if}}>
+                            <li>
+                                {{#each record.[dc.title]}}
+                                    {{#ifCond @index "==" 0}}<span class="bold">{{this}}</span> {{/ifCond}}
+                                {{/each}}
+                            </li>
+                            <li>
+                                {{#each record.[dc.contributor.author]}}
+                                    {{#ifCond @index "<" 5}} <span>{{this}}{{#unless @last}}, {{/unless}} </span>{{/ifCond}}
+                                    {{#ifCond @index "==" 5}}...{{/ifCond}}
+                                {{/each}}
+                            </li>
+                            <li>
+                                <a target="_blank" href="{{record.[dc.identifier.uri]}}">{{message "ViewSource"}}</a>
+                            </li>
+                        </ul>
+                    </label>
+                </div>
+            </div>
+        </li>
+    {{/each}}
+
 </ul>
+
+

@@ -24,9 +24,11 @@ public interface Imports {
     public int getNbRecords(Query query) throws MetadataSourceException;
     public Collection<ImportRecord> getRecords(String query, int start, int count)throws MetadataSourceException;
     public Collection<ImportRecord> getRecords(Query q)throws MetadataSourceException;
-    public ImportRecord getRecord(String id)throws MetadataSourceException;
+    public ImportRecord getRecord(String publicationId)throws MetadataSourceException;
     public ImportRecord getRecord(Query q)throws MetadataSourceException;
     public String getImportSource();
+
+    public boolean supports(String identifier);
 
     public Collection<ImportRecord> findMatchingRecords(Item item) throws MetadataSourceException;
 

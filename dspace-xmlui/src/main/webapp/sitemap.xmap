@@ -450,6 +450,20 @@
                         <map:mount check-reload="no" src="aspects/json-lookup.xmap" uri-prefix="json/"/>
                     </map:match>
 
+                    <map:match pattern="JSON/translate/i18n">
+                        <map:generate type="file" src="aspects/ReportingSuite/i18n.xml"/>
+                        <map:act type="locale">
+                            <map:transform type="i18n">
+                                <map:parameter name="locale" value="{locale}"/>
+                            </map:transform>
+                        </map:act>
+                        <map:transform src="aspects/translatedxml2text.xslt"/>
+                        <map:transform src="aspects/xml2json.xslt"/>
+
+                        <map:serialize type="text"/>
+                    </map:match>
+
+
                 </map:pipeline>
 
                 <!-- new AJAX menu (choices) responses for metadata authority control -->

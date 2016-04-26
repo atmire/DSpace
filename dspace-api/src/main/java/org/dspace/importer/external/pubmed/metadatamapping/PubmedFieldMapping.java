@@ -23,4 +23,6 @@ public class PubmedFieldMapping extends AbstractMetadataFieldMapping {
     public void setMetadataFieldMap(Map metadataFieldMap) {
         super.setMetadataFieldMap(metadataFieldMap);
     }
+
+
 }

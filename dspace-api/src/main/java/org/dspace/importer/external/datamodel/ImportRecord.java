@@ -7,6 +7,7 @@
  */
 package org.dspace.importer.external.datamodel;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.dspace.importer.external.metadatamapping.MetadatumDTO;
 
 import java.util.Collection;
@@ -21,14 +22,16 @@ import java.util.List;
  */
 public class ImportRecord {
     private List<MetadatumDTO> valueList = null;
+    private Pair<String, String> identifier;
 
     public List<MetadatumDTO> getValueList() {
         return Collections.unmodifiableList(valueList);
     }
 
-    public ImportRecord(List<MetadatumDTO> valueList) {
+    public ImportRecord(List<MetadatumDTO> valueList, Pair<String, String> identifier) {
         //don't want to alter the original list. Also now I can control the type of list
         this.valueList = new LinkedList<MetadatumDTO>(valueList);
+        this.identifier = identifier;
     }
 
     @Override
@@ -71,5 +74,9 @@ public class ImportRecord {
 
     public void addValue(MetadatumDTO value){
         this.valueList.add(value);
+    }
+
+    public Pair<String, String> getIdentifier() {
+        return identifier;
     }
 }

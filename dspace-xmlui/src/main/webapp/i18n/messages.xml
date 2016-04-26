@@ -618,7 +618,11 @@
 	<message key="xmlui.Submission.general.submission.previous">&lt; Previous</message>
 	<message key="xmlui.Submission.general.submission.save">Save &amp; Exit</message>
 	<message key="xmlui.Submission.general.submission.next">Next &gt;</message>
+	<message key="xmlui.Submission.general.submission.next_import">Next &amp; Import &gt;</message>
+	<message key="xmlui.Submission.general.submission.next_no_import">Next without import &gt;</message>
 	<message key="xmlui.Submission.general.submission.complete">Complete submission</message>
+	<message key="xmlui.Submission.general.submission.complete_import">Complete &amp; Import</message>
+	<message key="xmlui.Submission.general.submission.complete_no_import">Complete without import</message>
 	<message key="xmlui.Submission.general.workflow.title">Item submission</message>
 	<message key="xmlui.Submission.general.workflow.trail">Item submission</message>
 	<message key="xmlui.Submission.general.workflow.head">Item submission</message>
@@ -740,6 +744,17 @@
 	<message key="xmlui.Submission.submit.InitialQuestionsStep.date_issued">Date Issued</message>
 	<message key="xmlui.Submission.submit.InitialQuestionsStep.citation">Citation</message>
 	<message key="xmlui.Submission.submit.InitialQuestionsStep.publisher">Publisher</message>
+
+	<!-- org.dspace.app.xmlui.Submission.submit.LookupStep -->
+	<message key="xmlui.Submission.submit.LookupStep.publication_results">Publication Results</message>
+	<message key="xmlui.Submission.submit.LookupStep.previous_results">Previous results</message>
+	<message key="xmlui.Submission.submit.LookupStep.next_results">Next results</message>
+	<message key="xmlui.Submission.submit.LookupStep.showing_records">Showing records</message>
+	<message key="xmlui.Submission.submit.LookupStep.of">of</message>
+	<message key="xmlui.Submission.submit.LookupStep.view_source">View source</message>
+	<message key="xmlui.Submission.submit.LookupStep.loading">Loading...</message>
+	<message key="xmlui.Submission.submit.LookupStep.http://api.elsevier.com/content/search/scidir">Elsevier</message>
+	<message key="xmlui.Submission.submit.LookupStep.http://eutils.ncbi.nlm.nih.gov/entrez/eutils/">PubMed</message>
 
 	<!-- org.dspace.app.xmlui.Submission.submit.DescribeStep -->
 	<message key="xmlui.Submission.submit.DescribeStep.head">Describe Item</message>

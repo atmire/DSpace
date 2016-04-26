@@ -8,14 +8,17 @@
 package org.dspace.importer.external.metadatamapping;
 
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 import org.dspace.importer.external.metadatamapping.contributor.MetadataContributor;
 import org.dspace.importer.external.metadatamapping.service.MetadataProcessorService;
+import org.springframework.beans.factory.annotation.Required;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.*;
 
 /**
  * Created by Roeland Dillen (roeland at atmire dot com)
@@ -25,7 +28,7 @@ import java.util.Map;
 public abstract class AbstractMetadataFieldMapping<RecordType> implements MetadataFieldMapping<RecordType, MetadataContributor<RecordType>> {
 
     private Map<MetadataFieldConfig, MetadataContributor<RecordType>> metadataFieldMap;
-
+    private MetadataContributor identifierContributor;
     /**
      * log4j logger
      */
@@ -46,6 +49,15 @@ public abstract class AbstractMetadataFieldMapping<RecordType> implements Metada
         }else{
             return null;
         }
+    }
+
+    public MetadataContributor getIdentifierContributor() {
+        return identifierContributor;
+    }
+
+    @Required
+    public void setIdentifierContributor(MetadataContributor identifierContributor) {
+        this.identifierContributor = identifierContributor;
     }
 
     public MetadatumDTO toDCValue(MetadataFieldConfig field, String value) {
@@ -106,6 +118,16 @@ public abstract class AbstractMetadataFieldMapping<RecordType> implements Metada
             mc.setMetadataFieldMapping(this);
         }
 
+    }
+
+    public Pair<String, String> getIdentifier(RecordType recordType, String source) {
+        Iterator<MetadatumDTO> iterator = getIdentifierContributor().contributeMetadata(recordType).iterator();
+        Pair<String, String> result = null;
+        if (iterator.hasNext()) {
+            result = new ImmutablePair<>(source, iterator.next().getValue());
+        }
+
+        return result;
     }
 
     @Override

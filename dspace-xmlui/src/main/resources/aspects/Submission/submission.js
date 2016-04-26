@@ -39,6 +39,7 @@ importClass(Packages.org.dspace.app.util.SubmissionConfigReader);
 importClass(Packages.org.dspace.app.util.SubmissionInfo);
 
 importClass(Packages.org.dspace.submit.AbstractProcessingStep);
+importClass(Packages.org.dspace.submit.step.XMLUIStartSubmissionLookupStep);
 
 /* Global variable which stores a comma-separated list of all fields 
  * which errored out during processing of the last step.
@@ -331,7 +332,7 @@ function submissionControl(collectionHandle, workspaceID, initStepAndPage)
     	//-----------------------------------------------------------
         // User clicked "Next->" button (or a Non-interactive Step - i.e. no UI)
         // Only step forward to next page if no errors on this page
-        if ((cocoon.request.get(AbstractProcessingStep.NEXT_BUTTON) || !stepHasUI(stepConfig))  && (response_flag==AbstractProcessingStep.STATUS_COMPLETE))
+        if ((cocoon.request.get(AbstractProcessingStep.NEXT_BUTTON) || cocoon.request.get(XMLUIStartSubmissionLookupStep.NEXT_NO_IMPORT_BUTTON) || !stepHasUI(stepConfig))  && (response_flag==AbstractProcessingStep.STATUS_COMPLETE))
         {
            	state.progressIterator++;
 

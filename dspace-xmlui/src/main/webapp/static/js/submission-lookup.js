@@ -39,13 +39,22 @@
 
     $('#aspect_submission_StepTransformer_field_lookup').click(function(event){
         event.preventDefault();
-
+        var type = $('#aspect_submission_StepTransformer_field_type').val();
         var searchInput = $('#aspect_submission_StepTransformer_field_search').val();
-        startLookup(searchInput,0);
+        startLookup(searchInput,0, type);
     });
 
-    function startLookup(searchInput,start) {
-        $.ajax({url: window.publication.contextPath+"/json/submissionLookup?search=" + searchInput +"&start="+start+"&type=pubmed",
+    $('#aspect_submission_StepTransformer_field_search').keypress(function (e) {
+        if(e.which == 13) {
+            $('#aspect_submission_StepTransformer_field_lookup').click();
+            return false;
+        }
+    });
+
+    function startLookup(searchInput, start, type) {
+        load();
+
+        $.ajax({url: window.publication.contextPath+"/json/submissionLookup?search=" + searchInput +"&start="+start+"&type="+type,
             type: "POST",
             dataType: "json",
             async: true,
@@ -59,14 +68,12 @@
                 info.shownCount = start + info.records.length;
 
                 fillModal(info);
-                setPagination(start,info,searchInput);
+                setPagination(start,info,searchInput,type);
 
-                $(".publication-records-import-btn").click(function(event) {
-                    event.preventDefault();
-                    var pmid = $(this).attr("id").substring( $(this).attr("id").lastIndexOf("-") + 1);
 
-                    $("#aspect_submission_StepTransformer_field_publication_id").val(pmid);
-                    $("#aspect_submission_StepTransformer_div_StartSubmissionLookupStep").submit();
+
+                $("input[name=publication_id]:radio").change(function () {
+                    $("#aspect_submission_StepTransformer_field_submit_next").removeClass("hidden");
                 });
             }
         });
@@ -74,7 +81,7 @@
 
     function fillModal(info){
         var lookupModal = $('#lookup-search-results');
-        lookupModal.removeClass('hidden');
+
         var htmlData;
         if(info.records.length>0) {
             htmlData = html = publication_records_template(info);
@@ -83,12 +90,10 @@
             htmlData = html = "<p>No records found</p>";
         }
         lookupModal.find('.modal-body').html(htmlData);
-        if((typeof $().modal == 'function')){
-            lookupModal.modal('show');
-        }
+
     }
 
-    function setPagination(start, info, searchInput){
+    function setPagination(start, info, searchInput, type){
         if(start + info.records.length<info.total){
             $("#publication-pagination-next").attr("disabled", false);
         }
@@ -107,17 +112,29 @@
         $("#publication-pagination-previous").click(function(event) {
             $( this ).unbind( event );
             event.preventDefault();
-            startLookup(searchInput, start - 20);
+            startLookup(searchInput, start - 20, type);
         });
 
         $("#publication-pagination-next").unbind("click");
         $("#publication-pagination-next").click(function(event) {
             event.preventDefault();
-            startLookup(searchInput, start + 20);
+            startLookup(searchInput, start + 20, type);
         });
         $('.close-modal-results').click(function(){
             $('#lookup-search-results').addClass('hidden');
         });
     }
 
+
+    function load() {
+        var lookupModal = $('#lookup-search-results');
+        lookupModal.removeClass('hidden');
+        htmlData = html = "<p>" + $(document).data('i18n').Loading + "</p>";
+        lookupModal.find('.modal-body').html(htmlData);
+
+        var lookupModalTop = lookupModal.position().top;
+        if($(window).scrollTop() > lookupModalTop) {
+            $(document).scrollTop(lookupModalTop);
+        }
+    }
 })(jQuery);

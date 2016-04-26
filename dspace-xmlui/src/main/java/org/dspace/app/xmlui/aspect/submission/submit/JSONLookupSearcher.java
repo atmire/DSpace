@@ -36,6 +36,7 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -82,8 +83,9 @@ public class JSONLookupSearcher extends AbstractGenerator {
         }
 
         try {
-            int total = importService.getNbRecords(getLookupURI(), query);
-            Collection<ImportRecord> records = importService.getRecords(getLookupURI(), query, start, 20);
+            String url = request.getParameter("type");
+            int total = importService.getNbRecords(url, query);
+            Collection<ImportRecord> records = importService.getRecords(url, query, start, 20);
 
             DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
@@ -140,6 +142,10 @@ public class JSONLookupSearcher extends AbstractGenerator {
 
                     metadatumValueNodes.get(getField(metadatum)).appendChild(metadatumValueNode);
                 }
+
+                Element identifier = document.createElement("identifier");
+                identifier.setTextContent(URLEncoder.encode(record.getIdentifier().toString("%1$s|||%2$s"), "UTF-8"));
+                recordNode.appendChild(identifier);
 
                 for (Element element : metadatumValueNodes.values()) {
                     recordNode.appendChild(element);

@@ -7,6 +7,8 @@
  */
 package org.dspace.importer.external.metadatamapping;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.Collection;
 
 /**
@@ -21,6 +23,6 @@ public interface  MetadataFieldMapping<RecordType,QueryType> {
 
         public Collection<MetadatumDTO> resultToDCValueMapping(RecordType record);
 
-
+        public Pair<String, String> getIdentifier(RecordType recordType, String source);
 
 }

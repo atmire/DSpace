@@ -198,7 +198,7 @@
 	    <workflow-editable>true</workflow-editable>
 	  </step> -->
 
-       <!-- Find publications based on ID/DOI/Title/Author to pre-fill the submission
+       <!-- Find publications based on ID/DOI/Title/Author to pre-fill the submission -->
        <step>
            <heading>submit.progressbar.lookup</heading>
            <processing-class>org.dspace.submit.step.XMLUIStartSubmissionLookupStep</processing-class>
@@ -206,7 +206,7 @@
            <xmlui-binding>org.dspace.app.xmlui.aspect.submission.submit.StartSubmissionLookupStep</xmlui-binding>
            <workflow-editable>true</workflow-editable>
        </step>
-        -->
+
 
        <!--Additional step for the live import. This should be enabled to display the live import
        <step>

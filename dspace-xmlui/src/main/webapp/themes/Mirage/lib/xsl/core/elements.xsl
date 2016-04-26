@@ -97,15 +97,14 @@
             <div>
                 <div>
                     <div>
-                        <h4 >Publication Results</h4>
+                        <h4><i18n:text>xmlui.Submission.submit.LookupStep.publication_results</i18n:text></h4>
                     </div>
                     <div class="modal-body">
                         <p/>
                     </div>
                     <div>
-                        <button class="ds-button-field btn btn-default pull-left" id="publication-pagination-previous">Previous results</button>
-                        <button class="ds-button-field btn btn-default pull-left" id="publication-pagination-next">Next results</button>
-                        <button type="button" class="btn btn-default close-modal-results">Close</button>
+                        <button class="ds-button-field btn btn-default pull-left" id="publication-pagination-previous"><i18n:text>xmlui.Submission.submit.LookupStep.previous_results</i18n:text></button>
+                        <button class="ds-button-field btn btn-default pull-left" id="publication-pagination-next"><i18n:text>xmlui.Submission.submit.LookupStep.next_results</i18n:text></button>
                     </div>
                 </div>
             </div>

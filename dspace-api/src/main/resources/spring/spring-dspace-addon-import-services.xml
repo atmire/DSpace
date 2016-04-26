@@ -28,10 +28,10 @@
         <constructor-arg ref="pubmedService"/>
         <constructor-arg ref="PubmedMetadataFieldMapping"/>
         <property name="baseAddress" value="http://eutils.ncbi.nlm.nih.gov/entrez/eutils/"/>
-
     </bean>
     <bean id="PubmedMetadataFieldMapping"
           class="org.dspace.importer.external.pubmed.metadatamapping.PubmedFieldMapping">
+        <property name="identifierContributor" ref="pubmedIdentifierContrib"/>
     </bean>
 
     <!-- Metadatafield used to check against if it's already imported or not during the JSONLookupSearcher-->
@@ -45,5 +45,21 @@
         <property name="apiUrl" value="http://api.elsevier.com/content/search/scidir"/>
     </bean>
 
-    <bean id="ScidirMetadataFieldMapping" class="org.dspace.importer.external.scidir.ScidirMetadataFieldMapping"/>
+    <bean id="ScidirMetadataFieldMapping" class="org.dspace.importer.external.scidir.ScidirMetadataFieldMapping">
+        <property name="identifierContributor" ref="elsevierIdentifierContrib"/>
+    </bean>
+    <!-- TODO HAS TO BE REMOVED -->
+    <bean id="pubmedIdentifierContrib" class="org.dspace.importer.external.metadatamapping.contributor.SimpleXpathMetadatumContributor">
+        <property name="field" ref="dc.identifier.other"/>
+        <property name="query" value="descendant::MedlineCitation/PMID"/>
+        <property name="prefixToNamespaceMapping" ref="prefixToNamespaceMapping"/>
+        <property name="metadataFieldMapping" ref="PubmedMetadataFieldMapping" />
+    </bean>
+
+    <bean id="elsevierIdentifierContrib" class="org.dspace.importer.external.metadatamapping.contributor.SimpleXpathMetadatumContributor">
+        <property name="field" ref="elsevier.identifier.eid"/>
+        <property name="query" value="x:eid"/>
+        <property name="metadataFieldMapping" ref="ScidirMetadataFieldMapping" />
+    </bean>
+
 </beans>

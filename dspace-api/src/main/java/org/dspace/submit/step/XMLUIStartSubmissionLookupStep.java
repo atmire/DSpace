@@ -28,6 +28,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.sql.SQLException;
 
 /**
@@ -39,35 +40,43 @@ public class XMLUIStartSubmissionLookupStep extends AbstractProcessingStep {
     private static Logger log = Logger.getLogger(XMLUIStartSubmissionLookupStep.class);
     private ItemService itemService = ContentServiceFactory.getInstance().getItemService();
 
+    public static final String NEXT_NO_IMPORT_BUTTON = "submit_next_no_import";
+
     @Override
-    public int doProcessing(Context context, HttpServletRequest request, HttpServletResponse response, SubmissionInfo subInfo) throws ServletException, IOException, AuthorizeException, SQLException {
-        String publicationID = request.getParameter("publication_id");
+    public int doProcessing(Context context, HttpServletRequest request, HttpServletResponse response, SubmissionInfo subInfo) throws ServletException, IOException, AuthorizeException, SQLException
+    {
+        if(request.getParameter(AbstractProcessingStep.NEXT_BUTTON) != null)
+        {
+            String publicationID = URLDecoder.decode(request.getParameter("publication_id"), "UTF-8");
 
-        if (StringUtils.isNotBlank(publicationID)) {
-            ImportService importService = new DSpace().getServiceManager().getServiceByName("importService", ImportService.class);
-            Item item = subInfo.getSubmissionItem().getItem();
-            try {
-            ImportRecord   record = importService.getRecord(getPublicationUrl(), publicationID);
+            if (StringUtils.isNotBlank(publicationID))
+            {
+                ImportService importService = new DSpace().getServiceManager().getServiceByName("importService", ImportService.class);
+                if(importService.ingest(publicationID)) {
+                    Item item = subInfo.getSubmissionItem().getItem();
+                    try {
+                        ImportRecord record = importService.getRecord(getPublicationUrl(), publicationID);
 
+                        //TODO for templates
+                        for (MetadataValue metadatum : itemService.getMetadata(item, Item.ANY, Item.ANY, Item.ANY, Item.ANY)) {
+                            itemService.clearMetadata(context, item, metadatum.getMetadataField().getMetadataSchema().getName(), metadatum.getMetadataField().getElement(), metadatum.getMetadataField().getQualifier(), metadatum.getLanguage());
+                        }
 
-                for (MetadataValue metadatum : itemService.getMetadata(item, Item.ANY, Item.ANY, Item.ANY, Item.ANY)) {
-                    itemService.clearMetadata(context, item, metadatum.getMetadataField().getMetadataSchema().getName(), metadatum.getMetadataField().getElement(), metadatum.getMetadataField().getQualifier(), metadatum.getLanguage());
+                        for (MetadatumDTO metadatum : record.getValueList()) {
+                            itemService.addMetadata(context, item, metadatum.getSchema(), metadatum.getElement(), metadatum.getQualifier(), null, metadatum.getValue());
+                        }
+
+                        itemService.update(context, item);
+
+                    } catch (MetadataSourceException e) {
+                        //TODO: Find a better way
+                        log.error(e);
+                    }
                 }
 
-                for (MetadatumDTO metadatum : record.getValueList()) {
-                        itemService.addMetadata(context, item, metadatum.getSchema(), metadatum.getElement(), metadatum.getQualifier(),null, metadatum.getValue());
-                }
-
-                itemService.update(context, item);
-
-                context.dispatchEvents();
-
-            } catch (MetadataSourceException e) {
-                log.error(e);
             }
-
         }
-            return 0;
+            return STATUS_COMPLETE;
     }
 
     @Override

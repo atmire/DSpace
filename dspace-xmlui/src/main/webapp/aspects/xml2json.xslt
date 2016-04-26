@@ -140,10 +140,10 @@
     </xsl:choose>
   </xsl:template>
 
-  <!-- number (no support for javascript mantise) -->
-  <xsl:template match="text()[not(string(number())='NaN')]">
-    <xsl:value-of select="."/>
-  </xsl:template>
+  <!--&lt;!&ndash; number (no support for javascript mantise) &ndash;&gt;-->
+  <!--<xsl:template match="text()[not(string(number())='NaN')]">-->
+    <!--<xsl:value-of select="."/>-->
+  <!--</xsl:template>-->
 
   <!-- boolean, case-insensitive -->
   <xsl:template match="text()[translate(.,'TRUE','true')='true']">true</xsl:template>

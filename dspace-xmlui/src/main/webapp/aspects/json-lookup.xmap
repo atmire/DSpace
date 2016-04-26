@@ -54,7 +54,6 @@
     <map:components>
         <map:generators>
             <map:generator name="JSONLookupSearcher" src="org.dspace.app.xmlui.aspect.submission.submit.JSONLookupSearcher"/>
-            <map:generator name="JSONImportSearcher" src="org.dspace.app.xmlui.cocoon.JSONImportSearcher"/>
         </map:generators>
 
         <map:serializers>
@@ -69,35 +68,19 @@
 
             <map:match pattern="**">
 
-                <map:select type="request-parameter">
-                    <map:parameter name="parameter-name" value="type"/>
-                    <map:when test="pubmed">
-                        <map:generate type="JSONLookupSearcher"/>
+                <map:generate type="JSONLookupSearcher"/>
 
-                        <map:act type="locale">
-                            <map:transform type="i18n">
-                                <map:parameter name="locale" value="{locale}"/>
-                            </map:transform>
-                        </map:act>
-                        <map:transform src="translatedxml2text.xslt"/>
-                        <map:transform src="xml2json.xslt"/>
-                        <map:serialize type="text"/>
-                    </map:when>
-                    <map:when test="scidir">
-                        <map:generate type="JSONImportSearcher"/>
+                <map:act type="locale">
+                    <map:transform type="i18n">
+                        <map:parameter name="locale" value="{locale}"/>
+                    </map:transform>
+                </map:act>
+                <map:transform src="translatedxml2text.xslt"/>
+                <map:transform src="xml2json.xslt"/>
 
-                        <map:act type="locale">
-                            <map:transform type="i18n">
-                                <map:parameter name="locale" value="{locale}"/>
-                            </map:transform>
-                        </map:act>
-                        <map:transform src="translatedxml2text.xslt"/>
-                        <map:transform src="xml2json.xslt"/>
 
-                        <map:serialize type="text"/>
-                    </map:when>
-                </map:select>
 
+                <map:serialize type="text"/>
 
             </map:match>
 

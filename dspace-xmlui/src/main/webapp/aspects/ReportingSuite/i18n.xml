@@ -1,0 +1,6 @@
+<root xmlns:i18n="http://apache.org/cocoon/i18n/2.1">
+    <ViewSource><i18n:text>xmlui.Submission.submit.LookupStep.view_source</i18n:text></ViewSource>
+    <Of><i18n:text>xmlui.Submission.submit.LookupStep.of</i18n:text></Of>
+    <ShowingRecords><i18n:text>xmlui.Submission.submit.LookupStep.showing_records</i18n:text></ShowingRecords>
+    <Loading><i18n:text>xmlui.Submission.submit.LookupStep.loading</i18n:text></Loading>
+</root>

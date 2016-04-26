@@ -106,7 +106,8 @@ public class ScidirImportSourceServiceImpl extends AbstractImportMetadataSourceS
 
         private Query query;
 
-        private GetRecords(String queryString, int start, int count) {
+        private
+        GetRecords(String queryString, int start, int count) {
             query = new Query();
             query.addParameter("query",queryString);
             query.addParameter("start",start);
@@ -194,7 +195,8 @@ public class ScidirImportSourceServiceImpl extends AbstractImportMetadataSourceS
     }
 
     @Override
-    public ImportRecord getRecord(String id) throws MetadataSourceException {
+    public ImportRecord getRecord(String publicationId) throws MetadataSourceException {
+        String id = retrieveId(publicationId);
         return retry(new GetRecord(id));
     }
 

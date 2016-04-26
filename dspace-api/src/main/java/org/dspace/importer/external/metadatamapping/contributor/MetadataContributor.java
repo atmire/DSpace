@@ -7,6 +7,7 @@
  */
 package org.dspace.importer.external.metadatamapping.contributor;
 
+import org.dspace.importer.external.metadatamapping.MetadataFieldConfig;
 import org.dspace.importer.external.metadatamapping.MetadataFieldMapping;
 import org.dspace.importer.external.metadatamapping.MetadatumDTO;
 
@@ -22,4 +23,5 @@ public interface MetadataContributor<RecordType> {
     public void setMetadataFieldMapping(MetadataFieldMapping<RecordType, MetadataContributor<RecordType>> rt);
 
     public Collection<MetadatumDTO> contributeMetadata(RecordType t);
+    public MetadataFieldConfig getField();
 }

@@ -76,11 +76,12 @@
             </xsl:attribute>
             <br/>
             <i18n:text>
-                <xsl:value-of select="dri:item"/></i18n:text>
+                <xsl:value-of select="dri:item"/>
+            </i18n:text>
         </div>
     </xsl:template>
 
-    <xsl:template match="dri:list[@rend='sherpaList']/dri:item/dri:hi[@rend='sherpaBold']" priority="2" >
+    <xsl:template match="dri:list[@rend='sherpaList']/dri:item/dri:hi[@rend='sherpaBold']" priority="2">
         <strong>
             <xsl:call-template name="standardAttributes">
             </xsl:call-template>
@@ -88,7 +89,7 @@
         </strong>
     </xsl:template>
 
-    <xsl:template match="dri:list[@rend='sherpaList']/dri:item/dri:hi[contains(@rend,'sherpaStyle')]" priority="2" >
+    <xsl:template match="dri:list[@rend='sherpaList']/dri:item/dri:hi[contains(@rend,'sherpaStyle')]" priority="2">
         <span>
             <xsl:attribute name="class">
 
@@ -114,14 +115,20 @@
                 <xsl:value-of select="."/>
             </i18n:text>
         </span>
-        <span><xsl:text> </xsl:text></span>
+        <span>
+            <xsl:text> </xsl:text>
+        </span>
     </xsl:template>
 
-    <xsl:template match="dri:list[@rend='sherpaList']/dri:item/dri:figure" priority="2" >
+    <xsl:template match="dri:list[@rend='sherpaList']/dri:item/dri:figure" priority="2">
         <a>
-            <xsl:attribute name="href"><xsl:value-of select="@target"/></xsl:attribute>
+            <xsl:attribute name="href">
+                <xsl:value-of select="@target"/>
+            </xsl:attribute>
             <xsl:if test="@title">
-                <xsl:attribute name="title"><xsl:value-of select="@title"/></xsl:attribute>
+                <xsl:attribute name="title">
+                    <xsl:value-of select="@title"/>
+                </xsl:attribute>
             </xsl:if>
             <xsl:if test="@rend">
                 <xsl:attribute name="class">
@@ -130,18 +137,42 @@
             </xsl:if>
 
             <img>
-                <xsl:attribute name="src"><xsl:value-of select="@source"/></xsl:attribute>
-                <xsl:attribute name="alt"><xsl:apply-templates /></xsl:attribute>
-                <xsl:attribute name="border"><xsl:text>none</xsl:text></xsl:attribute>
+                <xsl:attribute name="src">
+                    <xsl:value-of select="@source"/>
+                </xsl:attribute>
+                <xsl:attribute name="alt">
+                    <xsl:apply-templates/>
+                </xsl:attribute>
+                <xsl:attribute name="border">
+                    <xsl:text>none</xsl:text>
+                </xsl:attribute>
             </img>
         </a>
     </xsl:template>
 
-    <xsl:template match="dri:list[@rend='sherpaList']/dri:item/dri:data" priority="2" >
+    <xsl:template match="dri:list[@rend='sherpaList']/dri:item/dri:data" priority="2">
         <xsl:call-template name="standardAttributes">
             <!--<xsl:with-param name="class">pull-left</xsl:with-param>-->
         </xsl:call-template>
         <xsl:apply-templates/>
+    </xsl:template>
+
+    <xsl:template match="dri:item[@rend='input-group']">
+        <div class="control-group ds-form-item">
+            <div class="row">
+                <div class="col-xs-3">
+                    <xsl:apply-templates select="dri:field[@n='type' and @type='select']"/>
+                </div>
+                <div class="col-xs-9">
+                    <div class="input-group">
+                        <xsl:apply-templates select="dri:field[@n='search' and @type='text']"/>
+                        <span class="input-group-btn">
+                            <xsl:apply-templates select="dri:field[@n='lookup' and @type='button']"/>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </xsl:template>
 
 </xsl:stylesheet>

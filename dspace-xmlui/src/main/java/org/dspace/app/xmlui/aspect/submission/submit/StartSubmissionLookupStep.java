@@ -19,6 +19,9 @@ import org.dspace.content.MetadataValue;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.MetadataFieldService;
+import org.dspace.importer.external.service.ImportService;
+import org.dspace.submit.AbstractProcessingStep;
+import org.dspace.utils.DSpace;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
@@ -35,10 +38,17 @@ public class StartSubmissionLookupStep extends AbstractSubmissionStep {
             message("xmlui.Submission.submit.StartSubmissionLookupStep.lookup_help");
     protected static final Message T_submit_lookup =
             message("xmlui.Submission.submit.StartSubmissionLookupStep.submit_lookup");
-    protected static final Message T_submit_publication_item=
-            message("xmlui.Submission.submit.StartSubmissionLookupStep.submit_publication_item");
-    private ItemService itemService = ContentServiceFactory.getInstance().getItemService();
-    MetadataFieldService metadataFieldService = ContentServiceFactory.getInstance().getMetadataFieldService();
+    protected static final Message T_next_import =
+            message("xmlui.Submission.general.submission.next_import");
+    protected static final Message T_next_no_import =
+            message("xmlui.Submission.general.submission.next_no_import");
+    protected static final Message T_complete_import =
+            message("xmlui.Submission.general.submission.complete_import");
+    protected static final Message T_complete_no_import =
+            message("xmlui.Submission.general.submission.complete_no_import");
+
+//    private ItemService itemService = ContentServiceFactory.getInstance().getItemService();
+//    MetadataFieldService metadataFieldService = ContentServiceFactory.getInstance().getMetadataFieldService();
 
     @Override
     public List addReviewSection(List reviewList) throws SAXException, WingException, UIException, SQLException, IOException, AuthorizeException {
@@ -54,6 +64,7 @@ public class StartSubmissionLookupStep extends AbstractSubmissionStep {
         pageMeta.addTrail().addContent(T_submission_trail);
 
         pageMeta.addMetadata("javascript", null, "handlebars", true).addContent("../../static/handlebars/handlebars.js");
+        pageMeta.addMetadata("javascript", null, "helpers", true).addContent("../../static/handlebars/helpers.js");
         pageMeta.addMetadata("javascript", null, "submission-lookup", true).addContent("../../static/js/submission-lookup.js");
         pageMeta.addMetadata("stylesheet", "screen", "datatables", true).addContent("../../static/Datatables/DataTables-1.8.0/media/css/datatables.css");
         pageMeta.addMetadata("javascript", "static", "datatables", true).addContent("static/Datatables/DataTables-1.8.0/media/js/jquery.dataTables.min.js");
@@ -73,51 +84,61 @@ public class StartSubmissionLookupStep extends AbstractSubmissionStep {
 
         form.addItem().addContent(T_lookup_help);
 
-        Item item = form.addItem("lookup-group","input-group");
+        Item item = form.addItem("lookup-group", "input-group");
+        Select select = item.addSelect("type"/*, "form-control"*/);
 
-        item.addText("search");
-        item.addButton("lookup").setValue(T_submit_lookup);
+        ImportService importService = new DSpace().getServiceManager().getServiceByName("importService", ImportService.class);
 
-        org.dspace.content.Item submissionItem = submission.getItem();
-
-        java.util.List<MetadataValue> pubmedId = itemService.getMetadata(submissionItem, "dc", "identifier", "other", org.dspace.content.Item.ANY);
-
-        if(pubmedId.size()>0){
-
-            form.addItem("publication-header","page-header").addContent(T_submit_publication_item);
-
-            java.util.List<MetadataValue> titles = itemService.getMetadata(submissionItem,"dc","title",null,org.dspace.content.Item.ANY);
-
-            if(titles.size()>0){
-                form.addItem("publication-title", "bold").addContent(titles.get(0).getValue());
-            }
-
-            java.util.List<MetadataValue> authors = itemService.getMetadata(submissionItem,"dc", "contributor", "author", org.dspace.content.Item.ANY);
-
-            if(authors.size()>0){
-                StringBuilder builder = new StringBuilder();
-
-                for (int i = 0;i<authors.size();i++) {
-                    builder.append(authors.get(i).getValue());
-
-                    if(i+1<authors.size()){
-                        builder.append(", ");
-                    }
-                }
-
-                if(builder.length()>150){
-                    builder.setLength(147);
-                    builder.append("...");
-                }
-                form.addItem().addContent(builder.toString());
-            }
+        for(String importUrl : importService.getImportUrls()) {
+            select.addOption(importUrl, message("xmlui.Submission.submit.LookupStep." + importUrl));
         }
+        item.addText("search"/*, "form-control"*/);
+        item.addButton("lookup"/*, "btn btn-secondary"*/).setValue(T_submit_lookup);
 
 
         div.addDivision("lookup-modal");
 
-        div.addHidden("publication_id");
-
         addControlButtons(form);
     }
+
+    /**
+     * Adds the "<-Previous", "Save/Cancel" and "Next->" buttons
+     * to a given form.  This method ensures that the same
+     * default control/paging buttons appear on each submission page.
+     * <P>
+     * Note: A given step may define its own buttons as necessary,
+     * and not call this method (since it must be explicitly invoked by
+     * the step's addBody() method)
+     *
+     * @param controls
+     *          The List which will contain all control buttons
+     */
+    @Override
+    public void addControlButtons(List controls)
+            throws WingException
+    {
+        Item actions = controls.addItem();
+
+        // only have "<-Previous" button if not first step
+        if(!isFirstStep())
+        {
+            actions.addButton(AbstractProcessingStep.PREVIOUS_BUTTON).setValue(T_previous);
+        }
+
+        // always show "Save/Cancel"
+        actions.addButton(AbstractProcessingStep.CANCEL_BUTTON).setValue(T_save);
+
+        // If last step, show "Complete Submission"
+        if(isLastStep())
+        {
+            actions.addButton(AbstractProcessingStep.NEXT_BUTTON).setValue(T_complete_import);
+            actions.addButton(AbstractProcessingStep.NEXT_BUTTON).setValue(T_complete_no_import);
+        }
+        else // otherwise, show "Next->"
+        {
+            actions.addButton(AbstractProcessingStep.NEXT_BUTTON, "hidden").setValue(T_next_import);
+            actions.addButton(org.dspace.submit.step.XMLUIStartSubmissionLookupStep.NEXT_NO_IMPORT_BUTTON).setValue(T_next_no_import);
+        }
+    }
+
 }

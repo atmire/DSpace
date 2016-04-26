@@ -16,6 +16,7 @@ import org.dspace.content.Item;
 import org.dspace.importer.external.MetadataSourceException;
 import org.dspace.importer.external.Query;
 import org.dspace.importer.external.datamodel.ImportRecord;
+import org.dspace.importer.external.metadatamapping.MetadataFieldConfig;
 import org.dspace.importer.external.metadatamapping.MetadataFieldMapping;
 import org.dspace.importer.external.metadatamapping.service.GenerateQueryService;
 import org.jaxen.JaxenException;
@@ -65,7 +66,8 @@ public class ImportMetadataSourceServiceImpl extends org.dspace.importer.externa
     }
 
     @Override
-    public ImportRecord getRecord(String id) throws MetadataSourceException {
+    public ImportRecord getRecord(String publicationId) throws MetadataSourceException {
+        String id = retrieveId(publicationId);
         return retry(new GetRecord(id));
     }
 
