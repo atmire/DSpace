@@ -9,7 +9,9 @@ package org.dspace.app.bulkedit;
 
 import org.dspace.content.Item;
 import org.dspace.content.Collection;
+import org.dspace.core.Context;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -103,6 +105,21 @@ public class BulkEditChange
         complete = new ArrayList<>();
         oldMappedCollections = new ArrayList<>();
         newMappedCollections = new ArrayList<>();
+    }
+
+    public void reloadEntities(Context context) throws SQLException
+    {
+        for(Collection oldColl : oldMappedCollections)
+        {
+            oldColl = context.reloadEntity(oldColl);
+        }
+        for(Collection newColl : newMappedCollections)
+        {
+            newColl = context.reloadEntity(newColl);
+        }
+        item = context.reloadEntity(item);
+        oldOwningCollection = context.reloadEntity(oldOwningCollection);
+        newOwningCollection = context.reloadEntity(newOwningCollection);
     }
 
     /**
