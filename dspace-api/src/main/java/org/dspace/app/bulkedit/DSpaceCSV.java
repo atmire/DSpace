@@ -7,6 +7,7 @@
  */
 package org.dspace.app.bulkedit;
 
+import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.authority.AuthorityValue;
 import org.dspace.authority.factory.AuthorityServiceFactory;
@@ -24,6 +25,7 @@ import org.dspace.content.authority.Choices;
 import org.dspace.core.Context;
 import org.dspace.services.factory.DSpaceServicesFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -112,136 +114,53 @@ public class DSpaceCSV implements Serializable
         // Initialise the class
         init();
 
-        // Open the CSV file
-        BufferedReader input = null;
+        // Initialize the CSV lines
+        initCSV(f);
+    }
+
+    private void initCSV(File csvFile) throws IOException
+    {
+        CSVReader reader = null;
         try
         {
-            input = new BufferedReader(new InputStreamReader(new FileInputStream(f),"UTF-8"));
+            reader = new CSVReader(new InputStreamReader(new FileInputStream(csvFile), StandardCharsets.UTF_8), fieldSeparator.charAt(0));
+            List<String[]> items = reader.readAll();
+            headings = new LinkedList<>(Arrays.asList(items.get(0)));
 
-            // Read the heading line
-            String head = input.readLine();
-            String[] headingElements = head.split(escapedFieldSeparator);
-            int columnCounter = 0;
-            for (String element : headingElements)
+            int idIndex = headings.indexOf("id");
+            if (idIndex != -1)
             {
-                columnCounter++;
-
-                // Remove surrounding quotes if there are any
-                if ((element.startsWith("\"")) && (element.endsWith("\"")))
+                for (String[] item : items.subList(1, items.size()))
                 {
-                    element = element.substring(1, element.length() - 1);
-                }
-
-                // Store the heading
-                if ("collection".equals(element))
-                {
-                    // Store the heading
-                    headings.add(element);
-                }
-                // Store the action
-                else if ("action".equals(element))
-                {
-                    // Store the heading
-                    headings.add(element);
-                }
-                else if (!"id".equals(element))
-                {
-                    String authorityPrefix = "";
-                    AuthorityValue authorityValueType = authorityValueService.getAuthorityValueType(element);
-                    if (authorityValueType != null) {
-                        String authorityType = authorityValueType.getAuthorityType();
-                        authorityPrefix = element.substring(0, authorityType.length() + 1);
-                        element = element.substring(authorityPrefix.length());
+                    DSpaceCSVLine line;
+                    String id = item[idIndex];
+                    if ("+".equals(id))
+                    {
+                        line = new DSpaceCSVLine();
+                    }
+                    else
+                    {
+                        line = new DSpaceCSVLine(UUID.fromString(id));
                     }
 
-                    // Verify that the heading is valid in the metadata registry
-                    String[] clean = element.split("\\[");
-                    String[] parts = clean[0].split("\\.");
-
-                    if (parts.length < 2) {
-                        throw new MetadataImportInvalidHeadingException(element,
-                                                                        MetadataImportInvalidHeadingException.ENTRY,
-                                                                        columnCounter);
-                    }
-
-                    String metadataSchema = parts[0];
-                    String metadataElement = parts[1];
-                    String metadataQualifier = null;
-                    if (parts.length > 2) {
-                        metadataQualifier = parts[2];
-                    }
-
-                    // Check that the scheme exists
-                    MetadataSchema foundSchema = metadataSchemaService.find(c, metadataSchema);
-                    if (foundSchema == null) {
-                        throw new MetadataImportInvalidHeadingException(clean[0],
-                                                                        MetadataImportInvalidHeadingException.SCHEMA,
-                                                                        columnCounter);
-                    }
-
-                    // Check that the metadata element exists in the schema
-                    MetadataField foundField = metadataFieldService.findByElement(c, foundSchema, metadataElement, metadataQualifier);
-                    if (foundField == null) {
-                        throw new MetadataImportInvalidHeadingException(clean[0],
-                                                                        MetadataImportInvalidHeadingException.ELEMENT,
-                                                                        columnCounter);
-                    }
-
-                    // Store the heading
-                    headings.add(authorityPrefix + element);
-                }
-            }
-
-            // Read each subsequent line
-            StringBuilder lineBuilder = new StringBuilder();
-            String lineRead;
-
-            while (StringUtils.isNotBlank(lineRead = input.readLine()))
-            {
-                if (lineBuilder.length() > 0) {
-                    // Already have a previously read value - add this line
-                    lineBuilder.append("\n").append(lineRead);
-
-                    // Count the number of quotes in the buffer
-                    int quoteCount = 0;
-                    for (int pos = 0; pos < lineBuilder.length(); pos++) {
-                        if (lineBuilder.charAt(pos) == '"') {
-                            quoteCount++;
+                    for (int i = 0; i < headings.size(); i++)
+                    {
+                        String heading = headings.get(i);
+                        if (!heading.equals("id"))
+                        {
+                            line.add(heading, item[i]);
                         }
                     }
-
-                    if (quoteCount % 2 == 0) {
-                        // Number of quotes is a multiple of 2, add the item
-                        addItem(lineBuilder.toString());
-                        lineBuilder = new StringBuilder();
-                    }
-                } else if (lineRead.indexOf('"') > -1) {
-                    // Get the number of quotes in the line
-                    int quoteCount = 0;
-                    for (int pos = 0; pos < lineRead.length(); pos++) {
-                        if (lineRead.charAt(pos) == '"') {
-                            quoteCount++;
-                        }
-                    }
-
-                    if (quoteCount % 2 == 0) {
-                        // Number of quotes is a multiple of 2, add the item
-                        addItem(lineRead);
-                    } else {
-                        // Uneven quotes - add to the buffer and leave for later
-                        lineBuilder.append(lineRead);
-                    }
-                } else {
-                    // No previously read line, and no quotes in the line - add item
-                    addItem(lineRead);
+                    lines.add(line);
                 }
+                headings.remove(idIndex);
             }
         }
         finally
         {
-            if (input != null)
+            if(reader != null)
             {
-                input.close();
+                reader.close();
             }
         }
     }
@@ -617,6 +536,7 @@ public class DSpaceCSV implements Serializable
      */
     public final String[] getCSVLinesAsStringArray()
     {
+        counter = lines.size();
         // Create the headings line
         String[] csvLines = new String[counter + 1];
         csvLines[0] = "id" + fieldSeparator + "collection";

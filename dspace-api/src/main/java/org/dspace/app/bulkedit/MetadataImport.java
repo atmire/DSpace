@@ -246,6 +246,8 @@ public class MetadataImport
                     // Only record if changes have been made
                     if (whatHasChanged.hasChanges())
                     {
+                        // Commit changes to the object
+                        c.commit();
                         changes.add(whatHasChanged);
                     }
                 }
@@ -390,12 +392,21 @@ public class MetadataImport
                         }
 
                         // Commit changes to the object
-//                        c.commit();
+                        c.commit();
                         whatHasChanged.setItem(item);
+
                     }
 
                     // Record the changes
                     changes.add(whatHasChanged);
+                }
+
+            }
+
+            if(change)
+            {
+                for (BulkEditChange bechange : changes) {
+                    bechange.reloadEntities(c);
                 }
             }
         }
@@ -405,7 +416,7 @@ public class MetadataImport
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
 
         // Return the changes
