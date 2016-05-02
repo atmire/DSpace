@@ -7,26 +7,16 @@
  */
 package org.dspace.authority;
 
-import org.dspace.authority.indexer.AuthorityIndexerInterface;
-import org.dspace.authority.indexer.AuthorityIndexingService;
-import org.apache.log4j.Logger;
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
-import org.apache.solr.client.solrj.response.FacetField;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrInputDocument;
-import org.dspace.authorize.AuthorizeException;
-import org.dspace.content.Item;
-import org.dspace.core.ConfigurationManager;
-import org.dspace.core.Context;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.net.*;
+import java.util.*;
+import org.apache.log4j.*;
+import org.apache.solr.client.solrj.*;
+import org.apache.solr.client.solrj.impl.*;
+import org.apache.solr.client.solrj.response.*;
+import org.apache.solr.common.*;
+import org.dspace.authority.indexer.*;
+import org.dspace.core.*;
 
 /**
  *
@@ -109,6 +99,17 @@ public class AuthoritySolrServiceImpl implements AuthorityIndexingService, Autho
             log.error("Authority solr is not correctly configured, check \"solr.authority.server\" property in the dspace.cfg", e);
         }
         return solrReturn;
+    }
+
+    @Override
+    public void deleteAuthorityValueById(String id) throws Exception {
+        try{
+            getSolr().deleteByQuery("id:\"" +id + "\"");
+            commit();
+        } catch (Exception e){
+            log.error("Error while cleaning authority solr server index", e);
+            throw new Exception(e);
+        }
     }
 
     /**

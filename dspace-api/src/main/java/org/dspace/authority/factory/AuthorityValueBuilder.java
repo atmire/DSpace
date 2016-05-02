@@ -25,6 +25,7 @@ public abstract class AuthorityValueBuilder<T extends AuthorityValue>
     public T buildAuthorityValue(SolrDocument document)
     {
         T authorityValue = buildAuthorityValue();
+        authorityValue.setSolrId(String.valueOf(document.getFieldValue("id")));
         authorityValue.setField(String.valueOf(document.getFieldValue("field")));
         authorityValue.setValue(String.valueOf(document.getFieldValue("value")));
         authorityValue.setDeleted((Boolean) document.getFieldValue("deleted"));

@@ -24,6 +24,10 @@ import org.joda.time.format.*;
 public abstract class AuthorityValue {
 
     /**
+     * The solr id field
+     */
+    private String solrId;
+    /**
      * The metadata field that this authority value is for
      */
     private String field;
@@ -52,6 +56,14 @@ public abstract class AuthorityValue {
     }
 
     public abstract String getId();
+
+    public String getSolrId() {
+        return solrId;
+    }
+
+    public void setSolrId(String solrId) {
+        this.solrId = solrId;
+    }
 
     public String getField() {
         return field;
@@ -222,6 +234,10 @@ public abstract class AuthorityValue {
             return false;
         }
         if (value != null ? !value.equals(that.value) : that.value != null) {
+            return false;
+        }
+
+        if (solrId != null ? !solrId.equals(that.solrId) : that.solrId != null) {
             return false;
         }
 

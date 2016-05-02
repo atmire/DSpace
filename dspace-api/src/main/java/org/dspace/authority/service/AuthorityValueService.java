@@ -69,4 +69,6 @@ public interface AuthorityValueService
      * @throws AuthorizeException
      */
     public void updateItemMetadataWithAuthority(Context context, Item item, MetadataValue value, AuthorityValue authorityValue) throws SQLException, AuthorizeException;
+
+    public void deleteAuthorityValueById(String id) throws Exception;
 }

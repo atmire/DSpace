@@ -222,4 +222,9 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
         value.setAuthority(authorityValue.getId());
         ContentServiceFactory.getInstance().getItemService().update(context, item);
     }
+
+    @Override
+    public void deleteAuthorityValueById(String id) throws Exception {
+        indexingService.deleteAuthorityValueById(id);
+    }
 }
