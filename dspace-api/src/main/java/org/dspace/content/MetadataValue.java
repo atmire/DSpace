@@ -63,7 +63,7 @@ public class MetadataValue implements ReloadableEntity<Integer>
     @Column(name = "confidence")
     private int confidence = -1;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade={CascadeType.PERSIST})
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="dspace_object_id")
     protected DSpaceObject dSpaceObject;
 

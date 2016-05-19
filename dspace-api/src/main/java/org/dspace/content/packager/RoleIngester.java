@@ -379,6 +379,7 @@ public class RoleIngester implements PackageIngester
             // may still be rolled back if a subsequent error occurs
             groupService.update(context, groupObj);
 
+            parent = intermediateCommit(context, parent);
         }
 
         // Go back and add Group members, now that all groups exist
@@ -421,7 +422,15 @@ public class RoleIngester implements PackageIngester
             // Actually update Group info in DB
             // NOTE: Group info may still be rolled back if a subsequent error occurs
             groupService.update(context, groupObj);
+
+            parent = intermediateCommit(context, parent);
+
         }
+    }
+
+    private DSpaceObject intermediateCommit(Context context, DSpaceObject dso) throws SQLException {
+        context.commit();
+        return context.reloadEntity(dso);
     }
 
     /**

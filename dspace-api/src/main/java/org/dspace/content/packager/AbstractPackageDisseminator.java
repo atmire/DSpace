@@ -96,6 +96,8 @@ public abstract class AbstractPackageDisseminator
         {
             // Disseminate the object using provided PackageDisseminator
             disseminate(context, dso, params, pkgFile);
+            context.clearCache();
+            dso = context.reloadEntity(dso);
         }
 
         //check if package was disseminated
@@ -124,6 +126,7 @@ public abstract class AbstractPackageDisseminator
                         //Also find all Items in this Collection and disseminate
                         Collection collection = (Collection) dso;
                         Iterator<Item> iterator = itemService.findByCollection(context, collection);
+
                         while(iterator.hasNext())
                         {
                             Item item = iterator.next();
@@ -131,27 +134,35 @@ public abstract class AbstractPackageDisseminator
                             //disseminate all items (recursively!)
                             String childFileName = pkgDirectory + PackageUtils.getPackageName(item, fileExtension);
                             disseminateAll(context, item, params, new File(childFileName));
+                            collection = context.reloadEntity(collection);
                         }
+
+                        context.commit();
 
                         break;
                     case Constants.COMMUNITY :
+                        dso = context.reloadEntity(dso);
                         //Also find all SubCommunities in this Community and disseminate
                         Community community = (Community) dso;
                         List<Community> subcommunities = community.getSubcommunities();
                         for (Community subcommunity : subcommunities)
                         {
+                            subcommunity = context.reloadEntity(subcommunity);
                             //disseminate all sub-communities (recursively!)
                             String childFileName = pkgDirectory + PackageUtils.getPackageName(subcommunity, fileExtension);
                             disseminateAll(context, subcommunity, params, new File(childFileName));
                         }
 
+                        community = context.reloadEntity(community);
+
                         //Also find all Collections in this Community and disseminate
                         List<Collection> collections = community.getCollections();
-                        for(int i=0; i<collections.size(); i++)
+                        for(Collection coll : collections)
                         {
+                            coll = context.reloadEntity(coll);
                             //disseminate all collections (recursively!)
-                            String childFileName = pkgDirectory + PackageUtils.getPackageName(collections.get(i), fileExtension);
-                            disseminateAll(context, collections.get(i), params, new File(childFileName));
+                            String childFileName = pkgDirectory + PackageUtils.getPackageName(coll, fileExtension);
+                            disseminateAll(context, coll, params, new File(childFileName));
                         }
 
                         break;
@@ -160,6 +171,7 @@ public abstract class AbstractPackageDisseminator
                         List<Community> topCommunities = communityService.findAllTop(context);
                         for (Community topCommunity : topCommunities)
                         {
+                            topCommunity = context.reloadEntity(topCommunity);
                             //disseminate all top-level communities (recursively!)
                             String childFileName = pkgDirectory + PackageUtils.getPackageName(topCommunity, fileExtension);
                             disseminateAll(context, topCommunity, params, new File(childFileName));

@@ -14,8 +14,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -23,6 +22,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.*;
+import org.dspace.content.Collection;
 import org.dspace.content.crosswalk.CrosswalkException;
 import org.dspace.content.crosswalk.MetadataValidationException;
 import org.dspace.content.factory.ContentServiceFactory;
@@ -33,6 +33,7 @@ import org.dspace.core.Context;
 import org.dspace.core.LogManager;
 import org.dspace.handle.factory.HandleServiceFactory;
 import org.dspace.handle.service.HandleService;
+import org.dspace.utils.DSpace;
 import org.dspace.workflow.WorkflowException;
 import org.dspace.workflow.factory.WorkflowServiceFactory;
 import org.jdom.Element;
@@ -276,7 +277,7 @@ public abstract class AbstractMETSIngester extends AbstractPackageIngester
                     }
                 }
             }//end if dso not null
-            
+
             return dso;
         }
         catch (SQLException se)
@@ -463,6 +464,9 @@ public abstract class AbstractMETSIngester extends AbstractPackageIngester
         // Next, crosswalk techMD, digiprovMD, rightsMD
         manifest.crosswalkObjectOtherAdminMD(context, params, dso, callback);
 
+        reloadPackageReferences(context);
+        dso = context.reloadEntity(dso);
+
         // -- Step 4 --
         // Run our Descriptive metadata (dublin core, etc) crosswalks!
         crosswalkObjectDmd(context, dso, manifest, callback, manifest
@@ -560,6 +564,8 @@ public abstract class AbstractMETSIngester extends AbstractPackageIngester
         // Update the object to make sure all changes are committed
         PackageUtils.updateDSpaceObject(context, dso);
 
+        dso = this.intermediateCommit(context, dso);
+
         return dso;
     }
 
@@ -649,6 +655,9 @@ public abstract class AbstractMETSIngester extends AbstractPackageIngester
         // Next, crosswalk techMD, digiprovMD, rightsMD
         manifest.crosswalkObjectOtherAdminMD(context, params, dso, callback);
 
+        reloadPackageReferences(context);
+        dso = context.reloadEntity(dso);
+
         // -- Step 4 --
         // Add all content files as bitstreams on new DSpace Object
         if (dso.getType() == Constants.ITEM)
@@ -717,6 +726,8 @@ public abstract class AbstractMETSIngester extends AbstractPackageIngester
 
         // Update the object to make sure all changes are committed
         PackageUtils.updateDSpaceObject(context, dso);
+
+        dso = this.intermediateCommit(context, dso);
 
         return dso;
     }
@@ -1475,6 +1486,11 @@ public abstract class AbstractMETSIngester extends AbstractPackageIngester
                                         + path + "' not included in the zip.");
             }
         }
+    }
+
+    private DSpaceObject intermediateCommit(Context context, DSpaceObject dso) throws SQLException {
+        context.commit();
+        return context.reloadEntity(dso);
     }
 
 

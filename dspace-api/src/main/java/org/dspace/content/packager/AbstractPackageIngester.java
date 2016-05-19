@@ -10,11 +10,7 @@ package org.dspace.content.packager;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.log4j.Logger;
 
@@ -31,6 +27,7 @@ import org.dspace.core.Context;
 import org.dspace.core.LogManager;
 import org.dspace.handle.factory.HandleServiceFactory;
 import org.dspace.handle.service.HandleService;
+import org.dspace.utils.DSpace;
 import org.dspace.workflow.WorkflowException;
 
 /**
@@ -191,6 +188,11 @@ public abstract class AbstractPackageIngester
                         // (Just in case this child is only *mapped* to the current Collection)
                         ingestAll(context, null, childPkg, params, license);
 
+                        // Make sure the dso is reloaded
+                        // Because of the recursion it's possible that the context was committed
+                        // without reloading the dso, which can lead to LazyInitializationException
+                        dso = context.reloadEntity(dso);
+
                         // A Collection can map to Items that it does not "own".
                         // If a Collection package has an Item as a child, it
                         // should be mapped regardless of ownership.
@@ -314,6 +316,11 @@ public abstract class AbstractPackageIngester
                         // (it will therefore be looked up in the package itself)
                         replaceAll(context, null, childPkg, params);
 
+                        // Make sure the dso is reloaded
+                        // Because of the recursion it's possible that the context was committed
+                        // without reloading the dso, which can lead to LazyInitializationException
+                        replacedDso = context.reloadEntity(replacedDso);
+
                         // A Collection can map to Items that it does not "own".
                         // If a Collection package has an Item as a child, it
                         // should be mapped regardless of ownership.
@@ -343,7 +350,6 @@ public abstract class AbstractPackageIngester
         return getIngestedList();
     }
 
-   
     /**
      * During ingestion process, some submission information packages (SIPs)
      * may reference other packages to be ingested (recursively).
@@ -446,5 +452,19 @@ public abstract class AbstractPackageIngester
             return (List) coll;
         else
             return new ArrayList(coll);
-    }   
+    }
+
+    protected void reloadPackageReferences(Context context) throws SQLException
+    {
+        if(packageReferences.size() > 0)
+        {
+            Map<DSpaceObject, List<String>> newPackageReferences = new HashMap<>();
+            for (DSpaceObject packageReference : packageReferences.keySet())
+            {
+                List old = packageReferences.get(packageReference);
+                newPackageReferences.put(context.reloadEntity(packageReference), old);
+            }
+            packageReferences = newPackageReferences;
+        }
+    }
 }
