@@ -1,0 +1,10 @@
+<settings>
+	<profiles/>
+	<servers>
+	    <server>
+            <id>atmire.com-releases</id>
+            <username>${env.CI_ATMIRE_USERNAME}</username>
+            <password>${env.CI_ATMIRE_PASSWORD}</password>
+	    </server>
+    </servers>
+</settings>

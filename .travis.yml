@@ -4,6 +4,10 @@ sudo: false
 env: 
   # Give Maven 1GB of memory to work with
   - MAVEN_OPTS=-Xmx1024M
+  global:
+    - secure: "PhknS/Dpf1qHBMatyE6gYbpDhEbe9DiV3YJmTz2bVmxSAjwmWaF1sq6sdkmBX0+9zjIJC4bNE8x5DuMqlewMxiqfuoSsj53pZnzqB5GKwm5HhvdgitjwczgknW5l02OMD+AQmijZl/7LZjl2fWZ9JrT9UtXD5g6viU636Z6HoQc="
+    - secure: "UwnWxASGhizdJpALdRDMmbd0o9g+fqGlSu50tJya7lycuUpj8tcdwMtNAFF9KR8t7p1Q3Gep05ZcX0Nh2Ef4ehfEeInnmQ7YoJkKog5RCJQqkd1ZcOZrdNRbU+5AqtL5rEAjXmbTW7GOHOJS+Nbcll4rvheUqRH31KUtm2WU7DM="
+
 
 # Install prerequisites for building Mirage2 more rapidly
 before_install:
@@ -29,6 +33,7 @@ branches:
     only:
         - master
         - mospace-5_x
+        - lso-1609-get-travis-ci-working-with-atmire-maven-repository
 
 # Skip install stage, as we'll do it below
 install: "echo 'Skipping install stage, dependencies will be downloaded during build and test stages.'"
@@ -44,12 +49,12 @@ script:
   #        -P !dspace => SKIP full DSpace assembly (will do below)
   #        -B => Maven batch/non-interactive mode (recommended for CI)
   #        -V => Display Maven version info before build
-  - "mvn clean install license:check -Dmaven.test.skip=false -P !dspace -B -V"
+    - "mvn clean install license:check -Dmaven.test.skip=false -P !dspace -B -V --settings settings.xml"
   # 2. [Assemble DSpace] Ensure assembly process works (from [src]/dspace/), including Mirage 2
   #        -Dmirage2.on=true => Build Mirage2
   #        -Dmirage2.deps.included=false => Don't include Mirage2 build dependencies (We installed them in before_install)
   #        -P !assembly => SKIP the actual building of [src]/dspace/dspace-installer (as it can be memory intensive)
-  - "cd dspace && mvn package -Dmirage2.on=true -Dmirage2.deps.included=false -P !assembly -B -V"
+  - "cd dspace && mvn package -Dmirage2.on=true -Dmirage2.deps.included=false -P !assembly -B -V --settings settings.xml"
 notifications:
   hipchat:
     rooms:
