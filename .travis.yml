@@ -2,6 +2,7 @@ language: java
 sudo: false
 
 env:
+  global:
   # Give Maven 1GB of memory to work with
   - MAVEN_OPTS=-Xmx1024M
   # use these encrypted tokens for access to atmire's private Maven repository
