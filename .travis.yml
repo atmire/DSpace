@@ -50,12 +50,12 @@ script:
   #        -P !dspace => SKIP full DSpace assembly (will do below)
   #        -B => Maven batch/non-interactive mode (recommended for CI)
   #        -V => Display Maven version info before build
-  - "mvn clean install license:check -Dmaven.test.skip=false -P !dspace -B -V --settings settings.xml"
+  - "mvn clean install license:check -Dmaven.test.skip=false -P !dspace -B -V --settings ./settings.xml"
   # 2. [Assemble DSpace] Ensure assembly process works (from [src]/dspace/), including Mirage 2
   #        -Dmirage2.on=true => Build Mirage2
   #        -Dmirage2.deps.included=false => Don't include Mirage2 build dependencies (We installed them in before_install)
   #        -P !assembly => SKIP the actual building of [src]/dspace/dspace-installer (as it can be memory intensive)
-  - "mvn package -Dmirage2.on=true -Dmirage2.deps.included=false -P !assembly -B -V --settings settings.xml"
+  - "mvn package -Dmirage2.on=true -Dmirage2.deps.included=false -P !assembly -B -V --settings ./settings.xml"
 
 notifications:
   hipchat:
