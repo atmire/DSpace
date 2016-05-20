@@ -10,6 +10,8 @@
     <mirrors>
         <mirror>
             <id>atmire.com-releases</id>
+            <name>atmire.com-releases</name>
+            <url>https://atmire.com/artifactory/atmire.com-releases/</url>
             <mirrorOf>!*</mirrorOf>
         </mirror>
     </mirrors>
