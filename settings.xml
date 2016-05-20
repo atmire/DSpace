@@ -7,4 +7,10 @@
             <password>${env.CI_ATMIRE_PASSWORD}</password>
 	    </server>
     </servers>
+    <mirrors>
+        <mirror>
+            <id>atmire.com-releases</id>
+            <mirrorOf>!*</mirrorOf>
+        </mirror>
+    </mirrors>
 </settings>
