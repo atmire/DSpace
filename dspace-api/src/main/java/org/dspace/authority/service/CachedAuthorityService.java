@@ -24,7 +24,7 @@ import org.dspace.core.*;
  */
 public interface CachedAuthorityService {
     /**
-     * Index all authorities that are available in an item's metadata.
+     * Index all authorities that are available in the metadata of the provided item.
      * @param context
      * the DSpace context
      * @param item
@@ -105,7 +105,7 @@ public interface CachedAuthorityService {
     public AuthorityValue findAuthorityValueByID(Context context, String authorityID);
 
     /**
-     * Find authority values by their value. The value of the authority values exactly match the provided value.
+     * Find authority values by their value. An authority is only returned if the authority's value exactly matches the provided value.
      * @param context
      * the dspace context
      * @param field
@@ -161,7 +161,7 @@ public interface CachedAuthorityService {
     public AuthorityValue storeMetadataInAuthorityCache(Context context, Item item, String metadataField, MetadataValue value);
 
     /**
-     * Replace an item's DCValue with this authority
+     * Replace an item's metadata value with this authority
      * @param context
      * the DSpace context
      * @param item

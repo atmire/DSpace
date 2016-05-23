@@ -24,7 +24,8 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Consumer that takes care of the indexing of authority controlled metadata fields for installed/updated items
+ * Consumer that takes care of the indexing of authority controlled metadata fields for all items,
+ * including workspace and workflow items.
  *
  * @author Antoine Snyers (antoine at atmire.com)
  * @author Kevin Van de Velde (kevin at atmire dot com)

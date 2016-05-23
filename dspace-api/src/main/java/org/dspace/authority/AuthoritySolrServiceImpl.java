@@ -90,7 +90,7 @@ public class AuthoritySolrServiceImpl implements AuthorityIndexingService, Autho
     }
 
     /**
-     * Commit all changes to the authority index since the last commit.
+     * Save all changes since the last commit in the authority index.
      */
     @Override
     public void commit() {

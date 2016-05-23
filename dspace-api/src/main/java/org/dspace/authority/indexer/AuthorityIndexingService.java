@@ -33,7 +33,7 @@ public interface AuthorityIndexingService {
     public void cleanIndex() throws Exception;
 
     /**
-     * Commit all changes to the authority index since the last commit.
+     * Save all changes since the last commit in the authority index.
      */
     public void commit();
 

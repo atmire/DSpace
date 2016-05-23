@@ -64,7 +64,8 @@ public class OrcidAuthorityValueBuilder extends PersonAuthorityValueBuilder<Orci
     }
 
     /**
-     * Build an authority value with the provided solr document
+     * Build an authority value with the provided solr document. Only orcid authority specific fields are handled in this method,
+     * the super method is used to set General fields.
      * @param document
      * The solr document of the authority value
      * @return

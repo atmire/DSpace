@@ -37,7 +37,8 @@ public class PersonAuthorityValueBuilder<T extends PersonAuthorityValue> extends
     }
 
     /**
-     * Build an authority value with the provided solr document
+     * Build an authority value with the provided solr document. Only person authority specific fields are handled in this method,
+     * the super method is used to set General fields.
      * @param document
      * The solr document of the authority value
      * @return

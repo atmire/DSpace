@@ -18,19 +18,25 @@ public abstract class AuthorityValueFactory
     public abstract AuthorityValue createAuthorityValue(String field, String content);
 
     /**
-     * Create a new authority value with the provided identifier. The idenitier can be an identifier from an external system (ORCID)
+     * Create a new authority value with the provided identifier. The identifier can be an identifier from an external system (ORCID)
      * or NULL in case of a local value.
      * @param type
+     * the authority type
      * @param identifier
+     * the external identifier
      * @return
+     * the created AuthorityValue
      */
     public abstract AuthorityValue createAuthorityValue(String type, String identifier, String content);
 
     /**
-     * Load an intsance from an authority value from the solr document
+     * Load an instance of an authority value from a provided solr document
      * @param type
+     * the authority type
      * @param solrDocument
+     * the solr document
      * @return
+     * the created AuthorityValue
      */
     public abstract AuthorityValue loadAuthorityValue(String type, SolrDocument solrDocument);
 

@@ -39,7 +39,7 @@ public abstract class AuthorityValueBuilder<T extends AuthorityValue>
 
     /**
      * Build an authority value with the provided solr document, this method will set the general fields,
-     * authority value specifid fields must be handled by overriding this method.
+     * authority value specific fields must be handled by overriding this method.
      *
      * @param document The solr document from which we will construct our authority value
      */
@@ -80,7 +80,7 @@ public abstract class AuthorityValueBuilder<T extends AuthorityValue>
     }
 
     /**
-     * Query an external source for authority values, returns an empty list of values by default (if not external source is present).
+     * Query an external source for authority values, returns an empty list of values by default (if no external source is present).
      * @param text the query to be sent to the external source
      * @param max the maximum number of results returned.
      * @return a list of authority values returned from the third party source
