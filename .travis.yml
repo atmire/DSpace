@@ -37,7 +37,7 @@ install: "echo 'Skipping install stage, dependencies will be downloaded during b
 script:
   # 0. run mvn help:effective-settings to confirm credentials are in use
   - "mvn help:effective-settings --settings ./settings.xml"
-  - "echo ATMIRE_CI_USER = $ATMIRE_CI_USER"
+  - "echo CI_ATMIRE_USERNAME = $CI_ATMIRE_USERNAME"
   # 1. [Install & Unit Test] Check source code licenses and run source code Unit Tests
   #    (This explicitly skips building the 'dspace' assembly module, since we only want to do that ONCE.)
   #        license:check => Validate all source code license headers
