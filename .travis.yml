@@ -61,5 +61,5 @@ env:
   # Give Maven 1GB of memory to work with
   - MAVEN_OPTS=-Xmx1024M
   # use these encrypted tokens for access to atmire's private Maven repository
-  - secure: PhknS/Dpf1qHBMatyE6gYbpDhEbe9DiV3YJmTz2bVmxSAjwmWaF1sq6sdkmBX0+9zjIJC4bNE8x5DuMqlewMxiqfuoSsj53pZnzqB5GKwm5HhvdgitjwczgknW5l02OMD+AQmijZl/7LZjl2fWZ9JrT9UtXD5g6viU636Z6HoQc=
-  - secure: UwnWxASGhizdJpALdRDMmbd0o9g+fqGlSu50tJya7lycuUpj8tcdwMtNAFF9KR8t7p1Q3Gep05ZcX0Nh2Ef4ehfEeInnmQ7YoJkKog5RCJQqkd1ZcOZrdNRbU+5AqtL5rEAjXmbTW7GOHOJS+Nbcll4rvheUqRH31KUtm2WU7DM=
+  - secure: exONiATp9HEvocvWhlpYN5Yb3UkemjvS6rjXGiXkTMF3Oq099OTamXUpEXYKfRC4+aNeUOHOSKQrHSvBfR3lS4khqfXv53OTup2bGYcAS0R5KatHslU89CfD+p5JsT2ki/lQ1nBmC+V1BU1UbuspxzwKRM00QNXQAF7tfi6gmf8=
+  - secure: aM9RQQDTgdQWZat3pV8vrgALHEi1eNNkaP8ybeZojQ7zE4EdHBkJI7Gf+e2zsz/f8Z1+CxMxePsY0VXDB7pyF8TxXNUPZgBEaFtsP1l7l2m0lxzLQZ45XEeJVPGFaivIf/h2ySZoimv0MoemGxeaKjG0/Il9l/QgUGG5Dfod7rs= 
