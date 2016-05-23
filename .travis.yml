@@ -1,14 +1,6 @@
 language: java
 sudo: false
 
-env:
-  global:
-  # Give Maven 1GB of memory to work with
-  - MAVEN_OPTS=-Xmx1024M
-  # use these encrypted tokens for access to atmire's private Maven repository
-  - secure: PhknS/Dpf1qHBMatyE6gYbpDhEbe9DiV3YJmTz2bVmxSAjwmWaF1sq6sdkmBX0+9zjIJC4bNE8x5DuMqlewMxiqfuoSsj53pZnzqB5GKwm5HhvdgitjwczgknW5l02OMD+AQmijZl/7LZjl2fWZ9JrT9UtXD5g6viU636Z6HoQc=
-  - secure: UwnWxASGhizdJpALdRDMmbd0o9g+fqGlSu50tJya7lycuUpj8tcdwMtNAFF9KR8t7p1Q3Gep05ZcX0Nh2Ef4ehfEeInnmQ7YoJkKog5RCJQqkd1ZcOZrdNRbU+5AqtL5rEAjXmbTW7GOHOJS+Nbcll4rvheUqRH31KUtm2WU7DM=
-
 # Install prerequisites for building Mirage2 more rapidly
 before_install:
   # Install latest Node.js 0.10.x & print version info
@@ -61,4 +53,10 @@ notifications:
   hipchat:
     rooms:
       secure: IJ/e7tbe7xZeC3BAMrQUgKOe9ZoayqhQRLgeCONw1KlcW7Vncq3SXVHyP5p5kssPEgt+7rbRbtoFqwa3seoIxXdW2E4NpOoo6TNYsrJLL1GC3GQAZ6Tqawbw+vnbsjRpBkDFNV9cQQFZaVBkQzRMO6BHVQmOiJ8dLJMxLbmFrgk=
-
+env:
+  global:
+  # Give Maven 1GB of memory to work with
+  - MAVEN_OPTS=-Xmx1024M
+  # use these encrypted tokens for access to atmire's private Maven repository
+  - secure: PhknS/Dpf1qHBMatyE6gYbpDhEbe9DiV3YJmTz2bVmxSAjwmWaF1sq6sdkmBX0+9zjIJC4bNE8x5DuMqlewMxiqfuoSsj53pZnzqB5GKwm5HhvdgitjwczgknW5l02OMD+AQmijZl/7LZjl2fWZ9JrT9UtXD5g6viU636Z6HoQc=
+  - secure: UwnWxASGhizdJpALdRDMmbd0o9g+fqGlSu50tJya7lycuUpj8tcdwMtNAFF9KR8t7p1Q3Gep05ZcX0Nh2Ef4ehfEeInnmQ7YoJkKog5RCJQqkd1ZcOZrdNRbU+5AqtL5rEAjXmbTW7GOHOJS+Nbcll4rvheUqRH31KUtm2WU7DM=
