@@ -128,7 +128,7 @@
                 <xsl:text>', '</xsl:text>
                 <xsl:value-of select="$value"/>
 
-                <xsl:text>', '</xsl:text>
+                <xsl:text>', </xsl:text>
                 <!-- Collection ID for context -->
                 <xsl:choose>
                     <xsl:when test="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='choice'][@qualifier='collection']">
@@ -140,7 +140,7 @@
                         <xsl:text>-1</xsl:text>
                     </xsl:otherwise>
                 </xsl:choose>
-                <xsl:text>');</xsl:text>
+                <xsl:text>);</xsl:text>
             </xsl:attribute>
         </input>
     </xsl:template>

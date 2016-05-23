@@ -7,28 +7,25 @@
  */
 package org.dspace.authority.factory;
 
-import org.dspace.authority.AuthoritySearchService;
-import org.dspace.authority.indexer.AuthorityIndexerInterface;
-import org.dspace.authority.service.AuthorityService;
-import org.dspace.authority.service.AuthorityValueService;
-import org.dspace.content.Item;
-import org.dspace.core.Context;
-import org.dspace.services.factory.DSpaceServicesFactory;
-
-import java.util.List;
+import java.util.*;
+import org.dspace.authority.*;
+import org.dspace.authority.indexer.*;
+import org.dspace.authority.service.*;
+import org.dspace.content.*;
+import org.dspace.core.*;
+import org.dspace.services.factory.*;
 
 /**
  * Abstract factory to get services for the authority package, use AuthorityServiceFactory.getInstance() to retrieve an implementation
  *
  * @author kevinvandevelde at atmire.com
+ * @author philip at atmire.com
  */
 public abstract class AuthorityServiceFactory {
 
-    public abstract AuthorityValueService getAuthorityValueService();
-
     public abstract AuthoritySearchService getAuthoritySearchService();
 
-    public abstract AuthorityService getAuthorityService();
+    public abstract CachedAuthorityService getCachedAuthorityService();
 
     public abstract List<AuthorityIndexerInterface> createAuthorityIndexers(Context context, boolean useCache);
 

@@ -26,18 +26,17 @@ public class DSpaceCSVLine implements Serializable
     /** The elements in this line in a hashtable, keyed by the metadata type */
     private final Map<String, ArrayList> items;
 
-    protected transient final AuthorityService authorityService
-            = AuthorityServiceFactory.getInstance().getAuthorityService();
+    protected transient final CachedAuthorityService cachedAuthorityService = AuthorityServiceFactory.getInstance().getCachedAuthorityService();
+
 
     /** ensuring that the order-sensible columns of the csv are processed in the correct order */
     private transient final Comparator<? super String> headerComparator = new Comparator<String>() {
         @Override
         public int compare(String md1, String md2) {
-            //TODO: FIX THIS ONE
-            // The metadata coming from an external source should be processed after the others
 
-            boolean source1AuthorityControlled = authorityService.isAuthorityControlledField(md1);
-            boolean source2AuthorityControlled = authorityService.isAuthorityControlledField(md2);
+            // The metadata coming from an external source should be processed after the others
+            boolean source1AuthorityControlled = cachedAuthorityService.isAuthorityControlledField(md1);
+            boolean source2AuthorityControlled = cachedAuthorityService.isAuthorityControlledField(md2);
 
             int compare;
             if (!source2AuthorityControlled && source1AuthorityControlled) {

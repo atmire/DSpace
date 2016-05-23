@@ -15,6 +15,7 @@ import java.net.MalformedURLException;
 import java.util.List;
 
 /**
+ * AuthoritySearchService is responsible for search requests to the authority solr core.
  *
  * @author Antoine Snyers (antoine at atmire.com)
  * @author Kevin Van de Velde (kevin at atmire dot com)

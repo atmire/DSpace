@@ -7,9 +7,10 @@ import org.dspace.services.factory.DSpaceServicesFactory;
 import java.util.List;
 
 /**
- * User: kevin (kevin at atmire.com)
- * Date: 7/04/16
- * Time: 16:47
+ * abstract factory to create AuthorityValues
+ *
+ * @author kevinvandevelde at atmire.com
+ * @author philip at atmire.com
  */
 public abstract class AuthorityValueFactory
 {
@@ -39,5 +40,16 @@ public abstract class AuthorityValueFactory
         return DSpaceServicesFactory.getInstance().getServiceManager().getServiceByName("authorityValueFactory", AuthorityValueFactory.class);
     }
 
+    /**
+     * Retrieve external results for the provided authority field with the provided text.
+     * @param field
+     * the authority controlled field
+     * @param text
+     * the text used to find the external results
+     * @param max
+     * the maximum amount of results
+     * @return
+     * a list of authority values containing the external results
+     */
     public abstract List<AuthorityValue> retrieveExternalResults(String field, String text, int max);
 }

@@ -9,8 +9,7 @@ package org.dspace.authority.factory;
 
 import org.dspace.authority.AuthoritySearchService;
 import org.dspace.authority.indexer.AuthorityIndexerInterface;
-import org.dspace.authority.service.AuthorityService;
-import org.dspace.authority.service.AuthorityValueService;
+import org.dspace.authority.service.*;
 import org.dspace.content.Item;
 import org.dspace.core.Context;
 import org.dspace.utils.DSpace;
@@ -22,22 +21,15 @@ import java.util.List;
  * Factory implementation to get services for the authority package, use AuthorityServiceFactory.getInstance() to retrieve an implementation
  *
  * @author kevinvandevelde at atmire.com
+ * @author philip at atmire.com
  */
 public class AuthorityServiceFactoryImpl extends AuthorityServiceFactory {
 
     @Autowired(required = true)
-    private AuthorityValueService authorityValueService;
-
-    @Autowired(required = true)
-    private AuthorityService authorityService;
+    private CachedAuthorityService cachedAuthorityService;
 
     @Autowired(required = true)
     private AuthoritySearchService authoritySearchService;
-
-    @Override
-    public AuthorityValueService getAuthorityValueService() {
-        return authorityValueService;
-    }
 
     @Override
     public AuthoritySearchService getAuthoritySearchService() {
@@ -45,8 +37,8 @@ public class AuthorityServiceFactoryImpl extends AuthorityServiceFactory {
     }
 
     @Override
-    public AuthorityService getAuthorityService() {
-        return authorityService;
+    public CachedAuthorityService getCachedAuthorityService() {
+        return cachedAuthorityService;
     }
 
     @Override

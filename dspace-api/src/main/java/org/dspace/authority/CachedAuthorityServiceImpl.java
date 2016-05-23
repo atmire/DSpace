@@ -6,7 +6,6 @@
  * http://www.dspace.org/license/
  */
 package org.dspace.authority;
-
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
@@ -28,16 +27,14 @@ import org.dspace.core.LogManager;
 import org.springframework.beans.factory.annotation.*;
 
 /**
- * This service contains all methods for using authority values
- *
- * @author Antoine Snyers (antoine at atmire.com)
- * @author Kevin Van de Velde (kevin at atmire dot com)
- * @author Ben Bosman (ben at atmire dot com)
- * @author Mark Diggory (markd at atmire dot com)
+ * @author philip at atmire.com
  */
-public class AuthorityValueServiceImpl implements AuthorityValueService{
+public class CachedAuthorityServiceImpl implements CachedAuthorityService {
 
-    private final Logger log = Logger.getLogger(AuthorityValueServiceImpl.class);
+    private final Logger log = Logger.getLogger(CachedAuthorityServiceImpl.class);
+
+    @Autowired(required = true)
+    protected AuthorityServiceFactory authorityServiceFactory;
 
     @Autowired
     protected AuthorityValueFactory authorityValueFactory;
@@ -48,14 +45,157 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
     @Autowired(required = true)
     protected AuthorityIndexingService indexingService;
 
-    @Autowired(required = true)
-    protected AuthorityService authorityService;
+    /** The prefix of the authority controlled field */
+    protected static final String AC_PREFIX = "authority.controlled.";
 
-    protected AuthorityValueServiceImpl()
-    {
+    protected Set<String> authorityControlled;
 
+    /**
+     * Index all authorities that are available in an item's metadata
+     * @param context
+     * the DSpace context
+     * @param item
+     * The item for which the authorities will be indexed
+     * @throws SQLException
+     * @throws AuthorizeException
+     */
+    @Override
+    public void processAuthorities(Context context, Item item) throws SQLException, AuthorizeException {
+        if(!isConfigurationValid()){
+            //Cannot index, configuration not valid
+            return;
+        }
+
+
+        for (AuthorityIndexerInterface indexers : authorityServiceFactory.createAuthorityIndexers(context, item)) {
+            while (indexers.hasMore())
+            {
+                AuthorityValue authorityValue = indexers.nextValue();
+                if(authorityValue != null)
+                    indexingService.indexContent(authorityValue);
+            }
+            //Close up
+            indexers.close();
+        }
+        //Commit to our server
+        indexingService.commit();
     }
 
+    @Override
+    public boolean isConfigurationValid()
+    {
+        if(!indexingService.isConfiguredProperly()){
+            return false;
+        }
+
+        for (AuthorityIndexerInterface indexerInterface : authorityServiceFactory.createUninitialisedAuthorityIndexers())
+        {
+            if(!indexerInterface.isConfiguredProperly()){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Retrieve all authority values found in the authority cache. Returns a map with as key the identifier of the authority value
+     * and as value the authority value.
+     *
+     * @param context
+     * the dspace context
+     * @return
+     * A map containing all authority values
+     * @throws SQLException
+     * @throws AuthorizeException
+     */
+    public Map<String, AuthorityValue> getAllAuthorityValues(Context context) throws SQLException, AuthorizeException {
+        Map<String, AuthorityValue> toIndexValues = new HashMap<>();
+
+        for (AuthorityIndexerInterface indexerInterface : authorityServiceFactory.createAuthorityIndexers(context, true))
+        {
+            while (indexerInterface.hasMore()) {
+                AuthorityValue authorityValue = indexerInterface.nextValue();
+                if(authorityValue != null){
+                    toIndexValues.put(authorityValue.getId(), authorityValue);
+                }
+            }
+            //Close up
+            indexerInterface.close();
+        }
+        return toIndexValues;
+    }
+
+    /**
+     * Empty the authority index.
+     * @throws Exception
+     */
+    @Override
+    public void cleanAuthorityIndex() throws Exception
+    {
+        indexingService.cleanIndex();
+    }
+
+    /**
+     * Index an authority value.
+     * @param authorityValue
+     */
+    @Override
+    public void indexAuthorityValue(AuthorityValue authorityValue)
+    {
+        indexingService.indexContent(authorityValue);
+    }
+
+    /**
+     * Commit all changes to the authority index since the last commit.
+     */
+    @Override
+    public void commitAuthorityIndex() {
+        indexingService.commit();
+    }
+
+    /**
+     * Check if a metadata field is authority controlled
+     * @param field
+     * The metadata field
+     * @return
+     * true if the field is authority controlled
+     */
+    @Override
+    public boolean isAuthorityControlledField(String field) {
+        if(authorityControlled==null){
+            setAuthorizedMetadataFields();
+        }
+
+        return authorityControlled.contains(field);
+    }
+
+    /**
+     * Set authority controlled fields
+     *
+     */
+    private void setAuthorizedMetadataFields()
+    {
+        authorityControlled = new HashSet<String>();
+        Enumeration propertyNames = ConfigurationManager.getProperties().propertyNames();
+        while(propertyNames.hasMoreElements())
+        {
+            String key = ((String) propertyNames.nextElement()).trim();
+            if (key.startsWith(AC_PREFIX)
+                    && ConfigurationManager.getBooleanProperty(key, false))
+            {
+                authorityControlled.add(key.substring(AC_PREFIX.length()));
+            }
+        }
+    }
+
+    /**
+     * Create an authority value object. This object is not yet stored in the authority cache.
+     * @param context The context
+     * @param authorityKey The authority key
+     * @param content The metadata value
+     * @param field The metadata field
+     * @return The new authority value object
+     */
     @Override
     public AuthorityValue createAuthorityValue(Context context, String authorityKey, String content, String field) {
         AuthorityValue nextValue = generateRaw(authorityKey, content, field);
@@ -66,6 +206,13 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
         return nextValue;
     }
 
+    /**
+     * Create a raw authority value object.
+     * @param authorityKey The authority key
+     * @param content The metadata value
+     * @param field The metadata field
+     * @return
+     */
     protected AuthorityValue generateRaw(String authorityKey, String content, String field) {
         AuthorityValue nextValue;
 
@@ -78,9 +225,15 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
         return nextValue;
     }
 
+    /**
+     * Update the index of an authority value
+     * @param value
+     * the authority value to index
+     * @return
+     * the updated authority value
+     */
     @Override
     public AuthorityValue updateAuthorityValue(AuthorityValue value) {
-        //TODO: Rewrite this one.
         AuthorityValue updated = generateRaw(value.generateString(), value.getValue(), value.getField());
         if (updated != null) {
             updated.setCreationDate(value.getCreationDate());
@@ -89,17 +242,21 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
                 updated.setLastModified(value.getLastModified());
             }else {
                 updated.updateLastModifiedDate();
-                authorityService.indexAuthorityValue(updated);
+                indexAuthorityValue(updated);
             }
         }
         return updated;
     }
 
     /**
+     * Find an authority value by authority ID.
      * Item.ANY does not work here.
-     * @param context Context
-     * @param authorityID authority id
-     * @return AuthorityValue
+     * @param context
+     * the DSpace context
+     * @param authorityID
+     * the authority ID
+     * @return
+     * the authority value with the provided authority ID
      */
     @Override
     public AuthorityValue findAuthorityValueByID(Context context, String authorityID) {
@@ -109,12 +266,30 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
         return findings.size() > 0 ? findings.get(0) : null;
     }
 
+    /**
+     * Find authority values by their value. The value of the authority values exactly match the provided value.
+     * @param context
+     * the dspace context
+     * @param field
+     * the authority field
+     * @param value
+     * the exact value
+     * @return
+     * a list of authority values with a value that exactly matches the provided value.
+     */
     @Override
     public List<AuthorityValue> findAuthorityValuesByExactValue(Context context, String field, String value) {
         String queryString = "value_keyword:\"" + value + "\" AND field:" + field;
         return find(context, queryString);
     }
 
+    /**
+     * Get all indexed authority values
+     * @param context
+     * the DSpace context
+     * @return
+     * a list of all indexed authority values
+     */
     @Override
     public List<AuthorityValue> findAllAuthorityValues(Context context) {
         String queryString = "*:*";
@@ -137,6 +312,17 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
         return allAuthorityValues;
     }
 
+    /**
+     * Retrieve external results for the provided authority field with the provided text.
+     * @param field
+     * the authority controlled field
+     * @param text
+     * the text used to find the external results
+     * @param max
+     * the maximum amount of results
+     * @return
+     * a list of authority values containing the external results
+     */
     @Override
     public List<AuthorityValue> retrieveExternalResults(String field, String text, int max)
     {
@@ -144,6 +330,13 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
 
     }
 
+    /**
+     * Get the authority value from the provided solr document
+     * @param solrDocument
+     * the solr document
+     * @return
+     * the authority value from the provided solr document
+     */
     @Override
     public AuthorityValue getAuthorityValueFromSolrDoc(SolrDocument solrDocument) {
         String type = (String) solrDocument.getFieldValue("authority_type");
@@ -154,6 +347,18 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
         return find(context,queryString,0,10);
     }
 
+    /**
+     * Query solr for authory values
+     * @param context
+     * the DSpace context
+     * @param queryString
+     * the solr query string
+     * @param start
+     * the offset
+     * @param rows
+     * the amount of returned authority values
+     * @return
+     */
     protected List<AuthorityValue> find(Context context, String queryString, int start, int rows) {
         List<AuthorityValue> findings = new ArrayList<AuthorityValue>();
         try {
@@ -189,6 +394,16 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
         return schema + "_" + element + ((qualifier != null) ? "_" + qualifier : "");
     }
 
+    /**
+     * This method looks at the authority of a metadata.
+     * If the authority can be found in solr, that value is reused.
+     * Otherwise a new authority value will be generated that will be indexed in solr.
+     * If the authority starts with AuthorityValueGenerator.GENERATE, a specific type of AuthorityValue will be generated.
+     * Depending on the type this may involve querying an external REST service
+     *
+     * @param metadataField Is one of the fields defined in dspace.cfg to be indexed.
+     * @param value         Is one of the values of the given metadataField in one of the items being indexed.
+     */
     public AuthorityValue storeMetadataInAuthorityCache(Context context, Item item, String metadataField, MetadataValue value)  {
 
         AuthorityValue nextValue = null;
@@ -217,12 +432,31 @@ public class AuthorityValueServiceImpl implements AuthorityValueService{
         return nextValue;
     }
 
+    /**
+     * Replace an item's DCValue with this authority
+     * @param context
+     * the DSpace context
+     * @param item
+     * the item
+     * @param value
+     * the metadata value
+     * @param authorityValue
+     * the authority value
+     * @throws SQLException
+     * @throws AuthorizeException
+     */
     public void updateItemMetadataWithAuthority(Context context, Item item, MetadataValue value, AuthorityValue authorityValue) throws SQLException, AuthorizeException {
         value.setValue(authorityValue.getValue());
         value.setAuthority(authorityValue.getId());
         ContentServiceFactory.getInstance().getItemService().update(context, item);
     }
 
+    /**
+     * Delete an authority index by it's authority ID
+     * @param id
+     * the authority ID
+     * @throws Exception
+     */
     @Override
     public void deleteAuthorityValueById(String id) throws Exception {
         indexingService.deleteAuthorityValueById(id);

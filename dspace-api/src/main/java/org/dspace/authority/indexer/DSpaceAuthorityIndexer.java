@@ -52,7 +52,7 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
     protected AuthorityValue nextValue;
     protected Context context;
     @Autowired(required = true)
-    protected AuthorityValueService authorityValueService;
+    protected CachedAuthorityService cachedAuthorityService;
     @Autowired(required = true)
     protected ItemService itemService;
     protected boolean useCache;
@@ -128,7 +128,7 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
         String metadataField = metadataFields.get(currentFieldIndex);
         List<MetadataValue> values = itemService.getMetadataByMetadataString(currentItem, metadataField);
         if (currentMetadataIndex < values.size()) {
-            nextValue = authorityValueService.storeMetadataInAuthorityCache(context, currentItem, metadataField, values.get(currentMetadataIndex));
+            nextValue = cachedAuthorityService.storeMetadataInAuthorityCache(context, currentItem, metadataField, values.get(currentMetadataIndex));
 
             currentMetadataIndex++;
             return true;

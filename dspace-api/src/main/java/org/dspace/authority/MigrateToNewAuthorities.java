@@ -13,6 +13,13 @@ import org.dspace.content.service.*;
 import org.dspace.core.*;
 
 /**
+ * Script MigrateToNewAuthorities is used to migrate the authority solr index of DSpace 5 and below to the changes
+ * introduced in DSpace 6.
+ * When MigrateToNewAuthorities is run, the authority keys of all indexed authorities are regenerated.
+ * All authorities are reindexed.
+ * Metadata values containing the old authority keys will be updated to reference the new authority key.
+ *
+ * @author kevinvandevelde at atmire.com
  * @author philip at atmire.com
  */
 public class MigrateToNewAuthorities {
@@ -23,12 +30,14 @@ public class MigrateToNewAuthorities {
     private static Logger log = Logger.getLogger(UpdateAuthorities.class);
 
     protected final ItemService itemService;
-    protected final AuthorityValueService authorityValueService;
+    protected final CachedAuthorityService cachedAuthorityService;
+
 
     public MigrateToNewAuthorities(Context context) {
         print = new PrintWriter(System.out);
         this.context = context;
-        this.authorityValueService = AuthorityServiceFactory.getInstance().getAuthorityValueService();
+        this.cachedAuthorityService = AuthorityServiceFactory.getInstance().getCachedAuthorityService();
+
         this.itemService = ContentServiceFactory.getInstance().getItemService();
     }
 
@@ -53,14 +62,14 @@ public class MigrateToNewAuthorities {
     }
 
     public void run() {
-        List<AuthorityValue> authorities = authorityValueService.findAllAuthorityValues(context);
+        List<AuthorityValue> authorities = cachedAuthorityService.findAllAuthorityValues(context);
 
         for (AuthorityValue authority : authorities) {
 
             if(!authority.getSolrId().equals(authority.getId())){
                 try {
-                    authorityValueService.deleteAuthorityValueById(authority.getSolrId());
-                    authorityValueService.updateAuthorityValue(authority);
+                    cachedAuthorityService.deleteAuthorityValueById(authority.getSolrId());
+                    cachedAuthorityService.updateAuthorityValue(authority);
 
                     updateItemsWihAuthority(authority);
                 } catch (Exception e) {
@@ -71,10 +80,6 @@ public class MigrateToNewAuthorities {
         }
     }
 
-    private AuthorityValue createNewAuthority(AuthorityValue authority){
-        return authorityValueService.createAuthorityValue(context, authority.generateString(), authority.getValue(), authority.getField());
-    }
-
     private void updateItemsWihAuthority(AuthorityValue authority) throws SQLException, AuthorizeException {
         String field = authority.getField().replaceAll("_", "\\.");
         Iterator<Item> itemIterator = itemService.findByMetadataFieldAuthority(context, field, authority.getSolrId(), false);
@@ -83,7 +88,7 @@ public class MigrateToNewAuthorities {
             Item next = itemIterator.next();
             List<MetadataValue> metadata = itemService.getMetadata(next, field, authority.getId());
             String valueBefore = metadata.get(0).getValue();
-            authorityValueService.updateItemMetadataWithAuthority(context, next, metadata.get(0), authority); //should be only one
+            cachedAuthorityService.updateItemMetadataWithAuthority(context, next, metadata.get(0), authority); //should be only one
 
             if (!valueBefore.equals(metadata.get(0).getValue())) {
                 print.println("Updated item with id " + next.getID());

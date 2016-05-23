@@ -27,6 +27,14 @@ public abstract class AuthorityValueBuilder<T extends AuthorityValue>
 {
     protected List<String> metadataFields;
 
+    /**
+     * Build an authority value with the provided identifier and content
+     * @param identifier
+     * the authority identifier
+     * @param content
+     * the authority value
+     * @return
+     */
     public abstract T buildAuthorityValue(String identifier, String content);
 
     /**

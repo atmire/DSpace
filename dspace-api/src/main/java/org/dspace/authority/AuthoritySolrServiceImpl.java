@@ -19,6 +19,8 @@ import org.dspace.authority.indexer.*;
 import org.dspace.core.*;
 
 /**
+ * AuthoritySolrServiceImpl is responsible for requests to the authority solr core.
+ * e.g. querying the authority solr core, indexing authorities in solr.
  *
  * @author Antoine Snyers (antoine at atmire.com)
  * @author Kevin Van de Velde (kevin at atmire dot com)
@@ -57,6 +59,10 @@ public class AuthoritySolrServiceImpl implements AuthorityIndexingService, Autho
         return solr;
     }
 
+    /**
+     * Index an authority value.
+     * @param value
+     */
     @Override
     public void indexContent(AuthorityValue value) {
         SolrInputDocument doc = value.getSolrInputDocument();
@@ -69,6 +75,10 @@ public class AuthoritySolrServiceImpl implements AuthorityIndexingService, Autho
         }
     }
 
+    /**
+     * Empty the authority index.
+     * @throws Exception
+     */
     @Override
     public void cleanIndex() throws Exception {
         try{
@@ -79,6 +89,9 @@ public class AuthoritySolrServiceImpl implements AuthorityIndexingService, Autho
         }
     }
 
+    /**
+     * Commit all changes to the authority index since the last commit.
+     */
     @Override
     public void commit() {
         try {
@@ -101,6 +114,12 @@ public class AuthoritySolrServiceImpl implements AuthorityIndexingService, Autho
         return solrReturn;
     }
 
+    /**
+     * Delete an authority index by it's authority ID
+     * @param id
+     * the authority ID
+     * @throws Exception
+     */
     @Override
     public void deleteAuthorityValueById(String id) throws Exception {
         try{

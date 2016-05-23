@@ -1,19 +1,33 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.authority;
 
-import org.apache.commons.lang.ObjectUtils;
-import org.apache.solr.common.SolrDocument;
-import org.dspace.authority.factory.AuthorityValueBuilder;
-
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.*;
+import org.apache.commons.lang.*;
+import org.apache.solr.common.*;
+import org.dspace.authority.factory.*;
 
 /**
- * User: kevin (kevin at atmire.com)
- * Date: 8/04/16
- * Time: 16:24
+ * AuthorityValueBuilder handles the creation of PersonAuthorityValues.
+ *
+ * @author kevinvandevelde at atmire.com
+ * @author philip at atmire.com
  */
 public class PersonAuthorityValueBuilder<T extends PersonAuthorityValue> extends AuthorityValueBuilder<T> {
 
+    /**
+     * Build an authority value with the provided identifier and content
+     * @param identifier
+     * the authority identifier
+     * @param content
+     * the authority value
+     * @return
+     */
     @Override
     public T buildAuthorityValue(String identifier, String content)
     {
@@ -22,6 +36,13 @@ public class PersonAuthorityValueBuilder<T extends PersonAuthorityValue> extends
         return authorityValue;
     }
 
+    /**
+     * Build an authority value with the provided solr document
+     * @param document
+     * The solr document of the authority value
+     * @return
+     * The created authority value
+     */
     @Override
     public T buildAuthorityValue(SolrDocument document)
     {
@@ -47,7 +68,11 @@ public class PersonAuthorityValueBuilder<T extends PersonAuthorityValue> extends
         return authorityValue;
     }
 
-
+    /**
+     * Build an empty authority value
+     * @return
+     * A new authority value
+     */
     @Override
     public T buildAuthorityValue() {
         return (T) new PersonAuthorityValue();

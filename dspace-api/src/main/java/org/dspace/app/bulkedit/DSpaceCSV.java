@@ -67,7 +67,7 @@ public class DSpaceCSV implements Serializable
     protected transient final ItemService itemService = ContentServiceFactory.getInstance().getItemService();
     protected transient final MetadataSchemaService metadataSchemaService = ContentServiceFactory.getInstance().getMetadataSchemaService();
     protected transient final MetadataFieldService metadataFieldService = ContentServiceFactory.getInstance().getMetadataFieldService();
-    protected transient final AuthorityService authorityService = AuthorityServiceFactory.getInstance().getAuthorityService();
+    protected transient final CachedAuthorityService cachedAuthorityService = AuthorityServiceFactory.getInstance().getCachedAuthorityService();
 
 
     /** Whether to export all metadata such as handles and provenance information */
@@ -139,7 +139,7 @@ public class DSpaceCSV implements Serializable
                 else if (!"id".equals(element))
                 {
                     String authorityPrefix = "";
-                    if (authorityService.isAuthorityControlledField(getFieldFromHeader(element))) {
+                    if (cachedAuthorityService.isAuthorityControlledField(getFieldFromHeader(element))) {
                         String authorityType = getAuthorityTypeFromHeader(element);
                         if(StringUtils.isNotBlank(authorityType)){
                             authorityPrefix = authorityType + ":";

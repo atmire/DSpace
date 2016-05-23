@@ -19,7 +19,7 @@ import org.apache.solr.common.params.CommonParams;
 import org.dspace.authority.AuthoritySearchService;
 import org.dspace.authority.AuthorityValue;
 import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.authority.service.AuthorityValueService;
+import org.dspace.authority.service.*;
 import org.dspace.content.Collection;
 import org.dspace.core.ConfigurationManager;
 import org.dspace.services.factory.DSpaceServicesFactory;
@@ -41,7 +41,7 @@ public class SolrAuthority implements ChoiceAuthority {
     private static final Logger log = Logger.getLogger(SolrAuthority.class);
 
     protected boolean externalResults = false;
-    protected AuthorityValueService authorityValueService = AuthorityServiceFactory.getInstance().getAuthorityValueService();
+    protected CachedAuthorityService cachedAuthorityService = AuthorityServiceFactory.getInstance().getCachedAuthorityService();
 
     public Choices getMatches(String field, String text, Collection collection, int start, int limit, String locale, boolean bestMatch) {
         if(limit == 0)
@@ -113,7 +113,7 @@ public class SolrAuthority implements ChoiceAuthority {
                 for (int i = 0; i < maxDocs; i++) {
                     SolrDocument solrDocument = authDocs.get(i);
                     if (solrDocument != null) {
-                        AuthorityValue val = AuthorityServiceFactory.getInstance().getAuthorityValueService().getAuthorityValueFromSolrDoc(solrDocument);
+                        AuthorityValue val = AuthorityServiceFactory.getInstance().getCachedAuthorityService().getAuthorityValueFromSolrDoc(solrDocument);
 
                         Map<String, String> extras = val.choiceSelectMap();
                         extras.put("insolr", val.getId());
@@ -153,7 +153,7 @@ public class SolrAuthority implements ChoiceAuthority {
 
     protected void addExternalResults(String field, String text, ArrayList<Choice> choices, List<AuthorityValue> alreadyPresent, int max) {
         //TODO: find a better way to implement max
-        final List<AuthorityValue> authorityValues = authorityValueService.retrieveExternalResults(field, text, max * 2); // max*2 because results get filtered
+        final List<AuthorityValue> authorityValues = cachedAuthorityService.retrieveExternalResults(field, text, max * 2); // max*2 because results get filtered
         if(CollectionUtils.isNotEmpty(authorityValues)){
             try {
                 // filtering loop

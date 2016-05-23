@@ -10,7 +10,7 @@ package org.dspace.authority.indexer;
 
 import org.apache.log4j.Logger;
 import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.authority.service.AuthorityService;
+import org.dspace.authority.service.*;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.Item;
 import org.dspace.content.factory.ContentServiceFactory;
@@ -40,11 +40,12 @@ public class AuthorityConsumer implements Consumer {
 
     protected ItemService itemService;
 
-    protected AuthorityService authorityService;
+    protected CachedAuthorityService cachedAuthorityService;
+
 
     @Override
     public void initialize() throws Exception {
-        authorityService = AuthorityServiceFactory.getInstance().getAuthorityService();
+        cachedAuthorityService = AuthorityServiceFactory.getInstance().getCachedAuthorityService();
         itemService = ContentServiceFactory.getInstance().getItemService();
 
     }
@@ -71,7 +72,7 @@ public class AuthorityConsumer implements Consumer {
             ctx.turnOffAuthorisationSystem();
             for (UUID id : itemsToUpdateAuthority) {
                 Item item = itemService.find(ctx, id);
-                authorityService.processAuthorities(ctx, item);
+                cachedAuthorityService.processAuthorities(ctx, item);
             }
         } catch (Exception e){
             log.error("Error while consuming the authority consumer", e);

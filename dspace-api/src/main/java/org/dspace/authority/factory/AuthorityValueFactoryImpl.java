@@ -8,9 +8,10 @@ import org.dspace.authority.*;
 import org.springframework.beans.factory.annotation.*;
 
 /**
- * User: kevin (kevin at atmire.com)
- * Date: 8/04/16
- * Time: 12:06
+ * factory class to create AuthorityValues
+ *
+ * @author kevinvandevelde at atmire.com
+ * @author philip at atmire.com
  */
 public class AuthorityValueFactoryImpl extends AuthorityValueFactory {
 
@@ -55,6 +56,17 @@ public class AuthorityValueFactoryImpl extends AuthorityValueFactory {
         return valueBuilder.buildAuthorityValue(solrDocument);
     }
 
+    /**
+     * Retrieve external results for the provided authority field.
+     * @param field
+     * the authority controlled field
+     * @param text
+     * the text used to find the external results
+     * @param max
+     * the maximum amount of results
+     * @return
+     * a list of authority values containing the external results
+     */
     @Override
     public List<AuthorityValue> retrieveExternalResults(String field, String text, int max) {
         for(String type : authorityValueBuilders.keySet())

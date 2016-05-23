@@ -7,21 +7,12 @@
  */
 package org.dspace.authority.orcid;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.dspace.authority.AuthorityKeyRepresentation;
-import org.dspace.authority.AuthorityValue;
-import org.dspace.authority.AuthorityValueServiceImpl;
-import org.dspace.authority.PersonAuthorityValue;
-import org.dspace.authority.orcid.model.Bio;
-import org.dspace.authority.orcid.model.BioExternalIdentifier;
-import org.dspace.authority.orcid.model.BioName;
-import org.dspace.authority.orcid.model.BioResearcherUrl;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrInputDocument;
-
 import java.util.*;
+import org.apache.commons.codec.digest.*;
+import org.apache.commons.lang.*;
+import org.apache.log4j.*;
+import org.apache.solr.common.*;
+import org.dspace.authority.*;
 
 /**
  *

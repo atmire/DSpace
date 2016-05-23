@@ -39,12 +39,14 @@ public class UpdateAuthorities {
     private List<String> selectedIDs;
 
     protected final ItemService itemService;
-    protected final AuthorityValueService authorityValueService;
+    protected final CachedAuthorityService cachedAuthorityService;
+
 
     public UpdateAuthorities(Context context) {
         print = new PrintWriter(System.out);
         this.context = context;
-        this.authorityValueService = AuthorityServiceFactory.getInstance().getAuthorityValueService();
+        this.cachedAuthorityService = AuthorityServiceFactory.getInstance().getCachedAuthorityService();
+
         this.itemService = ContentServiceFactory.getInstance().getItemService();
     }
 
@@ -121,17 +123,17 @@ public class UpdateAuthorities {
         if (selectedIDs != null && !selectedIDs.isEmpty()) {
             authorities = new ArrayList<AuthorityValue>();
             for (String selectedID : selectedIDs) {
-                AuthorityValue byID = authorityValueService.findAuthorityValueByID(context, selectedID);
+                AuthorityValue byID = cachedAuthorityService.findAuthorityValueByID(context, selectedID);
                 authorities.add(byID);
             }
         } else {
-            authorities = authorityValueService.findAllAuthorityValues(context);
+            authorities = cachedAuthorityService.findAllAuthorityValues(context);
         }
 
         if (authorities != null) {
             print.println(authorities.size() + " authorities found.");
             for (AuthorityValue authority : authorities) {
-                AuthorityValue updated = authorityValueService.updateAuthorityValue(authority);
+                AuthorityValue updated = cachedAuthorityService.updateAuthorityValue(authority);
                 if (!updated.getLastModified().equals(authority.getLastModified())) {
                     followUp(updated);
                 }
@@ -143,7 +145,7 @@ public class UpdateAuthorities {
     protected void followUp(AuthorityValue authority) {
         print.println("Updated: " + authority.getValue() + " - " + authority.getId());
 
-        boolean updateItems = ConfigurationManager.getBooleanProperty("auto-update-items");
+        boolean updateItems = ConfigurationManager.getBooleanProperty("solrauthority","auto-update-items");
         if (updateItems) {
             updateItems(authority);
         }
@@ -158,7 +160,7 @@ public class UpdateAuthorities {
                 Item next = itemIterator.next();
                 List<MetadataValue> metadata = itemService.getMetadata(next, field, authority.getId());
                 String valueBefore = metadata.get(0).getValue();
-                authorityValueService.updateItemMetadataWithAuthority(context, next, metadata.get(0), authority); //should be only one
+                cachedAuthorityService.updateItemMetadataWithAuthority(context, next, metadata.get(0), authority); //should be only one
 
                 if (!valueBefore.equals(metadata.get(0).getValue())) {
                     print.println("Updated item with id " + next.getID());

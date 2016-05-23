@@ -50,8 +50,7 @@ public class MetadataImport
     /** Logger */
     protected static final Logger log = Logger.getLogger(MetadataImport.class);
 
-    protected final AuthorityValueService authorityValueService;
-    protected static AuthorityService authorityService;
+    protected static CachedAuthorityService cachedAuthorityService;
 
     protected final ItemService itemService;
     protected final InstallItemService installItemService;
@@ -76,8 +75,7 @@ public class MetadataImport
         itemService = ContentServiceFactory.getInstance().getItemService();
         collectionService = ContentServiceFactory.getInstance().getCollectionService();
         handleService = HandleServiceFactory.getInstance().getHandleService();
-        authorityValueService = AuthorityServiceFactory.getInstance().getAuthorityValueService();
-        authorityService = AuthorityServiceFactory.getInstance().getAuthorityService();
+        cachedAuthorityService = AuthorityServiceFactory.getInstance().getCachedAuthorityService();
         workspaceItemService = ContentServiceFactory.getInstance().getWorkspaceItemService();
     }
 
@@ -840,7 +838,7 @@ public class MetadataImport
 
             // look up the value and authority in solr
             String field = schema + "_" + element + (StringUtils.isNotBlank(qualifier) ? "_" + qualifier : "");
-            List<AuthorityValue> byValue = authorityValueService.findAuthorityValuesByExactValue(c, field, value);
+            List<AuthorityValue> byValue = cachedAuthorityService.findAuthorityValuesByExactValue(c, field, value);
             AuthorityValue authorityValue = null;
             if (byValue.isEmpty()) {
                 String toGenerate = null;
@@ -849,7 +847,7 @@ public class MetadataImport
                     toGenerate = new AuthorityKeyRepresentation(authorityType, value).toString();
                 }
 
-                authorityValue = authorityValueService.createAuthorityValue(c, toGenerate, value, field);
+                authorityValue = cachedAuthorityService.createAuthorityValue(c, toGenerate, value, field);
                 dcv.setAuthority(toGenerate);
             } else {
                 authorityValue = byValue.get(0);
@@ -1147,13 +1145,13 @@ public class MetadataImport
      */
     private static boolean isAuthorityControlledField(String md)
     {
-        if(authorityService.isAuthorityControlledField(md)){
+        if(cachedAuthorityService.isAuthorityControlledField(md)){
             return true;
         }
 
         String mdf = StringUtils.substringAfter(md, ":");
         mdf = StringUtils.substringBefore(mdf, "[");
-        return authorityService.isAuthorityControlledField(mdf);
+        return cachedAuthorityService.isAuthorityControlledField(mdf);
     }
 
     /**

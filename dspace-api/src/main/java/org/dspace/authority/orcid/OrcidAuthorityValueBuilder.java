@@ -13,14 +13,22 @@ import org.springframework.beans.factory.annotation.Required;
 import java.util.*;
 
 /**
- * User: kevin (kevin at atmire.com)
- * Date: 8/04/16
- * Time: 15:45
+ * OrcidAuthorityValueBuilder handles the creation of OrcidAuthorityValues.
+ *
+ * @author kevinvandevelde at atmire.com
+ * @author philip at atmire.com
  */
 public class OrcidAuthorityValueBuilder extends PersonAuthorityValueBuilder<OrcidAuthorityValue>
 {
     protected OrcidConnector orcidConnector;
 
+    /**
+     * Build an authority value with the provided orcid identifier
+     * @param identifier
+     * the orcid identifier
+     * @return
+     * the resulting OrcidAuthorityValue
+     */
     @Override
     public OrcidAuthorityValue buildAuthorityValue(String identifier, String content)
     {
@@ -35,6 +43,13 @@ public class OrcidAuthorityValueBuilder extends PersonAuthorityValueBuilder<Orci
         return null;
     }
 
+    /**
+     * Build an authority value with the provided orcid bio
+     * @param orcidBio
+     * The orcid bio of the authority value
+     * @return
+     * The created authority value
+     */
     protected OrcidAuthorityValue buildAuthorityValueFromOrcidBio(Bio orcidBio) {
         //Make sure we have a result
         if(orcidBio != null)
@@ -48,6 +63,13 @@ public class OrcidAuthorityValueBuilder extends PersonAuthorityValueBuilder<Orci
         return null;
     }
 
+    /**
+     * Build an authority value with the provided solr document
+     * @param document
+     * The solr document of the authority value
+     * @return
+     * The created authority value
+     */
     @Override
     public OrcidAuthorityValue buildAuthorityValue(SolrDocument document)
     {
@@ -88,9 +110,11 @@ public class OrcidAuthorityValueBuilder extends PersonAuthorityValueBuilder<Orci
     }
 
     /**
-     * Method is responsible
+     * Add the information from an orcid bio to an authority value
+     * @param authorityValue
+     * the authority value the information is added to
      * @param bio
-     * @return
+     * the orcid bio
      */
     protected void storeOrcidBioInAuthorityValue(OrcidAuthorityValue authorityValue, Bio bio) {
         BioName name = bio.getName();
@@ -145,7 +169,6 @@ public class OrcidAuthorityValueBuilder extends PersonAuthorityValueBuilder<Orci
             authorityValue.addOtherMetadata("biography", bio.getBiography());
         }
 
-        //TODO: is thid needed ?
         authorityValue.setValue(authorityValue.getName());
     }
 

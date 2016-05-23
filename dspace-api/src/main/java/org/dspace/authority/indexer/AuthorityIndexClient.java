@@ -10,12 +10,13 @@ package org.dspace.authority.indexer;
 import org.dspace.authority.AuthorityValue;
 import org.apache.log4j.Logger;
 import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.authority.service.AuthorityService;
+import org.dspace.authority.service.*;
 import org.dspace.core.Context;
 
 import java.util.Map;
 
 /**
+ * Class used to reindex dspace authorities in solr
  *
  * @author Antoine Snyers (antoine at atmire.com)
  * @author Kevin Van de Velde (kevin at atmire dot com)
@@ -26,7 +27,7 @@ public class AuthorityIndexClient {
 
     private static Logger log = Logger.getLogger(AuthorityIndexClient.class);
 
-    protected static final AuthorityService authorityService = AuthorityServiceFactory.getInstance().getAuthorityService();
+    protected static final CachedAuthorityService cachedAuthorityService = AuthorityServiceFactory.getInstance().getCachedAuthorityService();
 
     public static void main(String[] args) throws Exception {
 
@@ -35,9 +36,7 @@ public class AuthorityIndexClient {
         //Ensure that we can update items if we are altering our authority control
         context.turnOffAuthorisationSystem();
 
-
-
-        if(!authorityService.isConfigurationValid()){
+        if(!cachedAuthorityService.isConfigurationValid()){
                     //Cannot index, configuration not valid
             System.out.println("Cannot index authority values since the configuration isn't valid. Check dspace logs for more information.");
 
@@ -48,17 +47,17 @@ public class AuthorityIndexClient {
         log.info("Retrieving all data");
 
         //Get all our values from the input forms
-        Map<String, AuthorityValue> toIndexValues = authorityService.getAllAuthorityValues(context);
+        Map<String, AuthorityValue> toIndexValues = cachedAuthorityService.getAllAuthorityValues(context);
 
 
         log.info("Cleaning the old index");
         System.out.println("Cleaning the old index");
-        authorityService.cleanAuthorityIndex();
+        cachedAuthorityService.cleanAuthorityIndex();
         log.info("Writing new data");
         System.out.println("Writing new data");
         for(String id : toIndexValues.keySet()){
-            authorityService.indexAuthorityValue(toIndexValues.get(id));
-            authorityService.commitAuthorityIndex();
+            cachedAuthorityService.indexAuthorityValue(toIndexValues.get(id));
+            cachedAuthorityService.commitAuthorityIndex();
         }
 
         context.complete();
