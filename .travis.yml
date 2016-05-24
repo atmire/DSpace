@@ -1,10 +1,6 @@
 language: java
 sudo: false
 
-env: 
-  # Give Maven 1GB of memory to work with
-  - MAVEN_OPTS=-Xmx1024M
-
 # Install prerequisites for building Mirage2 more rapidly
 before_install:
   # Install latest Node.js 0.10.x & print version info
@@ -29,6 +25,8 @@ branches:
     only:
         - master
         - mospace-5_x
+        - lso-1609-get-travis-ci-working-with-atmire-maven-repository
+        - re_1608_atmire_cua_install
 
 # Skip install stage, as we'll do it below
 install: "echo 'Skipping install stage, dependencies will be downloaded during build and test stages.'"
@@ -37,6 +35,9 @@ install: "echo 'Skipping install stage, dependencies will be downloaded during b
 # 1. Install & Unit Test APIs
 # 2. Assemble DSpace
 script:
+  # 0. run mvn help:effective-settings to confirm credentials are in use
+  - "mvn help:effective-settings --settings ./settings.xml"
+  - "echo CI_ATMIRE_USERNAME = $CI_ATMIRE_USERNAME"
   # 1. [Install & Unit Test] Check source code licenses and run source code Unit Tests
   #    (This explicitly skips building the 'dspace' assembly module, since we only want to do that ONCE.)
   #        license:check => Validate all source code license headers
@@ -44,13 +45,21 @@ script:
   #        -P !dspace => SKIP full DSpace assembly (will do below)
   #        -B => Maven batch/non-interactive mode (recommended for CI)
   #        -V => Display Maven version info before build
-  - "mvn clean install license:check -Dmaven.test.skip=false -P !dspace -B -V"
+  - "mvn clean install license:check -Dmaven.test.skip=false -P !dspace -B -V --settings ./settings.xml"
   # 2. [Assemble DSpace] Ensure assembly process works (from [src]/dspace/), including Mirage 2
   #        -Dmirage2.on=true => Build Mirage2
   #        -Dmirage2.deps.included=false => Don't include Mirage2 build dependencies (We installed them in before_install)
   #        -P !assembly => SKIP the actual building of [src]/dspace/dspace-installer (as it can be memory intensive)
-  - "cd dspace && mvn package -Dmirage2.on=true -Dmirage2.deps.included=false -P !assembly -B -V"
+  - "mvn package -Dmirage2.on=true -Dmirage2.deps.included=false -P !assembly -B -V --settings ./settings.xml"
+
 notifications:
   hipchat:
     rooms:
       secure: IJ/e7tbe7xZeC3BAMrQUgKOe9ZoayqhQRLgeCONw1KlcW7Vncq3SXVHyP5p5kssPEgt+7rbRbtoFqwa3seoIxXdW2E4NpOoo6TNYsrJLL1GC3GQAZ6Tqawbw+vnbsjRpBkDFNV9cQQFZaVBkQzRMO6BHVQmOiJ8dLJMxLbmFrgk=
+env:
+  global:
+  # Give Maven 1GB of memory to work with
+  - MAVEN_OPTS=-Xmx1024M
+  # use these encrypted tokens for access to atmire's private Maven repository
+  - secure: exONiATp9HEvocvWhlpYN5Yb3UkemjvS6rjXGiXkTMF3Oq099OTamXUpEXYKfRC4+aNeUOHOSKQrHSvBfR3lS4khqfXv53OTup2bGYcAS0R5KatHslU89CfD+p5JsT2ki/lQ1nBmC+V1BU1UbuspxzwKRM00QNXQAF7tfi6gmf8=
+  - secure: aM9RQQDTgdQWZat3pV8vrgALHEi1eNNkaP8ybeZojQ7zE4EdHBkJI7Gf+e2zsz/f8Z1+CxMxePsY0VXDB7pyF8TxXNUPZgBEaFtsP1l7l2m0lxzLQZ45XEeJVPGFaivIf/h2ySZoimv0MoemGxeaKjG0/Il9l/QgUGG5Dfod7rs= 
