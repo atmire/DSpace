@@ -86,12 +86,15 @@ public class MigrateToNewAuthorities {
 
         while (itemIterator.hasNext()) {
             Item next = itemIterator.next();
-            List<MetadataValue> metadata = itemService.getMetadata(next, field, authority.getId());
-            String valueBefore = metadata.get(0).getValue();
-            cachedAuthorityService.updateItemMetadataWithAuthority(context, next, metadata.get(0), authority); //should be only one
+            List<MetadataValue> metadata = itemService.getMetadata(next, field, authority.getSolrId());
 
-            if (!valueBefore.equals(metadata.get(0).getValue())) {
-                print.println("Updated item with id " + next.getID());
+            if(metadata.size()>0) {
+                  String valueBefore = metadata.get(0).getValue();
+                cachedAuthorityService.updateItemMetadataWithAuthority(context, next, metadata.get(0), authority); //should be only one
+
+                if (!valueBefore.equals(metadata.get(0).getValue())) {
+                    print.println("Updated item with id " + next.getID());
+                }
             }
         }
     }

@@ -20,7 +20,6 @@ import org.dspace.authority.service.*;
 import org.dspace.authorize.*;
 import org.dspace.content.*;
 import org.dspace.content.authority.*;
-import org.dspace.content.factory.*;
 import org.dspace.content.service.*;
 import org.dspace.core.*;
 import org.dspace.core.LogManager;
@@ -448,7 +447,7 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
     public void updateItemMetadataWithAuthority(Context context, Item item, MetadataValue value, AuthorityValue authorityValue) throws SQLException, AuthorizeException {
         value.setValue(authorityValue.getValue());
         value.setAuthority(authorityValue.getId());
-        ContentServiceFactory.getInstance().getItemService().update(context, item);
+        itemService.update(context, item);
     }
 
     /**
