@@ -52,11 +52,13 @@ public class MigrateToNewAuthorities {
         Context c = null;
         try {
             c = new Context();
+            c.turnOffAuthorisationSystem();
 
             MigrateToNewAuthorities migrateToNewAuthorities = new MigrateToNewAuthorities(c);
 
             migrateToNewAuthorities.run();
 
+            c.restoreAuthSystemState();
             c.complete();
 
         } catch (SQLException e) {
@@ -80,7 +82,7 @@ public class MigrateToNewAuthorities {
 
                     updateItemsWihAuthority(authority);
                 } catch (Exception e) {
-                    print.println("an exception occurred while updating items with authority " + authority.getId());
+                    System.out.println("an exception occurred while updating items containing metadata with authority id " + authority.getId());
                 }
 
             }
@@ -96,11 +98,11 @@ public class MigrateToNewAuthorities {
             List<MetadataValue> metadata = itemService.getMetadata(next, field, authority.getSolrId());
 
             if(metadata.size()>0) {
-                  String valueBefore = metadata.get(0).getValue();
+                  String authorityBefore = metadata.get(0).getAuthority();
                 cachedAuthorityService.updateItemMetadataWithAuthority(context, next, metadata.get(0), authority); //should be only one
 
-                if (!valueBefore.equals(metadata.get(0).getValue())) {
-                    print.println("Updated item with id " + next.getID());
+                if (!authorityBefore.equals(metadata.get(0).getAuthority())) {
+                    System.out.println("Updated metadata authority of item with id " + next.getID() + " and metadata value " + metadata.get(0).getValue());
                 }
                 itemService.update(context, next);
             }
