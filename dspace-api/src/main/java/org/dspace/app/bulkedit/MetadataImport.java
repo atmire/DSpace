@@ -838,7 +838,7 @@ public class MetadataImport
 
             // look up the value and authority in solr
             String field = schema + "_" + element + (StringUtils.isNotBlank(qualifier) ? "_" + qualifier : "");
-            List<AuthorityValue> byValue = cachedAuthorityService.findAuthorityValuesByExactValue(c, field, value);
+            List<AuthorityValue> byValue = cachedAuthorityService.findCachedAuthorityValuesByExactValue(c, field, value);
             AuthorityValue authorityValue = null;
             if (byValue.isEmpty()) {
                 String toGenerate = null;
@@ -847,7 +847,7 @@ public class MetadataImport
                     toGenerate = new AuthorityKeyRepresentation(authorityType, value).toString();
                 }
 
-                authorityValue = cachedAuthorityService.createAuthorityValue(c, toGenerate, value, field);
+                authorityValue = cachedAuthorityService.createNonCachedAuthorityValue(c, toGenerate, value, field);
                 dcv.setAuthority(toGenerate);
             } else {
                 authorityValue = byValue.get(0);

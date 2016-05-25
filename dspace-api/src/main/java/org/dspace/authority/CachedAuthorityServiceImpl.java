@@ -59,7 +59,7 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
      * @throws AuthorizeException
      */
     @Override
-    public void processAuthorities(Context context, Item item) throws SQLException, AuthorizeException {
+    public void writeItemAuthorityMetadataValuesToCache(Context context, Item item) throws SQLException, AuthorizeException {
         if(!isConfigurationValid()){
             //Cannot index, configuration not valid
             return;
@@ -107,10 +107,10 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
      * @throws SQLException
      * @throws AuthorizeException
      */
-    public Map<String, AuthorityValue> getAllAuthorityValues(Context context) throws SQLException, AuthorizeException {
+    public Map<String, AuthorityValue> getAllCachedAuthorityValues(Context context) throws SQLException, AuthorizeException {
         Map<String, AuthorityValue> toIndexValues = new HashMap<>();
 
-        for (AuthorityIndexerInterface indexerInterface : authorityServiceFactory.createAuthorityIndexers(context, true))
+        for (AuthorityIndexerInterface indexerInterface : authorityServiceFactory.createAuthorityIndexers(context))
         {
             while (indexerInterface.hasMore()) {
                 AuthorityValue authorityValue = indexerInterface.nextValue();
@@ -129,7 +129,7 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
      * @throws Exception
      */
     @Override
-    public void cleanAuthorityIndex() throws Exception
+    public void cleanCache() throws Exception
     {
         indexingService.cleanIndex();
     }
@@ -139,7 +139,7 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
      * @param authorityValue
      */
     @Override
-    public void indexAuthorityValue(AuthorityValue authorityValue)
+    public void writeAuthorityValueToCache(AuthorityValue authorityValue)
     {
         indexingService.indexContent(authorityValue);
     }
@@ -148,7 +148,7 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
      * Commit all changes to the authority index since the last commit.
      */
     @Override
-    public void commitAuthorityIndex() {
+    public void commitAuthorityCache() {
         indexingService.commit();
     }
 
@@ -196,7 +196,7 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
      * @return The new authority value object
      */
     @Override
-    public AuthorityValue createAuthorityValue(Context context, String authorityKey, String content, String field) {
+    public AuthorityValue createNonCachedAuthorityValue(Context context, String authorityKey, String content, String field) {
         AuthorityValue nextValue = generateRaw(authorityKey, content, field);
         nextValue.updateLastModifiedDate();
         nextValue.setCreationDate(new Date());
@@ -232,16 +232,21 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
      * the updated authority value
      */
     @Override
-    public AuthorityValue updateAuthorityValue(AuthorityValue value) {
+    public AuthorityValue updateAuthorityValueInCache(AuthorityValue value) {
         AuthorityValue updated = generateRaw(value.generateString(), value.getValue(), value.getField());
-        if (updated != null) {
+        if (updated != null)
+        {
             updated.setCreationDate(value.getCreationDate());
             updated.setField(value.getField());
-            if (updated.hasTheSameInformationAs(value)) {
+            //Check if we have newer information compared to what we have in the cache
+            if (updated.hasTheSameInformationAs(value))
+            {
                 updated.setLastModified(value.getLastModified());
-            }else {
+            }
+            else
+            {
                 updated.updateLastModifiedDate();
-                indexAuthorityValue(updated);
+                writeAuthorityValueToCache(updated);
             }
         }
         return updated;
@@ -258,7 +263,7 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
      * the authority value with the provided authority ID
      */
     @Override
-    public AuthorityValue findAuthorityValueByID(Context context, String authorityID) {
+    public AuthorityValue findCachedAuthorityValueByAuthorityID(Context context, String authorityID) {
         //Ensure that if we use the full identifier to match on
         String queryString = "id:\"" + authorityID + "\"";
         List<AuthorityValue> findings = find(context, queryString);
@@ -277,7 +282,7 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
      * a list of authority values with a value that exactly matches the provided value.
      */
     @Override
-    public List<AuthorityValue> findAuthorityValuesByExactValue(Context context, String field, String value) {
+    public List<AuthorityValue> findCachedAuthorityValuesByExactValue(Context context, String field, String value) {
         String queryString = "value_keyword:\"" + value + "\" AND field:" + field;
         return find(context, queryString);
     }
@@ -290,7 +295,7 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
      * a list of all indexed authority values
      */
     @Override
-    public List<AuthorityValue> findAllAuthorityValues(Context context) {
+    public List<AuthorityValue> findAllCachedAuthorityValues(Context context) {
         String queryString = "*:*";
         int rows = 1000;
         int start = 0;
@@ -313,6 +318,8 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
 
     /**
      * Retrieve external results for the provided authority field with the provided text.
+     * The returned list will contain non cached AuthorityValue objects
+     *
      * @param field
      * the authority controlled field
      * @param text
@@ -389,10 +396,6 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
         return queryString;
     }
 
-    protected String fieldParameter(String schema, String element, String qualifier) {
-        return schema + "_" + element + ((qualifier != null) ? "_" + qualifier : "");
-    }
-
     /**
      * This method looks at the authority of a metadata.
      * If the authority can be found in solr, that value is reused.
@@ -403,7 +406,7 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
      * @param metadataField Is one of the fields defined in dspace.cfg to be indexed.
      * @param value         Is one of the values of the given metadataField in one of the items being indexed.
      */
-    public AuthorityValue storeMetadataInAuthorityCache(Context context, Item item, String metadataField, MetadataValue value)  {
+    public AuthorityValue writeMetadataInAuthorityCache(Context context, Item item, String metadataField, MetadataValue value)  {
 
         AuthorityValue nextValue = null;
 
@@ -414,17 +417,17 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
 
         if (StringUtils.isNotBlank(authorityKey) && !AuthorityKeyRepresentation.isAuthorityKeyRepresentation(authorityKey)) {
             // !uid.startsWith(AuthorityValueGenerator.GENERATE) is not strictly necessary here but it prevents exceptions in solr
-            nextValue = findAuthorityValueByID(context, authorityKey);
+            nextValue = findCachedAuthorityValueByAuthorityID(context, authorityKey);
         }
         if (nextValue == null) {
-            nextValue = createAuthorityValue(context, authorityKey, content, metadataField.replaceAll("\\.", "_"));
+            nextValue = createNonCachedAuthorityValue(context, authorityKey, content, metadataField.replaceAll("\\.", "_"));
         }
         if (nextValue != null && requiresItemUpdate) {
             try {
                 updateItemMetadataWithAuthority(context, item, value, nextValue);
                 itemService.update(context, item);
             } catch (Exception e) {
-                log.error("Error creating a metadata value's authority", e);
+                log.error("Error creating a metadata value's authority for item: " + item.getID(), e);
             }
         }
 
@@ -457,7 +460,7 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
      * @throws Exception
      */
     @Override
-    public void deleteAuthorityValueById(String id) throws Exception {
+    public void deleteAuthorityValueFromCacheById(String id) throws Exception {
         indexingService.deleteAuthorityValueById(id);
     }
 }

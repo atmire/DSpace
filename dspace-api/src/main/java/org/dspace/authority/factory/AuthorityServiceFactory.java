@@ -27,8 +27,6 @@ public abstract class AuthorityServiceFactory {
 
     public abstract CachedAuthorityService getCachedAuthorityService();
 
-    public abstract List<AuthorityIndexerInterface> createAuthorityIndexers(Context context, boolean useCache);
-
     public abstract List<AuthorityIndexerInterface> createAuthorityIndexers(Context context);
 
     public abstract List<AuthorityIndexerInterface> createAuthorityIndexers(Context context, Item item);

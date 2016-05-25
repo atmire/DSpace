@@ -1,3 +1,10 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.authority;
 
 import java.io.*;
@@ -62,14 +69,14 @@ public class MigrateToNewAuthorities {
     }
 
     public void run() {
-        List<AuthorityValue> authorities = cachedAuthorityService.findAllAuthorityValues(context);
+        List<AuthorityValue> authorities = cachedAuthorityService.findAllCachedAuthorityValues(context);
 
         for (AuthorityValue authority : authorities) {
 
             if(!authority.getSolrId().equals(authority.getId())){
                 try {
-                    cachedAuthorityService.deleteAuthorityValueById(authority.getSolrId());
-                    cachedAuthorityService.updateAuthorityValue(authority);
+                    cachedAuthorityService.deleteAuthorityValueFromCacheById(authority.getSolrId());
+                    cachedAuthorityService.updateAuthorityValueInCache(authority);
 
                     updateItemsWihAuthority(authority);
                 } catch (Exception e) {
@@ -95,6 +102,7 @@ public class MigrateToNewAuthorities {
                 if (!valueBefore.equals(metadata.get(0).getValue())) {
                     print.println("Updated item with id " + next.getID());
                 }
+                itemService.update(context, next);
             }
         }
     }

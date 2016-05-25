@@ -193,16 +193,16 @@ public class SolrAuthority implements ChoiceAuthority {
                 String[] words = StringUtils.split(text, " ");
             for (int i = 0; i < words.length; i++)
             {
-                    String word = words[i];
-                    if (StringUtils.isNotBlank(query)) {
-                        query += " AND ";
-                    }
-                    if (i == words.length - 1) {
-                    query += "((" + searchField + ":" + ClientUtils.escapeQueryChars(word) + "*) OR (" + searchField + ":" + ClientUtils.escapeQueryChars(word) + "))";
-                    } else {
-                        query += "(" + searchField + ":" + ClientUtils.escapeQueryChars(word) + ")";
-                    }
+                String word = words[i];
+                if (StringUtils.isNotBlank(query)) {
+                    query += " AND ";
                 }
+                if (i == words.length - 1) {
+                query += "((" + searchField + ":" + ClientUtils.escapeQueryChars(word) + "*) OR (" + searchField + ":" + ClientUtils.escapeQueryChars(word) + "))";
+                } else {
+                    query += "(" + searchField + ":" + ClientUtils.escapeQueryChars(word) + ")";
+                }
+            }
         return query;
         }
     }

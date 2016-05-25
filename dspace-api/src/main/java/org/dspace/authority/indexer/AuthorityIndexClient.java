@@ -47,17 +47,17 @@ public class AuthorityIndexClient {
         log.info("Retrieving all data");
 
         //Get all our values from the input forms
-        Map<String, AuthorityValue> toIndexValues = cachedAuthorityService.getAllAuthorityValues(context);
+        Map<String, AuthorityValue> toIndexValues = cachedAuthorityService.getAllCachedAuthorityValues(context);
 
 
         log.info("Cleaning the old index");
         System.out.println("Cleaning the old index");
-        cachedAuthorityService.cleanAuthorityIndex();
+        cachedAuthorityService.cleanCache();
         log.info("Writing new data");
         System.out.println("Writing new data");
         for(String id : toIndexValues.keySet()){
-            cachedAuthorityService.indexAuthorityValue(toIndexValues.get(id));
-            cachedAuthorityService.commitAuthorityIndex();
+            cachedAuthorityService.writeAuthorityValueToCache(toIndexValues.get(id));
+            cachedAuthorityService.commitAuthorityCache();
         }
 
         context.complete();

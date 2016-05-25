@@ -55,7 +55,6 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
     protected CachedAuthorityService cachedAuthorityService;
     @Autowired(required = true)
     protected ItemService itemService;
-    protected boolean useCache;
     protected Map<String, AuthorityValue> cache;
     
 
@@ -85,11 +84,6 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
 
     @Override
     public void init(Context context) {
-        init(context, false);
-    }
-
-    @Override
-    public void init(Context context, boolean useCache) {
         try {
             this.itemIterator = itemService.findAllIncludeNotArchived(context);
             if(this.itemIterator.hasNext()) {
@@ -99,7 +93,6 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
             log.error("Error while retrieving all items in the metadata indexer");
         }
         initialize(context);
-        this.useCache = useCache;
     }
 
     protected void initialize(Context context) {
@@ -107,7 +100,6 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
 
         currentFieldIndex = 0;
         currentMetadataIndex = 0;
-        useCache = false;
         cache = new HashMap<>();
     }
 
@@ -128,7 +120,7 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
         String metadataField = metadataFields.get(currentFieldIndex);
         List<MetadataValue> values = itemService.getMetadataByMetadataString(currentItem, metadataField);
         if (currentMetadataIndex < values.size()) {
-            nextValue = cachedAuthorityService.storeMetadataInAuthorityCache(context, currentItem, metadataField, values.get(currentMetadataIndex));
+            nextValue = cachedAuthorityService.writeMetadataInAuthorityCache(context, currentItem, metadataField, values.get(currentMetadataIndex));
 
             currentMetadataIndex++;
             return true;

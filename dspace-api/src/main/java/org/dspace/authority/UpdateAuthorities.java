@@ -123,17 +123,17 @@ public class UpdateAuthorities {
         if (selectedIDs != null && !selectedIDs.isEmpty()) {
             authorities = new ArrayList<AuthorityValue>();
             for (String selectedID : selectedIDs) {
-                AuthorityValue byID = cachedAuthorityService.findAuthorityValueByID(context, selectedID);
+                AuthorityValue byID = cachedAuthorityService.findCachedAuthorityValueByAuthorityID(context, selectedID);
                 authorities.add(byID);
             }
         } else {
-            authorities = cachedAuthorityService.findAllAuthorityValues(context);
+            authorities = cachedAuthorityService.findAllCachedAuthorityValues(context);
         }
 
         if (authorities != null) {
             print.println(authorities.size() + " authorities found.");
             for (AuthorityValue authority : authorities) {
-                AuthorityValue updated = cachedAuthorityService.updateAuthorityValue(authority);
+                AuthorityValue updated = cachedAuthorityService.updateAuthorityValueInCache(authority);
                 if (!updated.getLastModified().equals(authority.getLastModified())) {
                     followUp(updated);
                 }

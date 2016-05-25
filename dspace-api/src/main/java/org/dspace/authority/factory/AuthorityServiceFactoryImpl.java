@@ -42,16 +42,6 @@ public class AuthorityServiceFactoryImpl extends AuthorityServiceFactory {
     }
 
     @Override
-    public List<AuthorityIndexerInterface> createAuthorityIndexers(Context context, boolean useCache)
-    {
-        final List<AuthorityIndexerInterface> authorityIndexers = createUninitialisedAuthorityIndexers();
-        for (AuthorityIndexerInterface authorityIndexerInterface : authorityIndexers) {
-            authorityIndexerInterface.init(context, useCache);
-        }
-        return authorityIndexers;
-    }
-
-    @Override
     public List<AuthorityIndexerInterface> createAuthorityIndexers(Context context) {
         final List<AuthorityIndexerInterface> authorityIndexers = createUninitialisedAuthorityIndexers();
         for (AuthorityIndexerInterface authorityIndexerInterface : authorityIndexers) {

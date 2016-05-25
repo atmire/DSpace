@@ -24,7 +24,7 @@ import org.dspace.core.*;
  */
 public interface CachedAuthorityService {
     /**
-     * Index all authorities that are available in the metadata of the provided item.
+     * Store all item metadata authorities that are available in the metadata of the provided item in the cache.
      * @param context
      * the DSpace context
      * @param item
@@ -32,7 +32,7 @@ public interface CachedAuthorityService {
      * @throws SQLException
      * @throws AuthorizeException
      */
-    public void processAuthorities(Context context, Item item) throws SQLException, AuthorizeException;
+    public void writeItemAuthorityMetadataValuesToCache(Context context, Item item) throws SQLException, AuthorizeException;
 
     public boolean isConfigurationValid();
 
@@ -45,24 +45,24 @@ public interface CachedAuthorityService {
      * @throws SQLException
      * @throws AuthorizeException
      */
-    public Map<String, AuthorityValue> getAllAuthorityValues(Context context) throws SQLException, AuthorizeException;
+    public Map<String, AuthorityValue> getAllCachedAuthorityValues(Context context) throws SQLException, AuthorizeException;
 
     /**
-     * Empty the authority index.
+     * Empty the authority cache.
      * @throws Exception
      */
-    public void cleanAuthorityIndex() throws Exception;
+    public void cleanCache() throws Exception;
 
     /**
      * Index an authority value.
      * @param authorityValue
      */
-    public void indexAuthorityValue(AuthorityValue authorityValue);
+    public void writeAuthorityValueToCache(AuthorityValue authorityValue);
 
     /**
      * Commit all changes to the authority index since the last commit.
      */
-    public void commitAuthorityIndex();
+    public void commitAuthorityCache();
 
     /**
      * Check if a metadata field is authority controlled
@@ -81,7 +81,7 @@ public interface CachedAuthorityService {
      * @param field The metadata field
      * @return The new authority value object
      */
-    public AuthorityValue createAuthorityValue(Context context, String authorityKey, String content, String field);
+    public AuthorityValue createNonCachedAuthorityValue(Context context, String authorityKey, String content, String field);
 
     /**
      * Update the index of an authority value
@@ -90,7 +90,7 @@ public interface CachedAuthorityService {
      * @return
      * the updated authority value
      */
-    public AuthorityValue updateAuthorityValue(AuthorityValue value);
+    public AuthorityValue updateAuthorityValueInCache(AuthorityValue value);
 
     /**
      * Find an authority value by authority ID.
@@ -102,7 +102,7 @@ public interface CachedAuthorityService {
      * @return
      * the authority value with the provided authority ID
      */
-    public AuthorityValue findAuthorityValueByID(Context context, String authorityID);
+    public AuthorityValue findCachedAuthorityValueByAuthorityID(Context context, String authorityID);
 
     /**
      * Find authority values by their value. An authority is only returned if the authority's value exactly matches the provided value.
@@ -115,7 +115,7 @@ public interface CachedAuthorityService {
      * @return
      * a list of authority values with a value that exactly matches the provided value.
      */
-    public List<AuthorityValue> findAuthorityValuesByExactValue(Context context, String field, String value);
+    public List<AuthorityValue> findCachedAuthorityValuesByExactValue(Context context, String field, String value);
 
     /**
      * Get all indexed authority values
@@ -124,7 +124,7 @@ public interface CachedAuthorityService {
      * @return
      * a list of all indexed authority values
      */
-    public List<AuthorityValue> findAllAuthorityValues(Context context);
+    public List<AuthorityValue> findAllCachedAuthorityValues(Context context);
 
     /**
      * Get the authority value from the provided solr document
@@ -158,7 +158,7 @@ public interface CachedAuthorityService {
      * @param metadataField Is one of the fields defined in dspace.cfg to be indexed.
      * @param value         Is one of the values of the given metadataField in one of the items being indexed.
      */
-    public AuthorityValue storeMetadataInAuthorityCache(Context context, Item item, String metadataField, MetadataValue value);
+    public AuthorityValue writeMetadataInAuthorityCache(Context context, Item item, String metadataField, MetadataValue value);
 
     /**
      * Replace an item's metadata value with this authority
@@ -181,5 +181,5 @@ public interface CachedAuthorityService {
      * the authority ID
      * @throws Exception
      */
-    public void deleteAuthorityValueById(String id) throws Exception;
+    public void deleteAuthorityValueFromCacheById(String id) throws Exception;
 }
