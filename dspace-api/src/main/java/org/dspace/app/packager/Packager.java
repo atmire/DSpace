@@ -319,6 +319,7 @@ public class Packager
 
         // find the EPerson, assign to context
         Context context = new Context();
+        context.enableBatchMode(true);
         EPerson myEPerson = null;
         myEPerson = EPersonServiceFactory.getInstance().getEPersonService().findByEmail(context, eperson);
         if (myEPerson == null)

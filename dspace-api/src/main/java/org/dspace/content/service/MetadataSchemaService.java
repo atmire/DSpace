@@ -14,6 +14,7 @@ import org.dspace.core.Context;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service interface class for the MetadataSchema object.
@@ -96,4 +97,6 @@ public interface MetadataSchemaService {
      * @throws SQLException
      */
     public MetadataSchema find(Context context, String shortName) throws SQLException;
+
+    public Map<String, MetadataSchema> exportMetadataSchemaList() throws SQLException;
 }

@@ -17,7 +17,9 @@ import org.dspace.core.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service implementation for the MetadataSchema object.
@@ -143,6 +145,18 @@ public class MetadataSchemaServiceImpl implements MetadataSchemaService {
             return null;
         }
         return metadataSchemaDAO.find(context, shortName);
+    }
+
+    public Map<String, MetadataSchema> exportMetadataSchemaList() throws SQLException
+    {
+        List<MetadataSchema> metadataSchemas = this.findAll(new Context());
+        Map<String, MetadataSchema> stringMetadataSchemas = new HashMap<>();
+        for (MetadataSchema schema : metadataSchemas)
+        {
+            stringMetadataSchemas.put(schema.getName(), schema);
+        }
+
+        return stringMetadataSchemas;
     }
 
 

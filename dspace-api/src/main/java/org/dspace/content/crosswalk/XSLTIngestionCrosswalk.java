@@ -36,12 +36,6 @@ import org.jdom.output.XMLOutputter;
 import org.jdom.transform.JDOMResult;
 import org.jdom.transform.JDOMSource;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.List;
-
 /**
  * Configurable XSLT-driven ingestion Crosswalk
  * <p>
@@ -73,11 +67,14 @@ public class XSLTIngestionCrosswalk
     // apply metadata values returned in DIM to the target item.
     private static void applyDim(Context context, List<Element> dimList, Item item, boolean createMissingMetadataFields)
             throws CrosswalkException, SQLException, AuthorizeException {
+
+        CrosswalkMetadataValidator validator = new CrosswalkMetadataValidator();
+
         for (Element elt : dimList)
         {
             if ("field".equals(elt.getName()) && DIM_NS.equals(elt.getNamespace()))
             {
-                applyDimField(context, elt, item, createMissingMetadataFields);
+                applyDimField(context, elt, item, createMissingMetadataFields, validator);
             }
             else if ("dim".equals(elt.getName()) && DIM_NS.equals(elt.getNamespace()))
             {
@@ -93,7 +90,7 @@ public class XSLTIngestionCrosswalk
     }
 
     // adds the metadata element from one <field>
-    private static void applyDimField(Context context, Element field, Item item, boolean createMissingMetadataFields) throws CrosswalkException, SQLException, AuthorizeException {
+    private static void applyDimField(Context context, Element field, Item item, boolean createMissingMetadataFields, CrosswalkMetadataValidator metadataValidator) throws CrosswalkException, SQLException, AuthorizeException {
         String schema = field.getAttributeValue("mdschema");
         String element = field.getAttributeValue("element");
         String qualifier = field.getAttributeValue("qualifier");
@@ -101,7 +98,6 @@ public class XSLTIngestionCrosswalk
         String authority = field.getAttributeValue("authority");
         String sconf = field.getAttributeValue("confidence");
 
-        CrosswalkMetadataValidator metadataValidator = new CrosswalkMetadataValidator();
         MetadataField metadataField = metadataValidator.checkMetadata(context, schema, element, qualifier, createMissingMetadataFields);
         // sanity check: some XSL puts an empty string in qualifier,
         // change it to null so we match the unqualified DC field:

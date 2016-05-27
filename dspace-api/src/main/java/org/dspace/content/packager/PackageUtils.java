@@ -795,7 +795,7 @@ public class PackageUtils
         String objID = StringUtils.substringBetween(groupName, "_", "_");
         int objType = StringUtils.startsWith(groupName, "COLLECTION_") ? Constants.COLLECTION : (StringUtils.startsWith(groupName, "COMMUNITY_") ? Constants.COMMUNITY : -1);
         String groupType = StringUtils.substringAfterLast(groupName, "_");
-        if (objID == null && objType != -1)
+        if (objID == null && objType == -1)
             return groupName;
 
 
@@ -805,7 +805,6 @@ public class PackageUtils
 
             //First, get the object via the Internal ID
             DSpaceObject dso = ContentServiceFactory.getInstance().getDSpaceLegacyObjectService(objType).findByIdOrLegacyId(context, objID);
-            ;
 
             if(dso==null)
             {

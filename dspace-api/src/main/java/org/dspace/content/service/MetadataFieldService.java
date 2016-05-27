@@ -16,6 +16,7 @@ import org.dspace.core.Context;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service interface class for the MetadataField object.
@@ -111,4 +112,6 @@ public interface MetadataFieldService {
      * @throws AuthorizeException
      */
     public void delete(Context context, MetadataField metadataField) throws SQLException, AuthorizeException;
+
+    public Map<String, MetadataField> exportMetadataFieldList() throws SQLException;
 }

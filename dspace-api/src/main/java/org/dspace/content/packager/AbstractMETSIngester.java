@@ -33,7 +33,6 @@ import org.dspace.core.Context;
 import org.dspace.core.LogManager;
 import org.dspace.handle.factory.HandleServiceFactory;
 import org.dspace.handle.service.HandleService;
-import org.dspace.utils.DSpace;
 import org.dspace.workflow.WorkflowException;
 import org.dspace.workflow.factory.WorkflowServiceFactory;
 import org.jdom.Element;
@@ -1489,7 +1488,7 @@ public abstract class AbstractMETSIngester extends AbstractPackageIngester
     }
 
     private DSpaceObject intermediateCommit(Context context, DSpaceObject dso) throws SQLException {
-        context.commit();
+        context.clearCache();
         return context.reloadEntity(dso);
     }
 

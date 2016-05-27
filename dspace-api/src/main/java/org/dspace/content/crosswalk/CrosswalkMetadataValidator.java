@@ -7,8 +7,10 @@
  */
 package org.dspace.content.crosswalk;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
+import org.apache.log4j.Logger;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.MetadataField;
 import org.dspace.content.MetadataSchema;
@@ -26,19 +28,34 @@ import java.util.Map;
 
 public class CrosswalkMetadataValidator {
 
+    /** log4j logger */
+    private static Logger log = Logger.getLogger(CrosswalkMetadataValidator.class);
+
     protected MetadataSchemaService metadataSchemaService;
     protected MetadataFieldService metadataFieldService;
 
     private String schemaChoice;
     private String fieldChoice;
 
-    private Map<Triple<String, String, String>, MetadataField> validatedMetadataFields;
+//    private Map<Triple<String, String, String>, MetadataField> validatedMetadataFields;
+
+    private Map<String, MetadataSchema> cachedMetadataSchemas;
+    private Map<String, MetadataField> cachedMetadataFields;
 
     public CrosswalkMetadataValidator() {
         metadataSchemaService = ContentServiceFactory.getInstance().getMetadataSchemaService();
         metadataFieldService = ContentServiceFactory.getInstance().getMetadataFieldService();
 
-        validatedMetadataFields = new HashMap<>();
+//        validatedMetadataFields = new HashMap<>();
+
+        try
+        {
+            cachedMetadataSchemas = metadataSchemaService.exportMetadataSchemaList();
+            cachedMetadataFields = metadataFieldService.exportMetadataFieldList();
+        } catch (SQLException e)
+        {
+            log.error(e.getMessage(), e);
+        }
 
         // The two options, with three possibilities each: add, ignore, fail
         schemaChoice = ConfigurationManager.getProperty("oai", "harvester.unknownSchema");
@@ -59,57 +76,59 @@ public class CrosswalkMetadataValidator {
      * on a configurable parameter (fail, ignore, add).
      */
     public MetadataField checkMetadata(Context context, String schema, String element, String qualifier, boolean forceCreate) throws SQLException, AuthorizeException, CrosswalkException {
-        if(!validatedBefore(schema, element, qualifier)) {
-            // Verify that the schema exists
-            MetadataSchema mdSchema = metadataSchemaService.find(context, schema);
-            MetadataField mdField = null;
-
-            if (mdSchema == null) {
-                // add a new schema, giving it a namespace of "unknown". Possibly a very bad idea.
-                if (forceCreate && schemaChoice.equals("add")) {
-                    try {
-                        mdSchema = metadataSchemaService.create(context, schema, String.valueOf(new Date().getTime()));
-                        mdSchema.setNamespace("unknown" + mdSchema.getID());
-                        metadataSchemaService.update(context, mdSchema);
-                    } catch (NonUniqueMetadataException e) {
-                        // This case should not be possible
-                        e.printStackTrace();
-                    }
-                }
-                // ignore the offending schema, quietly dropping all of its metadata elements before they clog our gears
-                else if (!schemaChoice.equals("ignore")) {
-                    throw new CrosswalkException("The '" + schema + "' schema has not been defined in this DSpace instance. ");
-                }
-            }
-
-            if (mdSchema != null) {
-                // Verify that the element exists; this part is reachable only if the metadata schema is valid
-                mdField = metadataFieldService.findByElement(context, mdSchema, element, qualifier);
-                if (mdField == null) {
-                    if (forceCreate && fieldChoice.equals("add")) {
-                        try {
-                            metadataFieldService.create(context, mdSchema, element, qualifier, null);
-                        } catch (NonUniqueMetadataException e) {
-                            // This case should also not be possible
-                            e.printStackTrace();
-                        }
-                    } else if (!fieldChoice.equals("ignore")) {
-                        throw new CrosswalkException("The '" + element + "." + qualifier + "' element has not been defined in this DSpace instance. ");
-                    }
-                }
-            }
-
-            validatedMetadataFields.put(createKey(schema, element, qualifier), mdField);
+        String metadataFieldString = schema + "_" + element;
+        if(StringUtils.isNotBlank(qualifier)) {
+            metadataFieldString += "_" + qualifier;
         }
 
-        return validatedMetadataFields.get(createKey(schema, element, qualifier));
+        // Verify that the schema exists
+        MetadataSchema mdSchema = cachedMetadataSchemas.get(schema);
+        MetadataField mdField = null;
+
+        if (!cachedMetadataSchemas.containsKey(schema)) {
+            // add a new schema, giving it a namespace of "unknown". Possibly a very bad idea.
+            if (forceCreate && schemaChoice.equals("add")) {
+                try {
+                    mdSchema = metadataSchemaService.create(context, schema, String.valueOf(new Date().getTime()));
+                    mdSchema.setNamespace("unknown" + mdSchema.getID());
+                    metadataSchemaService.update(context, mdSchema);
+                    cachedMetadataSchemas.put(schema, mdSchema);
+                } catch (NonUniqueMetadataException e) {
+                    // This case should not be possible
+                    log.error(e.getMessage(), e);
+                }
+            }
+            // ignore the offending schema, quietly dropping all of its metadata elements before they clog our gears
+            else if (!schemaChoice.equals("ignore")) {
+                throw new CrosswalkException("The '" + schema + "' schema has not been defined in this DSpace instance. ");
+            }
+        }
+
+        if (cachedMetadataSchemas.containsKey(schema)) {
+            // Verify that the element exists; this part is reachable only if the metadata schema is valid
+            if (!cachedMetadataFields.containsKey(metadataFieldString)) {
+                if (forceCreate && fieldChoice.equals("add")) {
+                    try {
+                        mdField = metadataFieldService.create(context, mdSchema, element, qualifier, null);
+                        cachedMetadataFields.put(metadataFieldString, mdField);
+                    } catch (NonUniqueMetadataException e) {
+                        // This case should also not be possible
+                        e.printStackTrace();
+                    }
+                } else if (!fieldChoice.equals("ignore")) {
+                    throw new CrosswalkException("The '" + element + "." + qualifier + "' element has not been defined in this DSpace instance. ");
+                }
+            }
+        }
+
+        return cachedMetadataFields.get(metadataFieldString);
     }
 
-    private boolean validatedBefore(String schema, String element, String qualifier) {
-        return validatedMetadataFields.containsKey(createKey(schema, element, qualifier));
-    }
+//    private boolean validatedBefore(String schema, String element, String qualifier) {
+//        return validatedMetadataFields.containsKey(createKey(schema, element, qualifier));
+//    }
 
-    private ImmutableTriple<String, String, String> createKey(final String schema, final String element, final String qualifier) {
-        return new ImmutableTriple<String, String, String>(schema, element, qualifier);
-    }
+//    private ImmutableTriple<String, String, String> createKey(final String schema, final String element, final String qualifier) {
+//        return new ImmutableTriple<String, String, String>(schema, element, qualifier);
+//    }
 }

@@ -19,7 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service implementation for the MetadataField object.
@@ -145,6 +147,17 @@ public class MetadataFieldServiceImpl implements MetadataFieldService {
 
         metadataValueService.deleteByMetadataField(context, metadataField);
         metadataFieldDAO.delete(context, metadataField);
+    }
+
+    public Map<String, MetadataField> exportMetadataFieldList() throws SQLException
+    {
+        List<MetadataField> metadataFields = this.findAll(new Context());
+        Map<String, MetadataField> stringMetadataFields = new HashMap<>();
+        for (MetadataField field : metadataFields)
+        {
+            stringMetadataFields.put(field.toString(), field);
+        }
+        return stringMetadataFields;
     }
 
     /**

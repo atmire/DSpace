@@ -484,7 +484,7 @@ public class AuthorizeServiceImpl implements AuthorizeService
                                        DSpaceObject dest) throws SQLException, AuthorizeException
     {
         // find all policies for the source object
-        List<ResourcePolicy> policies = getPolicies(c, src);
+        List<ResourcePolicy> policies = src.getResourcePolicies();
 
         //Only inherit non-ADMIN policies (since ADMIN policies are automatically inherited)
         List<ResourcePolicy> nonAdminPolicies = new ArrayList<ResourcePolicy>();

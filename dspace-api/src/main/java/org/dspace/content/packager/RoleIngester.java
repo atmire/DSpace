@@ -429,7 +429,7 @@ public class RoleIngester implements PackageIngester
     }
 
     private DSpaceObject intermediateCommit(Context context, DSpaceObject dso) throws SQLException {
-        context.commit();
+        context.clearCache();
         return context.reloadEntity(dso);
     }
 
