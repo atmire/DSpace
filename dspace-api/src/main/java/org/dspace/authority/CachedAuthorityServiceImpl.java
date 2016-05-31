@@ -26,6 +26,7 @@ import org.dspace.core.LogManager;
 import org.springframework.beans.factory.annotation.*;
 
 /**
+ * @author kevinvandevelde at atmire.com
  * @author philip at atmire.com
  */
 public class CachedAuthorityServiceImpl implements CachedAuthorityService {
