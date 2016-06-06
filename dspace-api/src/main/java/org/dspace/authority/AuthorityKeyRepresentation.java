@@ -30,9 +30,9 @@ public class AuthorityKeyRepresentation
     {
         if (isAuthorityKeyRepresentation(authority)) {
             String[] split = org.apache.commons.lang.StringUtils.split(authority, SPLIT);
-            if (split.length > 0) {
+            if (split.length > 1) {
                 authorityType = split[1];
-                if (split.length > 1) {
+                if (split.length > 2) {
                     internalIdentifier = split[2];
                 }
             }
