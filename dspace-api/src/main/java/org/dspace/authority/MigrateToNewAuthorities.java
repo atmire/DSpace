@@ -78,7 +78,7 @@ public class MigrateToNewAuthorities {
             if(!authority.getSolrId().equals(authority.getId())){
                 try {
                     cachedAuthorityService.deleteAuthorityValueFromCacheById(authority.getSolrId());
-                    cachedAuthorityService.updateAuthorityValueInCache(authority);
+                    cachedAuthorityService.writeAuthorityValueToCache(authority);
 
                     updateItemsWihAuthority(authority);
                 } catch (Exception e) {

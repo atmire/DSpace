@@ -7,17 +7,10 @@
  */
 package org.dspace.authority;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.ObjectUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrInputDocument;
-
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import org.apache.commons.codec.digest.*;
+import org.apache.commons.lang.*;
+import org.apache.solr.common.*;
 
 /**
  *
@@ -41,7 +34,13 @@ public class PersonAuthorityValue extends AuthorityValue {
     @Override
     public String getId() {
         // A PersonValue is considered unique with the first & last name.
-        String nonDigestedIdentifier = PersonAuthorityValue.class.toString() + "field: " + getField() +  "lastName: " + lastName + ", firstName: " + firstName;
+        String nonDigestedIdentifier;
+        if(StringUtils.isNotBlank(firstName)) {
+            nonDigestedIdentifier = PersonAuthorityValue.class.toString() + "field: " + getField() + "lastName: " + lastName + ", firstName: " + firstName;
+        }
+        else {
+            nonDigestedIdentifier = PersonAuthorityValue.class.toString() + "field: " + getField() + "lastName: " + lastName ;
+        }
         // We return an md5 digest of the toString, this will ensure a unique identifier for the same value each time
         return DigestUtils.md5Hex(nonDigestedIdentifier);
     }

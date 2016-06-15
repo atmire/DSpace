@@ -147,7 +147,7 @@ public class UpdateAuthorities {
                         }
                     }
                     else {
-                        cachedAuthorityService.deleteAuthorityValueFromCacheById(authority.getId());
+                        cachedAuthorityService.deleteAuthorityValueFromCacheById(authority.getSolrId());
                         print.println("Removed: " + authority.getValue() + " - " + authority.getId());
                     }
                 } catch (Exception e) {
