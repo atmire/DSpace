@@ -237,10 +237,6 @@ public abstract class AuthorityValue {
             return false;
         }
 
-        if (solrId != null ? !solrId.equals(that.solrId) : that.solrId != null) {
-            return false;
-        }
-
         return true;
     }
 }

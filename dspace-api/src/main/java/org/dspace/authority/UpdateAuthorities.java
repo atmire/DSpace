@@ -133,29 +133,43 @@ public class UpdateAuthorities {
         if (authorities != null) {
             print.println(authorities.size() + " authorities found.");
             for (AuthorityValue authority : authorities) {
-                AuthorityValue updated = cachedAuthorityService.updateAuthorityValueInCache(authority);
-                if (!updated.getLastModified().equals(authority.getLastModified())) {
-                    followUp(updated);
+                String field = authority.getField().replaceAll("_", "\\.");
+
+                try {
+                    Iterator<Item> itemIterator = itemService.findByMetadataFieldAuthority(context, field, authority.getId(), false);
+
+                    // update the authority if it is in the metadata of at least one item, otherwise delete the authority
+                    if(itemIterator.hasNext()){
+                        AuthorityValue updated = cachedAuthorityService.updateAuthorityValueInCache(authority);
+
+                        if (!updated.getLastModified().equals(authority.getLastModified())) {
+                            followUp(updated, itemIterator, field);
+                        }
+                    }
+                    else {
+                        cachedAuthorityService.deleteAuthorityValueFromCacheById(authority.getId());
+                        print.println("Removed: " + authority.getValue() + " - " + authority.getId());
+                    }
+                } catch (Exception e) {
+                    log.error(e.getMessage(),e);
                 }
             }
         }
     }
 
 
-    protected void followUp(AuthorityValue authority) {
+    protected void followUp(AuthorityValue authority, Iterator<Item> itemIterator, String field) {
         print.println("Updated: " + authority.getValue() + " - " + authority.getId());
 
         boolean updateItems = ConfigurationManager.getBooleanProperty("solrauthority","auto-update-items");
         if (updateItems) {
-            updateItems(authority);
+            updateItems(authority, itemIterator, field);
         }
     }
 
-    protected void updateItems(AuthorityValue authority) {
+    protected void updateItems(AuthorityValue authority, Iterator<Item> itemIterator, String field) {
         try {
             context.turnOffAuthorisationSystem();
-            String field = authority.getField().replaceAll("_", "\\.");
-            Iterator<Item> itemIterator = itemService.findByMetadataFieldAuthority(context, field, authority.getId(), false);
             while (itemIterator.hasNext()) {
                 Item next = itemIterator.next();
                 List<MetadataValue> metadata = itemService.getMetadata(next, field, authority.getId());
