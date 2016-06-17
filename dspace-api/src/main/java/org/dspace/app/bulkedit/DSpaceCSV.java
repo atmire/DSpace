@@ -11,11 +11,11 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.*;
 import org.apache.commons.lang3.*;
-import org.dspace.authority.factory.*;
-import org.dspace.authority.service.*;
 import org.dspace.content.Collection;
 import org.dspace.content.*;
 import org.dspace.content.authority.*;
+import org.dspace.content.authority.factory.*;
+import org.dspace.content.authority.service.*;
 import org.dspace.content.factory.*;
 import org.dspace.content.service.*;
 import org.dspace.core.*;
@@ -67,8 +67,7 @@ public class DSpaceCSV implements Serializable
     protected transient final ItemService itemService = ContentServiceFactory.getInstance().getItemService();
     protected transient final MetadataSchemaService metadataSchemaService = ContentServiceFactory.getInstance().getMetadataSchemaService();
     protected transient final MetadataFieldService metadataFieldService = ContentServiceFactory.getInstance().getMetadataFieldService();
-    protected transient final CachedAuthorityService cachedAuthorityService = AuthorityServiceFactory.getInstance().getCachedAuthorityService();
-
+    protected transient final MetadataAuthorityService metadataAuthorityService = ContentAuthorityServiceFactory.getInstance().getMetadataAuthorityService();
 
     /** Whether to export all metadata such as handles and provenance information */
     protected boolean exportAll;
@@ -139,7 +138,7 @@ public class DSpaceCSV implements Serializable
                 else if (!"id".equals(element))
                 {
                     String authorityPrefix = "";
-                    if (cachedAuthorityService.isAuthorityControlledField(getFieldFromHeader(element))) {
+                    if (metadataAuthorityService.isAuthorityControlled(getFieldFromHeader(element).replace(".","_"))) {
                         String authorityType = getAuthorityTypeFromHeader(element);
                         if(StringUtils.isNotBlank(authorityType)){
                             authorityPrefix = authorityType + ":";

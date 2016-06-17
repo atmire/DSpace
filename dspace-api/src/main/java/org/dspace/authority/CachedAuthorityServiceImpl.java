@@ -154,22 +154,6 @@ public class CachedAuthorityServiceImpl implements CachedAuthorityService {
     }
 
     /**
-     * Check if a metadata field is authority controlled
-     * @param field
-     * The metadata field
-     * @return
-     * true if the field is authority controlled
-     */
-    @Override
-    public boolean isAuthorityControlledField(String field) {
-        if(authorityControlled==null){
-            setAuthorizedMetadataFields();
-        }
-
-        return authorityControlled.contains(field);
-    }
-
-    /**
      * Set authority controlled fields
      *
      */

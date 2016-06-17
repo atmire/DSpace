@@ -65,15 +65,6 @@ public interface CachedAuthorityService {
     public void commitAuthorityCache();
 
     /**
-     * Check if a metadata field is authority controlled
-     * @param field
-     * The metadata field
-     * @return
-     * true if the field is authority controlled
-     */
-    public boolean isAuthorityControlledField(String field);
-
-    /**
      * Create an authority value object. This object is not yet stored in the authority cache.
      * @param context The context
      * @param authorityKey The authority key

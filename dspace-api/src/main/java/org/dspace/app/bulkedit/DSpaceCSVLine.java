@@ -7,11 +7,10 @@
  */
 package org.dspace.app.bulkedit;
 
-import org.dspace.authority.service.*;
-import org.dspace.authority.factory.*;
-
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
+import org.dspace.content.authority.factory.*;
+import org.dspace.content.authority.service.*;
 
 /**
  * Utility class to store a line from a CSV file
@@ -26,7 +25,7 @@ public class DSpaceCSVLine implements Serializable
     /** The elements in this line in a hashtable, keyed by the metadata type */
     private final Map<String, ArrayList> items;
 
-    protected transient final CachedAuthorityService cachedAuthorityService = AuthorityServiceFactory.getInstance().getCachedAuthorityService();
+    protected transient final MetadataAuthorityService metadataAuthorityService = ContentAuthorityServiceFactory.getInstance().getMetadataAuthorityService();
 
 
     /** ensuring that the order-sensible columns of the csv are processed in the correct order */
@@ -35,8 +34,8 @@ public class DSpaceCSVLine implements Serializable
         public int compare(String md1, String md2) {
 
             // The metadata coming from an external source should be processed after the others
-            boolean source1AuthorityControlled = cachedAuthorityService.isAuthorityControlledField(md1);
-            boolean source2AuthorityControlled = cachedAuthorityService.isAuthorityControlledField(md2);
+            boolean source1AuthorityControlled = metadataAuthorityService.isAuthorityControlled(md1.replace(".","_"));
+            boolean source2AuthorityControlled = metadataAuthorityService.isAuthorityControlled(md2.replace(".","_"));
 
             int compare;
             if (!source2AuthorityControlled && source1AuthorityControlled) {

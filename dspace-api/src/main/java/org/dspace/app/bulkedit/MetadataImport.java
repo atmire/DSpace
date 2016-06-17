@@ -20,6 +20,8 @@ import org.dspace.authorize.*;
 import org.dspace.content.Collection;
 import org.dspace.content.*;
 import org.dspace.content.authority.*;
+import org.dspace.content.authority.factory.*;
+import org.dspace.content.authority.service.*;
 import org.dspace.content.factory.*;
 import org.dspace.content.service.*;
 import org.dspace.core.*;
@@ -51,6 +53,7 @@ public class MetadataImport
     protected static final Logger log = Logger.getLogger(MetadataImport.class);
 
     protected static CachedAuthorityService cachedAuthorityService;
+    protected static MetadataAuthorityService metadataAuthorityService;
 
     protected final ItemService itemService;
     protected final InstallItemService installItemService;
@@ -77,6 +80,7 @@ public class MetadataImport
         handleService = HandleServiceFactory.getInstance().getHandleService();
         cachedAuthorityService = AuthorityServiceFactory.getInstance().getCachedAuthorityService();
         workspaceItemService = ContentServiceFactory.getInstance().getWorkspaceItemService();
+        metadataAuthorityService = ContentAuthorityServiceFactory.getInstance().getMetadataAuthorityService();
     }
 
     /**
@@ -1145,13 +1149,13 @@ public class MetadataImport
      */
     private static boolean isAuthorityControlledField(String md)
     {
-        if(cachedAuthorityService.isAuthorityControlledField(md)){
+        if(metadataAuthorityService.isAuthorityControlled(md.replace(".","_"))){
             return true;
         }
 
         String mdf = StringUtils.substringAfter(md, ":");
         mdf = StringUtils.substringBefore(mdf, "[");
-        return cachedAuthorityService.isAuthorityControlledField(mdf);
+        return metadataAuthorityService.isAuthorityControlled(mdf);
     }
 
     /**
