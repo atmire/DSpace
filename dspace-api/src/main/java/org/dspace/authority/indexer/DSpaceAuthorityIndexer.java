@@ -110,48 +110,38 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
 
 
     @Override
-    public boolean hasMore() throws SQLException, AuthorizeException {
-        if (currentItem == null) {
-            return false;
-        }
-
-        // 1. iterate over the metadata values
-
-        String metadataField = metadataFields.get(currentFieldIndex);
-        List<MetadataValue> values = itemService.getMetadataByMetadataString(currentItem, metadataField);
-        if (currentMetadataIndex < values.size()) {
-            nextValue = cachedAuthorityService.writeMetadataInAuthorityCache(context, currentItem, metadataField, values.get(currentMetadataIndex));
-
-            currentMetadataIndex++;
-            return true;
-        } else {
+    public boolean hasMore() throws AuthorizeException, SQLException {
+        // 1. iterate over the items
+        while(currentItem!=null){
 
             // 2. iterate over the metadata fields
+            for ( ; currentFieldIndex < metadataFields.size(); ) {
+                String metadataField = metadataFields.get(currentFieldIndex);
+                List<MetadataValue> values = itemService.getMetadataByMetadataString(currentItem, metadataField);
 
-            if ((currentFieldIndex + 1) < metadataFields.size()) {
-                currentFieldIndex++;
-                //Reset our current metadata index since we are moving to another field
-                currentMetadataIndex = 0;
-                return hasMore();
-            } else {
-
-                // 3. iterate over the items
-
-                if (itemIterator.hasNext()) {
-                    currentItem = itemIterator.next();
-                    //Reset our current field index
-                    currentFieldIndex = 0;
-                    //Reset our current metadata index
-                    currentMetadataIndex = 0;
-                } else {
-                    currentItem = null;
+                // 3. iterate over the metadata values
+                for (; currentMetadataIndex < values.size(); ) {
+                    MetadataValue value = values.get(currentMetadataIndex);
+                    nextValue = cachedAuthorityService.writeMetadataInAuthorityCache(context, currentItem, metadataField, values.get(currentMetadataIndex));
+                    currentMetadataIndex++;
+                    return true;
                 }
-                return hasMore();
+                currentMetadataIndex = 0;
+                currentFieldIndex++;
             }
+
+            if(itemIterator.hasNext()) {
+                currentItem = itemIterator.next();
+            }
+            else{
+                currentItem = null;
+            }
+
+            currentFieldIndex = 0;
         }
+
+        return false;
     }
-
-
 
     @Override
     public void close() {
