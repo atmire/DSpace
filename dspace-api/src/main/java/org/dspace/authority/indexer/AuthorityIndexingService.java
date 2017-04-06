@@ -8,9 +8,10 @@
 
 package org.dspace.authority.indexer;
 
-import org.dspace.authority.AuthorityValue;
+import org.dspace.authority.*;
 
 /**
+ * AuthorityIndexingService is responsible for index requests to the authority solr core.
  *
  * @author Antoine Snyers (antoine at atmire.com)
  * @author Kevin Van de Velde (kevin at atmire dot com)
@@ -19,12 +20,32 @@ import org.dspace.authority.AuthorityValue;
  */
 public interface AuthorityIndexingService {
 
+    /**
+     * Index an authority value.
+     * @param value
+     */
+    public void indexContent(AuthorityValue value);
 
-    public void indexContent(AuthorityValue value, boolean force);
+    public void indexContentWithSolrId(AuthorityValue value);
 
+    /**
+     * Empty the authority index.
+     * @throws Exception
+     */
     public void cleanIndex() throws Exception;
 
+    /**
+     * Save all changes since the last commit in the authority index.
+     */
     public void commit();
 
     public boolean isConfiguredProperly();
+
+    /**
+     * Delete an authority index by it's authority ID
+     * @param id
+     * the authority ID
+     * @throws Exception
+     */
+    void deleteAuthorityValueById(String id) throws Exception;
 }

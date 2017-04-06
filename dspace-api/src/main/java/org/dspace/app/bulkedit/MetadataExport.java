@@ -7,16 +7,13 @@
  */
 package org.dspace.app.bulkedit;
 
+import java.sql.*;
+import java.util.*;
 import org.apache.commons.cli.*;
-
+import org.dspace.content.Collection;
 import org.dspace.content.*;
-import org.dspace.core.Constants;
-import org.dspace.core.Context;
-import org.dspace.handle.HandleManager;
-
-import java.util.ArrayList;
-import java.sql.SQLException;
-import java.util.List;
+import org.dspace.core.*;
+import org.dspace.handle.*;
 
 /**
  * Metadata exporter to allow the batch export of metadata into a file
@@ -31,6 +28,8 @@ public class MetadataExport
     /** Whether to export all metadata, or just normally edited metadata */
     private boolean exportAll;
 
+    private Context context;
+
     /**
      * Set up a new metadata export
      *
@@ -43,6 +42,7 @@ public class MetadataExport
         // Store the export settings
         this.toExport = toExport;
         this.exportAll = exportAll;
+        this.context = c;
     }
 
     /**
@@ -54,6 +54,7 @@ public class MetadataExport
      */
     public MetadataExport(Context c, Community toExport, boolean exportAll)
     {
+        this.context = c;
         try
         {
             // Try to export the community
@@ -79,7 +80,7 @@ public class MetadataExport
      * @throws SQLException
      */
     private List<Integer> buildFromCommunity(Community community, List<Integer> itemIDs, int indent)
-                                                                               throws SQLException
+            throws SQLException
     {
         // Add all the collections
         Collection[] collections = community.getCollections();
@@ -129,7 +130,7 @@ public class MetadataExport
             DSpaceCSV csv = new DSpaceCSV(exportAll);
             while (toExport.hasNext())
             {
-                csv.addItem(toExport.next());
+                csv.addItem(context, toExport.next());
             }
 
             // Return the results
@@ -161,10 +162,10 @@ public class MetadataExport
     }
 
     /**
-	 * main method to run the metadata exporter
-	 *
-	 * @param argv the command line arguments given
-	 */
+     * main method to run the metadata exporter
+     *
+     * @param argv the command line arguments given
+     */
     public static void main(String[] argv) throws Exception
     {
         // Create an options object and populate it
@@ -260,7 +261,7 @@ public class MetadataExport
         DSpaceCSV csv = exporter.export();
 
         // Save the files to the file
-        csv.save(filename);        
+        csv.save(filename);
 
         // Finish off and tidy up
         c.restoreAuthSystemState();

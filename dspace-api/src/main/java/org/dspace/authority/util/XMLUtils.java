@@ -7,23 +7,15 @@
  */
 package org.dspace.authority.util;
 
-import org.apache.log4j.Logger;
-import org.apache.xpath.XPathAPI;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPathExpressionException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.io.*;
+import java.util.*;
+import javax.xml.parsers.*;
+import javax.xml.transform.*;
+import javax.xml.xpath.*;
+import org.apache.log4j.*;
+import org.apache.xpath.*;
+import org.w3c.dom.*;
+import org.xml.sax.*;
 
 /**
  *
@@ -41,8 +33,10 @@ public class XMLUtils {
 
     /**
      * @param xml The starting context (a Node or a Document, for example).
+     * @param singleNodeXPath xpath
      * @return node.getTextContent() on the node that matches singleNodeXPath
      * null if nothing matches the NodeListXPath
+     * @throws XPathExpressionException if xpath error
      */
     public static String getTextContent(Node xml, String singleNodeXPath) throws XPathExpressionException {
         String text = null;
@@ -56,8 +50,10 @@ public class XMLUtils {
 
     /**
      * @param xml The starting context (a Node or a Document, for example).
+     * @param NodeListXPath xpath
      * @return A Node matches the NodeListXPath
      * null if nothing matches the NodeListXPath
+     * @throws XPathExpressionException if xpath error
      */
     public static Node getNode(Node xml, String NodeListXPath) throws XPathExpressionException {
         Node result = null;
@@ -71,8 +67,10 @@ public class XMLUtils {
 
     /**
      * @param xml The starting context (a Node or a Document, for example).
+     * @param NodeListXPath xpath
      * @return A NodeList containing the nodes that match the NodeListXPath
      * null if nothing matches the NodeListXPath
+     * @throws XPathExpressionException if xpath error
      */
     public static NodeList getNodeList(Node xml, String NodeListXPath) throws XPathExpressionException {
         NodeList nodeList = null;
@@ -93,6 +91,8 @@ public class XMLUtils {
      * that are element nodes:
      * node.getNodeType() == Node.ELEMENT_NODE
      * node instanceof Element
+     * @param nodeList NodeList
+     * @return iterator over nodes
      */
     public static Iterator<Node> getNodeListIterator(final NodeList nodeList) {
         return new Iterator<Node>() {

@@ -79,6 +79,7 @@ public class VersionedHandleIdentifierProvider extends IdentifierProvider {
     {
         try
         {
+            context.turnOffAuthorisationSystem();
             String id = mint(context, dso);
 
             // move canonical to point the latest version
@@ -115,6 +116,8 @@ public class VersionedHandleIdentifierProvider extends IdentifierProvider {
         }catch (Exception e){
             log.error(LogManager.getHeader(context, "Error while attempting to create handle", "Item id: " + (dso != null ? dso.getID() : "")), e);
             throw new RuntimeException("Error while attempting to create identifier for Item id: " + (dso != null ? dso.getID() : ""));
+        }finally {
+            context.restoreAuthSystemState();
         }
     }
 
@@ -570,7 +573,7 @@ public class VersionedHandleIdentifierProvider extends IdentifierProvider {
      * @param context DSpace context
      * @param handle The handle to resolve
      * @return The database row corresponding to the handle
-     * @exception java.sql.SQLException If a database error occurs
+     * @exception SQLException If a database error occurs
      */
     protected static TableRow findHandleInternal(Context context, String handle)
             throws SQLException {
@@ -592,7 +595,7 @@ public class VersionedHandleIdentifierProvider extends IdentifierProvider {
      * @param id
      *            The id of object
      * @return The handle for object, or null if the object has no handle.
-     * @exception java.sql.SQLException
+     * @exception SQLException
      *                If a database error occurs
      */
     protected static TableRow getHandleInternal(Context context, int type, int id)
@@ -608,7 +611,7 @@ public class VersionedHandleIdentifierProvider extends IdentifierProvider {
      * Handle table.
      *
      * @return A new handle id
-     * @exception java.sql.SQLException
+     * @exception SQLException
      *                If a database error occurs
      */
     protected static String createId(int id) throws SQLException

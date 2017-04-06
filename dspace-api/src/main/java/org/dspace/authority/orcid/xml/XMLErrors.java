@@ -7,11 +7,10 @@
  */
 package org.dspace.authority.orcid.xml;
 
-import org.dspace.authority.util.XMLUtils;
-import org.apache.log4j.Logger;
-import org.w3c.dom.Document;
-
-import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.*;
+import org.apache.log4j.*;
+import org.dspace.authority.util.*;
+import org.w3c.dom.*;
 
 /**
  *

@@ -14,8 +14,7 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
            http://www.springframework.org/schema/beans/spring-beans.xsd
            http://www.springframework.org/schema/context
-           http://www.springframework.org/schema/context/spring-context.xsd"
-       default-autowire-candidates="*Service,*DAO,javax.sql.DataSource">
+           http://www.springframework.org/schema/context/spring-context.xsd">
 
     <context:annotation-config /> <!-- allows us to use spring annotations in beans -->
 
@@ -23,28 +22,28 @@
     <bean class="org.dspace.authority.AuthoritySolrServiceImpl" id="org.dspace.authority.AuthoritySearchService"/>
     <alias name="org.dspace.authority.AuthoritySearchService" alias="org.dspace.authority.indexer.AuthorityIndexingService"/>
 
-    <bean id="dspace.DSpaceAuthorityIndexer" class="org.dspace.authority.indexer.DSpaceAuthorityIndexer"/>
 
-    <bean name="AuthorityTypes" class="org.dspace.authority.AuthorityTypes">
-        <property name="types">
-            <list>
-                <bean class="org.dspace.authority.orcid.OrcidAuthorityValue"/>
-                <bean class="org.dspace.authority.PersonAuthorityValue"/>
-            </list>
-        </property>
-        <property name="fieldDefaults">
+    <bean id="authorityValueFactory" class="org.dspace.authority.factory.AuthorityValueFactoryImpl">
+        <property name="authorityValueFieldMapping">
             <map>
-                <entry key="dc_contributor_author">
-                    <bean class="org.dspace.authority.PersonAuthorityValue"/>
-                </entry>
+                <entry key="dc_contributor_author" value="PERSON"/>
             </map>
         </property>
     </bean>
 
-    <alias name="OrcidSource" alias="AuthoritySource"/>
-    <bean name="OrcidSource" class="org.dspace.authority.orcid.Orcid">
-        <constructor-arg value="http://pub.orcid.org"/>
+
+    <bean name="OrcidConnector" id="orcidConnector" class="org.dspace.authority.orcid.OrcidConnector" init-method="init">
+        <constructor-arg value="${orcid.api.url}"/>
+        <constructor-arg value="${orcid.oauth.url}"/>
+        <constructor-arg value="${orcid.client.id}"/>
+        <constructor-arg value="${orcid.client.secret}"/>
     </bean>
 
+    <bean id="orcidImportSource" class="java.lang.String">
+        <constructor-arg value="${orcid.connector.url}"/>
+    </bean>
+    <bean class="org.dspace.authority.CachedAuthorityServiceImpl" />
+    <bean id="authorityServiceFactory" class="org.dspace.authority.factory.AuthorityServiceFactoryImpl"/>
+    <bean id="ItemService" class="org.dspace.authority.ItemServiceImpl"/>
 
 </beans>

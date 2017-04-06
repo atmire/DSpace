@@ -37,6 +37,7 @@ public enum WorkExternalIdentifierType {
     PMID,
     RFC,
     SSRN,
-    ZBL
+    ZBL,
+    WOSUID
 
 }

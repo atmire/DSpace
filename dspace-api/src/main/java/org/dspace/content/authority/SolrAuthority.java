@@ -9,6 +9,7 @@ package org.dspace.content.authority;
 
 import org.dspace.authority.AuthoritySearchService;
 import org.dspace.authority.AuthorityValue;
+import org.dspace.authority.factory.AuthorityServiceFactory;
 import org.dspace.authority.rest.RestSource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -100,7 +101,7 @@ public class SolrAuthority implements ChoiceAuthority {
                 for (int i = 0; i < maxDocs; i++) {
                     SolrDocument solrDocument = authDocs.get(i);
                     if (solrDocument != null) {
-                        AuthorityValue val = AuthorityValue.fromSolr(solrDocument);
+                        AuthorityValue val = AuthorityServiceFactory.getInstance().getCachedAuthorityService().getAuthorityValueFromSolrDoc(solrDocument);
 
                         Map<String, String> extras = val.choiceSelectMap();
                         extras.put("insolr", val.getId());

@@ -7,7 +7,7 @@
  */
 package org.dspace.authority.orcid.model;
 
-import java.util.Map;
+import java.util.*;
 
 /**
  * http://support.orcid.org/knowledgebase/articles/118807

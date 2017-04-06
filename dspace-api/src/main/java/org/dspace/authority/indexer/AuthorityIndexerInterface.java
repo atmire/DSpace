@@ -8,9 +8,11 @@
 
 package org.dspace.authority.indexer;
 
-import org.dspace.authority.AuthorityValue;
-import org.dspace.content.Item;
-import org.dspace.core.Context;
+import java.sql.*;
+import org.dspace.authority.*;
+import org.dspace.authorize.*;
+import org.dspace.content.*;
+import org.dspace.core.*;
 
 /**
  *
@@ -23,13 +25,11 @@ public interface AuthorityIndexerInterface {
 
     public void init(Context context, Item item);
 
-    public void init(Context context, boolean useCache);
-
     public void init(Context context);
 
     public AuthorityValue nextValue();
 
-    public boolean hasMore();
+    public boolean hasMore() throws SQLException, AuthorizeException;
 
     public void close();
 

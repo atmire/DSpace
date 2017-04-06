@@ -7,19 +7,16 @@
  */
 package org.dspace.authority;
 
+import java.io.*;
+import java.sql.*;
+import java.util.*;
 import org.apache.commons.cli.*;
-import org.apache.log4j.Logger;
-import org.dspace.content.Item;
-import org.dspace.content.ItemIterator;
-import org.dspace.core.ConfigurationManager;
-import org.dspace.core.Context;
-
-import java.io.PrintWriter;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import org.dspace.content.Metadatum;
+import org.apache.log4j.*;
+import org.dspace.authority.factory.*;
+import org.dspace.authority.service.*;
+import org.dspace.content.*;
+import org.dspace.core.*;
+import org.dspace.utils.*;
 
 /**
  *
@@ -40,9 +37,16 @@ public class UpdateAuthorities {
     private Context context;
     private List<String> selectedIDs;
 
+    protected final CachedAuthorityService cachedAuthorityService;
+
+    protected final ItemService itemService;
+
+
     public UpdateAuthorities(Context context) {
         print = new PrintWriter(System.out);
         this.context = context;
+        this.cachedAuthorityService = AuthorityServiceFactory.getInstance().getCachedAuthorityService();
+        this.itemService = new DSpace().getServiceManager().getServicesByType(ItemService.class).get(0);
     }
 
     public static void main(String[] args) throws ParseException {
@@ -57,10 +61,12 @@ public class UpdateAuthorities {
             }
             UpdateAuthorities.run();
 
+            c.complete();
+
         } catch (SQLException e) {
-            log.error("Error in UpdateAuthorities", e);
+            log.error(e.getMessage(), e);
         } finally {
-            if (c != null) {
+            if (c != null && c.isValid()) {
                 c.abort();
             }
         }
@@ -76,7 +82,7 @@ public class UpdateAuthorities {
 
         HelpFormatter helpFormatter = new HelpFormatter();
         if (line.hasOption("h")) {
-            helpFormatter.printHelp("dsrun " + UpdateAuthorities.class.getCanonicalName(), options);
+            helpFormatter.printHelp("dsrun " + org.dspace.authority.UpdateAuthorities.class.getCanonicalName(), options);
             return 0;
         }
 
@@ -111,55 +117,74 @@ public class UpdateAuthorities {
         // This implementation could be very heavy on the REST service.
         // Use with care or make it more efficient.
 
-        AuthorityValueFinder authorityValueFinder = new AuthorityValueFinder();
         List<AuthorityValue> authorities;
 
         if (selectedIDs != null && !selectedIDs.isEmpty()) {
             authorities = new ArrayList<AuthorityValue>();
             for (String selectedID : selectedIDs) {
-                AuthorityValue byUID = authorityValueFinder.findByUID(context, selectedID);
-                authorities.add(byUID);
+                AuthorityValue byID = cachedAuthorityService.findCachedAuthorityValueByAuthorityID(context, selectedID);
+                authorities.add(byID);
             }
         } else {
-            authorities = authorityValueFinder.findAll(context);
+            authorities = cachedAuthorityService.findAllCachedAuthorityValues(context);
         }
 
         if (authorities != null) {
             print.println(authorities.size() + " authorities found.");
             for (AuthorityValue authority : authorities) {
-                AuthorityValue updated = AuthorityValueGenerator.update(authority);
-                if (!updated.getLastModified().equals(authority.getLastModified())) {
-                    followUp(updated);
+                String field = authority.getField().replaceAll("_", "\\.");
+
+                try {
+                    ItemIterator itemIterator = itemService.findByMetadataFieldAuthority(context, field, authority.getId(), false);
+
+                    // update the authority if it is in the metadata of at least one item, otherwise delete the authority
+                    if(itemIterator.hasNext()) {
+                        AuthorityValue updated = cachedAuthorityService.updateAuthorityValueInCache(authority);
+
+                        if (!updated.getLastModified().equals(authority.getLastModified())) {
+                            followUp(updated, itemIterator, field);
+                        }
+                    }
+                    else {
+                        cachedAuthorityService.deleteAuthorityValueFromCacheById(authority.getSolrId());
+                        print.println("Removed: " + authority.getValue() + " - " + authority.getId());
+                    }
+                } catch (Exception e) {
+                    log.error(e.getMessage(), e);
                 }
             }
         }
     }
 
 
-    protected void followUp(AuthorityValue authority) {
+    protected void followUp(AuthorityValue authority, ItemIterator itemIterator, String field) {
         print.println("Updated: " + authority.getValue() + " - " + authority.getId());
 
-        boolean updateItems = ConfigurationManager.getBooleanProperty("solrauthority", "auto-update-items");
+        boolean updateItems = ConfigurationManager.getBooleanProperty("solrauthority","auto-update-items");
         if (updateItems) {
-            updateItems(authority);
+            updateItems(authority, itemIterator, field);
         }
     }
 
-    protected void updateItems(AuthorityValue authority) {
+    protected void updateItems(AuthorityValue authority, ItemIterator itemIterator, String field) {
         try {
-            ItemIterator itemIterator = Item.findByMetadataFieldAuthority(context, authority.getField(), authority.getId());
+            context.turnOffAuthorisationSystem();
             while (itemIterator.hasNext()) {
                 Item next = itemIterator.next();
-                List<Metadatum> metadata = next.getMetadata(authority.getField(), authority.getId());
-                authority.updateItem(next, metadata.get(0)); //should be only one
-                List<Metadatum> metadataAfter = next.getMetadata(authority.getField(), authority.getId());
-                if (!metadata.get(0).value.equals(metadataAfter.get(0).value)) {
-                    print.println("Updated item with handle " + next.getHandle());
+                List<Metadatum> metadata = next.getMetadata(field, authority.getId());
+                String valueBefore = metadata.get(0).value;
+                cachedAuthorityService.updateItemMetadataWithAuthority(context, next, metadata.get(0), authority); //should be only one
+
+                if (!valueBefore.equals(metadata.get(0).value)) {
+                    print.println("Updated item with id " + next.getID());
                 }
             }
         } catch (Exception e) {
             log.error("Error updating item", e);
             print.println("Error updating item. " + Arrays.toString(e.getStackTrace()));
+        }
+        finally {
+            context.restoreAuthSystemState();
         }
     }
 

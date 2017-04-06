@@ -7,7 +7,6 @@
  */
 package org.dspace.authority;
 
-import org.dspace.authority.indexer.AuthorityIndexingService;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -15,6 +14,7 @@ import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrInputDocument;
+import org.dspace.authority.indexer.AuthorityIndexingService;
 import org.dspace.core.ConfigurationManager;
 
 import java.io.IOException;
@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * AuthoritySolrServiceImpl is responsible for requests to the authority solr core.
+ * e.g. querying the authority solr core, indexing authorities in solr.
  *
  * @author Antoine Snyers (antoine at atmire.com)
  * @author Kevin Van de Velde (kevin at atmire dot com)
@@ -33,6 +35,10 @@ public class AuthoritySolrServiceImpl implements AuthorityIndexingService, Autho
 
     private static final Logger log = Logger.getLogger(AuthoritySolrServiceImpl.class);
 
+    protected AuthoritySolrServiceImpl()
+    {
+
+    }
 
     /**
      * Non-Static CommonsHttpSolrServer for processing indexing events.
@@ -57,16 +63,44 @@ public class AuthoritySolrServiceImpl implements AuthorityIndexingService, Autho
         return solr;
     }
 
-    public void indexContent(AuthorityValue value, boolean force) {
+    /**
+     * Index an authority value.
+     * @param value
+     */
+    @Override
+    public void indexContent(AuthorityValue value) {
         SolrInputDocument doc = value.getSolrInputDocument();
 
         try{
             writeDocument(doc);
+            commit();
         }catch (Exception e){
             log.error("Error while writing authority value to the index: " + value.toString(), e);
         }
     }
 
+    /**
+     * Index an authority value with its solr ID.
+     * @param value
+     */
+    @Override
+    public void indexContentWithSolrId(AuthorityValue value) {
+        SolrInputDocument doc = value.getSolrInputDocument();
+        doc.setField("id", value.getSolrId());
+
+        try{
+            writeDocument(doc);
+            commit();
+        }catch (Exception e){
+            log.error("Error while writing authority value to the index: " + value.toString(), e);
+        }
+    }
+
+    /**
+     * Empty the authority index.
+     * @throws Exception
+     */
+    @Override
     public void cleanIndex() throws Exception {
         try{
             getSolr().deleteByQuery("*:*");
@@ -76,6 +110,10 @@ public class AuthoritySolrServiceImpl implements AuthorityIndexingService, Autho
         }
     }
 
+    /**
+     * Save all changes since the last commit in the authority index.
+     */
+    @Override
     public void commit() {
         try {
             getSolr().commit();
@@ -98,9 +136,26 @@ public class AuthoritySolrServiceImpl implements AuthorityIndexingService, Autho
     }
 
     /**
+     * Delete an authority index by it's authority ID
+     * @param id
+     * the authority ID
+     * @throws Exception
+     */
+    @Override
+    public void deleteAuthorityValueById(String id) throws Exception {
+        try{
+            getSolr().deleteByQuery("id:\"" +id + "\"");
+            commit();
+        } catch (Exception e){
+            log.error("Error while cleaning authority solr server index", e);
+            throw new Exception(e);
+        }
+    }
+
+    /**
      * Write the document to the solr index
      * @param doc the solr document
-     * @throws java.io.IOException
+     * @throws IOException if IO error
      */
     protected void writeDocument(SolrInputDocument doc) throws IOException {
 
@@ -108,7 +163,7 @@ public class AuthoritySolrServiceImpl implements AuthorityIndexingService, Autho
             getSolr().add(doc);
         } catch (Exception e) {
             try {
-                log.error("An error occurred for document: " + doc.getField("id").getFirstValue() + ", source: " + doc.getField("source").getFirstValue() + ", field: " + doc.getField("field").getFirstValue() + ", full-text: " + doc.getField("full-text").getFirstValue(), e);
+                log.error("An error occurred for document: " + doc.getField("id").getFirstValue() + ", source: " + doc.getField("source").getFirstValue() + ", authority_category: " + doc.getField("authority_category").getFirstValue() + ", full-text: " + doc.getField("full-text").getFirstValue(), e);
             } catch (Exception e1) {
                 //shouldn't happen
             }
@@ -116,6 +171,7 @@ public class AuthoritySolrServiceImpl implements AuthorityIndexingService, Autho
         }
     }
 
+    @Override
     public QueryResponse search(SolrQuery query) throws SolrServerException, MalformedURLException {
         return getSolr().query(query);
     }
@@ -123,17 +179,19 @@ public class AuthoritySolrServiceImpl implements AuthorityIndexingService, Autho
     /**
      * Retrieves all the metadata fields which are indexed in the authority control
      * @return a list of metadata fields
+     * @throws Exception if error
      */
-    public List<String> getAllIndexedMetadataFields() throws Exception {
+    @Override
+    public List<String> getAllIndexedCategories() throws Exception {
         SolrQuery solrQuery = new SolrQuery();
         solrQuery.setQuery("*:*");
         solrQuery.setFacet(true);
-        solrQuery.addFacetField("field");
+        solrQuery.addFacetField("authority_category");
 
         QueryResponse response = getSolr().query(solrQuery);
 
         List<String> results = new ArrayList<String>();
-        FacetField facetField = response.getFacetField("field");
+        FacetField facetField = response.getFacetField("authority_category");
         if(facetField != null){
             List<FacetField.Count> values = facetField.getValues();
             if(values != null){

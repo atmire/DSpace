@@ -8,8 +8,7 @@
 
 package org.dspace.authority.orcid.model;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  *

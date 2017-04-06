@@ -33,6 +33,10 @@ public class WorkExternalIdentifier {
         this.workExternalIdentifierType = workExternalIdentifierType;
     }
 
+    public String getWorkExternalIdenfitierID(){
+        return workExternalIdenfitierID;
+    }
+
     @Override
     public String toString() {
         return "WorkExternalIdentifier{" +

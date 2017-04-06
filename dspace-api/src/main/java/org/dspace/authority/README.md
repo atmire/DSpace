@@ -34,9 +34,19 @@ public class JournalAuthorityValue extends AuthorityValue {
     protected String publisher;
     protected List<String> ISSN = new ArrayList<String>();
 ```
-Since the journal title is to be stored as the record's value no specific instance variable is needed, **AuthorityValue** already provides this. The internal ID is also taken care of in the superclass.
+Since the journal title is to be stored as the record's value no specific instance variable is needed, **AuthorityValue** already provides this.
 
-Override **getSolrInputDocument()** and **setValues(SolrDocument document)** to control what is stored in the solr document.
+Override **getId()** to control how the authority ID is generated.
+```
+   @Override
+    public String getId() {
+        String nonDigestedIdentifier = JournalAuthorityValue.class.toString() + "field: " + getField() +  "issn: " + issn + ", publisher: " + publisher;
+        // We return an md5 digest of the toString, this will ensure a unique identifier for the same value each time
+        return DigestUtils.md5Hex(nonDigestedIdentifier);
+    }
+```
+
+Override **getSolrInputDocument()** to control what is stored in the solr document.
 
 ```
     @Override
@@ -48,24 +58,9 @@ Override **getSolrInputDocument()** and **setValues(SolrDocument document)** to 
         }
         return doc;
     }
-
-    @Override
-    public void setValues(SolrDocument document) {
-        super.setValues(document);
-        Object publisher = document.getFieldValue("publisher");
-        if (publisher != null) {
-            setPublisher(publisher.toString());
-        }
-        Collection<Object> issns = document.getFieldValues("ISSN");
-        if (issns != null) {
-            for (Object issn : issns) {
-                addISSN(issn.toString());
-            }
-        }
-    }
 ```
 
-Override **choiceSelectMap()** to control what will be displayed in the lookup UI
+Override **choiceSelectMap()** to control what will be displayed in the lookup UI.
 ```
     @Override
     public Map<String, String> choiceSelectMap() {
@@ -88,12 +83,10 @@ Override **choiceSelectMap()** to control what will be displayed in the lookup U
         return map;
     }
 ```
-Override **getAuthorityType()**, **generateString()** and **newInstance(String info)** and make sure they are consistent.
+Override **getAuthorityType()**, **generateString()** and make sure they are consistent.
 
 * **getAuthorityType()** The authority type is an implicit field in the solr document and is necessary to cast the solr document into the correct java class.
 * **generateString()** is a temporary value for the metadata's authority that will be handed to the authority consumer. This is only used when an external authority is chosen that has not yet been added to the solr cache. It needs to contain enough information to make an inambiguous external lookup, e.g. some sort of id.
-* **newInstance(String info)** will use the information to make the actual lookup and fill in all the information. In case there is no external source, this is of no matter.
-You may always look at the OrcidAuthorityValue class for an example!
 
 ```
     @Override
@@ -101,49 +94,73 @@ You may always look at the OrcidAuthorityValue class for an example!
         return "journal";
     }
 
-    @Override
-    public String generateString() {
-        return AuthorityValueGenerator.GENERATE // The trigger for the authority consumer to generate a new entry in the solr cache.
-                + getAuthorityType() // So this class will be used to create a new instance
-                + AuthorityValueGenerator.SPLIT
-                + getValue(); // This will be the value of the "info" parameter in public AuthorityValue newInstance(String info)
-    }
-
-    @Override
-    public AuthorityValue newInstance(String info) {
-        JournalAuthorityValue authorityValue = JournalAuthorityValue.create();
-        authorityValue.setValue(info);
-        // no external retrieval of information for this authority
-        return authorityValue;
-    }
+        @Override
+        public String generateString() {
+            return new AuthorityKeyRepresentation(getAuthorityType(), getId()).toString();
+        }
 ```
 
 Override **hasTheSameInformationAs(Object o)** and include only the sensible fields. The use case for this method is an update from the external information source. When comparing a value before and after the update and returning false, the last-modified-date will be updated.
 
-## Add the new class to the spring configuration
-config/spring/api/authority-services.xml
+## Extend org.dspace.authority.factory.AuthorityValueBuilder and implement the methods
 
 ```
-    <bean name="AuthorityTypes" class="org.dspace.authority.AuthorityTypes">
-        <property name="types">
-            <list>
-                <bean class="org.dspace.authority.journal.JournalAuthorityValue"/>
-                <bean class="org.dspace.authority.orcid.OrcidAuthorityValue"/>
-                <bean class="org.dspace.authority.PersonAuthorityValue"/>
-            </list>
-        </property>
-        <property name="fieldDefaults">
-            <map>
-                <entry key="dc_contributor_author">
-                    <bean class="org.dspace.authority.PersonAuthorityValue"/>
-                </entry>
-                <entry key="dc_relation_ispartofseries">
-                    <bean class="org.dspace.authority.journal.JournalAuthorityValue"/>
-                </entry>
-            </map>
-        </property>
-    </bean>
+public class PersonAuthorityValueBuilder<T extends PersonAuthorityValue> extends AuthorityValueBuilder<T> {
 ```
-The **types** property contains all active authority types. When casting a solr document into the correct java class, only the classes in this list will be candidates. Only when none of the listed classes have a matching **getAuthorityType()** the superclass AuthorityValue will be used.
 
-The **fieldDefaults** indicate which authority type to create when adding a new metadata value that is not brought forth by the external lookup.
+Override **buildAuthorityValue()** methods. These methods will be used to build JournalAuthorityValues. 
+
+```
+   @Override
+    public T buildAuthorityValue() {
+        return (T) new JournalAuthorityValue();
+    }
+
+    @Override
+    public T buildAuthorityValue(String identifier, String content)
+    {
+        final T authorityValue = buildAuthorityValue();
+        authorityValue.setValue(content);
+        return authorityValue;
+    }
+    
+    @Override
+    public T buildAuthorityValue(SolrDocument document)
+    {
+        T authorityValue = super.buildAuthorityValue(document);
+        authorityValue.setPublisher(ObjectUtils.toString(document.getFieldValue("publisher")));
+        authorityValue.setIssn(ObjectUtils.toString(document.getFieldValue("issn")));
+        return authorityValue;
+    }
+```
+
+## Add the new classes to the spring configuration
+config/spring/api/orcid-authority-services.xml
+
+```
+        <bean id="authorityValueFactory" class="org.dspace.authority.factory.AuthorityValueFactoryImpl">
+            <property name="authorityValueBuilders">
+                <util:map map-class="java.util.LinkedHashMap">
+                    <entry key="#{T(org.dspace.authority.orcid.OrcidAuthorityValue).TYPE}" value-ref="org.dspace.authority.orcid.OrcidAuthorityValueBuilder"/>
+                    <entry key="#{T(org.dspace.authority.PersonAuthorityValue).TYPE}" value-ref="org.dspace.authority.PersonAuthorityValueBuilder"/>
+                    <entry key="#{T(org.dspace.authority.JournalAuthorityValue).TYPE}" value-ref="org.dspace.authority.JournalAuthorityValueBuilder"/>
+                </util:map>
+            </property>
+            <property name="authorityValueBuilderDefaults">
+                <map>
+                    <entry key="dc_contributor_author">
+                        <ref bean="org.dspace.authority.PersonAuthorityValueBuilder"/>
+                    </entry>
+                </map>
+            </property>
+        </bean>
+        
+            <bean id="org.dspace.authority.JournalAuthorityValueBuilder" class="org.dspace.authority.JournalAuthorityValueBuilder">
+                <property name="metadataFields">
+                    <list>
+                        <value>dc_relation_ispartofseries</value>
+                    </list>
+                </property>
+            </bean>
+```
+
