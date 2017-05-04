@@ -10,6 +10,8 @@ package org.dspace.app.bulkedit;
 import java.io.*;
 import java.util.*;
 import java.io.Serializable;
+
+import org.apache.commons.lang.StringUtils;
 import org.dspace.content.authority.*;
 
 /**
@@ -33,15 +35,17 @@ public class DSpaceCSVLine implements Serializable
             // The metadata coming from an external source should be processed after the others
             MetadataAuthorityManager manager = MetadataAuthorityManager.getManager();
 
-            boolean source1AuthorityControlled = manager.isAuthorityControlled(md1.replace(".","_"));
-            boolean source2AuthorityControlled = manager.isAuthorityControlled(md2.replace(".","_"));
+
+            boolean source1AuthorityControlled = manager.isAuthorityControlled(StringUtils.replace(md1,".","_"));
+
+            boolean source2AuthorityControlled = manager.isAuthorityControlled(StringUtils.replace(md2,".","_"));
 
             int compare;
-            if (!source2AuthorityControlled && source1AuthorityControlled) {
-                compare = -1;
+            if (!source1AuthorityControlled && source2AuthorityControlled) {
+                compare = 1;
             }
             else if (source1AuthorityControlled && !source2AuthorityControlled) {
-                compare = 1;
+                compare = -1;
             } else {
                 // the order of the rest does not matter
                 compare = md1.compareTo(md2);

@@ -16,6 +16,7 @@ import java.util.Enumeration;
 
 import org.apache.cocoon.environment.Request;
 import org.apache.cocoon.servlet.multipart.Part;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.dspace.app.util.Util;
 import org.dspace.app.xmlui.utils.UIException;
@@ -253,12 +254,19 @@ public class FlowItemUtils
 		String fieldID = request.getParameter("field");
 		String value = request.getParameter("value");
 		String language = request.getParameter("language");
-		
+		String authorityId = request.getParameter("value_authority");
+
+
 		MetadataField field = MetadataField.find(context,Integer.valueOf(fieldID));
 		MetadataSchema schema = MetadataSchema.find(context,field.getSchemaID());
 		
+		if(StringUtils.isNotBlank(authorityId)) {
+			item.addMetadata(schema.getName(), field.getElement(), field.getQualifier(), language, value, authorityId,  Choices.CF_ACCEPTED);
+		}
+		else {
 		item.addMetadata(schema.getName(), field.getElement(), field.getQualifier(), language, value);
-		
+		}
+
 		item.update();
 		context.commit();
 		

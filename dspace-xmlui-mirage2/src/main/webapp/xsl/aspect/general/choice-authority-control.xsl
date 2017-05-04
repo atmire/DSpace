@@ -70,7 +70,7 @@
           <xsl:text>', '</xsl:text>
           <!-- Confidence Indicator's ID so lookup can frob it -->
           <xsl:value-of select="$confIndicator"/>
-          <xsl:text>', </xsl:text>
+          <xsl:text>', '</xsl:text>
           <!-- Collection ID for context -->
           <xsl:choose>
             <xsl:when test="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='choice'][@qualifier='collection']">
@@ -80,7 +80,7 @@
               <xsl:text>-1</xsl:text>
             </xsl:otherwise>
           </xsl:choose>
-          <xsl:text>, </xsl:text>
+          <xsl:text>', </xsl:text>
           <!-- isName -->
           <xsl:value-of select="$isName"/>
           <xsl:text>, </xsl:text>
@@ -93,7 +93,14 @@
 
     <xsl:template name="addLookupButtonAuthor">
         <xsl:param name="isName" select="'missing value'"/>
-        <button type="button" name="{concat('lookup_',@n)}" class="ds-button-field ds-add-button btn btn-default ">
+        <xsl:param name="value" select="@n"/>
+        <button type="button" name="{concat('lookup_',@n)}">
+            <xsl:attribute name="class">
+                <xsl:text>ds-button-field ds-add-button btn btn-default</xsl:text>
+                <xsl:if test="@type='hidden'">
+                    <xsl:text> hidden</xsl:text>
+                </xsl:if>
+            </xsl:attribute>
             <xsl:attribute name="onClick">
                 <xsl:text>javascript:AuthorLookup('</xsl:text>
                 <!-- URL -->
@@ -107,12 +114,15 @@
                     </xsl:otherwise>
                 </xsl:choose>
                 <xsl:text>', '</xsl:text>
-                <xsl:value-of select="@n"/>
+                <xsl:value-of select="$value"/>
+
                 <xsl:text>', </xsl:text>
                 <!-- Collection ID for context -->
                 <xsl:choose>
                     <xsl:when test="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='choice'][@qualifier='collection']">
+                        <xsl:text>'</xsl:text>
                         <xsl:value-of select="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='choice'][@qualifier='collection']"/>
+                        <xsl:text>'</xsl:text>
                     </xsl:when>
                     <xsl:otherwise>
                         <xsl:text>-1</xsl:text>

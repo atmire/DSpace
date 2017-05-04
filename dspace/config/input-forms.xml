@@ -48,6 +48,16 @@
          <hint>Enter the names of the authors of this item.</hint>
          <required></required>
        </field>
+   <field>
+         <dc-schema>dc</dc-schema>
+         <dc-element>contributor</dc-element>
+         <dc-qualifier>editor</dc-qualifier>
+         <repeatable>true</repeatable>
+         <label>Editors</label>
+         <input-type>name</input-type>
+         <hint>Enter the names of the editors of this item.</hint>
+         <required></required>
+       </field>
 
        <field>
          <dc-schema>dc</dc-schema>

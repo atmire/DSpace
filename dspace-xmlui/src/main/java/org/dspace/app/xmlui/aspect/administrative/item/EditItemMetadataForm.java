@@ -7,40 +7,19 @@
  */
 package org.dspace.app.xmlui.aspect.administrative.item;
 
-import java.io.Serializable;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Comparator;
-
-import org.apache.cocoon.environment.ObjectModelHelper;
-import org.apache.cocoon.environment.Request;
-import org.dspace.app.xmlui.cocoon.AbstractDSpaceTransformer;
-import org.dspace.app.xmlui.wing.Message;
-import org.dspace.app.xmlui.wing.WingException;
-import org.dspace.app.xmlui.wing.element.Body;
-import org.dspace.app.xmlui.wing.element.Button;
-import org.dspace.app.xmlui.wing.element.Cell;
-import org.dspace.app.xmlui.wing.element.CheckBox;
-import org.dspace.app.xmlui.wing.element.Composite;
-import org.dspace.app.xmlui.wing.element.Division;
+import java.io.*;
+import java.sql.*;
+import java.util.*;
+import org.apache.cocoon.environment.*;
+import org.apache.log4j.*;
+import org.dspace.app.xmlui.cocoon.*;
+import org.dspace.app.xmlui.wing.*;
+import org.dspace.app.xmlui.wing.element.*;
 import org.dspace.app.xmlui.wing.element.List;
-import org.dspace.app.xmlui.wing.element.PageMeta;
-import org.dspace.app.xmlui.wing.element.Para;
-import org.dspace.app.xmlui.wing.element.Params;
-import org.dspace.app.xmlui.wing.element.Row;
-import org.dspace.app.xmlui.wing.element.Select;
-import org.dspace.app.xmlui.wing.element.Table;
-import org.dspace.app.xmlui.wing.element.Text;
-import org.dspace.app.xmlui.wing.element.TextArea;
-import org.dspace.app.xmlui.wing.element.Value;
 import org.dspace.content.Collection;
-import org.dspace.content.Metadatum;
 import org.dspace.content.Item;
-import org.dspace.content.MetadataField;
-import org.dspace.content.MetadataSchema;
-import org.dspace.content.authority.MetadataAuthorityManager;
-import org.dspace.content.authority.ChoiceAuthorityManager;
-import org.dspace.content.authority.Choices;
+import org.dspace.content.*;
+import org.dspace.content.authority.*;
 
 /**
  * Display a list of all metadata available for this item and allow the user to
@@ -52,6 +31,8 @@ import org.dspace.content.authority.Choices;
 
 public class EditItemMetadataForm extends AbstractDSpaceTransformer {
         
+    private static final Logger log = Logger.getLogger(EditItemMetadataForm.class);
+
         /** Language strings */
         private static final Message T_dspace_home = message("xmlui.general.dspace_home");
         private static final Message T_submit_update = message("xmlui.general.update");
@@ -188,12 +169,17 @@ public class EditItemMetadataForm extends AbstractDSpaceTransformer {
                 addComposite.setLabel(T_value_label);
                 TextArea addValue = addComposite.addTextArea("value");
                 Text addLang = addComposite.addText("language");
+                addComposite.setAuthorityControlled();
+
 
                 addValue.setSize(4, 35);
                 addLang.setLabel(T_lang_label);
                 addLang.setSize(6);
 
-                addForm.addItem().addButton("submit_add").setValue(T_submit_add);
+                org.dspace.app.xmlui.wing.element.Item item1 = addForm.addItem();
+                item1.addButton("submit_add").setValue(T_submit_add);
+
+            addMainLookupSection(item1, fields);
 
                 
                 
@@ -305,6 +291,25 @@ public class EditItemMetadataForm extends AbstractDSpaceTransformer {
                 main.addHidden("administrative-continue").setValue(knot.getId());
         }
 
+    private void addMainLookupSection(org.dspace.app.xmlui.wing.element.Item item1, MetadataField[] fields) throws WingException {
+        for (MetadataField field : fields) {
+            try {
+                MetadataSchema metadataSchema = MetadataSchema.find(context, field.getSchemaID());
+
+                if(metadataSchema!=null) {
+                    String fieldKey = MetadataAuthorityManager.makeFieldKey(metadataSchema.getName(), field.getElement(), field.getQualifier());
+                    boolean isAuth = MetadataAuthorityManager.getManager().isAuthorityControlled(fieldKey);
+                    if (isAuth) {
+                        if (Params.PRESENTATION_AUTHORLOOKUP.equals(ChoiceAuthorityManager.getManager().getPresentation(fieldKey))) {
+                            item1.addHidden(fieldKey, Params.PRESENTATION_AUTHORLOOKUP).setValue(fieldKey);
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                log.error(e.getMessage(),e);
+            }
+        }
+    }
 
 
         /**

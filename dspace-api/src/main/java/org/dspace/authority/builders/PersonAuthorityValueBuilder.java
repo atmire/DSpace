@@ -5,11 +5,12 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.authority;
+package org.dspace.authority.builders;
 
 import java.util.*;
 import org.apache.commons.lang.*;
 import org.apache.solr.common.*;
+import org.dspace.authority.PersonAuthorityValue;
 import org.dspace.authority.factory.*;
 
 /**

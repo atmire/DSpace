@@ -5,12 +5,13 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.authority.orcid;
+package org.dspace.authority.builders;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.solr.common.SolrDocument;
 import org.dspace.authority.AuthorityValue;
-import org.dspace.authority.builders.PersonAuthorityValueBuilder;
+import org.dspace.authority.orcid.OrcidAuthorityValue;
+import org.dspace.authority.orcid.OrcidConnector;
 import org.orcid.jaxb.model.record_v2.*;
 import org.springframework.beans.factory.annotation.Required;
 

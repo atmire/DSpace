@@ -132,7 +132,7 @@ function AuthorLookup(url, authorityInput, collectionID) {
                 vcard.data('authorityID', aData['authority']);
                 vcard.data('name', aData['value']);
 
-                var notDisplayed = ['insolr','value','authority'];
+                var notDisplayed = ['insolr','value','authority', 'orcidID'];
                 var predefinedOrder = ['last-name','first-name'];
                 var variable = vcard.find('.variable');
                 variable.empty();
@@ -141,19 +141,21 @@ function AuthorLookup(url, authorityInput, collectionID) {
                 });
 
                 for (var key in aData) {
-                    if (aData.hasOwnProperty(key) && notDisplayed.indexOf(key) < 0 && predefinedOrder.indexOf(key) < 0) {
+                    if (predefinedOrder.indexOf(key) < 0) {
                         variableItem(aData, key, variable);
                     }
                 }
 
                 function variableItem(aData, key, variable) {
+                    if (aData.hasOwnProperty(key) && notDisplayed.indexOf(key) < 0) {
                     var label = key.replace(/-/g, ' ');
                     var dataString = '';
                     dataString += '<li class="vcard-' + key + '">' +
                         '<label>' + label + ': </label>';
 
                     if(key == 'orcid'){
-                        dataString +='<span><a target="_blank" href="http://orcid.org/' + aData[key] + '">' + aData[key] + '</a></span>';
+                            var orcidURL =window.DSpace.orcidConnectorURL;
+                            dataString += '<span><a target="_blank" href="'+orcidURL+ aData[key] + '">' + aData[key] + '</a></span>';
                     } else {
                         dataString += '<span>' + aData[key] + '</span>';
                     }
@@ -162,7 +164,8 @@ function AuthorLookup(url, authorityInput, collectionID) {
                     variable.append(dataString);
                     return label;
                 }
-                
+                }
+
                 if(aData['insolr']!="false"){
                     var discoverLink = window.DSpace.context_path + "/discover?filtertype=author&filter_relational_operator=authority&filter=" + aData['insolr'];
                     vcard.find('.vcard-insolr span').empty().append('<a href="'+ discoverLink+'" target="_new">view items</a>');
@@ -170,12 +173,19 @@ function AuthorLookup(url, authorityInput, collectionID) {
                     vcard.find('.vcard-insolr span').text("0");
                 }
                 vcard.find('.vcard-add input').click(function() {
-                    if (authorityInput.indexOf('value_') != -1) {
+                    if (authorityInput.indexOf('value') != -1) {
                         // edit item
                         $('input[name=' + authorityInput + ']').val(vcard.find('.vcard-last-name span').text() + ', ' + vcard.find('.vcard-first-name span').text());
+                            if(authorityInput == 'value'){
+                                $('input[name=' + authorityInput + '_authority]').val(vcard.data('authorityID'));
+                                $('textarea[name=' + authorityInput + ']').val(vcard.data('name'));
+                                $('button[name=submit_add]').click();
+                            }
+                            else {
                         var oldAuthority = $('input[name=' + authorityInput + '_authority]');
                         oldAuthority.val(vcard.data('authorityID'));
                         $('textarea[name='+ authorityInput+']').val(vcard.data('name'));
+                    }
                     } else {
                         // submission
                         var lastName = $('input[name=' + authorityInput + '_last]');
@@ -189,7 +199,6 @@ function AuthorLookup(url, authorityInput, collectionID) {
 
                         $('input[name=' + authorityInput + '_authority]').val(vcard.data('authorityID'));
                         $('input[name=submit_'+ authorityInput +'_add]').click();
-
                     }
                     content.modal('hide');
                 });
@@ -208,14 +217,6 @@ function AuthorLookup(url, authorityInput, collectionID) {
                 wrapper.find('.vcard-wrapper .vcard:visible').hide();
                 wrapper.find('.vcard-wrapper .no-vcard-selected:hidden').show();
             }
-            $('#lookup-more-button').click(function () {
-                button = lessButton;
-                datatable.fnFilter($('.dataTables_filter > input').val());
-            });
-            $('#lookup-less-button').click(function () {
-                button = moreButton;
-                datatable.fnFilter($('.dataTables_filter > input').val());
-            });
         },
         "fnServerData": function (sSource, aoData, fnCallback) {
             var sEcho;
@@ -320,4 +321,130 @@ function AuthorLookup(url, authorityInput, collectionID) {
             });
         }
     });
+
+    content.on('click', '#lookup-more-button', function () {
+        button = lessButton;
+        datatable.fnFilter($('.dataTables_filter > input').val());
+    });
+    content.on('click', '#lookup-less-button', function () {
+        button = moreButton;
+        datatable.fnFilter($('.dataTables_filter > input').val());
+    });
 }
+
+//only show the lookup button for the selected field on the edit item metadata page
+(function ($) {
+    $(document).ready(function () {
+        renderMainLookup();
+
+        $("#aspect_administrative_item_EditItemMetadataForm_field_field").change(function () {
+            renderMainLookup();
+        });
+
+        function renderMainLookup() {
+            var selectedField = $('#aspect_administrative_item_EditItemMetadataForm_field_field').find("option:selected").text();
+
+            $('#aspect_administrative_item_EditItemMetadataForm_list_addItemMetadata button[name^="lookup_"]').each(function () {
+                if($(this).attr('name')=='lookup_' + selectedField.replace(".", "_").replace(".", "_")){
+                    $(this).removeClass('hidden');
+                }
+                else {
+                    $(this).addClass('hidden');
+                }
+            });
+        }
+    });
+})(jQuery);
+
+
+(function ($) {
+    var itemID;
+    $(document).ready(function () {
+        itemID = window.DSpace.submission_item;
+
+        $('.authority-fields-autocompletion').each(function (index){
+            saytSetup(this.name);
+        });
+    });
+
+    function saytSetup(authorityField) {
+        var valueInput = $('#aspect_submission_StepTransformer_field_' + authorityField);
+        var lastName = $('#aspect_submission_StepTransformer_field_' + authorityField + '_last');
+        var firstName = $('#aspect_submission_StepTransformer_field_' + authorityField + '_first');
+        var authority = $('input[name=' + authorityField + '_authority]');
+        var orcidID = $('input[name=' + authorityField + '_orcidID]');
+        var authorFields = $('#aspect_submission_StepTransformer_field_' + authorityField + ',#aspect_submission_StepTransformer_field_' + authorityField + '_last');
+
+
+        var a = authorFields.autocomplete({
+            source: function (request, response) {
+                var subfield = "";
+                if ($('#aspect_submission_StepTransformer_field_' + authorityField + '_last').is(':focus')) {
+                    subfield = "last";
+                }
+                if ($('#aspect_submission_StepTransformer_field_' + authorityField + '_first').is(':focus')) {
+                    subfield = "first";
+                }
+                $.ajax({
+                    url: window.DSpace.context_path + "/choices/" + authorityField + "?limit=20&query=" + request.term + "&item=" + itemID + (subfield.length > 0 ? "&subfield=" + subfield : "")+"&autocompletion=true",
+                    dataType: "xml",
+                    success: function (xmlResponse) {
+                        var data = $("Choice", xmlResponse).map(function () {
+                            return {
+                                value: $(this).text(),
+                                lastName: $(this).attr('last-name'),
+                                firstName: $(this).attr('first-name'),
+                                authority: $(this).attr('authority'),
+                                orcidID: $(this).attr('orcidID'),
+                                cn: $(this).attr('cn'),
+                                email: $(this).attr('email')
+                            };
+                        });
+                        data.sort(function (a, b) {
+                            var compared = 0;
+                            if (a.lastName !== undefined && b.lastName !== undefined) {
+                                compared = a.lastName.localeCompare(b.lastName);
+                            } else {
+                                compared = a.value.localeCompare(b.value);
+                            }
+                            return compared;
+                        });
+                        response(data);
+                    }
+                });
+            },
+            minLength: 1,
+            select: function (event, ui) {
+                valueInput.val(ui.item.value);
+                lastName.val(ui.item.lastName);
+                firstName.val(ui.item.firstName);
+                authority.val(ui.item.authority);
+                orcidID.val(ui.item.orcidID);
+                event.preventDefault(); // prevents both names to be inserted in the same input
+
+
+            },
+            create: function () {
+                $(this).data('ui-autocomplete')._renderItem = function (ul, item) {
+                    var personInfo = "";
+                    if (item.hasOwnProperty('cn')) {
+                        personInfo = " <small>(" + item.cn + ", " + item.email + ")</small>";
+                    }
+                    var orcidValue ="";
+                    if(item.hasOwnProperty('orcidID')){
+                        orcidValue =" <small>(" + item.orcidID + ")</small>";
+                    }
+                    var info = "<a>" + item.value + personInfo + orcidValue+"</a>";
+                    return $("<li>")
+                        .append(info)
+                        .appendTo(ul);
+                };
+            },
+            open: function (event, ui) {
+                $("li:odd").addClass("ui-menu-item-alternate");
+            }
+        });
+    }
+
+})(jQuery);
+

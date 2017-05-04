@@ -5,12 +5,15 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.authority.orcid;
+package org.dspace.authority.builders;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.solr.common.SolrDocument;
 import org.dspace.authority.AuthorityValue;
-import org.dspace.authority.builders.PersonAuthorityValueBuilder;
+import org.dspace.authority.factory.IdentifiableAuthorityValueBuilder;
+import org.dspace.authority.orcid.OrcidAuthorityValue;
+import org.dspace.authority.orcid.OrcidConnector;
+import org.dspace.utils.DSpace;
 import org.orcid.jaxb.model.record_v2.*;
 import org.springframework.beans.factory.annotation.Required;
 
@@ -25,20 +28,24 @@ import java.util.List;
  * @author kevinvandevelde at atmire.com
  * @author philip at atmire.com
  */
-public class OrcidAuthorityValueBuilder extends PersonAuthorityValueBuilder<OrcidAuthorityValue> {
-    protected OrcidConnector orcidConnector;
+public class IdentifiablePersonAuthorityValueBuilder extends PersonAuthorityValueBuilder<OrcidAuthorityValue> implements IdentifiableAuthorityValueBuilder
+{
+    protected OrcidConnector orcidConnector = new DSpace().getServiceManager().getServiceByName("orcidConnector", OrcidConnector.class);
 
     /**
      * Build an authority value with the provided orcid identifier
-     *
-     * @param identifier the orcid identifier
-     * @return the resulting OrcidAuthorityValue
+     * @param identifier
+     * the orcid identifier
+     * @return
+     * the resulting OrcidAuthorityValue
      */
     @Override
-    public OrcidAuthorityValue buildAuthorityValue(String identifier, String content) {
+    public OrcidAuthorityValue buildAuthorityValue(String identifier, String content)
+    {
         Person orcidBio = orcidConnector.queryAuthorityID(identifier);
         OrcidAuthorityValue orcidAuthorityValue = buildAuthorityValueFromOrcidBio(orcidBio);
-        if (orcidAuthorityValue != null) {
+        if (orcidAuthorityValue != null)
+        {
             return orcidAuthorityValue;
         }
 
@@ -48,13 +55,15 @@ public class OrcidAuthorityValueBuilder extends PersonAuthorityValueBuilder<Orci
 
     /**
      * Build an authority value with the provided orcid bio
-     *
-     * @param orcidBio The orcid bio of the authority value
-     * @return The created authority value
+     * @param orcidBio
+     * The orcid bio of the authority value
+     * @return
+     * The created authority value
      */
     protected OrcidAuthorityValue buildAuthorityValueFromOrcidBio(Person orcidBio) {
         //Make sure we have a result
-        if (orcidBio != null) {
+        if(orcidBio != null)
+        {
             OrcidAuthorityValue orcidAuthorityValue = buildAuthorityValue();
             orcidAuthorityValue.updateLastModifiedDate();
             orcidAuthorityValue.setCreationDate(new Date());
@@ -67,17 +76,20 @@ public class OrcidAuthorityValueBuilder extends PersonAuthorityValueBuilder<Orci
     /**
      * Build an authority value with the provided solr document. Only orcid authority specific fields are handled in this method,
      * the super method is used to set General fields.
-     *
-     * @param document The solr document of the authority value
-     * @return The created authority value
+     * @param document
+     * The solr document of the authority value
+     * @return
+     * The created authority value
      */
     @Override
-    public OrcidAuthorityValue buildAuthorityValue(SolrDocument document) {
+    public OrcidAuthorityValue buildAuthorityValue(SolrDocument document)
+    {
         OrcidAuthorityValue orcidAuthorityValue = super.buildAuthorityValue(document);
         orcidAuthorityValue.setOrcid_id(String.valueOf(document.getFieldValue("orcid_id")));
         for (String fieldName : document.getFieldNames()) {
             String labelPrefix = "label_";
-            if (fieldName.startsWith(labelPrefix)) {
+            if (fieldName.startsWith(labelPrefix))
+            {
                 String label = fieldName.substring(labelPrefix.length());
                 Collection<Object> fieldValues = document.getFieldValues(fieldName);
                 for (Object o : fieldValues) {
@@ -99,7 +111,8 @@ public class OrcidAuthorityValueBuilder extends PersonAuthorityValueBuilder<Orci
         List<AuthorityValue> result = new ArrayList<>();
         for (Person bio : bios) {
             final OrcidAuthorityValue orcidAuthorityValue = buildAuthorityValueFromOrcidBio(bio);
-            if (orcidAuthorityValue != null) {
+            if(orcidAuthorityValue != null)
+            {
                 result.add(orcidAuthorityValue);
             }
         }
@@ -108,9 +121,10 @@ public class OrcidAuthorityValueBuilder extends PersonAuthorityValueBuilder<Orci
 
     /**
      * Add the information from an orcid bio to an authority value
-     *
-     * @param authorityValue the authority value the information is added to
-     * @param bio            the orcid bio
+     * @param authorityValue
+     * the authority value the information is added to
+     * @param bio
+     * the orcid bio
      */
     protected void storeOrcidBioInAuthorityValue(OrcidAuthorityValue authorityValue, Person bio) {
         Name name = bio.getName();

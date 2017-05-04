@@ -10,23 +10,28 @@
 -->
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
            http://www.springframework.org/schema/beans/spring-beans.xsd
            http://www.springframework.org/schema/context
-           http://www.springframework.org/schema/context/spring-context.xsd">
+           http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
     <context:annotation-config /> <!-- allows us to use spring annotations in beans -->
 
     <!-- Authority control -->
     <bean class="org.dspace.authority.AuthoritySolrServiceImpl" id="org.dspace.authority.AuthoritySearchService"/>
     <alias name="org.dspace.authority.AuthoritySearchService" alias="org.dspace.authority.indexer.AuthorityIndexingService"/>
+    <util:list id="indexerList" >
+        <ref bean="dspace.DSpaceAuthorityIndexer"/>
+    </util:list>
+    <bean id="dspace.DSpaceAuthorityIndexer" class="org.dspace.authority.indexer.DSpaceAuthorityIndexer"/>
 
 
     <bean id="authorityValueFactory" class="org.dspace.authority.factory.AuthorityValueFactoryImpl">
         <property name="authorityValueFieldMapping">
             <map>
                 <entry key="dc_contributor_author" value="PERSON"/>
+                <entry key="dc_contributor_editor" value="PERSON"/>
             </map>
         </property>
     </bean>
@@ -35,8 +40,9 @@
     <bean name="OrcidConnector" id="orcidConnector" class="org.dspace.authority.orcid.OrcidConnector" init-method="init">
         <constructor-arg value="${orcid.api.url}"/>
         <constructor-arg value="${orcid.oauth.url}"/>
-        <constructor-arg value="${orcid.client.id}"/>
-        <constructor-arg value="${orcid.client.secret}"/>
+        <!--If you want to use authentication, also use the following fields.-->
+        <!--<constructor-arg value="${orcid.client.id}"/>-->
+        <!--<constructor-arg value="${orcid.client.secret}"/>-->
     </bean>
 
     <bean id="orcidImportSource" class="java.lang.String">

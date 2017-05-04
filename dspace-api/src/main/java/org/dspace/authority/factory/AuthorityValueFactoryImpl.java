@@ -29,7 +29,7 @@ public class AuthorityValueFactoryImpl extends AuthorityValueFactory {
 
     private static final Logger log = Logger.getLogger(AuthorityValueFactoryImpl.class);
     private Map<String, AuthorityCategory> authorityValueFieldMapping;
-    private String builderPrefix = "com.atmire.authority.builders.";
+    private String builderPrefix = "org.dspace.authority.builders.";
     private String builderPostfix = "AuthorityValueBuilder";
     private String idBuilderPrefix = "Identifiable";
 

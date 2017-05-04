@@ -7,20 +7,16 @@
  */
 package org.dspace.authority;
 
-import org.apache.log4j.Logger;
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
-import org.apache.solr.client.solrj.response.FacetField;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrInputDocument;
-import org.dspace.authority.indexer.AuthorityIndexingService;
-import org.dspace.core.ConfigurationManager;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.net.*;
+import java.util.*;
+import org.apache.log4j.*;
+import org.apache.solr.client.solrj.*;
+import org.apache.solr.client.solrj.impl.*;
+import org.apache.solr.client.solrj.response.*;
+import org.apache.solr.common.*;
+import org.dspace.authority.indexer.*;
+import org.dspace.core.*;
 
 /**
  * AuthoritySolrServiceImpl is responsible for requests to the authority solr core.
