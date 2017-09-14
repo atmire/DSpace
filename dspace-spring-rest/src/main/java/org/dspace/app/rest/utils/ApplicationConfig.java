@@ -7,10 +7,15 @@
  */
 package org.dspace.app.rest.utils;
 
+import org.dspace.app.rest.parameter.resolver.SearchFilterResolver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+
+import java.util.List;
 
 /**
  * This class provide extra configuration for our Spring Boot Application
@@ -21,7 +26,7 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
 @Configuration
 @EnableSpringDataWebSupport
 @ComponentScan({ "org.dspace.app.rest.converter", "org.dspace.app.rest.repository", "org.dspace.app.rest.utils" })
-public class ApplicationConfig {
+public class ApplicationConfig extends WebMvcConfigurerAdapter {
 	@Value("${dspace.dir}")
 	private String dspaceHome;
 
@@ -37,4 +42,10 @@ public class ApplicationConfig {
 			return corsAllowedOrigins.split("\\s*,\\s*");
 		return null;
 	}
+
+	@Override
+	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
+		argumentResolvers.add(new SearchFilterResolver());
+	}
+
 }
