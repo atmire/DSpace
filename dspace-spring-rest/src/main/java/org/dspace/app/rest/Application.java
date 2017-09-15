@@ -7,25 +7,20 @@
  */
 package org.dspace.app.rest;
 
-import java.io.File;
-
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.servlet.Filter;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-
 import org.dspace.app.rest.filter.DSpaceRequestContextFilter;
 import org.dspace.app.rest.model.hateoas.DSpaceRelProvider;
+import org.dspace.app.rest.parameter.resolver.SearchFilterResolver;
 import org.dspace.app.rest.utils.ApplicationConfig;
 import org.dspace.app.util.DSpaceContextListener;
 import org.dspace.servicemanager.DSpaceKernelImpl;
 import org.dspace.servicemanager.DSpaceKernelInit;
 import org.dspace.servicemanager.config.DSpaceConfigurationService;
+import org.dspace.servicemanager.spring.SpringServiceManager;
 import org.dspace.utils.servlet.DSpaceWebappServletFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
@@ -33,9 +28,18 @@ import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.hateoas.RelProvider;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.servlet.Filter;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import java.io.File;
+import java.util.List;
 
 /**
  * Define the Spring Boot Application settings itself. This class takes the place 
@@ -57,6 +61,9 @@ public class Application extends SpringBootServletInitializer
 
     @Autowired
     private ApplicationConfig configuration;
+
+    @Value("${dspace.dir}")
+    private String dspaceHome;
     
     /**
      * Override the default SpringBootServletInitializer.configure() method,
@@ -65,13 +72,23 @@ public class Application extends SpringBootServletInitializer
      * This is necessary to allow us to build a deployable WAR, rather than
      * always relying on embedded Tomcat.
      * <P>
+     *
      * See: http://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#howto-create-a-deployable-war-file
      * @param application
      * @return
      */
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-        return application.sources(Application.class);
+        //TODO FIX ME: dspaceHome is not set at startup.
+        DSpaceConfigurationService dsConfigService = new DSpaceConfigurationService(dspaceHome);
+
+        //Load extra configs (see org.dspace.servicemanager.DSpaceServiceManager.startup())
+        String[] extraConfigs = dsConfigService.getPropertyAsType("service.manager.spring.configs", String[].class);
+
+        String[] extraSources = SpringServiceManager.getSpringPaths(false, extraConfigs, dsConfigService);
+
+        return application.sources(Application.class)
+                .sources(extraSources);
     }
 
     @Bean
@@ -177,7 +194,7 @@ public class Application extends SpringBootServletInitializer
     }
     
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
+    public WebMvcConfigurer webMvcConfigurer() {
         return new WebMvcConfigurerAdapter() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
@@ -185,6 +202,11 @@ public class Application extends SpringBootServletInitializer
                 if (corsAllowedOrigins != null) {
                 	registry.addMapping("/api/**").allowedOrigins(corsAllowedOrigins);
                 }
+            }
+
+            @Override
+            public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
+                argumentResolvers.add(new SearchFilterResolver());
             }
         };
     }
