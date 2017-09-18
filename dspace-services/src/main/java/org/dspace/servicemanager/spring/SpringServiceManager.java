@@ -36,6 +36,7 @@ public final class SpringServiceManager implements ServiceManagerSystem {
     /**
      * @return the parent core Spring {@link ApplicationContext}
      */
+    @Override
     public ClassPathXmlApplicationContext getApplicationContext() {
         return applicationContext;
     }
