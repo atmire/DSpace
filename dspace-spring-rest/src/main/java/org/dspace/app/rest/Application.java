@@ -24,7 +24,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.core.annotation.Order;
 import org.springframework.hateoas.RelProvider;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -88,6 +90,11 @@ public class Application extends SpringBootServletInitializer {
                 this.kernelImpl.start(getProvidedHome(dspaceHome)); // init the kernel
             }
 
+            return application
+                    .parent(kernelImpl.getServiceManager().getApplicationContext())
+                    .listeners(new DSpaceKernelDestroyer(kernelImpl))
+                    .sources(Application.class);
+
         } catch (Exception e) {
             // failed to start so destroy it and log and throw an exception
             try {
@@ -95,14 +102,10 @@ public class Application extends SpringBootServletInitializer {
             } catch (Exception e1) {
                 // nothing
             }
-            String message = "Failure during filter init: " + e.getMessage();
-            System.err.println(message + ":" + e);
+            String message = "Failure during SpringApplicationBuilder configuration: " + e.getMessage();
+            log.error(message + ":" + e.getMessage(), e);
             throw new RuntimeException(message, e);
         }
-
-        return application
-                .parent(kernelImpl.getServiceManager().getApplicationContext())
-                .sources(Application.class);
     }
 
     @Bean
@@ -114,7 +117,6 @@ public class Application extends SpringBootServletInitializer {
                     throws ServletException {
                 servletContext.setInitParameter("dspace.dir", configuration.getDspaceHome());
             }
-
         };
     }
 
@@ -203,5 +205,20 @@ public class Application extends SpringBootServletInitializer {
             }
         }
         return providedHome;
+    }
+
+    private class DSpaceKernelDestroyer implements ApplicationListener<ContextClosedEvent> {
+        private DSpaceKernelImpl kernelImpl;
+
+        public DSpaceKernelDestroyer(DSpaceKernelImpl kernelImpl) {
+            this.kernelImpl = kernelImpl;
+        }
+
+        public void onApplicationEvent(final ContextClosedEvent event) {
+            if (this.kernelImpl != null) {
+                this.kernelImpl.destroy();
+                this.kernelImpl = null;
+            }
+        }
     }
 }
