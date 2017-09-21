@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  */
 public abstract class AbstractDSpaceRestRepository {
+
 	@Autowired
 	protected Utils utils;
 
