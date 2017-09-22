@@ -62,7 +62,7 @@ public class SearchResultsResource extends HALResource {
         DiscoveryRestController methodOn = methodOn(DiscoveryRestController.class);
 
         UriComponentsBuilder uriComponentsBuilder = linkTo(methodOn
-                .getSearchObjects(data.getQuery(), data.getType(), data.getScope(), data.getConfigurationName(), null, null))
+                .getSearchObjects(data.getQuery(), data.getDsoType(), data.getScope(), data.getConfigurationName(), null, null))
                 .toUriComponentsBuilder();
 
         return addFilterParams(uriComponentsBuilder).build().toString();
