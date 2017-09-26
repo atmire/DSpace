@@ -35,8 +35,10 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.*;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.handler.extraction.ExtractingParams;
-import org.dspace.content.*;
+import org.dspace.authorize.ResourcePolicy;
+import org.dspace.authorize.factory.AuthorizeServiceFactory;
 import org.dspace.content.Collection;
+import org.dspace.content.*;
 import org.dspace.content.authority.Choices;
 import org.dspace.content.authority.service.ChoiceAuthorityService;
 import org.dspace.content.authority.service.MetadataAuthorityService;
@@ -46,6 +48,8 @@ import org.dspace.content.service.CommunityService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.*;
 import org.dspace.discovery.configuration.*;
+import org.dspace.eperson.Group;
+import org.dspace.eperson.factory.EPersonServiceFactory;
 import org.dspace.handle.service.HandleService;
 import org.dspace.services.factory.DSpaceServicesFactory;
 import org.dspace.storage.rdbms.DatabaseUtils;
@@ -63,10 +67,6 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import org.dspace.authorize.ResourcePolicy;
-import org.dspace.authorize.factory.AuthorizeServiceFactory;
-import org.dspace.eperson.Group;
-import org.dspace.eperson.factory.EPersonServiceFactory;
 
 /**
  * SolrIndexer contains the methods that index Items and their metadata,
@@ -1906,7 +1906,7 @@ public class SolrServiceImpl implements SearchService, IndexingService {
                                     field,
                                     new DiscoverResult.FacetResult(filterValue,
                                             displayedValue, authorityValue,
-                                            sortValue, facetValue.getCount()));
+                                            sortValue, facetValue.getCount(), facetFieldConfig.getType()));
                         }
                     }
                 }
@@ -1939,7 +1939,7 @@ public class SolrServiceImpl implements SearchService, IndexingService {
                     //No need to show empty years
                     if (0 < count)
                     {
-                        result.addFacetResult(facetField, new DiscoverResult.FacetResult(filter, name, null, name, count));
+                        result.addFacetResult(facetField, new DiscoverResult.FacetResult(filter, name, null, name, count, DiscoveryConfigurationParameters.TYPE_DATE));
                     }
                 }
             }
