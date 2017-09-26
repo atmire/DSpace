@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import org.dspace.app.rest.link.HalLinkService;
 import org.dspace.app.rest.model.SearchConfigurationRest;
 import org.dspace.app.rest.model.SearchResultsRest;
+import org.dspace.app.rest.model.SearchSupportRest;
 import org.dspace.app.rest.model.hateoas.SearchSupportResource;
 import org.dspace.app.rest.model.hateoas.SearchConfigurationResource;
 import org.dspace.app.rest.model.hateoas.SearchResultsResource;
@@ -57,7 +58,9 @@ public class DiscoveryRestController implements InitializingBean {
     @RequestMapping(method = RequestMethod.GET)
     public SearchSupportResource getSearchSupport(@RequestParam(name = "scope", required = false) String dsoScope,
                                                   @RequestParam(name = "configuration", required = false) String configurationName){
-        SearchSupportResource searchSupportResource = new SearchSupportResource(null);
+
+        SearchSupportRest searchSupportRest = discoveryRestRepository.getSearchSupport();
+        SearchSupportResource searchSupportResource = new SearchSupportResource(searchSupportRest);
         halLinkService.addLinks(searchSupportResource);
         return searchSupportResource;
     }

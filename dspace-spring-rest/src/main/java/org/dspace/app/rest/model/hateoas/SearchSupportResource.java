@@ -5,6 +5,7 @@ import org.apache.commons.lang.StringUtils;
 import org.dspace.app.rest.DiscoverableEndpointsService;
 import org.dspace.app.rest.DiscoveryRestController;
 import org.dspace.app.rest.model.SearchConfigurationRest;
+import org.dspace.app.rest.model.SearchSupportRest;
 import org.dspace.app.rest.model.hateoas.HALResource;
 import org.dspace.app.rest.model.hateoas.RelNameDSpaceResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,17 +27,17 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 /**
  * Created by raf on 25/09/2017.
  */
-@RelNameDSpaceResource(SearchConfigurationRest.NAME)
+@RelNameDSpaceResource(SearchSupportRest.NAME)
 public class SearchSupportResource extends HALResource {
 
     @JsonUnwrapped
-    private final SearchConfigurationRest data;
+    private final SearchSupportRest data;
 
 
-    public SearchSupportResource(SearchConfigurationRest searchConfigurationRest) {
-        this.data = searchConfigurationRest;
+    public SearchSupportResource(SearchSupportRest searchSupportRest) {
+        this.data = searchSupportRest;
     }
-    public SearchConfigurationRest getData(){
+    public SearchSupportRest getData(){
         return data;
     }
 }

@@ -3,9 +3,11 @@ package org.dspace.app.rest.repository;
 import org.apache.log4j.Logger;
 import org.dspace.app.rest.converter.DiscoverConfigurationConverter;
 import org.dspace.app.rest.converter.DiscoverResultConverter;
+import org.dspace.app.rest.converter.DiscoverSearchSupportConverter;
 import org.dspace.app.rest.exception.InvalidRequestException;
 import org.dspace.app.rest.model.SearchConfigurationRest;
 import org.dspace.app.rest.model.SearchResultsRest;
+import org.dspace.app.rest.model.SearchSupportRest;
 import org.dspace.app.rest.model.hateoas.SearchConfigurationResource;
 import org.dspace.app.rest.model.hateoas.SearchResultsResource;
 import org.dspace.app.rest.parameter.SearchFilter;
@@ -52,6 +54,9 @@ public class DiscoveryRestRepository extends AbstractDSpaceRestRepository {
     @Autowired
     private DiscoverConfigurationConverter discoverConfigurationConverter;
 
+    @Autowired
+    private DiscoverSearchSupportConverter discoverSearchSupportConverter;
+
     public SearchConfigurationRest getSearchConfiguration(final String dsoScope, final String configurationName) {
         Context context = obtainContext();
 
@@ -97,5 +102,9 @@ public class DiscoveryRestRepository extends AbstractDSpaceRestRepository {
         //TODO Call DiscoveryConfigurationConverter on configuration to convert this API model to the REST model
 
         //TODO Return REST model
+    }
+
+    public SearchSupportRest getSearchSupport() {
+        return discoverSearchSupportConverter.convert();
     }
 }
