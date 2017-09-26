@@ -22,6 +22,7 @@
 
 
 
+
     <bean class="org.dspace.discovery.SolrServiceImpl" id="org.dspace.discovery.SearchService"/>
 
     <alias name="org.dspace.discovery.SearchService" alias="org.dspace.discovery.IndexingService"/>
