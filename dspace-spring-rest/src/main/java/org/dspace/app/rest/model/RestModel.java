@@ -10,6 +10,9 @@ package org.dspace.app.rest.model;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.dspace.kernel.DSpaceKernel;
+import org.dspace.servicemanager.DSpaceServiceManager;
+import org.dspace.servicemanager.config.DSpaceConfigurationService;
 
 /**
  * Methods to implement to make a REST resource addressable
@@ -21,6 +24,7 @@ public interface RestModel extends Serializable {
 	public static final String CORE = "core";
 	public static final String EPERSON = "eperson";
 	public static final String DISCOVER = "discover";
+	public static final String ROOT = "root";
 	
 	@JsonIgnore
 	public String getCategory();
@@ -29,4 +33,6 @@ public interface RestModel extends Serializable {
 
 	@JsonIgnore
 	public Class getController();
+
+
 }
