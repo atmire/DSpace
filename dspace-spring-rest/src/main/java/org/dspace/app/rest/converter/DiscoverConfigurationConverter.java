@@ -18,31 +18,33 @@ import java.util.List;
 public class DiscoverConfigurationConverter {
     public SearchConfigurationRest convert(DiscoveryConfiguration configuration){
         SearchConfigurationRest searchConfigurationRest = new SearchConfigurationRest();
-        addSearchFilters(searchConfigurationRest, configuration.getSearchFilters());
-        addSortOptions(searchConfigurationRest, configuration.getSearchSortConfiguration());
+        if(configuration != null){
+            addSearchFilters(searchConfigurationRest, configuration.getSearchFilters());
+            addSortOptions(searchConfigurationRest, configuration.getSearchSortConfiguration());
+        }
         return searchConfigurationRest;
     }
 
 
     public void addSearchFilters(SearchConfigurationRest searchConfigurationRest, List<DiscoverySearchFilter> searchFilterList){
-        for(DiscoverySearchFilter discoverySearchFilter : searchFilterList){
-            SearchConfigurationRest.Filter filter = new SearchConfigurationRest.Filter();
-            filter.setFilter(discoverySearchFilter.getIndexFieldName());
-            filter.addDefaultOperatorsToList();
-            searchConfigurationRest.addFilter(filter);
-
-
+        if(searchFilterList != null){
+            for(DiscoverySearchFilter discoverySearchFilter : searchFilterList){
+                SearchConfigurationRest.Filter filter = new SearchConfigurationRest.Filter();
+                filter.setFilter(discoverySearchFilter.getIndexFieldName());
+                filter.addDefaultOperatorsToList();
+                searchConfigurationRest.addFilter(filter);
+            }
         }
     }
 
     private void addSortOptions(SearchConfigurationRest searchConfigurationRest, DiscoverySortConfiguration searchSortConfiguration) {
-        for(DiscoverySortFieldConfiguration discoverySearchSortConfiguration : searchSortConfiguration.getSortFields()){
-            SearchConfigurationRest.SortOption sortOption = new SearchConfigurationRest.SortOption();
-            sortOption.setMetadata(discoverySearchSortConfiguration.getMetadataField());
-
-            sortOption.setName(discoverySearchSortConfiguration.getType());
-
-            searchConfigurationRest.addSortOption(sortOption);
+        if(searchSortConfiguration!=null){
+            for(DiscoverySortFieldConfiguration discoverySearchSortConfiguration : searchSortConfiguration.getSortFields()){
+                SearchConfigurationRest.SortOption sortOption = new SearchConfigurationRest.SortOption();
+                sortOption.setMetadata(discoverySearchSortConfiguration.getMetadataField());
+                sortOption.setName(discoverySearchSortConfiguration.getType());
+                searchConfigurationRest.addSortOption(sortOption);
+            }
         }
     }
 
