@@ -1,0 +1,167 @@
+package org.dspace.app.rest.converter;
+
+
+import org.dspace.app.rest.converter.DiscoverConfigurationConverter;
+import org.dspace.app.rest.model.SearchConfigurationRest;
+import org.dspace.discovery.configuration.DiscoveryConfiguration;
+import org.dspace.discovery.configuration.DiscoverySearchFilter;
+import org.dspace.discovery.configuration.DiscoverySortConfiguration;
+import org.dspace.discovery.configuration.DiscoverySortFieldConfiguration;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+
+import java.util.LinkedList;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
+
+/**
+ * Created by raf on 26/09/2017.
+ */
+@RunWith(MockitoJUnitRunner.class)
+public class DiscoverConfigurationConverterTest{
+
+    SearchConfigurationRest searchConfigurationRest;
+
+    @InjectMocks
+    private DiscoverConfigurationConverter discoverConfigurationConverter;
+
+    @Mock
+    private DiscoverySortConfiguration discoverySortConfiguration;
+
+    @Mock
+    private DiscoveryConfiguration discoveryConfiguration;
+
+    @Before
+    public void setUp() throws Exception{
+    }
+
+    public void populateDiscoveryConfigurationWithEmptyList(){
+        discoveryConfiguration.setSearchFilters(new LinkedList<DiscoverySearchFilter>());
+        discoveryConfiguration.setSearchSortConfiguration(new DiscoverySortConfiguration());
+    }
+    @Test
+    public void testStartTests() throws Exception{
+        assertEquals(true, true);
+    }
+
+    @Test
+    public void testReturnType() throws Exception{
+        populateDiscoveryConfigurationWithEmptyList();
+        assertEquals(SearchConfigurationRest.class, discoverConfigurationConverter.convert(discoveryConfiguration).getClass());
+    }
+    @Test
+    public void testReturnObjectNotNull() throws Exception{
+        populateDiscoveryConfigurationWithEmptyList();
+        assertNotNull(discoverConfigurationConverter.convert(discoveryConfiguration));
+    }
+    @Test
+    public void testConvertWithNullParamter() throws Exception{
+        assertNotNull(discoverConfigurationConverter.convert(null));
+    }
+    @Test
+    public void testNoSearchSortConfigurationReturnObjectNotNull() throws Exception {
+        discoveryConfiguration.setSearchFilters(new LinkedList<>());
+        assertNotNull(discoverConfigurationConverter.convert(discoveryConfiguration));
+    }
+    @Test
+    public void testNoSearchFilterReturnObjectNotNull() throws Exception{
+        discoveryConfiguration.setSearchSortConfiguration(new DiscoverySortConfiguration());
+        assertNotNull(discoverConfigurationConverter.convert(discoveryConfiguration));
+    }
+    @Test
+    public void testNoSearchSortConfigurationAndNoSearchFilterReturnObjectNotNull() throws Exception{
+        assertNotNull(discoverConfigurationConverter.convert(discoveryConfiguration));
+    }
+    @Test
+    public void testCorrectSortOptionsAfterConvert() throws Exception{
+        populateDiscoveryConfigurationWithEmptyList();
+
+        DiscoverySortFieldConfiguration discoverySortFieldConfiguration = new DiscoverySortFieldConfiguration();
+        discoverySortFieldConfiguration.setMetadataField("title");
+        discoverySortFieldConfiguration.setType("text");
+        DiscoverySortFieldConfiguration discoverySortFieldConfiguration1 = new DiscoverySortFieldConfiguration();
+        discoverySortFieldConfiguration1.setMetadataField("author");
+        discoverySortFieldConfiguration1.setType("text");
+        LinkedList<DiscoverySortFieldConfiguration> mockedList = new LinkedList<>();
+        mockedList.add(discoverySortFieldConfiguration);
+        mockedList.add(discoverySortFieldConfiguration1);
+
+        when(discoveryConfiguration.getSearchSortConfiguration()).thenReturn(discoverySortConfiguration);
+        when(discoverySortConfiguration.getSortFields()).thenReturn(mockedList);
+
+        searchConfigurationRest = discoverConfigurationConverter.convert(discoveryConfiguration);
+
+        int counter = 0;
+        for(SearchConfigurationRest.SortOption sortOption : searchConfigurationRest.getSortOptions()){
+            assertEquals(mockedList.get(counter).getMetadataField(), sortOption.getMetadata());
+            assertEquals(mockedList.get(counter).getType(), sortOption.getName());
+            counter++;
+        }
+
+        assertTrue(!(searchConfigurationRest.getSortOptions().isEmpty()));
+    }
+
+    @Test
+    public void testEmptySortOptionsAfterConvertWithConfigurationWithEmptySortFields() throws Exception{
+        populateDiscoveryConfigurationWithEmptyList();
+        searchConfigurationRest = discoverConfigurationConverter.convert(discoveryConfiguration);
+        assertEquals(0, searchConfigurationRest.getSortOptions().size());
+
+    }
+
+    @Test
+    public void testEmptySortOptionsAfterConvertWithConfigurationWithNullSortFields() throws Exception{
+        populateDiscoveryConfigurationWithEmptyList();
+        when(discoveryConfiguration.getSearchSortConfiguration()).thenReturn(null);
+        searchConfigurationRest = discoverConfigurationConverter.convert(discoveryConfiguration);
+
+        assertEquals(0, searchConfigurationRest.getSortOptions().size());
+    }
+    @Test
+    public void testCorrectSearchFiltersAfterConvert() throws Exception{
+        populateDiscoveryConfigurationWithEmptyList();
+
+        LinkedList<DiscoverySearchFilter> mockedList = new LinkedList();
+        DiscoverySearchFilter discoverySearchFilter = new DiscoverySearchFilter();
+        discoverySearchFilter.setIndexFieldName("title");
+        DiscoverySearchFilter discoverySearchFilter1 = new DiscoverySearchFilter();
+        discoverySearchFilter1.setIndexFieldName("title2");
+
+        mockedList.add(discoverySearchFilter);
+        mockedList.add(discoverySearchFilter1);
+        when(discoveryConfiguration.getSearchFilters()).thenReturn(mockedList);
+
+        searchConfigurationRest = discoverConfigurationConverter.convert(discoveryConfiguration);
+
+        int counter = 0;
+        for(SearchConfigurationRest.Filter filter: searchConfigurationRest.getFilters()){
+            assertEquals(mockedList.get(counter).getIndexFieldName(), filter.getFilter());
+            counter++;
+        }
+        assertTrue(!(searchConfigurationRest.getFilters().isEmpty()));
+    }
+
+    @Test
+    public void testEmptySearchFilterAfterConvertWithConfigurationWithEmptySearchFilters() throws Exception{
+        populateDiscoveryConfigurationWithEmptyList();
+        searchConfigurationRest = discoverConfigurationConverter.convert(discoveryConfiguration);
+        assertEquals(0, searchConfigurationRest.getFilters().size());
+    }
+
+    @Test
+    public void testEmptySearchFiltersAfterConvertWithConfigurationWithNullSearchFilters() throws Exception{
+        populateDiscoveryConfigurationWithEmptyList();
+
+        when(discoveryConfiguration.getSearchFilters()).thenReturn(null);
+        searchConfigurationRest = discoverConfigurationConverter.convert(discoveryConfiguration);
+
+        assertEquals(0, searchConfigurationRest.getFilters().size());
+    }
+}
