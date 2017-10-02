@@ -65,12 +65,12 @@ public class SearchConfigurationRest extends BaseObjectRest<String> {
         private String filter;
         private List<Operator> operators = new LinkedList<>();
 
-        private static final String OPERATOR_EQUALS = "equals";
-        private static final String OPERATOR_NOTEQUALS = "notequals";
-        private static final String OPERATOR_AUTHORITY = "authority";
-        private static final String OPERATOR_NOTAUTHORITY = "notauthority";
-        private static final String OPERATOR_CONTAINS = "contains";
-        private static final String OPERATOR_NOTCONTAINS = "notcontains";
+        public static final String OPERATOR_EQUALS = "equals";
+        public static final String OPERATOR_NOTEQUALS = "notequals";
+        public static final String OPERATOR_AUTHORITY = "authority";
+        public static final String OPERATOR_NOTAUTHORITY = "notauthority";
+        public static final String OPERATOR_CONTAINS = "contains";
+        public static final String OPERATOR_NOTCONTAINS = "notcontains";
 
 
         public void setFilter(String filter){

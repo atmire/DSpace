@@ -21,49 +21,6 @@ public class SearchConfigurationRestTest {
         searchConfigurationRest = new SearchConfigurationRest();
     }
 
-    @Test
-    public void testConstructorDoesNotReturnNull() throws Exception{
-        assertNotNull(searchConfigurationRest);
-    }
-
-    @Test
-    public void testGetTypeReturnsCorrectValue() throws Exception{
-        assertEquals(SearchConfigurationRest.NAME, searchConfigurationRest.getType());
-    }
-
-    @Test
-    public void testGetCategoryReturnsCorrectValue() throws Exception{
-        assertEquals(SearchConfigurationRest.CATEGORY, searchConfigurationRest.getCategory());
-    }
-
-    @Test
-    public void testGetControllerReturnsCorrectValue() throws Exception{
-        assertEquals(DiscoveryRestController.class, searchConfigurationRest.getController());
-    }
-
-    @Test
-    public void testSetScopeNullReturnsNull() throws Exception{
-        searchConfigurationRest.setScope(null);
-        assertNull(searchConfigurationRest.getScope());
-    }
-
-    @Test
-    public void testSetScopeProperValueReturnsCorrectValue() throws Exception{
-        searchConfigurationRest.setScope("scope");
-        assertEquals("scope", searchConfigurationRest.getScope());
-    }
-
-    @Test
-    public void testSetConfigurationNameNullReturnsNull() throws Exception{
-        searchConfigurationRest.setConfigurationName(null);
-        assertNull(searchConfigurationRest.getConfigurationName());
-    }
-
-    @Test
-    public void testSetConfigurationNameProperValueReturnsCorrectValue() throws Exception{
-        searchConfigurationRest.setConfigurationName("configuration name");
-        assertEquals("configuration name", searchConfigurationRest.getConfigurationName());
-    }
 
     @Test
     public void testFiltersNotNullAfterConstructor() throws Exception{
@@ -123,52 +80,6 @@ public class SearchConfigurationRestTest {
 
     }
 
-    @Test
-    public void testSortOptionsSetNameNullReturnsNull() throws Exception{
-        SearchConfigurationRest.SortOption sortOption = new SearchConfigurationRest.SortOption();
-        sortOption.setName(null);
-        assertNull(sortOption.getName());
-    }
-
-    @Test
-    public void testSortOptionsSetNameProperValueReturnsCorrectValue() throws Exception{
-        SearchConfigurationRest.SortOption sortOption = new SearchConfigurationRest.SortOption();
-        sortOption.setName("name");
-        assertEquals("name", sortOption.getName());
-    }
-
-    @Test
-    public void testSortOptionsGetNameIsNullAfterConstructor() throws Exception{
-        SearchConfigurationRest.SortOption sortOption = new SearchConfigurationRest.SortOption();
-        assertNull(sortOption.getName());
-    }
-
-    @Test
-    public void testSortOptionsSetMetadataNullReturnsNull() throws Exception{
-        SearchConfigurationRest.SortOption sortOption = new SearchConfigurationRest.SortOption();
-        sortOption.setMetadata(null);
-        assertNull(sortOption.getMetadata());
-    }
-
-    @Test
-    public void testSortOptionsSetMetadataProperValueReturnsCorrectValue() throws Exception{
-        SearchConfigurationRest.SortOption sortOption = new SearchConfigurationRest.SortOption();
-        sortOption.setMetadata("metadata");
-        assertEquals("metadata", sortOption.getMetadata());
-    }
-
-    @Test
-    public void testSortOptionsGetMetadataIsNullAfterConstructor() throws Exception{
-        SearchConfigurationRest.SortOption sortOption = new SearchConfigurationRest.SortOption();
-        assertNull(sortOption.getMetadata());
-    }
-
-    @Test
-    public void testOperatorConstructorNullParameterMakesObjectWithNullOperator() throws Exception{
-        SearchConfigurationRest.Filter.Operator operator = new SearchConfigurationRest.Filter.Operator(null);
-        assertNotNull(operator);
-        assertNull(operator.getOperator());
-    }
 
     @Test
     public void testOperatorConstructorWithProperValueReturnsCorrectValue() throws Exception{
@@ -176,25 +87,6 @@ public class SearchConfigurationRestTest {
         assertEquals("operator", operator.getOperator());
     }
 
-    @Test
-    public void testFilterSetFilterNullReturnsNull() throws Exception{
-        SearchConfigurationRest.Filter filter = new SearchConfigurationRest.Filter();
-        filter.setFilter(null);
-        assertNull(filter.getFilter());
-    }
-
-    @Test
-    public void testFilterSetFilterProperValueReturnsCorrectValue() throws Exception{
-        SearchConfigurationRest.Filter filter = new SearchConfigurationRest.Filter();
-        filter.setFilter("name");
-        assertEquals("name", filter.getFilter());
-    }
-
-    @Test
-    public void testFilterGetFilterIsNullAfterConstructor() throws Exception{
-        SearchConfigurationRest.Filter filter = new SearchConfigurationRest.Filter();
-        assertNull(filter.getFilter());
-    }
 
     @Test
     public void testFilterGetOperatorsAfterConstructorReturnsEmptyList() throws Exception{
