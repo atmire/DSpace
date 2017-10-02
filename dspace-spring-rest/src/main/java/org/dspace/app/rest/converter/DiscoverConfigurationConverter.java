@@ -1,5 +1,6 @@
 package org.dspace.app.rest.converter;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.dspace.app.rest.model.SearchConfigurationRest;
 import org.dspace.discovery.configuration.DiscoveryConfiguration;
 import org.dspace.discovery.configuration.DiscoverySearchFilter;
@@ -27,19 +28,17 @@ public class DiscoverConfigurationConverter {
 
 
     public void addSearchFilters(SearchConfigurationRest searchConfigurationRest, List<DiscoverySearchFilter> searchFilterList){
-        if(searchFilterList != null){
-            for(DiscoverySearchFilter discoverySearchFilter : searchFilterList){
+            for(DiscoverySearchFilter discoverySearchFilter : CollectionUtils.emptyIfNull(searchFilterList)){
                 SearchConfigurationRest.Filter filter = new SearchConfigurationRest.Filter();
                 filter.setFilter(discoverySearchFilter.getIndexFieldName());
                 filter.addDefaultOperatorsToList();
                 searchConfigurationRest.addFilter(filter);
             }
-        }
     }
 
     private void addSortOptions(SearchConfigurationRest searchConfigurationRest, DiscoverySortConfiguration searchSortConfiguration) {
         if(searchSortConfiguration!=null){
-            for(DiscoverySortFieldConfiguration discoverySearchSortConfiguration : searchSortConfiguration.getSortFields()){
+            for(DiscoverySortFieldConfiguration discoverySearchSortConfiguration : CollectionUtils.emptyIfNull(searchSortConfiguration.getSortFields())){
                 SearchConfigurationRest.SortOption sortOption = new SearchConfigurationRest.SortOption();
                 sortOption.setMetadata(discoverySearchSortConfiguration.getMetadataField());
                 sortOption.setName(discoverySearchSortConfiguration.getType());

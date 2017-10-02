@@ -14,8 +14,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Set;
 
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -46,20 +51,13 @@ public class DiscoverConfigurationConverterTest{
         discoveryConfiguration.setSearchFilters(new LinkedList<DiscoverySearchFilter>());
         discoveryConfiguration.setSearchSortConfiguration(new DiscoverySortConfiguration());
     }
-    @Test
-    public void testStartTests() throws Exception{
-        assertEquals(true, true);
-    }
 
     @Test
     public void testReturnType() throws Exception{
         populateDiscoveryConfigurationWithEmptyList();
-        assertEquals(SearchConfigurationRest.class, discoverConfigurationConverter.convert(discoveryConfiguration).getClass());
-    }
-    @Test
-    public void testReturnObjectNotNull() throws Exception{
-        populateDiscoveryConfigurationWithEmptyList();
-        assertNotNull(discoverConfigurationConverter.convert(discoveryConfiguration));
+        searchConfigurationRest = discoverConfigurationConverter.convert(discoveryConfiguration);
+        assertTrue(searchConfigurationRest.getFilters().isEmpty());
+        assertEquals(SearchConfigurationRest.class, searchConfigurationRest.getClass());
     }
     @Test
     public void testConvertWithNullParamter() throws Exception{
@@ -68,16 +66,24 @@ public class DiscoverConfigurationConverterTest{
     @Test
     public void testNoSearchSortConfigurationReturnObjectNotNull() throws Exception {
         discoveryConfiguration.setSearchFilters(new LinkedList<>());
-        assertNotNull(discoverConfigurationConverter.convert(discoveryConfiguration));
+        searchConfigurationRest = discoverConfigurationConverter.convert(discoveryConfiguration);
+        assertTrue(discoveryConfiguration.getSearchFilters().isEmpty());
+        assertTrue(searchConfigurationRest.getFilters().isEmpty());
+        assertNotNull(searchConfigurationRest);
     }
     @Test
     public void testNoSearchFilterReturnObjectNotNull() throws Exception{
         discoveryConfiguration.setSearchSortConfiguration(new DiscoverySortConfiguration());
-        assertNotNull(discoverConfigurationConverter.convert(discoveryConfiguration));
+        searchConfigurationRest = discoverConfigurationConverter.convert(discoveryConfiguration);
+        assertTrue(searchConfigurationRest.getFilters().isEmpty());
+        assertNotNull(searchConfigurationRest);
     }
+
+    //Checks that the convert is still done properly without error even if the discoveryConfiguration's attributes are null
     @Test
     public void testNoSearchSortConfigurationAndNoSearchFilterReturnObjectNotNull() throws Exception{
-        assertNotNull(discoverConfigurationConverter.convert(discoveryConfiguration));
+        searchConfigurationRest = discoverConfigurationConverter.convert(discoveryConfiguration);
+        assertNotNull(searchConfigurationRest);
     }
     @Test
     public void testCorrectSortOptionsAfterConvert() throws Exception{
@@ -105,7 +111,7 @@ public class DiscoverConfigurationConverterTest{
             counter++;
         }
 
-        assertTrue(!(searchConfigurationRest.getSortOptions().isEmpty()));
+        assertFalse(searchConfigurationRest.getSortOptions().isEmpty());
     }
 
     @Test
@@ -142,7 +148,12 @@ public class DiscoverConfigurationConverterTest{
 
         int counter = 0;
         for(SearchConfigurationRest.Filter filter: searchConfigurationRest.getFilters()){
-            assertEquals(mockedList.get(counter).getIndexFieldName(), filter.getFilter());
+            DiscoverySearchFilter searchFilter = mockedList.get(counter);
+            assertEquals(searchFilter.getIndexFieldName(), filter.getFilter());
+            //TODO checkoperators
+            SearchConfigurationRest.Filter.Operator operator = new SearchConfigurationRest.Filter.Operator("testing");
+            filter.addOperator(operator);
+            assertEquals(filter.getOperators().get(filter.getOperators().size()-1), operator);
             counter++;
         }
         assertTrue(!(searchConfigurationRest.getFilters().isEmpty()));
