@@ -1,5 +1,7 @@
 package org.dspace.app.rest.model;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.dspace.app.rest.DiscoveryRestController;
 
 /**
@@ -18,5 +20,22 @@ public class SearchSupportRest extends BaseObjectRest<String>{
 
     public Class getController() {
         return DiscoveryRestController.class;
+    }
+
+    @Override
+    public boolean equals(Object object){
+        return (object instanceof SearchSupportRest &&
+                new EqualsBuilder().append(this.getCategory(), ((SearchSupportRest) object).getCategory())
+                        .append(this.getType(), ((SearchSupportRest) object).getType())
+                        .append(this.getController(), ((SearchSupportRest) object).getController())
+                        .isEquals());
+    }
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+                .append(this.getCategory())
+                .append(this.getType())
+                .append(this.getController())
+                .toHashCode();
     }
 }
