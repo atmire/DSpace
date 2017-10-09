@@ -50,6 +50,99 @@ public class DiscoverQueryBuilder {
                                     String dsoType, Pageable page)
             throws InvalidRequestException {
 
+        DiscoverQuery queryArgs = buildCommonDiscoverQuery(context, discoveryConfiguration, query, searchFilters, dsoType);
+
+        //When all search criteria are set, configure facet results
+        addFaceting(context, scope, queryArgs, discoveryConfiguration);
+
+        //Configure pagination and sorting
+        configurePagination(page, queryArgs);
+        configureSorting(page, queryArgs, discoveryConfiguration.getSearchSortConfiguration());
+
+        return queryArgs;
+    }
+
+    public DiscoverQuery buildFacetQuery(Context context, DSpaceObject scope,
+                                    DiscoveryConfiguration discoveryConfiguration,
+                                    String query, List<SearchFilter> searchFilters,
+                                    String dsoType, Pageable page, String facetName)
+            throws InvalidRequestException {
+
+        DiscoverQuery queryArgs = buildCommonDiscoverQuery(context, discoveryConfiguration, query, searchFilters, dsoType);
+
+        //TODO CHANGE TO FACETSTUFFZ
+        //When all search criteria are set, configure facet results
+        addFacetingForFacets(context, scope, queryArgs, discoveryConfiguration, facetName);
+
+        //Configure pagination and sorting
+        configurePaginationForFacets(page, queryArgs);
+        //TODO DIS
+        configureSortingFacet(page, queryArgs, discoveryConfiguration.getSearchSortConfiguration());
+
+        return queryArgs;
+    }
+
+    private void configureSortingFacet(Pageable page, DiscoverQuery queryArgs, DiscoverySortConfiguration searchSortConfiguration) {
+        //TODO UGLY
+        Sort sort = page.getSort();
+        if(sort == null){
+            queryArgs.setSortField("score", DiscoverQuery.SORT_ORDER.desc);
+            return;
+        }
+        if(page.getSort().getOrderFor("score") != null){
+            queryArgs.setSortField(page.getSort().getOrderFor("score").getProperty(), DiscoverQuery.SORT_ORDER.desc);
+        }
+        else if(page.getSort().getOrderFor("title") != null){
+            queryArgs.setSortField(page.getSort().getOrderFor("title").getProperty(), DiscoverQuery.SORT_ORDER.desc);
+        }
+    }
+
+    private void configurePaginationForFacets(Pageable page, DiscoverQuery queryArgs) {
+        if (page != null) {
+            queryArgs.setMaxResults(0);
+            queryArgs.setFacetOffset(page.getOffset());
+        }
+    }
+
+    private DiscoverQuery addFacetingForFacets(Context context, DSpaceObject scope, DiscoverQuery queryArgs, DiscoveryConfiguration discoveryConfiguration, String facetName) {
+        List<DiscoverySearchFilterFacet> facets = discoveryConfiguration.getSidebarFacets();
+        if (facets != null) {
+            queryArgs.setFacetMinCount(1);
+
+            //TODO This can be optimized.
+            for (DiscoverySearchFilterFacet facet : facets) {
+                if(StringUtils.equals(facet.getIndexFieldName(), facetName)){
+
+                    fillFacetIntoQueryArgs(context, scope, queryArgs, facet);
+                }
+            }
+        }
+
+        return queryArgs;
+    }
+
+    private void fillFacetIntoQueryArgs(Context context, DSpaceObject scope, DiscoverQuery queryArgs, DiscoverySearchFilterFacet facet) {
+        if (facet.getType().equals(DiscoveryConfigurationParameters.TYPE_DATE)) {
+            try {
+                FacetYearRange facetYearRange = searchService.getFacetYearRange(context, scope, facet, queryArgs.getFilterQueries());
+
+                queryArgs.addYearRangeFacet(facet, facetYearRange);
+
+            } catch (Exception e) {
+                log.error(LogManager.getHeader(context, "Error in Discovery while setting up date facet range", "date facet: " + facet), e);
+            }
+
+        } else {
+
+            int facetLimit = facet.getFacetLimit();
+            //Add one to our facet limit to make sure that if we have more then the shown facets that we show our "show more" url
+            facetLimit++;
+
+            queryArgs.addFacetField(new DiscoverFacetField(facet.getIndexFieldName(), facet.getType(), facetLimit, facet.getSortOrderSidebar()));
+        }
+    }
+
+    private DiscoverQuery buildCommonDiscoverQuery(Context context, DiscoveryConfiguration discoveryConfiguration, String query, List<SearchFilter> searchFilters, String dsoType) throws InvalidSearchFilterException, InvalidDSpaceObjectTypeException {
         DiscoverQuery queryArgs = buildBaseQueryForConfiguration(discoveryConfiguration);
 
         //Add search filters
@@ -64,14 +157,6 @@ public class DiscoverQueryBuilder {
         if (StringUtils.isNotBlank(dsoType)) {
             queryArgs.setDSpaceObjectFilter(getDsoTypeId(dsoType));
         }
-
-        //When all search criteria are set, configure facet results
-        addFaceting(context, scope, queryArgs, discoveryConfiguration);
-
-        //Configure pagination and sorting
-        configurePagination(page, queryArgs);
-        configureSorting(page, queryArgs, discoveryConfiguration.getSearchSortConfiguration());
-
         return queryArgs;
     }
 
@@ -193,24 +278,7 @@ public class DiscoverQueryBuilder {
 
             /** enable faceting of search results */
             for (DiscoverySearchFilterFacet facet : facets) {
-                if (facet.getType().equals(DiscoveryConfigurationParameters.TYPE_DATE)) {
-                    try {
-                        FacetYearRange facetYearRange = searchService.getFacetYearRange(context, scope, facet, queryArgs.getFilterQueries());
-
-                        queryArgs.addYearRangeFacet(facet, facetYearRange);
-
-                    } catch (Exception e) {
-                        log.error(LogManager.getHeader(context, "Error in Discovery while setting up date facet range", "date facet: " + facet), e);
-                    }
-
-                } else {
-
-                    int facetLimit = facet.getFacetLimit();
-                    //Add one to our facet limit to make sure that if we have more then the shown facets that we show our "show more" url
-                    facetLimit++;
-
-                    queryArgs.addFacetField(new DiscoverFacetField(facet.getIndexFieldName(), facet.getType(), facetLimit, facet.getSortOrderSidebar()));
-                }
+                fillFacetIntoQueryArgs(context, scope, queryArgs, facet);
             }
         }
 
