@@ -17,6 +17,7 @@ import javax.servlet.Filter;
 import org.apache.commons.io.Charsets;
 import org.dspace.app.rest.Application;
 import org.dspace.app.rest.utils.ApplicationConfig;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -51,7 +52,7 @@ public class AbstractControllerIntegrationTest extends AbstractUnitTestWithDatab
     protected MediaType contentType = new MediaType(MediaTypes.HAL_JSON.getType(),
             MediaTypes.HAL_JSON.getSubtype(), Charsets.UTF_8);
 
-    protected MockMvc mockMvc;
+    protected static MockMvc mockMvc = null;
 
     protected HttpMessageConverter mappingJackson2HttpMessageConverter;
 
@@ -73,11 +74,17 @@ public class AbstractControllerIntegrationTest extends AbstractUnitTestWithDatab
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
-        this.mockMvc = webAppContextSetup(webApplicationContext)
-                //Add all filter implementations
-                .addFilters(requestFilters.toArray(new Filter[requestFilters.size()]))
-                .build();
+        if(mockMvc == null) {
+            mockMvc = webAppContextSetup(webApplicationContext)
+                    //Add all filter implementations
+                    .addFilters(requestFilters.toArray(new Filter[requestFilters.size()]))
+                    .build();
+        }
+    }
+
+    @AfterClass
+    public static void shutdown() throws Exception {
+        mockMvc = null;
     }
 
 }
