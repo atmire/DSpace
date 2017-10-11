@@ -55,4 +55,5 @@ public class FacetResultsRest extends ResultsRest {
         this.hasMore = hasMore;
     }
 
+
 }

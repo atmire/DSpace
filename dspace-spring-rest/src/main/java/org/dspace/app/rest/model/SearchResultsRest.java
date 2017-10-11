@@ -129,6 +129,10 @@ public class SearchResultsRest extends ResultsRest {
             this.by = by;
             this.order = order;
         }
+        public Sorting(String by){
+            this.by=by;
+            this.order=null;
+        }
 
         public String getBy() {
             return by;

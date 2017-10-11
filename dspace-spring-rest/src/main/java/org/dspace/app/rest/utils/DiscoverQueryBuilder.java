@@ -70,31 +70,13 @@ public class DiscoverQueryBuilder {
 
         DiscoverQuery queryArgs = buildCommonDiscoverQuery(context, discoveryConfiguration, query, searchFilters, dsoType);
 
-        //TODO CHANGE TO FACETSTUFFZ
         //When all search criteria are set, configure facet results
         addFacetingForFacets(context, scope, queryArgs, discoveryConfiguration, facetName);
 
-        //Configure pagination and sorting
+        //Configure pagination
         configurePaginationForFacets(page, queryArgs);
-        //TODO DIS
-        configureSortingFacet(page, queryArgs, discoveryConfiguration.getSearchSortConfiguration());
 
         return queryArgs;
-    }
-
-    private void configureSortingFacet(Pageable page, DiscoverQuery queryArgs, DiscoverySortConfiguration searchSortConfiguration) {
-        //TODO UGLY
-        Sort sort = page.getSort();
-        if(sort == null){
-            queryArgs.setSortField("score", DiscoverQuery.SORT_ORDER.desc);
-            return;
-        }
-        if(page.getSort().getOrderFor("score") != null){
-            queryArgs.setSortField(page.getSort().getOrderFor("score").getProperty(), DiscoverQuery.SORT_ORDER.desc);
-        }
-        else if(page.getSort().getOrderFor("title") != null){
-            queryArgs.setSortField(page.getSort().getOrderFor("title").getProperty(), DiscoverQuery.SORT_ORDER.desc);
-        }
     }
 
     private void configurePaginationForFacets(Pageable page, DiscoverQuery queryArgs) {
@@ -137,7 +119,7 @@ public class DiscoverQueryBuilder {
             int facetLimit = facet.getFacetLimit();
             //Add one to our facet limit to make sure that if we have more then the shown facets that we show our "show more" url
             facetLimit++;
-
+            //This should take care of the sorting for us
             queryArgs.addFacetField(new DiscoverFacetField(facet.getIndexFieldName(), facet.getType(), facetLimit, facet.getSortOrderSidebar()));
         }
     }

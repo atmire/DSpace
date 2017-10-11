@@ -1,19 +1,15 @@
 package org.dspace.app.rest.converter;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.dspace.app.rest.model.FacetResultsRest;
-import org.dspace.app.rest.model.SearchFacetEntryRest;
 import org.dspace.app.rest.model.SearchFacetValueRest;
 import org.dspace.app.rest.model.SearchResultsRest;
 import org.dspace.app.rest.parameter.SearchFilter;
-import org.dspace.authority.AuthorityValue;
-import org.dspace.authority.service.AuthorityValueService;
 import org.dspace.core.Context;
 import org.dspace.discovery.DiscoverQuery;
 import org.dspace.discovery.DiscoverResult;
 import org.dspace.discovery.configuration.DiscoveryConfiguration;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.dspace.discovery.configuration.DiscoveryConfigurationParameters;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
@@ -22,10 +18,7 @@ import java.util.List;
 @Component
 public class DiscoverFacetResultsConverter {
 
-
-    @Autowired
-    private AuthorityValueService authorityValueService;
-
+    private static final int MAX_RESULTS = 10;
 
     public FacetResultsRest convert(Context context, String facetName, DiscoverQuery discoverQuery, String dsoScope, List<SearchFilter> searchFilters, DiscoverResult searchResult, DiscoveryConfiguration configuration, Pageable page){
         FacetResultsRest facetResultsRest = new FacetResultsRest();
@@ -36,82 +29,48 @@ public class DiscoverFacetResultsConverter {
     }
 
     private void addToFacetResultList(String facetName, DiscoverResult searchResult, FacetResultsRest facetResultsRest) {
-//        for(DiscoverResult.FacetResult facetResult : searchResult.getFacetResult(facetName)){
-//            facetResultsRest.addToFacetResultList(facetResult);
-//        }
             List<DiscoverResult.FacetResult> facetValues = searchResult.getFacetResult(facetName);
-
-            SearchFacetEntryRest facetEntry = new SearchFacetEntryRest(facetName);
             int valueCount = 0;
-
             for (DiscoverResult.FacetResult value : CollectionUtils.emptyIfNull(facetValues)) {
-                if(valueCount >= 10){
+                if(valueCount >= MAX_RESULTS){
                     break;
                 }
-                SearchFacetValueRest valueRest = new SearchFacetValueRest();
-                valueRest.setLabel(value.getDisplayedValue());
-                valueRest.setFilterValue(value.getAsFilterQuery());
-                valueRest.setFilterType(value.getFilterType());
-                valueRest.setAuthorityKey(value.getAuthorityKey());
-                valueRest.setSortValue(value.getSortValue());
-                valueRest.setCount(value.getCount());
-                facetEntry.addValue(valueRest);
-                if(StringUtils.isBlank(facetEntry.getFacetType())) {
-                    facetEntry.setFacetType(value.getFieldType());
-                }
-
+                SearchFacetValueRest valueRest = buildSearchFacetValueRestFromFacetResult(value);
+                facetResultsRest.addToFacetResultList(valueRest);
                 valueCount++;
             }
+    }
 
-            for(SearchFacetValueRest searchFacetValueRest : CollectionUtils.emptyIfNull(facetEntry.getValues())){
-                facetResultsRest.addToFacetResultList(searchFacetValueRest);
-            }
-
-
+    private SearchFacetValueRest buildSearchFacetValueRestFromFacetResult(DiscoverResult.FacetResult value) {
+        SearchFacetValueRest valueRest = new SearchFacetValueRest();
+        valueRest.setLabel(value.getDisplayedValue());
+        valueRest.setFilterValue(value.getAsFilterQuery());
+        valueRest.setFilterType(value.getFilterType());
+        valueRest.setAuthorityKey(value.getAuthorityKey());
+        valueRest.setSortValue(value.getSortValue());
+        valueRest.setCount(value.getCount());
+        return valueRest;
     }
 
     private void setRequestInformation(Context context, String facetName, DiscoverQuery discoverQuery, String dsoScope, List<SearchFilter> searchFilters, DiscoverResult searchResult, DiscoveryConfiguration configuration, FacetResultsRest facetResultsRest, Pageable page) {
         facetResultsRest.setName(facetName);
         facetResultsRest.setQuery(discoverQuery.getQuery());
         facetResultsRest.setScope(dsoScope);
-//        facetResultsRest.setPage(page);
         facetResultsRest.setQuery(discoverQuery.getQuery());
         if(!searchResult.getFacetResult(facetName).isEmpty()){
             facetResultsRest.setType(searchResult.getFacetResult(facetName).get(0).getFieldType());
         }
-        if(searchResult.getFacetResult(facetName).size() > 10 && searchResult.getFacetResult(facetName).get(10) != null){
+        if(searchResult.getFacetResult(facetName).size() > MAX_RESULTS && searchResult.getFacetResult(facetName).get(MAX_RESULTS) != null){
             facetResultsRest.setHasMore(true);
         }
-
-        SearchResultsRest.Sorting sort = new SearchResultsRest.Sorting(discoverQuery.getSortField(), discoverQuery.getSortOrder().toString());
-        facetResultsRest.setSort(sort);
-
-//        if(page != null && page.getSort() != null && page.getSort().iterator().hasNext()) {
-//            Sort.Order order = page.getSort().iterator().next();
-//            facetResultsRest.setSort(order.getProperty(), order.getDirection().name());
-//        }
-
+        if(!discoverQuery.getFacetFields().isEmpty()){
+            DiscoveryConfigurationParameters.SORT sort2 = discoverQuery.getFacetFields().get(0).getSortOrder();
+            SearchResultsRest.Sorting sort = new SearchResultsRest.Sorting(sort2.name());
+            facetResultsRest.setSort(sort);
+        }
+        SearchFilterToAppliedFilterConverter searchFilterToAppliedFilterConverter = new SearchFilterToAppliedFilterConverter();
         for (SearchFilter searchFilter : CollectionUtils.emptyIfNull(searchFilters)) {
-
-            facetResultsRest.addAppliedFilter(convertSearchFilter(context, searchFilter));
+            facetResultsRest.addAppliedFilter(searchFilterToAppliedFilterConverter.convertSearchFilter(context, searchFilter));
         }
-    }
-
-    private SearchResultsRest.AppliedFilter convertSearchFilter(Context context, SearchFilter searchFilter) {
-        AuthorityValue authorityValue = null;
-        if(searchFilter.hasAuthorityOperator()) {
-            authorityValue = authorityValueService.findByUID(context, searchFilter.getValue());
-        }
-
-        SearchResultsRest.AppliedFilter appliedFilter;
-        if (authorityValue == null) {
-            appliedFilter = new SearchResultsRest.AppliedFilter(searchFilter.getName(), searchFilter.getOperator(),
-                    searchFilter.getValue(), searchFilter.getValue());
-        } else {
-            appliedFilter = new SearchResultsRest.AppliedFilter(searchFilter.getName(), searchFilter.getOperator(),
-                    searchFilter.getValue(), authorityValue.getValue());
-        }
-
-        return appliedFilter;
     }
 }

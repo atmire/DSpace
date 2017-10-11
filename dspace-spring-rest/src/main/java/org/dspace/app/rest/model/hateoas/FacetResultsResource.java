@@ -25,15 +25,6 @@ public class FacetResultsResource extends HALResource{
     @JsonUnwrapped
     private final FacetResultsRest data;
 
-
-    public EmbeddedPage getEmbeddedPage() {
-        return embeddedPage;
-    }
-
-    public void setEmbeddedPage(EmbeddedPage embeddedPage) {
-        this.embeddedPage = embeddedPage;
-    }
-
     @JsonUnwrapped
     private EmbeddedPage embeddedPage;
 
@@ -44,28 +35,26 @@ public class FacetResultsResource extends HALResource{
     }
 
     private void addEmbeds(final FacetResultsRest data, final Pageable page, final Utils utils) {
-
-        List<FacetResultEntryResource> list = buildEntryList(data);
-        Page<FacetResultEntryResource> pageImpl;
-        pageImpl = new PageImpl<>(list, page, -1);
+        List<SearchFacetValueResource> list = buildEntryList(data);
+        Page<SearchFacetValueResource> pageImpl = new PageImpl<>(list, page, -1);
         embeddedPage = new EmbeddedPage(buildBaseLink(data), pageImpl, list);
-
-//        embedResource("facets", new EmbeddedPage(buildBaseLink(data), pageImpl, list));
-
         embedResource("values", embeddedPage.getPageContent());
     }
-    private static List<FacetResultEntryResource> buildEntryList(final FacetResultsRest data) {
-//        PageImpl<SearchFacetValueRest> page = new PageImpl<SearchFacetValueRest>(data.getFacetResultList(),
-//                pageable, data.getFacetResultList().size());
-//        embedResource("facets", new EmbeddedPage(buildBaseLink(data), page, data.getFacetResultList()));
+    private static List<SearchFacetValueResource> buildEntryList(final FacetResultsRest data) {
+//        LinkedList<FacetResultEntryResource> list = new LinkedList<>();
+//        for(SearchFacetValueRest searchFacetValueRest : data.getFacetResultList()){
+//            FacetResultEntryRest facetResultEntryRest = new FacetResultEntryRest();
+//            facetResultEntryRest.setName(searchFacetValueRest.getLabel());
+//            facetResultEntryRest.setCount(searchFacetValueRest.getCount());
+//            FacetResultEntryResource facetResultEntryResource = new FacetResultEntryResource(facetResultEntryRest);
+//            list.add(facetResultEntryResource);
+//        }
+//        return list;
 
-        LinkedList<FacetResultEntryResource> list = new LinkedList<>();
+        LinkedList<SearchFacetValueResource> list = new LinkedList<>();
         for(SearchFacetValueRest searchFacetValueRest : data.getFacetResultList()){
-            FacetResultEntryRest facetResultEntryRest = new FacetResultEntryRest();
-            facetResultEntryRest.setName(searchFacetValueRest.getLabel());
-            facetResultEntryRest.setCount(searchFacetValueRest.getCount());
-            FacetResultEntryResource facetResultEntryResource = new FacetResultEntryResource(facetResultEntryRest);
-            list.add(facetResultEntryResource);
+            SearchFacetValueResource searchFacetValueResource = new SearchFacetValueResource(searchFacetValueRest, );
+            list.add(searchFacetValueResource);
         }
         return list;
     }
@@ -74,6 +63,7 @@ public class FacetResultsResource extends HALResource{
     }
     private String buildBaseLink(final FacetResultsRest data) {
 
+        //TODO MOVE -> factory
         DiscoveryRestController methodOn = methodOn(DiscoveryRestController.class);
 
         UriComponentsBuilder uriComponentsBuilder = linkTo(methodOn
@@ -86,7 +76,6 @@ public class FacetResultsResource extends HALResource{
     private UriComponentsBuilder addFilterParams(UriComponentsBuilder uriComponentsBuilder) {
         if (data.getAppliedFilters() != null) {
             for (SearchResultsRest.AppliedFilter filter : data.getAppliedFilters()) {
-                //TODO Make sure the filter format is defined in only one place
                 uriComponentsBuilder.queryParam("f." + filter.getFilter(), filter.getValue() + "," + filter.getOperator());
             }
         }

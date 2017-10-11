@@ -129,7 +129,6 @@ public class DiscoveryRestRepository extends AbstractDSpaceRestRepository {
         try {
             discoverQuery = queryBuilder.buildFacetQuery(context, scopeObject, configuration, query, searchFilters, dsoType, page, facetName);
             searchResult = searchService.search(context, scopeObject, discoverQuery);
-            //TODO set "hasMore" property on facets
 
         } catch (InvalidRequestException e) {
             log.warn("Received an invalid request", e);
