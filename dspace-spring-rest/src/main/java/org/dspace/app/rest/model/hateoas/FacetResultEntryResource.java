@@ -40,6 +40,7 @@ public class FacetResultEntryResource extends HALResource {
 
         DiscoveryRestController methodOn = methodOn(DiscoveryRestController.class);
 
+        //TODO move somewhere else ->
         UriComponentsBuilder uriComponentsBuilder = linkTo(methodOn
                 .getSearchObjects(data.getName(), data.getQuery(), null, data.getScope(), new LinkedList<SearchFilter>(), null))
                 .toUriComponentsBuilder();
