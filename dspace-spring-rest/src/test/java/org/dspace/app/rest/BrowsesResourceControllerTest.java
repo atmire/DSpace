@@ -13,12 +13,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.dspace.app.rest.builder.CollectionBuilder;
 import org.dspace.app.rest.builder.CommunityBuilder;
+import org.dspace.app.rest.builder.GroupBuilder;
 import org.dspace.app.rest.builder.ItemBuilder;
 import org.dspace.app.rest.matcher.BrowseIndexMatchers;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.dspace.content.Item;
+import org.dspace.eperson.Group;
 import org.junit.Test;
 
 /**
@@ -112,51 +114,100 @@ public class BrowsesResourceControllerTest extends AbstractControllerIntegration
 
     @Test
     public void findBrowseByTitleItems() throws Exception {
-
         context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        //1. A community-collection structure with one parent community with sub-community and two collections.
         parentCommunity = new CommunityBuilder().createCommunity(context)
                 .withName("Parent Community")
                 .build();
-
         Community child1 = new CommunityBuilder().createSubCommunity(context, parentCommunity)
                 .withName("Sub Community")
                 .build();
-
         Collection col1 = new CollectionBuilder().createCollection(context, child1).withName("Collection 1").build();
         Collection col2 = new CollectionBuilder().createCollection(context, child1).withName("Collection 2").build();
 
-        Item item1 = new ItemBuilder().createItem(context, col1)
-                .withTitle("My first test item")
+        //2. Two public items that are readable by Anonymous
+        Item publicItem1 = new ItemBuilder().createItem(context, col1)
+                .withTitle("Public item 1")
                 .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald")
-                .withAuthor("Doe, John")
-                .withSubject("Java")
-                .withSubject("Unit Testing")
+                .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                .withSubject("Java").withSubject("Unit Testing")
                 .build();
 
-        Item item2 = new ItemBuilder().createItem(context, col2)
-                .withTitle("My second test item")
+        Item publicItem2 = new ItemBuilder().createItem(context, col2)
+                .withTitle("Public item 2")
                 .withIssueDate("2016-02-13")
-                .withAuthor("Smith, Maria")
-                .withAuthor("Doe, Jane")
-                .withSubject("Angular")
-                .withSubject("Unit Testing")
+                .withAuthor("Smith, Maria").withAuthor("Doe, Jane")
+                .withSubject("Angular").withSubject("Unit Testing")
+                .build();
+
+        //3. An item that has been made private
+        Item privateItem = new ItemBuilder().createItem(context, col1)
+                .withTitle("This is a private item")
+                .withIssueDate("2015-03-12")
+                .withAuthor("Duck, Donald")
+                .withSubject("Cartoons").withSubject("Ducks")
+                .makePrivate()
+                .build();
+
+        //4. An item with an item-level embargo
+        Item embargoedItem = new ItemBuilder().createItem(context, col2)
+                .withTitle("An embargoed publication")
+                .withIssueDate("2017-08-10")
+                .withAuthor("Mouse, Mickey")
+                .withSubject("Cartoons").withSubject("Mice")
+                .withEmbargoPeriod("12 months")
+                .build();
+
+        //5. An item that is only readable for an internal groups
+        Group internalGroup = new GroupBuilder().createGroup(context)
+                .withName("Internal Group")
+                .build();
+
+        Item internalItem = new ItemBuilder().createItem(context, col2)
+                .withTitle("Internal publication")
+                .withIssueDate("2016-09-19")
+                .withAuthor("Doe, John")
+                .withSubject("Unknown")
+                .withReaderGroup(internalGroup)
                 .build();
 
         context.restoreAuthSystemState();
 
-        //When we browse the items in the Browse by item endpoint
-        mockMvc.perform(get("/api/discover/browses/title/items"))
+        //** WHEN **
+        //An anonymous user browses the items in the Browse by item endpoint
+        //sorted descending by tile
+        mockMvc.perform(get("/api/discover/browses/title/items")
+                .requestAttr("sort", "title,desc"))
+
+        //** THEN **
                 //The status has to be 200 OK
                 .andExpect(status().isOk())
                 //We expect the content type to be "application/hal+json;charset=UTF-8"
                 .andExpect(content().contentType(contentType))
 
-                //We expect our two created items to be present
+                //We expect only the two public items to be present
                 .andExpect(jsonPath("$.page.size", is(20)))
                 .andExpect(jsonPath("$.page.totalElements", is(2)))
                 .andExpect(jsonPath("$.page.totalPages", is(1)))
                 .andExpect(jsonPath("$.page.number", is(0)))
+
+                //Verify that the title of the public items are present and sorted descending
+                .andExpect(jsonPath("$._embedded.items[*].metadata[?(@.key=='dc.title')].value",
+                        contains("Public item 2", "Public item 1")))
+
+                //The private item must not be present
+                .andExpect(jsonPath("$._embedded.items[*].metadata[?(@.key=='dc.title')].value",
+                        not(hasItem("This is a private item"))))
+
+                //The item with an item-level embargo must not be present
+                .andExpect(jsonPath("$._embedded.items[*].metadata[?(@.key=='dc.title')].value",
+                        not(hasItem("An embargoed publication"))))
+
+                //The internal item must not be present
+                .andExpect(jsonPath("$._embedded.items[*].metadata[?(@.key=='dc.title')].value",
+                        not(hasItem("Internal publication"))))
         ;
     }
 }
