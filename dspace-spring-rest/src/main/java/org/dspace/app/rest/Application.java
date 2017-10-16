@@ -96,7 +96,8 @@ public class Application extends SpringBootServletInitializer {
                 servletContext.setInitParameter("dspace.dir", configuration.getDspaceHome());
 
                 // start the kernel when the webapp starts
-                if (DSpaceKernelManager.getDefaultKernel() == null) {
+                this.dspaceKernel = DSpaceKernelManager.getDefaultKernel();
+                if (this.dspaceKernel == null) {
                     DSpaceKernelImpl kernelImpl = null;
                     try {
                         kernelImpl = DSpaceKernelInit.getKernel(null);
@@ -121,7 +122,7 @@ public class Application extends SpringBootServletInitializer {
                     }
                 }
 
-                if(this.dspaceKernel != null) {
+                if(springBootApplicationContext.getParent() == null) {
                     //Set the DSpace Kernel Application context as a parent of the Spring Boot context so that
                     //we can auto-wire all DSpace Kernel services
                     springBootApplicationContext.setParent(dspaceKernel.getServiceManager().getApplicationContext());

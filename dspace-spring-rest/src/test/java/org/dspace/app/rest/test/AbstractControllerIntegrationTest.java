@@ -17,7 +17,7 @@ import javax.servlet.Filter;
 import org.apache.commons.io.Charsets;
 import org.dspace.app.rest.Application;
 import org.dspace.app.rest.utils.ApplicationConfig;
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -49,10 +49,12 @@ import org.springframework.web.context.WebApplicationContext;
 @WebAppConfiguration
 public class AbstractControllerIntegrationTest extends AbstractUnitTestWithDatabase {
 
+    public static final String REST_SERVER_URL = "http://localhost/api/";
+
     protected MediaType contentType = new MediaType(MediaTypes.HAL_JSON.getType(),
             MediaTypes.HAL_JSON.getSubtype(), Charsets.UTF_8);
 
-    protected static MockMvc mockMvc = null;
+    protected MockMvc mockMvc = null;
 
     protected HttpMessageConverter mappingJackson2HttpMessageConverter;
 
@@ -74,6 +76,7 @@ public class AbstractControllerIntegrationTest extends AbstractUnitTestWithDatab
 
     @Before
     public void setUp() throws Exception {
+        super.setUp();
         if(mockMvc == null) {
             mockMvc = webAppContextSetup(webApplicationContext)
                     //Add all filter implementations
@@ -82,8 +85,9 @@ public class AbstractControllerIntegrationTest extends AbstractUnitTestWithDatab
         }
     }
 
-    @AfterClass
-    public static void shutdown() throws Exception {
+    @After
+    public void destroy() {
+        super.destroy();
         mockMvc = null;
     }
 
