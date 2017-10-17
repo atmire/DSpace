@@ -25,12 +25,12 @@ import org.junit.BeforeClass;
 /**
  * Abstract Test class copied from DSpace API
  */
-public class AbstractDSpaceTest
+public class AbstractDSpaceIntegrationTest
 {
     public static final String TEST_DSPACE_DIR = System.getProperty("dspace.dir");
 
     /** log4j category */
-    private static final Logger log = Logger.getLogger(AbstractDSpaceTest.class);
+    private static final Logger log = Logger.getLogger(AbstractDSpaceIntegrationTest.class);
 
     /**
      * Test properties. These configure our general test environment
@@ -60,7 +60,7 @@ public class AbstractDSpaceTest
 
             //load the properties of the tests
             testProps = new Properties();
-            URL properties = AbstractDSpaceTest.class.getClassLoader()
+            URL properties = AbstractDSpaceIntegrationTest.class.getClassLoader()
                     .getResource("test-config.properties");
             testProps.load(properties.openStream());
 
