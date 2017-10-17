@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
@@ -24,13 +25,14 @@ import org.dspace.app.rest.test.AbstractDSpaceIntegrationTest;
  */
 public class MockSolrServer {
 
+    private static final Logger log = Logger.getLogger(MockSolrServer.class);
+    private static final ConcurrentMap<String, SolrServer> loadedCores = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, AtomicLong> usersPerCore = new ConcurrentHashMap<>();
+    private static CoreContainer container = null;
+
     private String coreName;
 
     private SolrServer solrServer = null;
-
-    private static CoreContainer container = null;
-    private static final ConcurrentMap<String, SolrServer> loadedCores = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<String, AtomicLong> usersPerCore = new ConcurrentHashMap<>();
 
 
     public MockSolrServer(final String coreName) throws Exception {
@@ -68,6 +70,7 @@ public class MockSolrServer {
             }
 
             loadedCores.put(coreName, server);
+            log.info("SOLR Server for core " + coreName + " initialized");
         }
         return server;
     }
@@ -78,6 +81,7 @@ public class MockSolrServer {
             if(remainingUsers <= 0) {
                 solrServer.shutdown();
                 usersPerCore.remove(coreName);
+                log.info("SOLR Server for core " + coreName + " destroyed");
             }
 
             if(usersPerCore.isEmpty()) {
@@ -90,11 +94,13 @@ public class MockSolrServer {
         if(container == null) {
             container = new CoreContainer(AbstractDSpaceIntegrationTest.TEST_DSPACE_DIR + File.separator + "solr");
             container.load();
+            log.info("SOLR CoreContainer initialized");
         }
     }
 
     private static synchronized void destroyContainer() {
         container = null;
+        log.info("SOLR CoreContainer destroyed");
     }
 
 }
