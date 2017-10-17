@@ -23,7 +23,6 @@ import java.sql.SQLException;
 public class CollectionBuilder extends AbstractBuilder<Collection> {
 
     private Collection collection;
-    private Context context;
 
     public CollectionBuilder createCollection(final Context context, final Community parent) {
         this.context = context;

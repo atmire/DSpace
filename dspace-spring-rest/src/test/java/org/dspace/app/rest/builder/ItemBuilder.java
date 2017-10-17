@@ -18,6 +18,7 @@ import org.dspace.eperson.Group;
 public class ItemBuilder extends AbstractBuilder<Item> {
 
     private WorkspaceItem workspaceItem;
+    private Group readerGroup = null;
 
     public ItemBuilder createItem(final Context context, final Collection col1) {
         this.context = context;
@@ -40,7 +41,7 @@ public class ItemBuilder extends AbstractBuilder<Item> {
     }
 
     public ItemBuilder withAuthor(final String authorName) {
-        return addMetadataValue(workspaceItem.getItem(), MetadataSchema.DC_SCHEMA, "date", "issued", authorName);
+        return addMetadataValue(workspaceItem.getItem(), MetadataSchema.DC_SCHEMA, "contributor", "author", authorName);
     }
 
     public ItemBuilder withSubject(final String subject) {
@@ -57,7 +58,8 @@ public class ItemBuilder extends AbstractBuilder<Item> {
     }
 
     public ItemBuilder withReaderGroup(Group group) {
-        return setOnlyReadPermission(workspaceItem.getItem(), group, null);
+        readerGroup = group;
+        return this;
     }
 
     @Override
@@ -65,6 +67,12 @@ public class ItemBuilder extends AbstractBuilder<Item> {
         try {
             Item item = installItemService.installItem(context, workspaceItem);
             itemService.update(context, item);
+
+            //Check if we need to make this item private. This has to be done after item install.
+            if(readerGroup != null) {
+                setOnlyReadPermission(workspaceItem.getItem(), readerGroup, null);
+            }
+
             context.dispatchEvents();
 
             indexingService.commit();

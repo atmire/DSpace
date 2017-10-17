@@ -8,6 +8,7 @@
 package org.dspace.app.rest.builder;
 
 import org.apache.log4j.Logger;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.ResourcePolicy;
 import org.dspace.authorize.factory.AuthorizeServiceFactory;
 import org.dspace.authorize.service.AuthorizeService;
@@ -29,6 +30,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.MutablePeriod;
 import org.joda.time.format.PeriodFormat;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Date;
 
@@ -37,23 +39,53 @@ import java.util.Date;
  */
 public abstract class AbstractBuilder<T extends DSpaceObject> {
 
-    protected static final CommunityService communityService = ContentServiceFactory.getInstance().getCommunityService();
-    protected static final CollectionService collectionService = ContentServiceFactory.getInstance().getCollectionService();
-    protected static final ItemService itemService = ContentServiceFactory.getInstance().getItemService();
-    protected static final InstallItemService installItemService = ContentServiceFactory.getInstance().getInstallItemService();
-    protected static final WorkspaceItemService workspaceItemService = ContentServiceFactory.getInstance().getWorkspaceItemService();
-    protected static final EPersonService ePersonService = EPersonServiceFactory.getInstance().getEPersonService();
-    protected static final GroupService groupService = EPersonServiceFactory.getInstance().getGroupService();
-    protected static final BundleService bundleService = ContentServiceFactory.getInstance().getBundleService();
-    protected static final BitstreamService bitstreamService = ContentServiceFactory.getInstance().getBitstreamService();
-    protected static final AuthorizeService authorizeService = AuthorizeServiceFactory.getInstance().getAuthorizeService();
-    protected static final ResourcePolicyService resourcePolicyService = AuthorizeServiceFactory.getInstance().getResourcePolicyService();
-    protected static final IndexingService indexingService = DSpaceServicesFactory.getInstance().getServiceManager().getServiceByName(IndexingService.class.getName(),IndexingService.class);
+    static CommunityService communityService;
+    static CollectionService collectionService;
+    static ItemService itemService;
+    static InstallItemService installItemService;
+    static WorkspaceItemService workspaceItemService;
+    static EPersonService ePersonService;
+    static GroupService groupService;
+    static BundleService bundleService;
+    static BitstreamService bitstreamService;
+    static AuthorizeService authorizeService;
+    static ResourcePolicyService resourcePolicyService;
+    static IndexingService indexingService;
 
     protected Context context;
 
     /** log4j category */
     private static final Logger log = Logger.getLogger(AbstractBuilder.class);
+
+    public static void init() {
+        communityService = ContentServiceFactory.getInstance().getCommunityService();
+        collectionService = ContentServiceFactory.getInstance().getCollectionService();
+        itemService = ContentServiceFactory.getInstance().getItemService();
+        installItemService = ContentServiceFactory.getInstance().getInstallItemService();
+        workspaceItemService = ContentServiceFactory.getInstance().getWorkspaceItemService();
+        ePersonService = EPersonServiceFactory.getInstance().getEPersonService();
+        groupService = EPersonServiceFactory.getInstance().getGroupService();
+        bundleService = ContentServiceFactory.getInstance().getBundleService();
+        bitstreamService = ContentServiceFactory.getInstance().getBitstreamService();
+        authorizeService = AuthorizeServiceFactory.getInstance().getAuthorizeService();
+        resourcePolicyService = AuthorizeServiceFactory.getInstance().getResourcePolicyService();
+        indexingService = DSpaceServicesFactory.getInstance().getServiceManager().getServiceByName(IndexingService.class.getName(),IndexingService.class);
+    }
+
+    public static void destroy() {
+        communityService = null;
+        collectionService = null;
+        itemService = null;
+        installItemService = null;
+        workspaceItemService = null;
+        ePersonService = null;
+        groupService = null;
+        bundleService = null;
+        bitstreamService = null;
+        authorizeService = null;
+        resourcePolicyService = null;
+        indexingService = null;
+    }
 
     protected <B> B handleException(final Exception e) {
         log.error(e);
@@ -110,4 +142,11 @@ public abstract class AbstractBuilder<T extends DSpaceObject> {
     }
 
     public abstract T build();
+
+    public void delete(Context context, T dso) throws SQLException, IOException, AuthorizeException {
+        T attachedDso = context.reloadEntity(dso);
+        if(attachedDso != null) {
+            getDsoService().delete(context, attachedDso);
+        }
+    }
 }

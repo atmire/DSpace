@@ -16,6 +16,7 @@ import java.util.Properties;
 import java.util.TimeZone;
 
 import org.apache.log4j.Logger;
+import org.dspace.app.rest.builder.AbstractBuilder;
 import org.dspace.servicemanager.DSpaceKernelImpl;
 import org.dspace.servicemanager.DSpaceKernelInit;
 import org.junit.AfterClass;
@@ -26,6 +27,8 @@ import org.junit.BeforeClass;
  */
 public class AbstractDSpaceTest
 {
+    public static final String TEST_DSPACE_DIR = System.getProperty("dspace.dir");
+
     /** log4j category */
     private static final Logger log = Logger.getLogger(AbstractDSpaceTest.class);
 
@@ -66,8 +69,9 @@ public class AbstractDSpaceTest
             if (!kernelImpl.isRunning())
             {
                 // NOTE: the "dspace.dir" system property MUST be specified via Maven
-                kernelImpl.start(System.getProperty("dspace.dir")); // init the kernel
+                kernelImpl.start(TEST_DSPACE_DIR); // init the kernel
             }
+            AbstractBuilder.init();
         }
         catch (IOException ex)
         {
@@ -75,7 +79,6 @@ public class AbstractDSpaceTest
             fail("Error initializing tests: " + ex.getMessage());
         }
     }
-
 
     /**
      * This method will be run after all tests finish as per @AfterClass. It
@@ -86,6 +89,8 @@ public class AbstractDSpaceTest
         //we clear the properties
         testProps.clear();
         testProps = null;
+
+        AbstractBuilder.destroy();
 
         //Also clear out the kernel & nullify (so JUnit will clean it up)
         if (kernelImpl != null) {

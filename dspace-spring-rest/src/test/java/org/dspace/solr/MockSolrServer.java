@@ -14,6 +14,7 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.core.CoreContainer;
+import org.dspace.app.rest.test.AbstractDSpaceTest;
 
 /**
  * Abstract class to mock a service that uses SOLR
@@ -23,6 +24,8 @@ public class MockSolrServer {
     private String coreName;
 
     private SolrServer solrServer = null;
+
+    private static CoreContainer container = null;
 
     public MockSolrServer(final String coreName) throws Exception {
         this.coreName = coreName;
@@ -34,8 +37,7 @@ public class MockSolrServer {
     }
 
     protected void initSolrServer() throws Exception {
-        CoreContainer container = new CoreContainer(System.getProperty("dspace.dir") + File.separator + "solr");
-        container.load();
+        initSolrContainer();
 
         solrServer = new EmbeddedSolrServer(container, coreName);
 
@@ -45,6 +47,13 @@ public class MockSolrServer {
             solrServer.commit();
         } catch (SolrServerException | IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static synchronized void initSolrContainer() {
+        if(container == null) {
+            container = new CoreContainer(AbstractDSpaceTest.TEST_DSPACE_DIR + File.separator + "solr");
+            container.load();
         }
     }
 

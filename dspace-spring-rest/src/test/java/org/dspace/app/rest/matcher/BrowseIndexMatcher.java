@@ -15,9 +15,12 @@ import static org.hamcrest.text.IsEqualIgnoringCase.equalToIgnoringCase;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
-public class BrowseIndexMatchers {
+/**
+ * Utility class to construct a Matcher for a browse index
+ */
+public class BrowseIndexMatcher {
 
-    public BrowseIndexMatchers() {
+    public BrowseIndexMatcher() {
 
     }
 
