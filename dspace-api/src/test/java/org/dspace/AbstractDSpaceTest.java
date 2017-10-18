@@ -43,7 +43,6 @@ public class AbstractDSpaceTest
 {
     /** log4j category */
     private static final Logger log = Logger.getLogger(AbstractDSpaceTest.class);
-    public static final String TEST_DSPACE_DIR = System.getProperty("dspace.dir");
 
     /**
      * Test properties. These configure our general test environment
@@ -82,7 +81,7 @@ public class AbstractDSpaceTest
             if (!kernelImpl.isRunning())
             {
                 // NOTE: the "dspace.dir" system property MUST be specified via Maven
-                kernelImpl.start(TEST_DSPACE_DIR); // init the kernel
+                kernelImpl.start(getDspaceDir()); // init the kernel
             }
 
             // Initialize mock Util class (allows Util.getSourceVersion() to work in Unit tests)
@@ -111,5 +110,9 @@ public class AbstractDSpaceTest
             kernelImpl.destroy();
         }
         kernelImpl = null;
+    }
+    public static String getDspaceDir(){
+        return System.getProperty("dspace.dir");
+
     }
 }
