@@ -27,7 +27,6 @@ import org.junit.BeforeClass;
  */
 public class AbstractDSpaceIntegrationTest
 {
-    public static final String TEST_DSPACE_DIR = System.getProperty("dspace.dir");
 
     /** log4j category */
     private static final Logger log = Logger.getLogger(AbstractDSpaceIntegrationTest.class);
@@ -69,7 +68,7 @@ public class AbstractDSpaceIntegrationTest
             if (!kernelImpl.isRunning())
             {
                 // NOTE: the "dspace.dir" system property MUST be specified via Maven
-                kernelImpl.start(TEST_DSPACE_DIR); // init the kernel
+                kernelImpl.start(getDspaceDir()); // init the kernel
             }
             AbstractBuilder.init();
         }
@@ -97,6 +96,11 @@ public class AbstractDSpaceIntegrationTest
             kernelImpl.destroy();
         }
         kernelImpl = null;
+    }
+
+    public static String getDspaceDir(){
+        return System.getProperty("dspace.dir");
+
     }
 }
 

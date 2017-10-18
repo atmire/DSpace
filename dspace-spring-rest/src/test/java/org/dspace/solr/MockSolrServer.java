@@ -88,7 +88,7 @@ public class MockSolrServer {
 
     private static synchronized void initSolrContainer() {
         if(container == null) {
-            container = new CoreContainer(AbstractDSpaceIntegrationTest.TEST_DSPACE_DIR + File.separator + "solr");
+            container = new CoreContainer(AbstractDSpaceIntegrationTest.getDspaceDir() + File.separator + "solr");
             container.load();
         }
     }
