@@ -81,6 +81,7 @@ public class MockSolrServer {
             if(remainingUsers <= 0) {
                 solrServer.shutdown();
                 usersPerCore.remove(coreName);
+                loadedCores.remove(coreName);
                 log.info("SOLR Server for core " + coreName + " destroyed");
             }
 
