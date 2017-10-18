@@ -92,7 +92,9 @@ public class MockSolrServer {
 
     private static synchronized void initSolrContainer() {
         if(container == null) {
-            container = new CoreContainer(AbstractDSpaceIntegrationTest.getDspaceDir() + File.separator + "solr");
+            String solrDir = AbstractDSpaceIntegrationTest.getDspaceDir() + File.separator + "solr";
+            log.info("Initializing SOLR CoreContainer with directory " + solrDir);
+            container = new CoreContainer(solrDir);
             container.load();
             log.info("SOLR CoreContainer initialized");
         }
