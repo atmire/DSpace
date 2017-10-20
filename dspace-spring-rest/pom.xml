@@ -205,6 +205,17 @@
 			<!-- <version>2.5.5.RELEASE</version> -->
 		</dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-activemq</artifactId>
+            <version>${spring-boot.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-pool</artifactId>
+        </dependency>
+
          <!-- Add in Spring Security for AuthN and AuthZ -->
         <!-- <dependency>
             <groupId>org.springframework.boot</groupId>
