@@ -10,18 +10,16 @@ package org.dspace.app.rest;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.dspace.app.rest.link.HalLinkService;
-import org.dspace.app.rest.model.SearchConfigurationRest;
-import org.dspace.app.rest.model.SearchResultsRest;
-import org.dspace.app.rest.model.SearchSupportRest;
-import org.dspace.app.rest.model.hateoas.SearchSupportResource;
-import org.dspace.app.rest.model.hateoas.SearchConfigurationResource;
-import org.dspace.app.rest.model.hateoas.SearchResultsResource;
+import org.dspace.app.rest.model.*;
+import org.dspace.app.rest.model.hateoas.*;
 import org.dspace.app.rest.parameter.SearchFilter;
 import org.dspace.app.rest.repository.DiscoveryRestRepository;
 import org.dspace.app.rest.utils.ScopeResolver;
 import org.dspace.app.rest.utils.Utils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.ResourceSupport;
@@ -111,23 +109,26 @@ public class DiscoveryRestController implements InitializingBean {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/facets")
-    public void getFacetsConfiguration(@RequestParam(name = "scope", required = false) String dsoScope,
+    public FacetConfigurationResource getFacetsConfiguration(@RequestParam(name = "scope", required = false) String dsoScope,
                                        @RequestParam(name = "configuration", required = false) String configurationName) {
         if(log.isTraceEnabled()) {
             log.trace("Retrieving facet configuration for scope " + StringUtils.trimToEmpty(dsoScope)
                     + " and configuration name " + StringUtils.trimToEmpty(configurationName));
         }
 
-        discoveryRestRepository.getFacetsConfiguration(dsoScope, configurationName);
+        FacetConfigurationRest facetConfigurationRest = discoveryRestRepository.getFacetsConfiguration(dsoScope, configurationName);
+        FacetConfigurationResource facetConfigurationResource = new FacetConfigurationResource(facetConfigurationRest);
+        halLinkService.addLinks(facetConfigurationResource);
+        return facetConfigurationResource;
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/facets/{name}")
     public ResourceSupport getFacetValues(@PathVariable("name") String facetName,
-                                          @RequestParam(name = "query", required = false) String query,
-                                          @RequestParam(name = "dsoType", required = false) String dsoType,
-                                          @RequestParam(name = "scope", required = false) String dsoScope,
-                                          List<SearchFilter> searchFilters,
-                                          Pageable page) {
+                                                         @RequestParam(name = "query", required = false) String query,
+                                                         @RequestParam(name = "dsoType", required = false) String dsoType,
+                                                         @RequestParam(name = "scope", required = false) String dsoScope,
+                                                         List<SearchFilter> searchFilters,
+                                                         Pageable page) {
         if(log.isTraceEnabled()) {
             log.trace("Facetting on facet " + facetName + " with scope: " + StringUtils.trimToEmpty(dsoScope)
                     + ", dsoType: " + StringUtils.trimToEmpty(dsoType)
@@ -137,8 +138,16 @@ public class DiscoveryRestController implements InitializingBean {
         }
 
         //TODO
+        FacetResultsRest facetResultsRest = discoveryRestRepository.getFacetObjects(facetName, query, dsoType, dsoScope, searchFilters, page);
 
-        return null;
+        FacetResultsResource facetResultsResource = new FacetResultsResource(facetResultsRest, page, utils);
+
+        //TODO make prettier
+        facetResultsResource.setBaseLinkString(halLinkService.getBaseLink(facetResultsResource));
+        facetResultsResource.addEmbeds(facetResultsRest, page, utils);
+//        halLinkService.addLinks(facetResultsResource);
+
+        return facetResultsResource;
     }
 
 }
