@@ -7,6 +7,15 @@
  */
 package org.dspace.app.rest;
 
+import java.io.File;
+import java.util.List;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.servlet.Filter;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+
 import org.dspace.app.rest.filter.DSpaceRequestContextFilter;
 import org.dspace.app.rest.model.hateoas.DSpaceRelProvider;
 import org.dspace.app.rest.parameter.resolver.SearchFilterResolver;
@@ -19,7 +28,6 @@ import org.dspace.utils.servlet.DSpaceWebappServletFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
@@ -34,14 +42,6 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.servlet.Filter;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import java.io.File;
-import java.util.List;
 
 /**
  * Define the Spring Boot Application settings itself. This class takes the place
@@ -83,14 +83,7 @@ public class Application extends SpringBootServletInitializer
      */
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-
-        //Load extra configs (see org.dspace.servicemanager.DSpaceServiceManager.startup())
-        String[] extraConfigs = dsConfigService.getPropertyAsType("service.manager.spring.configs", String[].class);
-
-        String[] extraSources = SpringServiceManager.getSpringPaths(false, extraConfigs, dsConfigService);
-
-        return application.sources(Application.class)
-                .sources(extraSources);
+        return application.sources(Application.class);
     }
 
     @Bean
@@ -221,21 +214,6 @@ public class Application extends SpringBootServletInitializer
     }
 
     /** Utility class that will destory the DSpace Kernel on Spring Boot shutdown */
-    private class DSpaceKernelDestroyer implements ApplicationListener<ContextClosedEvent> {
-        private DSpaceKernelImpl kernelImpl;
-
-        public DSpaceKernelDestroyer(DSpaceKernelImpl kernelImpl) {
-            this.kernelImpl = kernelImpl;
-        }
-
-        public void onApplicationEvent(final ContextClosedEvent event) {
-            if (this.kernelImpl != null) {
-                this.kernelImpl.destroy();
-                this.kernelImpl = null;
-            }
-        }
-    }
-
     private class DSpaceKernelDestroyer implements ApplicationListener<ContextClosedEvent> {
         private DSpaceKernelImpl kernelImpl;
 
