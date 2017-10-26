@@ -32,10 +32,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.core.annotation.Order;
 import org.springframework.hateoas.RelProvider;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -57,8 +55,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
  * @author Tim Donohue
  */
 @SpringBootApplication
-public class Application extends SpringBootServletInitializer
-{
+public class Application extends SpringBootServletInitializer {
     private static final Logger log = LoggerFactory.getLogger(Application.class);
 
     @Autowired
@@ -83,8 +80,6 @@ public class Application extends SpringBootServletInitializer
      */
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-        return application.sources(Application.class);
-    }
 
     @Bean
     public ServletContextInitializer contextInitializer() {

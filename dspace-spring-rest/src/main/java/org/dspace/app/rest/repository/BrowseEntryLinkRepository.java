@@ -10,8 +10,8 @@ package org.dspace.app.rest.repository;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.UUID;
 import java.util.function.Consumer;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -21,21 +21,21 @@ import org.dspace.app.rest.model.BrowseEntryRest;
 import org.dspace.app.rest.model.BrowseIndexRest;
 import org.dspace.app.rest.model.hateoas.BrowseEntryResource;
 import org.dspace.app.rest.utils.ScopeResolver;
-import org.dspace.browse.*;
+import org.dspace.browse.BrowseEngine;
+import org.dspace.browse.BrowseException;
+import org.dspace.browse.BrowseIndex;
+import org.dspace.browse.BrowseInfo;
+import org.dspace.browse.BrowserScope;
 import org.dspace.content.DSpaceObject;
-import org.dspace.content.service.CollectionService;
-import org.dspace.content.service.CommunityService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Component;
-
-import javax.servlet.http.HttpServletRequest;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.function.Consumer;
 
 /**
  * This is the repository responsible to retrieve the first level values

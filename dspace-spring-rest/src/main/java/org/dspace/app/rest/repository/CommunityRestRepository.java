@@ -111,7 +111,7 @@ public class CommunityRestRepository extends DSpaceRestRepository<CommunityRest,
 		Page<CommunityRest> page = utils.getPage(subCommunities, pageable).map(converter);
 		return page;
 	}
-	
+
 	@Override
 	public Class<CommunityRest> getDomainClass() {
 		return CommunityRest.class;
