@@ -37,6 +37,7 @@ public class SearchFacetValueResource extends HALResource<SearchFacetValueRest> 
         return searchData;
     }
 
+    @JsonIgnore
     public SearchFacetValueRest getValueData() {
         return getContent();
     }

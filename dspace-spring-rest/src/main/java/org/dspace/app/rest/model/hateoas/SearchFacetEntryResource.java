@@ -31,6 +31,7 @@ public class SearchFacetEntryResource extends HALResource<SearchFacetEntryRest> 
         addEmbeds();
     }
 
+    @JsonIgnore
     public SearchFacetEntryRest getFacetData() {
         return getContent();
     }
