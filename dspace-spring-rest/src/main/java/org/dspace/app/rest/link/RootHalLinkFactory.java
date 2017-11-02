@@ -18,7 +18,7 @@ import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Component;
 
 /**
- * Created by raf on 26/09/2017.
+ * This class' purpose is to add the links to the root REST endpoint to the next endpoints.
  */
 @Component
 public class RootHalLinkFactory extends HalLinkFactory<RootResource, RootRestResourceController> {
