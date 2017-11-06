@@ -81,7 +81,7 @@ public abstract class DSpaceResource<T extends RestModel> extends ResourceSuppor
 										// TODO add support for single linked object other than for collections
 										Page<? extends Serializable> pageResult = (Page<? extends RestModel>) m.invoke(linkRepository, null, ((BaseObjectRest) data).getId(), null, null);
 										EmbeddedPage ep = new EmbeddedPage(linkToSubResource.getHref(), pageResult, null);
-										embedded.put(name, ep);
+										embedded.put(utils.getCurie(data, name), ep);
 										found = true;
 								}
 							}
@@ -140,10 +140,10 @@ public abstract class DSpaceResource<T extends RestModel> extends ResourceSuppor
 									}
 								}
 								if (linkedObject != null) {
-									embedded.put(name, wrapObject);
+									embedded.put(utils.getCurie(data, name), wrapObject);
 									this.add(linkToSubResource);
 								} else if(!linkAnnotation.optional()) {
-									embedded.put(name, null);
+									embedded.put(utils.getCurie(data, name), null);
 									this.add(linkToSubResource);
 								}
 
@@ -163,7 +163,7 @@ public abstract class DSpaceResource<T extends RestModel> extends ResourceSuppor
 												// TODO add support for single linked object other than for collections
 												Page<? extends Serializable> pageResult = (Page<? extends RestModel>) m.invoke(linkRepository, null, ((BaseObjectRest) data).getId(), null, null);
 												EmbeddedPage ep = new EmbeddedPage(linkToSubResource.getHref(), pageResult, null);
-												embedded.put(name, ep);
+												embedded.put(utils.getCurie(data, name), ep);
 												found = true;
 										}
 									}
@@ -181,11 +181,11 @@ public abstract class DSpaceResource<T extends RestModel> extends ResourceSuppor
 							this.add(linkToSubResource);
 							RestModel linkedObject = (RestModel) readMethod.invoke(data);
 							if (linkedObject != null) {
-								embedded.put(name,
+								embedded.put(utils.getCurie(data, name),
 										utils.getResourceRepository(linkedObject.getCategory(), linkedObject.getType())
 												.wrapResource(linkedObject));
 							} else {
-								embedded.put(name, null);
+								embedded.put(utils.getCurie(data, name), null);
 							}
 
 							Method writeMethod = pd.getWriteMethod();

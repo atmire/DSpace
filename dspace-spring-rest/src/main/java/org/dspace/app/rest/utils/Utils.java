@@ -159,4 +159,8 @@ public class Utils {
 	public String getMetadataKey(String schema, String element, String qualifier) {
 		return schema + "." + element + (StringUtils.isNotBlank(qualifier) ? "." + qualifier : "");
 	}
+
+	public <T extends RestModel> String getCurie(T data, String name) {
+		return String.format("%s:%s", data.getCategory(), name);
+	}
 }
