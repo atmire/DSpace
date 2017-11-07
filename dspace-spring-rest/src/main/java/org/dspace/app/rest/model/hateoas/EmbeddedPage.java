@@ -11,18 +11,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.data.domain.Page;
-import org.springframework.web.util.UriComponentsBuilder;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.data.domain.Page;
+import org.springframework.web.util.UriComponentsBuilder;
 
 public class EmbeddedPage {
 
 	private Page page;
 	private List fullList;
 	private UriComponentsBuilder self;
-	
+
 	public EmbeddedPage(String self, Page page, List fullList) {
 		this.page = page;
 		this.fullList = fullList;
@@ -45,8 +44,8 @@ public class EmbeddedPage {
 	}
 	
 	@JsonProperty(value = "_links")
-	public Map<String, String> getLinks() {
-		Map<String, String> links = new HashMap<String, String>();
+	public Map<String, Object> getLinks() {
+		Map<String, Object> links = new HashMap<>();
 		if (!page.isFirst()) {
 			links.put("first", _link(0));
 			links.put("self", _link(page.getNumber()));
@@ -63,6 +62,7 @@ public class EmbeddedPage {
 		if (page.hasNext()) {
 			links.put("next", _link(page.getNumber()+1));
 		}
+
 		return links;
 	}
 

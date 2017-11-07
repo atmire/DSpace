@@ -14,6 +14,8 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
+import org.atteo.evo.inflector.English;
+import org.dspace.app.rest.doc.DSpaceCurieProvider;
 import org.dspace.app.rest.exception.PaginationException;
 import org.dspace.app.rest.exception.RepositoryNotFoundException;
 import org.dspace.app.rest.model.AuthorityRest;
@@ -42,8 +44,12 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class Utils {
+
 	@Autowired
 	ApplicationContext applicationContext;
+
+	@Autowired
+	DSpaceCurieProvider curieProvider;
 
 	public <T> Page<T> getPage(List<T> fullContents, Pageable pageable) {
 		int total = fullContents.size();
@@ -160,7 +166,8 @@ public class Utils {
 		return schema + "." + element + (StringUtils.isNotBlank(qualifier) ? "." + qualifier : "");
 	}
 
-	public <T extends RestModel> String getCurie(T data, String name) {
-		return String.format("%s:%s", data.getCategory(), name);
+	public <T extends RestModel> String getNamespacedRel(T data, String name) {
+		return curieProvider.getNamespacedRelFor(data, name);
 	}
+
 }

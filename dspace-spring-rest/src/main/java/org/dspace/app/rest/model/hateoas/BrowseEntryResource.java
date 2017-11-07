@@ -26,6 +26,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * @author Andrea Bollini (andrea.bollini at 4science.it)
  *
  */
+@DSpaceRestCategory(BrowseIndexRest.CATEGORY)
 @RelNameDSpaceResource(BrowseEntryRest.NAME)
 public class BrowseEntryResource extends ResourceSupport {
 
