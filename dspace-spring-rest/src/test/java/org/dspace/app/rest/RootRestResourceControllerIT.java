@@ -53,15 +53,6 @@ public class RootRestResourceControllerIT extends AbstractControllerIntegrationT
                 .andExpect(jsonPath("$._links.core:metadatafields.href", startsWith(REST_SERVER_URL)))
                 .andExpect(jsonPath("$._links.core:metadataschemas.href", startsWith(REST_SERVER_URL)))
                 .andExpect(jsonPath("$._links.core:sites.href", startsWith(REST_SERVER_URL)))
-
-                .andDo(document("root", relaxedLinks(
-                        linkWithRel("core:bitstreamformats").description("The <<bitstreamformats,Bitstream formats>> in this repository"),
-                        linkWithRel("core:bitstreams").description("Endpoint to retrieve all <<bitstreams,bitstreams>> in this repository"),
-                        linkWithRel("discover:browses").description("Endpoint to <<browses,browse the content>> of this repository"),
-                        linkWithRel("curies").description("Curies for documentation")
-                        ),
-                        relaxedResponseFields(fieldWithPath("_links").description("<<root-links,Links>> to other resources"))
-                ))
                 ;
     }
 
