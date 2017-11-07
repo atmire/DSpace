@@ -15,6 +15,7 @@ import static org.hamcrest.Matchers.startsWith;
 
 import org.hamcrest.Matcher;
 
+
 /**
  * Class to match JSON browse entries in ITs
  *
@@ -33,7 +34,7 @@ public class BrowseEntryResourceMatcher {
     }
     public static Matcher<? super Object> matchItemLinks() {
         return allOf(
-                hasJsonPath("$._links.items.href", startsWith(REST_SERVER_URL))
+                hasJsonPath("$._links.discover:items.href", startsWith(REST_SERVER_URL))
         );
     }
 }

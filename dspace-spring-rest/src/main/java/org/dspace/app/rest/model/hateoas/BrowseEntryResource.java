@@ -30,6 +30,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RelNameDSpaceResource(BrowseEntryRest.NAME)
 public class BrowseEntryResource extends ResourceSupport {
 
+
 	@JsonUnwrapped
 	private final BrowseEntryRest data;
 

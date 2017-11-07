@@ -26,7 +26,10 @@ public class DSpaceRelProvider extends EvoInflectorRelProvider {
 
 	@Override
 	public String getItemResourceRelFor(Class<?> type) {
-		if (DSpaceResource.class.isAssignableFrom(type)) {
+		if (DSpaceResource.class.isAssignableFrom(type)
+				//TODO fix once HAL link factories are merged
+				|| BrowseEntryResource.class.isAssignableFrom(type)) {
+
 			RelNameDSpaceResource relAnnotation = type.getAnnotation(RelNameDSpaceResource.class);
 			DSpaceRestCategory catAnnotation = type.getAnnotation(DSpaceRestCategory.class);
 

@@ -146,6 +146,36 @@
         </profile>
     </profiles>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.asciidoctor</groupId>
+                <artifactId>asciidoctor-maven-plugin</artifactId>
+                <version>1.5.3</version>
+                <executions>
+                    <execution>
+                        <id>generate-docs</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>process-asciidoc</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirectory>src/main/documentation</sourceDirectory>
+                            <outputDirectory>${project.build.directory}/classes/static/documentation</outputDirectory>
+                            <backend>html</backend>
+                            <doctype>book</doctype>
+                            <imagesDir>img</imagesDir>
+                            <preserveDirectories>true</preserveDirectories>
+                            <attributes>
+                                <snippets>${project.build.directory}/generated-snippets</snippets>
+                            </attributes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <!-- These next two dependencies build a WAR that is BOTH executable
              AND deployable into an external container (Tomcat).
@@ -192,6 +222,15 @@
             <artifactId>json-path</artifactId>
             <scope>test</scope>
             <version>${json-path.version}</version>
+        </dependency> -->
+
+        <dependency>
+            <groupId>org.springframework.restdocs</groupId>
+            <artifactId>spring-restdocs-mockmvc</artifactId>
+            <version>1.2.2.RELEASE</version>
+            <scope>test</scope>
+        </dependency>
+
         </dependency>
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
@@ -199,7 +238,7 @@
             <version>${json-path.version}</version>
             <scope>test</scope>
         </dependency>
-		
+
 		<!-- The HAL Browser -->
  		<dependency>
 			<groupId>org.springframework.data</groupId>
