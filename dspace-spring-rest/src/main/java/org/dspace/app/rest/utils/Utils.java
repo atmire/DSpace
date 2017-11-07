@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.atteo.evo.inflector.English;
-import org.dspace.app.rest.doc.DSpaceCurieProvider;
+import org.dspace.app.rest.model.hateoas.DSpaceCurieProvider;
 import org.dspace.app.rest.exception.PaginationException;
 import org.dspace.app.rest.exception.RepositoryNotFoundException;
 import org.dspace.app.rest.model.AuthorityRest;
