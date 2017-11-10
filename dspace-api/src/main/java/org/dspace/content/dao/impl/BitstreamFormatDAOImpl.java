@@ -8,15 +8,21 @@
 package org.dspace.content.dao.impl;
 
 import org.dspace.content.BitstreamFormat;
+import org.dspace.content.BitstreamFormat_;
 import org.dspace.content.dao.BitstreamFormatDAO;
 import org.dspace.core.Context;
 import org.dspace.core.AbstractHibernateDAO;
+import org.dspace.harvest.HarvestedItem;
+import javax.persistence.Query;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -54,13 +60,24 @@ public class BitstreamFormatDAOImpl extends AbstractHibernateDAO<BitstreamFormat
     {
         // NOTE: Avoid internal formats since e.g. "License" also has
         // a MIMEtype of text/plain.
-        Criteria criteria = createCriteria(context, BitstreamFormat.class);
-        criteria.add(Restrictions.and(
-                Restrictions.eq("internal", includeInternal),
-                Restrictions.like("mimetype", mimeType)
-        ));
-
-        return singleResult(criteria);
+//        Criteria criteria = createCriteria(context, BitstreamFormat.class);
+//        criteria.add(Restrictions.and(
+//                Restrictions.eq("internal", includeInternal),
+//                Restrictions.like("mimetype", mimeType)
+//        ));
+//
+//        return singleResult(criteria);
+//
+//
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, BitstreamFormat.class);
+        Root<BitstreamFormat> bitstreamFormatRoot = criteriaQuery.from(BitstreamFormat.class);
+        criteriaQuery.select(bitstreamFormatRoot);
+        criteriaQuery.where(criteriaBuilder.and(criteriaBuilder.equal(bitstreamFormatRoot.get(BitstreamFormat_.internal), includeInternal),
+                                                criteriaBuilder.like(bitstreamFormatRoot.get(BitstreamFormat_.mimetype), mimeType)
+                                                )
+                            );
+        return singleResult(context, criteriaQuery);
     }
 
     /**
@@ -79,12 +96,19 @@ public class BitstreamFormatDAOImpl extends AbstractHibernateDAO<BitstreamFormat
     public BitstreamFormat findByShortDescription(Context context,
             String desc) throws SQLException
     {
-        Criteria criteria = createCriteria(context, BitstreamFormat.class);
-        criteria.add(Restrictions.and(
-                Restrictions.eq("shortDescription", desc)
-        ));
-
-        return uniqueResult(criteria);
+//        Criteria criteria = createCriteria(context, BitstreamFormat.class);
+//        criteria.add(Restrictions.and(
+//                Restrictions.eq("shortDescription", desc)
+//        ));
+//
+//        return uniqueResult(criteria);
+//
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, BitstreamFormat.class);
+        Root<BitstreamFormat> bitstreamFormatRoot = criteriaQuery.from(BitstreamFormat.class);
+        criteriaQuery.select(bitstreamFormatRoot);
+        criteriaQuery.where(criteriaBuilder.equal(bitstreamFormatRoot.get(BitstreamFormat_.shortDescription), desc));
+        return uniqueResult(context, criteriaQuery, false, BitstreamFormat.class, -1, -1);
     }
 
     @Override
@@ -99,14 +123,36 @@ public class BitstreamFormatDAOImpl extends AbstractHibernateDAO<BitstreamFormat
 
     @Override
     public List<BitstreamFormat> findNonInternal(Context context) throws SQLException {
-        Criteria criteria = createCriteria(context, BitstreamFormat.class);
-        criteria.add(Restrictions.and(
-                Restrictions.eq("internal", false),
-                Restrictions.not(Restrictions.like("shortDescription", "Unknown"))
-        ));
-        criteria.addOrder(Order.desc("supportLevel")).addOrder(Order.asc("shortDescription"));
 
-        return list(criteria);
+        //TODO RAF CHECK
+//        Criteria criteria = createCriteria(context, BitstreamFormat.class);
+//        criteria.add(Restrictions.and(
+//                Restrictions.eq("internal", false),
+//                Restrictions.not(Restrictions.like("shortDescription", "Unknown"))
+//        ));
+//        criteria.addOrder(Order.desc("supportLevel")).addOrder(Order.asc("shortDescription"));
+//
+//        return list(criteria);
+
+
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, BitstreamFormat.class);
+        Root<BitstreamFormat> bitstreamFormatRoot = criteriaQuery.from(BitstreamFormat.class);
+        criteriaQuery.select(bitstreamFormatRoot);
+        criteriaQuery.where(criteriaBuilder.and(criteriaBuilder.equal(bitstreamFormatRoot.get(BitstreamFormat_.internal), false),
+                                                criteriaBuilder.not(
+                                                                    criteriaBuilder.like(bitstreamFormatRoot.get(BitstreamFormat_.shortDescription), "Unknown"))
+                                                )
+                            );
+
+
+        List<javax.persistence.criteria.Order> orderList = new LinkedList<>();
+        orderList.add(criteriaBuilder.desc(bitstreamFormatRoot.get(BitstreamFormat_.supportLevel)));
+        orderList.add(criteriaBuilder.asc(bitstreamFormatRoot.get(BitstreamFormat_.shortDescription)));
+        criteriaQuery.orderBy(orderList);
+
+
+        return list(context, criteriaQuery, false, BitstreamFormat.class, -1, -1);
 
     }
 
@@ -124,9 +170,23 @@ public class BitstreamFormatDAOImpl extends AbstractHibernateDAO<BitstreamFormat
 
     @Override
     public List<BitstreamFormat> findAll(Context context, Class clazz) throws SQLException {
-        Criteria criteria = createCriteria(context, BitstreamFormat.class);
-        criteria.addOrder(Order.asc("id"));
-        return list(criteria);
+
+        //TODO RAF CHECK
+
+//        Criteria criteria = createCriteria(context, BitstreamFormat.class);
+//        criteria.addOrder(Order.asc("id"));
+//        return list(criteria);
+
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, BitstreamFormat.class);
+        Root<BitstreamFormat> bitstreamFormatRoot = criteriaQuery.from(BitstreamFormat.class);
+        criteriaQuery.select(bitstreamFormatRoot);
+
+        List<javax.persistence.criteria.Order> orderList = new LinkedList<>();
+        orderList.add(criteriaBuilder.asc(bitstreamFormatRoot.get(BitstreamFormat_.id)));
+        criteriaQuery.orderBy(orderList);
+
+        return list(context, criteriaQuery, false, BitstreamFormat.class, -1, -1);
     }
 
 }

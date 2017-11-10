@@ -8,14 +8,20 @@
 package org.dspace.content.dao.impl;
 
 import org.dspace.content.MetadataSchema;
+import org.dspace.content.MetadataSchema_;
 import org.dspace.content.dao.MetadataSchemaDAO;
 import org.dspace.core.AbstractHibernateDAO;
 import org.dspace.core.Context;
+import org.dspace.eperson.Subscription;
+import org.dspace.eperson.Subscription_;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
 import org.hibernate.criterion.Order;
-
+import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -49,19 +55,32 @@ public class MetadataSchemaDAOImpl extends AbstractHibernateDAO<MetadataSchema> 
                 "WHERE ms.namespace = :namespace ");
 
         query.setParameter("namespace", namespace);
+        query.setHint("org.hibernate.cacheable", Boolean.TRUE);
 
-        query.setCacheable(true);
         return singleResult(query);
     }
 
     @Override
     public List<MetadataSchema> findAll(Context context, Class clazz) throws SQLException {
         // Get all the metadataschema rows
-        Criteria criteria = createCriteria(context, MetadataSchema.class);
-        criteria.addOrder(Order.asc("id"));
-        criteria.setCacheable(true);
 
-        return list(criteria);
+        //TODO RAF CHECK
+//        Criteria criteria = createCriteria(context, MetadataSchema.class);
+//        criteria.addOrder(Order.asc("id"));
+//        criteria.setCacheable(true);
+//
+//        return list(criteria);
+
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, MetadataSchema.class);
+        Root<MetadataSchema> metadataSchemaRoot = criteriaQuery.from(MetadataSchema.class);
+        criteriaQuery.select(metadataSchemaRoot);
+
+        List<javax.persistence.criteria.Order> orderList = new LinkedList<>();
+        orderList.add(criteriaBuilder.asc(metadataSchemaRoot.get(MetadataSchema_.id)));
+        criteriaQuery.orderBy(orderList);
+
+        return list(context, criteriaQuery, true, MetadataSchema.class, -1, -1);
     }
 
     /**
@@ -84,7 +103,7 @@ public class MetadataSchemaDAOImpl extends AbstractHibernateDAO<MetadataSchema> 
         query.setParameter("namespace", namespace);
         query.setParameter("id", metadataSchemaId);
 
-        query.setCacheable(true);
+        query.setHint("org.hibernate.cacheable", Boolean.TRUE);
         return singleResult(query) == null;
     }
 
@@ -107,7 +126,7 @@ public class MetadataSchemaDAOImpl extends AbstractHibernateDAO<MetadataSchema> 
         query.setParameter("name", name);
         query.setParameter("id", metadataSchemaId);
 
-        query.setCacheable(true);
+        query.setHint("org.hibernate.cacheable", Boolean.TRUE);
         return singleResult(query) == null;
     }
 
@@ -130,7 +149,7 @@ public class MetadataSchemaDAOImpl extends AbstractHibernateDAO<MetadataSchema> 
 
         query.setParameter("name", shortName);
 
-        query.setCacheable(true);
+        query.setHint("org.hibernate.cacheable", Boolean.TRUE);
         return singleResult(query);
     }
 }

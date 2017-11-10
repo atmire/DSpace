@@ -11,9 +11,11 @@ import org.dspace.content.DSpaceObject;
 import org.dspace.core.AbstractHibernateDAO;
 import org.dspace.core.Context;
 import org.dspace.handle.Handle;
+import org.dspace.handle.Handle_;
 import org.dspace.handle.dao.HandleDAO;
+import org.dspace.xmlworkflow.storedcomponents.ClaimedTask;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
+import javax.persistence.Query;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
@@ -21,6 +23,9 @@ import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionIn
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.jdbc.ReturningWork;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -58,7 +63,7 @@ public class HandleDAOImpl extends AbstractHibernateDAO<Handle> implements Handl
 
             query.setParameter("id", dso.getID());
 
-            query.setCacheable(true);
+            query.setHint("org.hibernate.cacheable", Boolean.TRUE);
             return list(query);
         }
     }
@@ -73,22 +78,39 @@ public class HandleDAOImpl extends AbstractHibernateDAO<Handle> implements Handl
 
         query.setParameter("handle", handle);
 
-        query.setCacheable(true);
+        query.setHint("org.hibernate.cacheable", Boolean.TRUE);
         return uniqueResult(query);
     }
 
     @Override
     public List<Handle> findByPrefix(Context context, String prefix) throws SQLException {
-        Criteria criteria = createCriteria(context, Handle.class);
-        criteria.add(Restrictions.like("handle", prefix + "%"));
-        return list(criteria);
+//        Criteria criteria = createCriteria(context, Handle.class);
+//        criteria.add(Restrictions.like("handle", prefix + "%"));
+//        return list(criteria);
+//
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Handle.class);
+        Root<Handle> handleRoot = criteriaQuery.from(Handle.class);
+        criteriaQuery.select(handleRoot);
+        criteriaQuery.where(criteriaBuilder.like(handleRoot.get(Handle_.handle), prefix+"%"));
+        return list(context, criteriaQuery, false, Handle.class, -1, -1);
     }
 
     @Override
     public long countHandlesByPrefix(Context context, String prefix) throws SQLException {
-        Criteria criteria = createCriteria(context, Handle.class);
-        criteria.add(Restrictions.like("handle", prefix + "%"));
-        return countLong(criteria);
+        //TODO RAF CHECK
+//        Criteria criteria = createCriteria(context, Handle.class);
+//        criteria.add(Restrictions.like("handle", prefix + "%"));
+//        return countLong(criteria);
+//
+
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
+
+        Root<Handle> handleRoot = criteriaQuery.from(Handle.class);
+        criteriaQuery.select(criteriaBuilder.count(criteriaQuery.from(Handle.class)));
+        criteriaQuery.where(criteriaBuilder.like(handleRoot.get(Handle_.handle), prefix+"%"));
+        return countLong(context, criteriaQuery, criteriaBuilder, handleRoot);
     }
 
     @Override
@@ -96,9 +118,9 @@ public class HandleDAOImpl extends AbstractHibernateDAO<Handle> implements Handl
     {
         String hql = "UPDATE Handle set handle = concat(:newPrefix, '/', substring(handle, :oldPrefixLength + 2)) WHERE handle like concat(:oldPrefix,'%')";
         Query query = createQuery(context, hql);
-        query.setString("newPrefix", newPrefix);
-        query.setInteger("oldPrefixLength", oldPrefix.length());
-        query.setString("oldPrefix", oldPrefix);
+        query.setParameter("newPrefix", newPrefix);
+        query.setParameter("oldPrefixLength", oldPrefix.length());
+        query.setParameter("oldPrefix", oldPrefix);
         return query.executeUpdate();
     }
 
