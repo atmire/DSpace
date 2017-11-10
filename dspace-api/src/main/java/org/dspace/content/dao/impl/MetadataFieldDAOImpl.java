@@ -7,17 +7,21 @@
  */
 package org.dspace.content.dao.impl;
 
-import org.dspace.content.MetadataField;
-import org.dspace.content.MetadataSchema;
+import org.dspace.content.*;
 import org.dspace.content.dao.MetadataFieldDAO;
 import org.dspace.core.AbstractHibernateDAO;
 import org.dspace.core.Context;
+import org.dspace.eperson.RegistrationData;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
-import org.hibernate.Query;
 import org.hibernate.criterion.Order;
-
+import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Root;
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -62,8 +66,8 @@ public class MetadataFieldDAOImpl extends AbstractHibernateDAO<MetadataField> im
         if(qualifier != null) {
             query.setParameter("qualifier", qualifier);
         }
+        query.setHint("org.hibernate.cacheable", Boolean.TRUE);
 
-        query.setCacheable(true);
         return singleResult(query);
     }
 
@@ -98,18 +102,34 @@ public class MetadataFieldDAOImpl extends AbstractHibernateDAO<MetadataField> im
         if(qualifier != null) {
             query.setParameter("qualifier", qualifier);
         }
+        query.setHint("org.hibernate.cacheable", Boolean.TRUE);
 
-        query.setCacheable(true);
         return singleResult(query);
     }
 
     @Override
     public List<MetadataField> findAll(Context context, Class<MetadataField> clazz) throws SQLException {
-        Criteria criteria = createCriteria(context, MetadataField.class);
-        criteria.createAlias("metadataSchema", "s").addOrder(Order.asc("s.name")).addOrder(Order.asc("element")).addOrder(Order.asc("qualifier"));
-        criteria.setFetchMode("metadataSchema", FetchMode.JOIN);
-        criteria.setCacheable(true);
-        return list(criteria);
+
+        //TODO RAF CHECK
+//        Criteria criteria = createCriteria(context, MetadataField.class);
+//        criteria.createAlias("metadataSchema", "s").addOrder(Order.asc("s.name")).addOrder(Order.asc("element")).addOrder(Order.asc("qualifier"));
+//        criteria.setFetchMode("metadataSchema", FetchMode.JOIN);
+//        criteria.setCacheable(true);
+//        return list(criteria);
+
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, MetadataField.class);
+        Root<MetadataField> metadataFieldRoot = criteriaQuery.from(MetadataField.class);
+        Join<MetadataField, MetadataSchema> join = metadataFieldRoot.join("metadataSchema");
+        criteriaQuery.select(metadataFieldRoot);
+
+        List<javax.persistence.criteria.Order> orderList = new LinkedList<>();
+        orderList.add(criteriaBuilder.asc(join.get(MetadataSchema_.name)));
+        orderList.add(criteriaBuilder.asc(metadataFieldRoot.get(MetadataField_.element)));
+        orderList.add(criteriaBuilder.asc(metadataFieldRoot.get(MetadataField_.qualifier)));
+        criteriaQuery.orderBy(orderList);
+
+        return list(context, criteriaQuery, true, MetadataField.class, -1, -1);
     }
 
     @Override
@@ -123,8 +143,8 @@ public class MetadataFieldDAOImpl extends AbstractHibernateDAO<MetadataField> im
 
         query.setParameter("name", metadataSchema);
         query.setParameter("element", element);
+        query.setHint("org.hibernate.cacheable", Boolean.TRUE);
 
-        query.setCacheable(true);
         return list(query);
     }
 
@@ -140,7 +160,8 @@ public class MetadataFieldDAOImpl extends AbstractHibernateDAO<MetadataField> im
 
         query.setParameter("name", metadataSchema.getName());
 
-        query.setCacheable(true);
+        query.setHint("org.hibernate.cacheable", Boolean.TRUE);
+
         return list(query);
     }
 }

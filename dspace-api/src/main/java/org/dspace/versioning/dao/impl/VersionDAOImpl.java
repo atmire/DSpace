@@ -10,15 +10,21 @@ package org.dspace.versioning.dao.impl;
 import org.dspace.content.Item;
 import org.dspace.core.AbstractHibernateDAO;
 import org.dspace.core.Context;
+import org.dspace.harvest.HarvestedCollection;
+import org.dspace.harvest.HarvestedCollection_;
 import org.dspace.versioning.Version;
 import org.dspace.versioning.VersionHistory;
+import org.dspace.versioning.Version_;
 import org.dspace.versioning.dao.VersionDAO;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-
+import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -41,9 +47,16 @@ public class VersionDAOImpl extends AbstractHibernateDAO<Version> implements Ver
 
     @Override
     public Version findByItem(Context context, Item item) throws SQLException {
-        Criteria criteria = createCriteria(context, Version.class);
-        criteria.add(Restrictions.eq("item", item));
-        return singleResult(criteria);
+//        Criteria criteria = createCriteria(context, Version.class);
+//        criteria.add(Restrictions.eq("item", item));
+//        return singleResult(criteria);
+//
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Version.class);
+        Root<Version> versionRoot = criteriaQuery.from(Version.class);
+        criteriaQuery.select(versionRoot);
+        criteriaQuery.where(criteriaBuilder.equal(versionRoot.get(Version_.item), item));
+        return singleResult(context, criteriaQuery);
     }
 
     @Override
@@ -53,7 +66,7 @@ public class VersionDAOImpl extends AbstractHibernateDAO<Version> implements Ver
                         + "FROM Version WHERE versionHistory.id = :historyId");
         q.setParameter("historyId", vh.getID());
 
-        int next = (Integer) q.uniqueResult();
+        int next = (Integer) q.getSingleResult();
         return next;
     }
     
@@ -61,10 +74,26 @@ public class VersionDAOImpl extends AbstractHibernateDAO<Version> implements Ver
     public List<Version> findVersionsWithItems(Context context, VersionHistory versionHistory)
             throws SQLException
     {
-        Criteria criteria = createCriteria(context, Version.class);
-        criteria.add(Restrictions.eq("versionHistory", versionHistory));
-        criteria.add(Restrictions.and(Restrictions.isNotNull("item")));
-        criteria.addOrder(Order.desc("versionNumber"));
-        return list(criteria);
+        //TODO RAF CHECK
+//        Criteria criteria = createCriteria(context, Version.class);
+//        criteria.add(Restrictions.eq("versionHistory", versionHistory));
+//        criteria.add(Restrictions.and(Restrictions.isNotNull("item")));
+//        criteria.addOrder(Order.desc("versionNumber"));
+//        return list(criteria);
+
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Version.class);
+        Root<Version> versionRoot = criteriaQuery.from(Version.class);
+        criteriaQuery.select(versionRoot);
+        criteriaQuery.where(criteriaBuilder.and(criteriaBuilder.equal(versionRoot.get(Version_.versionHistory), versionHistory),
+                                                criteriaBuilder.isNotNull(versionRoot.get(Version_.item))
+                                                )
+                            );
+
+        List<javax.persistence.criteria.Order> orderList = new LinkedList<>();
+        orderList.add(criteriaBuilder.desc(versionRoot.get(Version_.versionNumber)));
+        criteriaQuery.orderBy(orderList);
+
+        return list(context, criteriaQuery, false, Version.class, -1, -1);
     }
 }

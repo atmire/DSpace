@@ -7,18 +7,28 @@
  */
 package org.dspace.versioning.dao.impl;
 
+import org.dspace.content.BitstreamFormat_;
 import org.dspace.content.Item;
+import org.dspace.content.Item_;
 import org.dspace.core.Context;
 import org.dspace.core.AbstractHibernateDAO;
 import org.dspace.versioning.VersionHistory;
+import org.dspace.versioning.Version_;
 import org.dspace.versioning.dao.VersionHistoryDAO;
+import org.dspace.workflowbasic.BasicWorkflowItem;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
 import org.dspace.versioning.Version;
 import org.hibernate.criterion.Order;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Root;
 
 /**
  * Hibernate implementation of the Database Access Object interface class for the VersionHistory object.
@@ -39,10 +49,25 @@ public class VersionHistoryDAOImpl extends AbstractHibernateDAO<VersionHistory> 
 
     @Override
     public VersionHistory findByItem(Context context, Item item) throws SQLException {
-        Criteria criteria = createCriteria(context, VersionHistory.class);
-        criteria.createAlias("versions", "v");
-        criteria.add(Restrictions.eq("v.item", item));
-        criteria.addOrder(Order.desc("v.versionNumber"));
-        return singleResult(criteria);
+
+        //TODO RAF CHECK
+//        Criteria criteria = createCriteria(context, VersionHistory.class);
+//        criteria.createAlias("versions", "v");
+//        criteria.add(Restrictions.eq("v.item", item));
+//        criteria.addOrder(Order.desc("v.versionNumber"));
+//        return singleResult(criteria);
+
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, VersionHistory.class);
+        Root<VersionHistory> versionHistoryRoot = criteriaQuery.from(VersionHistory.class);
+        Join<VersionHistory, Version> join = versionHistoryRoot.join("versions");
+        criteriaQuery.select(versionHistoryRoot);
+        criteriaQuery.where(criteriaBuilder.equal(join.get(Version_.item), item));
+
+        List<javax.persistence.criteria.Order> orderList = new LinkedList<>();
+        orderList.add(criteriaBuilder.desc(join.get(Version_.versionNumber)));
+        criteriaQuery.orderBy(orderList);
+
+        return singleResult(context, criteriaQuery);
     }
 }

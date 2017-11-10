@@ -8,14 +8,14 @@
 package org.dspace.core;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.hibernate.Criteria;
-import org.hibernate.Query;
+import javax.persistence.Query;
+//import org.hibernate.query.Query;
 import org.hibernate.Session;
-import org.hibernate.criterion.Projections;
-
+import javax.persistence.criteria.*;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -55,13 +55,16 @@ public abstract class AbstractHibernateDAO<T> implements GenericDAO<T> {
 
     @Override
     public List<T> findAll(Context context, Class<T> clazz) throws SQLException {
-        return list(createCriteria(context, clazz));
+        CriteriaQuery criteriaQuery = getCriteriaQuery(getCriteriaBuilder(context), clazz);
+        Root<T> root = criteriaQuery.from(clazz);
+        criteriaQuery.select(root);
+        return executeCriteriaQuery(context, criteriaQuery, false, clazz, -1, -1);
     }
 
     @Override
     public T findUnique(Context context, String query) throws SQLException {
         @SuppressWarnings("unchecked")
-        T result = (T) createQuery(context, query).uniqueResult();
+        T result = (T) createQuery(context, query).getSingleResult();
         return result;
     }
 
@@ -86,7 +89,7 @@ public abstract class AbstractHibernateDAO<T> implements GenericDAO<T> {
     @Override
     public List<T> findMany(Context context, String query) throws SQLException {
         @SuppressWarnings("unchecked")
-        List<T> result = (List<T>) createQuery(context, query).list();
+        List<T> result = (List<T>) createQuery(context, query).getResultList();
         return result;
     }
 
@@ -102,33 +105,33 @@ public abstract class AbstractHibernateDAO<T> implements GenericDAO<T> {
      */
     public List<T> findMany(Context context, Query query) throws SQLException {
         @SuppressWarnings("unchecked")
-        List<T> result = (List<T>) query.list();
+        List<T> result = (List<T>) query.getResultList();
         return result;
     }
 
-    public Criteria createCriteria(Context context, Class<T> persistentClass) throws SQLException {
-        return getHibernateSession(context).createCriteria(persistentClass);
-    }
-
-    public Criteria createCriteria(Context context, Class<T> persistentClass, String alias) throws SQLException {
-        return getHibernateSession(context).createCriteria(persistentClass, alias);
-    }
+//    public Criteria createCriteria(Context context, Class<T> persistentClass) throws SQLException {
+//        return getHibernateSession(context).createCriteria(persistentClass);
+//    }
+//
+//    public Criteria createCriteria(Context context, Class<T> persistentClass, String alias) throws SQLException {
+//        return getHibernateSession(context).createCriteria(persistentClass, alias);
+//    }
 
     public Query createQuery(Context context, String query) throws SQLException {
         return getHibernateSession(context).createQuery(query);
     }
 
-    public List<T> list(Criteria criteria)
+    public List<T> list(Context context, CriteriaQuery criteriaQuery, boolean cacheable, Class<T> clazz, int maxResults, int offset) throws SQLException
     {
         @SuppressWarnings("unchecked")
-        List<T> result = (List<T>) criteria.list();
+        List<T> result = (List<T>) executeCriteriaQuery(context,criteriaQuery,cacheable, clazz, maxResults, offset);
         return result;
     }
 
     public List<T> list(Query query)
     {
         @SuppressWarnings("unchecked")
-        List<T> result = (List<T>) query.list();
+        List<T> result = (List<T>) query.getResultList();
         return result;
     }
 
@@ -136,32 +139,43 @@ public abstract class AbstractHibernateDAO<T> implements GenericDAO<T> {
      * Retrieve a unique result from the query.  If multiple results CAN be
      * retrieved an exception will be thrown,
      * so only use when the criteria state uniqueness in the database.
-     * @param criteria JPA criteria
+     * @param criteriaQuery JPA criteria
      * @return a DAO specified by the criteria
      */
-    public T uniqueResult(Criteria criteria)
+    public T uniqueResult(Context context, CriteriaQuery criteriaQuery, boolean cacheable, Class<T> clazz, int maxResults, int offset) throws SQLException
     {
-        @SuppressWarnings("unchecked")
-        T result = (T) criteria.uniqueResult();
-        return result;
+        List<T> list = list(context, criteriaQuery, cacheable, clazz, maxResults, offset);
+        if(CollectionUtils.isNotEmpty(list))
+        {
+            if(list.size()==1){
+                return list.get(0);
+            }
+            else{
+                throw new IllegalArgumentException("More than one result found");
+            }
+        }else{
+            return null;
+        }
     }
 
     /**
      * Retrieve a single result from the query.  Best used if you expect a
      * single result, but this isn't enforced on the database.
-     * @param criteria JPA criteria
+     * @param criteriaQuery JPA criteria
      * @return a DAO specified by the criteria
      */
-    public T singleResult(Criteria criteria)
+    public T singleResult(Context context, CriteriaQuery criteriaQuery) throws SQLException
     {
-        criteria.setMaxResults(1);
-        List<T> list = list(criteria);
-        if(CollectionUtils.isNotEmpty(list))
-        {
-            return list.get(0);
-        }else{
-            return null;
-        }
+//        List<T> list = list(context, criteriaQuery, cacheable, clazz, maxResults, offset);
+//        if(CollectionUtils.isNotEmpty(list))
+//        {
+//            return list.get(0);
+//        }else{
+//            return null;
+//        }
+//
+        Query query = this.getHibernateSession(context).createQuery(criteriaQuery);
+        return (T) query.getSingleResult();
 
     }
 
@@ -174,34 +188,76 @@ public abstract class AbstractHibernateDAO<T> implements GenericDAO<T> {
         }else{
             return null;
         }
+
     }
 
     public T uniqueResult(Query query)
     {
         @SuppressWarnings("unchecked")
-        T result = (T) query.uniqueResult();
+        T result = (T) query.getSingleResult();
         return result;
     }
 
     public Iterator<T> iterate(Query query)
     {
         @SuppressWarnings("unchecked")
-        Iterator<T> result = (Iterator<T>) query.iterate();
+        Iterator<T> result = (Iterator<T>) query.getResultList().iterator();
         return result;
     }
 
-    public int count(Criteria criteria)
+    public int count(Context context, CriteriaQuery criteriaQuery, CriteriaBuilder criteriaBuilder, Root<T> root) throws SQLException
     {
-        return ((Long) criteria.setProjection(Projections.rowCount()).uniqueResult()).intValue();
+        return Math.toIntExact(countLong(context, criteriaQuery, criteriaBuilder, root));
     }
 
     public int count(Query query)
     {
-        return ((Long) query.uniqueResult()).intValue();
+        return ((Long) query.getSingleResult()).intValue();
     }
 
-    public long countLong(Criteria criteria)
+    public long countLong(Context context, CriteriaQuery criteriaQuery, CriteriaBuilder criteriaBuilder, Root<T> root) throws SQLException
     {
-        return (Long) criteria.setProjection(Projections.rowCount()).uniqueResult();
+        Expression<Long> countExpression = criteriaBuilder.countDistinct(root);
+        criteriaQuery.select(countExpression);
+        return (Long) this.getHibernateSession(context).createQuery(criteriaQuery).getSingleResult();
     }
+
+    public CriteriaQuery<T> getCriteriaQuery(CriteriaBuilder criteriaBuilder, Class<T> c){
+        CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(c);
+        return criteriaQuery;
+    }
+    public CriteriaBuilder getCriteriaBuilder(Context context) throws SQLException{
+        return this.getHibernateSession(context).getCriteriaBuilder();
+    }
+    public List<T> executeCriteriaQuery(Context context, CriteriaQuery<T> criteriaQuery, boolean cacheable, Class<T> clazz, int maxResults, int offset) throws SQLException{
+        //This has to be here, otherwise a 500 gets thrown
+        Root<T> root = criteriaQuery.from(clazz);
+        Query query = this.getHibernateSession(context).createQuery(criteriaQuery);
+
+        //TODO Check if this works and is desireable
+        query.setHint("org.hibernate.cacheable", cacheable);
+//        query.setCacheable(cacheable);
+        if(maxResults != -1){
+            query.setMaxResults(maxResults);
+        }
+        if(maxResults != -1){
+            query.setFirstResult(offset);
+        }
+        return query.getResultList();
+
+    }
+    public List<T> findByX(Context context, Class clazz, Map<String, Object> equals, boolean cacheable, int maxResults, int offset) throws SQLException{
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery<T> criteria = getCriteriaQuery(criteriaBuilder, clazz);
+        Root root = criteria.from(clazz);
+        criteria.select(root);
+
+        //TODO Maybe one big where, test this;;;; seems to not be necessary
+        for(Map.Entry<String, Object> entry : equals.entrySet()){
+            criteria.where(criteriaBuilder.equal(root.get(entry.getKey()), entry.getValue()));
+        }
+        return executeCriteriaQuery(context, criteria, cacheable, clazz, maxResults, offset);
+    }
+
+    //TODO find alternative for uniqueResult
 }

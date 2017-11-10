@@ -12,9 +12,13 @@ import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.MetadataField;
+import org.dspace.xmlworkflow.storedcomponents.PoolTask;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
@@ -30,9 +34,15 @@ public abstract class AbstractHibernateDSODAO<T extends DSpaceObject> extends Ab
 {
     public T findByLegacyId(Context context, int legacyId, Class<T> clazz) throws SQLException
     {
-        Criteria criteria = createCriteria(context, clazz);
-        criteria.add(Restrictions.eq("legacyId", legacyId));
-        return uniqueResult(criteria);
+//        Criteria criteria = createCriteria(context, clazz);
+//        criteria.add(Restrictions.eq("legacyId", legacyId));
+//        return uniqueResult(criteria);
+//
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, clazz);
+        Root<T> root = criteriaQuery.from(clazz);
+        criteriaQuery.where(criteriaBuilder.equal(root.get("legacyId"), legacyId));
+        return uniqueResult(context, criteriaQuery, false, clazz, -1, -1);
     }
 
 

@@ -10,17 +10,28 @@ package org.dspace.content.dao.impl;
 import org.dspace.content.Collection;
 import org.dspace.content.Item;
 import org.dspace.content.WorkspaceItem;
+import org.dspace.content.WorkspaceItem_;
 import org.dspace.content.dao.WorkspaceItemDAO;
 import org.dspace.core.Context;
 import org.dspace.core.AbstractHibernateDAO;
 import org.dspace.eperson.EPerson;
+import org.dspace.eperson.EPerson_;
+import org.dspace.eperson.Group;
+import org.dspace.harvest.HarvestedCollection_;
+import org.dspace.identifier.DOI;
+import org.dspace.workflow.WorkflowItem;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
+import javax.persistence.Query;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.transform.BasicTransformerAdapter;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Root;
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -50,43 +61,99 @@ public class WorkspaceItemDAOImpl extends AbstractHibernateDAO<WorkspaceItem> im
     @Override
     public List<WorkspaceItem> findByCollection(Context context, Collection c) throws SQLException
     {
-        Criteria criteria = createCriteria(context, WorkspaceItem.class);
-        criteria.add(Restrictions.eq("collection", c));
-        return list(criteria);
+//        Criteria criteria = createCriteria(context, WorkspaceItem.class);
+//        criteria.add(Restrictions.eq("collection", c));
+//        return list(criteria);
+
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, WorkspaceItem.class);
+        Root<WorkspaceItem> workspaceItemRoot = criteriaQuery.from(WorkspaceItem.class);
+        criteriaQuery.select(workspaceItemRoot);
+        criteriaQuery.where(criteriaBuilder.equal(workspaceItemRoot.get(WorkspaceItem_.collection), c));
+        return list(context, criteriaQuery, false, WorkspaceItem.class, -1, -1);
+
     }
 
     @Override
     public WorkspaceItem findByItem(Context context, Item i) throws SQLException
     {
-        Criteria criteria = createCriteria(context, WorkspaceItem.class);
-        criteria.add(Restrictions.eq("item", i));
-        // Look for the unique workspaceitem entry where 'item_id' references this item
-        return uniqueResult(criteria);
+//        Criteria criteria = createCriteria(context, WorkspaceItem.class);
+//        criteria.add(Restrictions.eq("item", i));
+//         Look for the unique workspaceitem entry where 'item_id' references this item
+//        return uniqueResult(criteria);
+//
+
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, WorkspaceItem.class);
+        Root<WorkspaceItem> workspaceItemRoot = criteriaQuery.from(WorkspaceItem.class);
+        criteriaQuery.select(workspaceItemRoot);
+        criteriaQuery.where(criteriaBuilder.equal(workspaceItemRoot.get(WorkspaceItem_.item), i));
+        return uniqueResult(context, criteriaQuery, false, WorkspaceItem.class, -1, -1);
     }
 
     @Override
     public List<WorkspaceItem> findAll(Context context) throws SQLException
     {
-        Criteria criteria = createCriteria(context, WorkspaceItem.class);
-        criteria.addOrder(Order.asc("item"));
-        return list(criteria);
+        //TODO RAF CHECK
+//        Criteria criteria = createCriteria(context, WorkspaceItem.class);
+//        criteria.addOrder(Order.asc("item"));
+//        return list(criteria);
+
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, WorkspaceItem.class);
+        Root<WorkspaceItem> workspaceItemRoot = criteriaQuery.from(WorkspaceItem.class);
+        criteriaQuery.select(workspaceItemRoot);
+
+        List<javax.persistence.criteria.Order> orderList = new LinkedList<>();
+        orderList.add(criteriaBuilder.asc(workspaceItemRoot.get(WorkspaceItem_.item)));
+        criteriaQuery.orderBy(orderList);
+
+
+        return list(context, criteriaQuery, false, WorkspaceItem.class, -1, -1);
     }
 
     @Override
     public List<WorkspaceItem> findWithSupervisedGroup(Context context) throws SQLException {
-        Criteria criteria = createCriteria(context, WorkspaceItem.class);
-        criteria.add(Restrictions.isNotEmpty("supervisorGroups"));
-        criteria.addOrder(Order.asc("workspaceItemId"));
-        return list(criteria);
+        //TODO RAF CHECK
+//        Criteria criteria = createCriteria(context, WorkspaceItem.class);
+//        criteria.add(Restrictions.isNotEmpty("supervisorGroups"));
+//        criteria.addOrder(Order.asc("workspaceItemId"));
+//        return list(criteria);
+
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, WorkspaceItem.class);
+        Root<WorkspaceItem> workspaceItemRoot = criteriaQuery.from(WorkspaceItem.class);
+        criteriaQuery.select(workspaceItemRoot);
+        criteriaQuery.where(criteriaBuilder.isNotEmpty(workspaceItemRoot.get(WorkspaceItem_.supervisorGroups)));
+
+        List<javax.persistence.criteria.Order> orderList = new LinkedList<>();
+        orderList.add(criteriaBuilder.asc(workspaceItemRoot.get(WorkspaceItem_.workspaceItemId)));
+        criteriaQuery.orderBy(orderList);
+
+
+        return list(context, criteriaQuery, false, WorkspaceItem.class, -1, -1);
+
+
     }
 
     @Override
     public List<WorkspaceItem> findBySupervisedGroupMember(Context context, EPerson ePerson) throws SQLException {
-        Criteria criteria = createCriteria(context, WorkspaceItem.class);
-        criteria.createAlias("supervisorGroups", "supervisorGroup");
-        criteria.createAlias("supervisorGroup.epeople", "person");
-        criteria.add(Restrictions.eq("person.id", ePerson.getID()));
-        return list(criteria);
+
+        //TODO RAF CHECK
+//        Criteria criteria = createCriteria(context, WorkspaceItem.class);
+//        criteria.createAlias("supervisorGroups", "supervisorGroup");
+//        criteria.createAlias("supervisorGroup.epeople", "person");
+//        criteria.add(Restrictions.eq("person.id", ePerson.getID()));
+//        return list(criteria);
+//
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, WorkspaceItem.class);
+        Root<WorkspaceItem> workspaceItemRoot = criteriaQuery.from(WorkspaceItem.class);
+        Join<WorkspaceItem, Group> join = workspaceItemRoot.join("supervisorGroups");
+        Join<Group, EPerson> secondJoin = join.join("epeople");
+        criteriaQuery.select(workspaceItemRoot);
+        criteriaQuery.where(criteriaBuilder.equal(secondJoin.get(EPerson_.id), ePerson.getID()));
+        return list(context, criteriaQuery, false, WorkspaceItem.class, -1, -1);
     }
 
     @Override
@@ -99,13 +166,15 @@ public class WorkspaceItemDAOImpl extends AbstractHibernateDAO<WorkspaceItem> im
     public List<Map.Entry<Integer, Long>> getStageReachedCounts(Context context) throws SQLException {
         Query query = createQuery(context,"SELECT wi.stageReached as stage_reached, count(*) as cnt from WorkspaceItem wi" +
                 " group by wi.stageReached order by wi.stageReached");
-        query.setResultTransformer(new BasicTransformerAdapter() {
-            @Override
-            public Object transformTuple(Object[] tuple, String[] aliases) {
-                return new java.util.AbstractMap.SimpleImmutableEntry((Integer) tuple[0], (Long) tuple[1]);
-            }
-        });
-        return (List<Map.Entry<Integer, Long>>)query.list();
+
+        //TODO RAF WRITE
+//        query.setResultTransformer(new BasicTransformerAdapter() {
+//            @Override
+//            public Object transformTuple(Object[] tuple, String[] aliases) {
+//                return new java.util.AbstractMap.SimpleImmutableEntry((Integer) tuple[0], (Long) tuple[1]);
+//            }
+//        });
+        return (List<Map.Entry<Integer, Long>>)query.getResultList();
     }
 
 }

@@ -16,7 +16,7 @@ import org.dspace.checker.dao.ChecksumHistoryDAO;
 import org.dspace.content.Bitstream;
 import org.dspace.core.Context;
 import org.dspace.core.AbstractHibernateDAO;
-import org.hibernate.Query;
+import javax.persistence.Query;
 
 /**
  * <p>
@@ -44,7 +44,8 @@ public class ChecksumHistoryDAOImpl extends AbstractHibernateDAO<ChecksumHistory
     public int deleteByDateAndCode(Context context, Date retentionDate, ChecksumResultCode resultCode) throws SQLException {
         String hql = "delete from ChecksumHistory where processEndDate < :processEndDate AND checksumResult.resultCode=:resultCode";
         Query query = createQuery(context, hql);
-        query.setTimestamp("processEndDate", retentionDate);
+        //TODO RAF WRITE
+//        query.setTimestamp("processEndDate", retentionDate);
         query.setParameter("resultCode", resultCode);
         return query.executeUpdate();
     }

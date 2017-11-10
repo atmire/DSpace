@@ -8,7 +8,11 @@
 package org.dspace.content.dao.impl;
 
 import org.apache.commons.collections.ListUtils;
+import org.dspace.authorize.ResourcePolicy;
+import org.dspace.authorize.ResourcePolicy_;
+import org.dspace.content.Collection;
 import org.dspace.content.Community;
+import org.dspace.content.Community_;
 import org.dspace.content.MetadataField;
 import org.dspace.content.dao.CommunityDAO;
 import org.dspace.core.Constants;
@@ -16,13 +20,16 @@ import org.dspace.core.Context;
 import org.dspace.core.AbstractHibernateDSODAO;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
+import org.dspace.xmlworkflow.storedcomponents.CollectionRole;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
+import javax.persistence.Query;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
 
+import javax.persistence.criteria.*;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -76,9 +83,16 @@ public class CommunityDAOImpl extends AbstractHibernateDSODAO<Community> impleme
 
     @Override
     public Community findByAdminGroup(Context context, Group group) throws SQLException {
-        Criteria criteria = createCriteria(context, Community.class);
-        criteria.add(Restrictions.eq("admins", group));
-        return singleResult(criteria);
+//        Criteria criteria = createCriteria(context, Community.class);
+//        criteria.add(Restrictions.eq("admins", group));
+//        return singleResult(criteria);
+//
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Community.class);
+        Root<Community> communityRoot = criteriaQuery.from(Community.class);
+        criteriaQuery.select(communityRoot);
+        criteriaQuery.where(criteriaBuilder.equal(communityRoot.get(Community_.admins), group));
+        return singleResult(context, criteriaQuery);
     }
 
     @Override
@@ -91,13 +105,16 @@ public class CommunityDAOImpl extends AbstractHibernateDSODAO<Community> impleme
 
         Query query = createQuery(context, queryBuilder.toString());
         query.setParameter(sortField.toString(), sortField.getID());
-        query.setCacheable(true);
+        query.setHint("org.hibernate.cacheable", Boolean.TRUE);
+
 
         return findMany(context, query);
     }
 
     @Override
     public List<Community> findAuthorized(Context context, EPerson ePerson, List<Integer> actions) throws SQLException {
+
+        //TODO RAF CHECK
 
         /*TableRowIterator tri = DatabaseManager.query(context,
                 "SELECT \n" +
@@ -117,22 +134,40 @@ public class CommunityDAOImpl extends AbstractHibernateDSODAO<Community> impleme
                         "  resourcepolicy.action_id = 11) AND \n" +
                         "  resourcepolicy.resource_type_id = 4 AND eperson.eperson_id = ?", context.getCurrentUser().getID());
         */
-        Criteria criteria = createCriteria(context, Community.class);
-        criteria.createAlias("resourcePolicies", "resourcePolicy");
-
-        Disjunction actionQuery = Restrictions.or();
-        for (Integer action : actions)
-        {
-            actionQuery.add(Restrictions.eq("resourcePolicy.actionId", action));
+//        Criteria criteria = createCriteria(context, Community.class);
+//        criteria.createAlias("resourcePolicies", "resourcePolicy");
+//
+//        Disjunction actionQuery = Restrictions.or();
+//        for (Integer action : actions)
+//        {
+//            actionQuery.add(Restrictions.eq("resourcePolicy.actionId", action));
+//        }
+//        criteria.add(Restrictions.and(
+//                Restrictions.eq("resourcePolicy.resourceTypeId", Constants.COMMUNITY),
+//                Restrictions.eq("resourcePolicy.eperson", ePerson),
+//                actionQuery
+//        ));
+//        criteria.setCacheable(true);
+//
+//        return list(criteria);
+//
+//
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Community.class);
+        Root<Community> communityRoot = criteriaQuery.from(Community.class);
+        Join<Community, ResourcePolicy> join = communityRoot.join("resourcePolicies");
+        List<Predicate> orPredicates = new LinkedList<Predicate>();
+        for(Integer action : actions){
+            orPredicates.add(criteriaBuilder.equal(join.get(ResourcePolicy_.actionId), action));
         }
-        criteria.add(Restrictions.and(
-                Restrictions.eq("resourcePolicy.resourceTypeId", Constants.COMMUNITY),
-                Restrictions.eq("resourcePolicy.eperson", ePerson),
-                actionQuery
-        ));
-        criteria.setCacheable(true);
-
-        return list(criteria);
+        Predicate orPredicate = criteriaBuilder.and(orPredicates.toArray(new Predicate[]{}));
+        criteriaQuery.select(communityRoot);
+        criteriaQuery.where(criteriaBuilder.and(criteriaBuilder.equal(join.get(ResourcePolicy_.resourceTypeId), Constants.COLLECTION),
+                                                criteriaBuilder.equal(join.get(ResourcePolicy_.eperson), ePerson),
+                                                orPredicate
+                                                )
+                            );
+        return list(context, criteriaQuery, true, Community.class, -1, -1);
     }
 
     @Override
@@ -165,11 +200,12 @@ public class CommunityDAOImpl extends AbstractHibernateDSODAO<Community> impleme
         }
         query.append(" AND rp.resourceTypeId=").append(Constants.COMMUNITY);
         query.append(" AND rp.epersonGroup.id IN (select g.id from Group g where (from EPerson e where e.id = :eperson_id) in elements(epeople))");
-        Query hibernateQuery = createQuery(context, query.toString());
-        hibernateQuery.setParameter("eperson_id", ePerson.getID());
-        hibernateQuery.setCacheable(true);
+        Query persistenceQuery = createQuery(context, query.toString());
+        persistenceQuery.setParameter("eperson_id", ePerson.getID());
 
-        return list(hibernateQuery);
+        persistenceQuery.setHint("org.hibernate.cacheable", Boolean.TRUE);
+
+        return list(persistenceQuery);
     }
 
     @Override

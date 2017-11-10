@@ -8,15 +8,24 @@
 package org.dspace.content.dao.impl;
 
 import org.dspace.content.MetadataField;
+import org.dspace.content.MetadataField_;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.dao.MetadataValueDAO;
 import org.dspace.core.AbstractHibernateDAO;
 import org.dspace.core.Context;
+import org.dspace.versioning.Version;
+import org.dspace.versioning.VersionHistory;
+import org.dspace.versioning.Version_;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
-import org.hibernate.Query;
 import org.hibernate.criterion.Restrictions;
 
+import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.JoinType;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
@@ -39,13 +48,25 @@ public class MetadataValueDAOImpl extends AbstractHibernateDAO<MetadataValue> im
     @Override
     public List<MetadataValue> findByField(Context context, MetadataField metadataField) throws SQLException
     {
-        Criteria criteria = createCriteria(context, MetadataValue.class);
-        criteria.add(
-                Restrictions.eq("metadataField.id", metadataField.getID())
-        );
-        criteria.setFetchMode("metadataField", FetchMode.JOIN);
+        //TODO RAF CHECK
+//        Criteria criteria = createCriteria(context, MetadataValue.class);
+//        criteria.add(
+//                Restrictions.eq("metadataField.id", metadataField.getID())
+//        );
+//        criteria.setFetchMode("metadataField", FetchMode.JOIN);
+//
+//        return list(criteria);
 
-        return list(criteria);
+
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, MetadataValue.class);
+        Root<MetadataValue> metadataValueRoot = criteriaQuery.from(MetadataValue.class);
+        Join<MetadataValue, MetadataField> join = metadataValueRoot.join("metadataField");
+        criteriaQuery.select(metadataValueRoot);
+        criteriaQuery.where(criteriaBuilder.equal(join.get(MetadataField_.id), metadataField.getID()));
+
+
+        return null;
     }
 
     @Override
@@ -54,7 +75,7 @@ public class MetadataValueDAOImpl extends AbstractHibernateDAO<MetadataValue> im
                 "WHERE m.value like concat('%', concat(:searchString,'%')) ORDER BY m.id ASC";
 
         Query query = createQuery(context, queryString);
-        query.setString("searchString", value);
+        query.setParameter("searchString", value);
 
         return iterate(query);
     }
@@ -75,7 +96,7 @@ public class MetadataValueDAOImpl extends AbstractHibernateDAO<MetadataValue> im
         Query query = createQuery(context, queryString);
         query.setParameter("metadata_field_id", metadataFieldId);
         query.setMaxResults(1);
-        return (MetadataValue) query.uniqueResult();
+        return (MetadataValue) query.getSingleResult();
     }
 
     @Override

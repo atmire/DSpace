@@ -17,7 +17,7 @@ import org.dspace.core.Context;
 import org.dspace.core.AbstractHibernateDSODAO;
 import org.dspace.eperson.EPerson;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
+import javax.persistence.Query;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
@@ -94,7 +94,8 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
         query.setParameter("discoverable", discoverable);
         if(lastModified != null)
         {
-            query.setTimestamp("last_modified", lastModified);
+            //TODO RAF WRITE
+//            query.setTimestamp("last_modified", lastModified);
 	}
         return iterate(query);
     }
@@ -147,67 +148,70 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
     
     @Override
     public Iterator<Item> findByMetadataQuery(Context context, List<List<MetadataField>> listFieldList, List<String> query_op, List<String> query_val, List<UUID> collectionUuids, String regexClause, int offset, int limit) throws SQLException {
-    	Criteria criteria = createCriteria(context, Item.class, "item");
-    	criteria.setFirstResult(offset);
-    	criteria.setMaxResults(limit);
-    	
-    	if (!collectionUuids.isEmpty()){
-			DetachedCriteria dcollCriteria = DetachedCriteria.forClass(Collection.class, "coll");
-        	dcollCriteria.setProjection(Projections.property("coll.id"));
-        	dcollCriteria.add(Restrictions.eqProperty("coll.id", "item.owningCollection"));
-			dcollCriteria.add(Restrictions.in("coll.id", collectionUuids));
-			criteria.add(Subqueries.exists(dcollCriteria));
-    	}
-    	
-        int index = Math.min(listFieldList.size(), Math.min(query_op.size(), query_val.size()));
-        StringBuilder sb = new StringBuilder();
+//    	Criteria criteria = createCriteria(context, Item.class, "item");
+//    	criteria.setFirstResult(offset);
+//    	criteria.setMaxResults(limit);
+//
+//    	if (!collectionUuids.isEmpty()){
+//			DetachedCriteria dcollCriteria = DetachedCriteria.forClass(Collection.class, "coll");
+//        	dcollCriteria.setProjection(Projections.property("coll.id"));
+//        	dcollCriteria.add(Restrictions.eqProperty("coll.id", "item.owningCollection"));
+//			dcollCriteria.add(Restrictions.in("coll.id", collectionUuids));
+//			criteria.add(Subqueries.exists(dcollCriteria));
+//    	}
+//
+//        int index = Math.min(listFieldList.size(), Math.min(query_op.size(), query_val.size()));
+//        StringBuilder sb = new StringBuilder();
+//
+//        for(int i=0; i<index; i++) {
+//        	OP op = OP.valueOf(query_op.get(i));
+//        	if (op == null) {
+//        		log.warn("Skipping Invalid Operator: " + query_op.get(i));
+//        		continue;
+//        	}
+//
+//        	if (op == OP.matches || op == OP.doesnt_match) {
+//        		if (regexClause.isEmpty()) {
+//            		log.warn("Skipping Unsupported Regex Operator: " + query_op.get(i));
+//            		continue;
+//        		}
+//        	}
+//
+//        	DetachedCriteria subcriteria = DetachedCriteria.forClass(MetadataValue.class,"mv");
+//        	subcriteria.add(Property.forName("mv.dSpaceObject").eqProperty("item.id"));
+//        	subcriteria.setProjection(Projections.property("mv.dSpaceObject"));
+//
+//        	if (!listFieldList.get(i).isEmpty()) {
+//        		subcriteria.add(Restrictions.in("metadataField", listFieldList.get(i)));
+//        	}
+//
+//        	sb.append(op.name() + " ");
+//        	if (op == OP.equals || op == OP.not_equals){
+//    			subcriteria.add(Property.forName("mv.value").eq(query_val.get(i)));
+//    			sb.append(query_val.get(i));
+//        	} else if (op == OP.like || op == OP.not_like){
+//    			subcriteria.add(Property.forName("mv.value").like(query_val.get(i)));
+//    			sb.append(query_val.get(i));
+//        	} else if (op == OP.contains || op == OP.doesnt_contain){
+//    			subcriteria.add(Property.forName("mv.value").like("%"+query_val.get(i)+"%"));
+//    			sb.append(query_val.get(i));
+//        	} else if (op == OP.matches || op == OP.doesnt_match) {
+//            	subcriteria.add(Restrictions.sqlRestriction(regexClause, query_val.get(i), StandardBasicTypes.STRING));
+//    			sb.append(query_val.get(i));
+//        	}
+//
+//        	if (op == OP.exists || op == OP.equals || op == OP.like || op == OP.contains || op == OP.matches) {
+//        		criteria.add(Subqueries.exists(subcriteria));
+//        	} else {
+//        		criteria.add(Subqueries.notExists(subcriteria));
+//        	}
+//        }
+//     	log.debug(String.format("Running custom query with %d filters", index));
+//
+//        return list(criteria).iterator();
+        //TODO RAF WRITE
 
-        for(int i=0; i<index; i++) {
-        	OP op = OP.valueOf(query_op.get(i));
-        	if (op == null) {
-        		log.warn("Skipping Invalid Operator: " + query_op.get(i));
-        		continue;
-        	}
-        	
-        	if (op == OP.matches || op == OP.doesnt_match) {
-        		if (regexClause.isEmpty()) {
-            		log.warn("Skipping Unsupported Regex Operator: " + query_op.get(i));
-            		continue;
-        		}
-        	}
-        	
-        	DetachedCriteria subcriteria = DetachedCriteria.forClass(MetadataValue.class,"mv");
-        	subcriteria.add(Property.forName("mv.dSpaceObject").eqProperty("item.id"));
-        	subcriteria.setProjection(Projections.property("mv.dSpaceObject"));
-        	
-        	if (!listFieldList.get(i).isEmpty()) {
-        		subcriteria.add(Restrictions.in("metadataField", listFieldList.get(i)));
-        	}
-        	
-        	sb.append(op.name() + " ");
-        	if (op == OP.equals || op == OP.not_equals){
-    			subcriteria.add(Property.forName("mv.value").eq(query_val.get(i)));
-    			sb.append(query_val.get(i));
-        	} else if (op == OP.like || op == OP.not_like){
-    			subcriteria.add(Property.forName("mv.value").like(query_val.get(i)));        		        		
-    			sb.append(query_val.get(i));
-        	} else if (op == OP.contains || op == OP.doesnt_contain){
-    			subcriteria.add(Property.forName("mv.value").like("%"+query_val.get(i)+"%"));        		        		
-    			sb.append(query_val.get(i));
-        	} else if (op == OP.matches || op == OP.doesnt_match) {
-            	subcriteria.add(Restrictions.sqlRestriction(regexClause, query_val.get(i), StandardBasicTypes.STRING));
-    			sb.append(query_val.get(i));        		
-        	}
-        	
-        	if (op == OP.exists || op == OP.equals || op == OP.like || op == OP.contains || op == OP.matches) {
-        		criteria.add(Subqueries.exists(subcriteria));
-        	} else {
-        		criteria.add(Subqueries.notExists(subcriteria));        		
-        	}
-        }
-     	log.debug(String.format("Running custom query with %d filters", index));
-
-        return list(criteria).iterator();
+        return null;
     }
 
     @Override
@@ -261,7 +265,7 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
         Query query = createQuery(context, "select count(distinct i) from Item i " +
                                             "join i.collections collection " +
                                             "WHERE collection IN (:collections) AND i.inArchive=:in_archive AND i.withdrawn=:withdrawn");
-        query.setParameterList("collections", collections);
+        query.setParameter("collections", collections);
         query.setParameter("in_archive", includeArchived);
         query.setParameter("withdrawn", includeWithdrawn);
 
@@ -273,7 +277,8 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
             throws SQLException
     {
         Query query = createQuery(context, "SELECT i FROM item i WHERE last_modified > :last_modified");
-        query.setTimestamp("last_modified", since);
+        //TODO RAF WRITE
+//        query.setTimestamp("last_modified", since);
         return iterate(query);
     }
 

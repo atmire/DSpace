@@ -15,8 +15,7 @@ import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
 import org.dspace.eperson.dao.GroupDAO;
-import org.hibernate.Query;
-
+import javax.persistence.Query;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
@@ -86,7 +85,7 @@ public class GroupDAOImpl extends AbstractHibernateDSODAO<Group> implements Grou
         if (offset > 0) {
         	query.setFirstResult(offset);
         }
-        query.setCacheable(true);
+        query.setHint("org.hibernate.cacheable", Boolean.TRUE);
 
         return list(query);
     }
@@ -95,7 +94,7 @@ public class GroupDAOImpl extends AbstractHibernateDSODAO<Group> implements Grou
     public List<Group> findByEPerson(Context context, EPerson ePerson) throws SQLException {
         Query query = createQuery(context, "from Group where (from EPerson e where e.id = :eperson_id) in elements(epeople)");
         query.setParameter("eperson_id", ePerson.getID());
-        query.setCacheable(true);
+        query.setHint("org.hibernate.cacheable", Boolean.TRUE);
 
         return list(query);
     }
@@ -107,7 +106,7 @@ public class GroupDAOImpl extends AbstractHibernateDSODAO<Group> implements Grou
                 "where g.name = :name ");
 
         query.setParameter("name", name);
-        query.setCacheable(true);
+        query.setHint("org.hibernate.cacheable", Boolean.TRUE);
 
         return singleResult(query);
     }
@@ -133,7 +132,7 @@ public class GroupDAOImpl extends AbstractHibernateDSODAO<Group> implements Grou
 
             query.setParameter("id", id);
             query.setParameter("eperson_id", ePerson.getID());
-            query.setCacheable(true);
+            query.setHint("org.hibernate.cacheable", Boolean.TRUE);
 
             return singleResult(query);
         }
@@ -183,7 +182,7 @@ public class GroupDAOImpl extends AbstractHibernateDSODAO<Group> implements Grou
                 "JOIN g.groups c ");
 
         @SuppressWarnings("unchecked")
-        List<Pair<UUID, UUID>> results = query.list();
+        List<Pair<UUID, UUID>> results = query.getResultList();
         return results;
     }
 

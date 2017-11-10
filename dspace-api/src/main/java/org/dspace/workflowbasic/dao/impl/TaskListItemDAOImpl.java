@@ -10,13 +10,17 @@ package org.dspace.workflowbasic.dao.impl;
 import org.dspace.core.Context;
 import org.dspace.core.AbstractHibernateDAO;
 import org.dspace.eperson.EPerson;
+import org.dspace.harvest.HarvestedItem;
 import org.dspace.workflowbasic.BasicWorkflowItem;
 import org.dspace.workflowbasic.TaskListItem;
+import org.dspace.workflowbasic.TaskListItem_;
 import org.dspace.workflowbasic.dao.TaskListItemDAO;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
 import org.hibernate.criterion.Restrictions;
-
+import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -44,8 +48,15 @@ public class TaskListItemDAOImpl extends AbstractHibernateDAO<TaskListItem> impl
 
     @Override
     public List<TaskListItem> findByEPerson(Context context, EPerson ePerson) throws SQLException {
-        Criteria criteria = createCriteria(context, TaskListItem.class);
-        criteria.add(Restrictions.eq("ePerson", ePerson));
-        return list(criteria);
+//        Criteria criteria = createCriteria(context, TaskListItem.class);
+//        criteria.add(Restrictions.eq("ePerson", ePerson));
+//        return list(criteria);
+//
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, TaskListItem.class);
+        Root<TaskListItem> taskListItemRoot = criteriaQuery.from(TaskListItem.class);
+        criteriaQuery.select(taskListItemRoot);
+        criteriaQuery.where(criteriaBuilder.equal(taskListItemRoot.get(TaskListItem_.ePerson), ePerson));
+        return list(context, criteriaQuery, false, TaskListItem.class, -1, -1);
     }
 }

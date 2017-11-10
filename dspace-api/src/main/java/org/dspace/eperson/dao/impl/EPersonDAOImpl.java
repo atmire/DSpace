@@ -14,12 +14,16 @@ import org.dspace.content.MetadataField;
 import org.dspace.core.AbstractHibernateDSODAO;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
+import org.dspace.eperson.EPerson_;
 import org.dspace.eperson.Group;
 import org.dspace.eperson.dao.EPersonDAO;
+import org.dspace.xmlworkflow.storedcomponents.WorkflowItemRole;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
 import org.hibernate.criterion.Restrictions;
-
+import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -40,23 +44,37 @@ public class EPersonDAOImpl extends AbstractHibernateDSODAO<EPerson> implements 
     @Override
     public EPerson findByEmail(Context context, String email) throws SQLException
     {
-        // All email addresses are stored as lowercase, so ensure that the email address is lowercased for the lookup
-        Criteria criteria = createCriteria(context, EPerson.class);
-        criteria.add(Restrictions.eq("email", email.toLowerCase()));
-
-        criteria.setCacheable(true);
-        return uniqueResult(criteria);
+//         All email addresses are stored as lowercase, so ensure that the email address is lowercased for the lookup
+//        Criteria criteria = createCriteria(context, EPerson.class);
+//        criteria.add(Restrictions.eq("email", email.toLowerCase()));
+//
+//        criteria.setCacheable(true);
+//        return uniqueResult(criteria);
+//
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, EPerson.class);
+        Root<EPerson> ePersonRoot = criteriaQuery.from(EPerson.class);
+        criteriaQuery.select(ePersonRoot);
+        criteriaQuery.where(criteriaBuilder.equal(ePersonRoot.get(EPerson_.email), email.toLowerCase()));
+        return uniqueResult(context, criteriaQuery, true, EPerson.class, -1, -1);
     }
 
 
     @Override
     public EPerson findByNetid(Context context, String netid) throws SQLException
     {
-        Criteria criteria = createCriteria(context, EPerson.class);
-        criteria.add(Restrictions.eq("netid", netid));
-
-        criteria.setCacheable(true);
-        return uniqueResult(criteria);
+//        Criteria criteria = createCriteria(context, EPerson.class);
+//        criteria.add(Restrictions.eq("netid", netid));
+//
+//        criteria.setCacheable(true);
+//        return uniqueResult(criteria);
+//
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, EPerson.class);
+        Root<EPerson> ePersonRoot = criteriaQuery.from(EPerson.class);
+        criteriaQuery.select(ePersonRoot);
+        criteriaQuery.where((criteriaBuilder.equal(ePersonRoot.get(EPerson_.netid), netid)));
+        return uniqueResult(context, criteriaQuery, true, EPerson.class, -1, -1);
     }
 
     @Override
@@ -113,26 +131,43 @@ public class EPersonDAOImpl extends AbstractHibernateDSODAO<EPerson> implements 
             idList.add(group.getID());
         }
 
-        query.setParameterList("idList", idList);
+        query.setParameter("idList", idList);
 
         return list(query);
     }
 
     @Override
     public List<EPerson> findWithPasswordWithoutDigestAlgorithm(Context context) throws SQLException {
-        Criteria criteria = createCriteria(context, EPerson.class);
-        criteria.add(Restrictions.and(
-                Restrictions.isNotNull("password"),
-                Restrictions.isNull("digestAlgorithm")
-        ));
-        return list(criteria);
+//        Criteria criteria = createCriteria(context, EPerson.class);
+//        criteria.add(Restrictions.and(
+//                Restrictions.isNotNull("password"),
+//                Restrictions.isNull("digestAlgorithm")
+//        ));
+//        return list(criteria);
+//
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, EPerson.class);
+        Root<EPerson> ePersonRoot = criteriaQuery.from(EPerson.class);
+        criteriaQuery.select(ePersonRoot);
+        criteriaQuery.where(criteriaBuilder.and(criteriaBuilder.isNotNull(ePersonRoot.get(EPerson_.password)),
+                                                criteriaBuilder.isNull(ePersonRoot.get(EPerson_.digestAlgorithm))
+                                                )
+                            );
+        return list(context, criteriaQuery, false, EPerson.class, -1, -1);
     }
 
     @Override
     public List<EPerson> findNotActiveSince(Context context, Date date) throws SQLException {
-        Criteria criteria = createCriteria(context, EPerson.class);
-        criteria.add(Restrictions.le("lastActive", date));
-        return list(criteria);
+//        Criteria criteria = createCriteria(context, EPerson.class);
+//        criteria.add(Restrictions.le("lastActive", date));
+//        return list(criteria);
+//
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, EPerson.class);
+        Root<EPerson> ePersonRoot = criteriaQuery.from(EPerson.class);
+        criteriaQuery.select(ePersonRoot);
+        criteriaQuery.where(criteriaBuilder.lessThanOrEqualTo(ePersonRoot.<Date>get(EPerson_.lastActive), date));
+        return list(context, criteriaQuery, false, EPerson.class, -1, -1);
     }
 
     protected Query getSearchQuery(Context context, String queryString, String queryParam, List<MetadataField> queryFields, List<MetadataField> sortFields, String sortField) throws SQLException {
