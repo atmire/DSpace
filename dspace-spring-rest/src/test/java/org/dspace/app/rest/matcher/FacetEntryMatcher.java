@@ -7,10 +7,10 @@
  */
 package org.dspace.app.rest.matcher;
 
-import org.hamcrest.Matcher;
-
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static org.hamcrest.Matchers.*;
+
+import org.hamcrest.Matcher;
 
 public class FacetEntryMatcher {
 
@@ -29,7 +29,7 @@ public class FacetEntryMatcher {
         return allOf(
                 hasJsonPath("$.name", is("author")),
                 hasJsonPath("$.facetType", is("text")),
-                hasJsonPath("$._links.self", containsString("api/discover/facets/author")),
+                hasJsonPath("$._links.self.href", containsString("api/discover/facets/author")),
                 hasJsonPath("$.hasMore", is(hasMore))
         );
     }
@@ -47,7 +47,7 @@ public class FacetEntryMatcher {
         return allOf(
                 hasJsonPath("$.name", is("subject")),
                 hasJsonPath("$.facetType", is("hierarchical")),
-                hasJsonPath("$._links.self", containsString("api/discover/facets/subject")),
+                hasJsonPath("$._links.self.href", containsString("api/discover/facets/subject")),
                 hasJsonPath("$.hasMore", is(hasMore))
 
         );
@@ -65,7 +65,7 @@ public class FacetEntryMatcher {
         return allOf(
                 hasJsonPath("$.name", is("dateIssued")),
                 hasJsonPath("$.facetType", is("date")),
-                hasJsonPath("$._links.self", containsString("api/discover/facets/dateIssued")),
+                hasJsonPath("$._links.self.href", containsString("api/discover/facets/dateIssued")),
                 hasJsonPath("$.hasMore", is(hasMore))
         );
     }
@@ -82,7 +82,7 @@ public class FacetEntryMatcher {
         return allOf(
                 hasJsonPath("$.name", is("has_content_in_original_bundle")),
                 hasJsonPath("$.facetType", is("standard")),
-                hasJsonPath("$._links.self", containsString("api/discover/facets/has_content_in_original_bundle")),
+                hasJsonPath("$._links.self.href", containsString("api/discover/facets/has_content_in_original_bundle")),
                 hasJsonPath("$.hasMore", is(hasMore))
         );
     }

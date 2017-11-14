@@ -7,21 +7,27 @@
  */
 package org.dspace.app.rest;
 
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.dspace.app.rest.builder.CollectionBuilder;
 import org.dspace.app.rest.builder.CommunityBuilder;
 import org.dspace.app.rest.builder.ItemBuilder;
-import org.dspace.app.rest.matcher.*;
+import org.dspace.app.rest.matcher.AppliedFilterMatcher;
+import org.dspace.app.rest.matcher.FacetEntryMatcher;
+import org.dspace.app.rest.matcher.FacetValueMatcher;
+import org.dspace.app.rest.matcher.PageMatcher;
+import org.dspace.app.rest.matcher.SearchFilterMatcher;
+import org.dspace.app.rest.matcher.SearchResultMatcher;
+import org.dspace.app.rest.matcher.SortOptionMatcher;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.dspace.content.Item;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest {
 
@@ -118,9 +124,9 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 //The facetType has to be 'text' because that's how the author facet is configured by default
                 .andExpect(jsonPath("$.facetType", is("text")))
                 //Because we've constructed such a structure so that we have more than 2 (size) authors, there needs to be a next link
-                .andExpect(jsonPath("$._links.next", containsString("api/discover/facets/author?page")))
+                .andExpect(jsonPath("$._links.next.href", containsString("api/discover/facets/author?page")))
                 //There always needs to be a self link
-                .andExpect(jsonPath("$._links.self", containsString("api/discover/facets/author")))
+                .andExpect(jsonPath("$._links.self.href", containsString("api/discover/facets/author")))
                 //Because there are more authors than is represented (because of the size param), hasMore has to be true
                 .andExpect(jsonPath("$.hasMore", is(Boolean.TRUE)))
                 //The page object needs to be present and just like specified in the matcher
@@ -187,7 +193,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 //The facetType has to be 'text' because that's the default configuration for this facet
                 .andExpect(jsonPath("$.facetType", is("text")))
                 //There always needs to be a self link present
-                .andExpect(jsonPath("$._links.self", containsString("api/discover/facets/author")))
+                .andExpect(jsonPath("$._links.self.href", containsString("api/discover/facets/author")))
                 //hasMore has to be false because we've not entered more than 20 (this is default size) authors
                 .andExpect(jsonPath("$.hasMore", is(Boolean.FALSE)))
                 //The page object needs to present and exactly like how it is specified here. 20 is entered as the size because that's the default in the configuration if no size parameter has been given
@@ -259,10 +265,9 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 //The facetType has to be 'text' as this is the default configuration
                 .andExpect(jsonPath("$.facetType", is("text")))
                 //There needs to be a next link because there are more authors than the current size is allowed to show. There are more pages after this one
-                //TODO UNCOMMENT AND MAKE TEST WORK, CURRENTLY BROKEN
-//                .andExpect(jsonPath("$._links.next", containsString("api/discover/facets/author?page")))
+                .andExpect(jsonPath("$._links.next.href", containsString("api/discover/facets/author?page")))
                 //There always needs to be a self link
-                .andExpect(jsonPath("$._links.self", containsString("api/discover/facets/author")))
+                .andExpect(jsonPath("$._links.self.href", containsString("api/discover/facets/author")))
                 //hasMore needs to be true because there are more elements than currently shown, there are additional pages
                 .andExpect(jsonPath("$.hasMore", is(Boolean.TRUE)))
                 //The page object has to be like this because that's what we've asked in the parameters
@@ -330,9 +335,9 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 //The facetType needs to be 'text' as that's the default configuration for the given facet
                 .andExpect(jsonPath("$.facetType", is("text")))
                 //There always needs to be a self link available
-                .andExpect(jsonPath("$._links.self", containsString("api/discover/facets/author")))
+                .andExpect(jsonPath("$._links.self.href", containsString("api/discover/facets/author")))
                 //The self link needs to contain the query that was specified in the parameters, this is how it looks like
-                .andExpect(jsonPath("$._links.self", containsString("f.title=test,contains")))
+                .andExpect(jsonPath("$._links.self.href", containsString("f.title=test,contains")))
                 //The hasMore property has to be false because we don't have more than 20 authors that take part in the results
                 .andExpect(jsonPath("$.hasMore", is(Boolean.FALSE)))
                 //The applied filters have to be specified like this, applied filters are the parameters given below starting with f.
@@ -406,7 +411,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 //The facetType has to be 'date' because that's the default configuration for this facet
                 .andExpect(jsonPath("$.facetType", is("date")))
                 //There always needs to be a self link available
-                .andExpect(jsonPath("$._links.self", containsString("api/discover/facets/dateIssued")))
+                .andExpect(jsonPath("$._links.self.href", containsString("api/discover/facets/dateIssued")))
                 //The hasMore property has to be set on false as we've not gotten more results than we're able to show
                 .andExpect(jsonPath("$.hasMore", is(Boolean.FALSE)))
                 //This is how the page object must look like because it's the default with size 20
@@ -479,7 +484,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 //The scope has to be the same as the one that we've given in the parameters
                 .andExpect(jsonPath("$.scope", is("testScope")))
                 //There always needs to be a self link available
-                .andExpect(jsonPath("$._links.self", containsString("api/discover/facets/author")))
+                .andExpect(jsonPath("$._links.self.href", containsString("api/discover/facets/author")))
                 //the hasMore property needs to be false as we're currently able to show all the authors on one page
                 .andExpect(jsonPath("$.hasMore", is(Boolean.FALSE)))
                 //These are all the authors for the items that were created and thus they have to be present in the embedded values section
@@ -508,7 +513,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 //The scope has to be same as the param that we've entered
                 .andExpect(jsonPath("$.scope", is("testScope")))
                 //There always needs to be a self link available
-                .andExpect(jsonPath("$._links.self", containsString("api/discover/facets/author")))
+                .andExpect(jsonPath("$._links.self.href", containsString("api/discover/facets/author")))
                 //The hasMore property needs to be true because there are more values than that we're able to show on a page of size 2
                 .andExpect(jsonPath("$.hasMore", is(Boolean.TRUE)))
                 //These are the values that need to be present as it's ordered by count and these authors are the most common ones in the items that we've created
@@ -601,9 +606,9 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 //the facetType needs to be 'date' as that's the default facetType for this facet in the configuration
                 .andExpect(jsonPath("$.facetType", is("date")))
                 //There always needs to be a self link available
-                .andExpect(jsonPath("$._links.self", containsString("api/discover/facets/dateIssued")))
+                .andExpect(jsonPath("$._links.self.href", containsString("api/discover/facets/dateIssued")))
                 //Seeing as we've entered a size of two and there are more dates than just two, we'll need a next link to go to the next page to see the rest of the dates
-                .andExpect(jsonPath("$._links.next", containsString("api/discover/facets/dateIssued?page")))
+                .andExpect(jsonPath("$._links.next.href", containsString("api/discover/facets/dateIssued?page")))
                 //The hasMore property needs to be true for the same reason as the next link
                 .andExpect(jsonPath("$.hasMore", is(Boolean.TRUE)))
                 //The page object needs to look like this because we've entered a size of 2 and we didn't specify a starting page so it defaults to 0
@@ -674,7 +679,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 //The facetType needs to be 'date' as that's the default facetType for this facet in the configuration
                 .andExpect(jsonPath("$.facetType", is("date")))
                 //There always needs to be a self link
-                .andExpect(jsonPath("$._links.self", containsString("api/discover/facets/dateIssued")))
+                .andExpect(jsonPath("$._links.self.href", containsString("api/discover/facets/dateIssued")))
                 //The hasMore property needs to be false because all the dates are able to show in two intervals, therefore we don't need more pages
                 .andExpect(jsonPath("$.hasMore", is(Boolean.FALSE)))
                 //There needs to be an appliedFilters section that looks like this because we've specified a query in the parameters
@@ -793,7 +798,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                         FacetEntryMatcher.hasContentInOriginalBundleFacetInSearchObjects(false)
                 )))
                 //There always needs to be a self link
-                .andExpect(jsonPath("$._links.self", containsString("/api/discover/search/objects")))
+                .andExpect(jsonPath("$._links.self.href", containsString("/api/discover/search/objects")))
         ;
     }
 
@@ -868,7 +873,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                         FacetEntryMatcher.hasContentInOriginalBundleFacetInSearchObjects(false)
                 )))
                 //There always needs to be a self link available
-                .andExpect(jsonPath("$._links.self", containsString("/api/discover/search/objects")))
+                .andExpect(jsonPath("$._links.self.href", containsString("/api/discover/search/objects")))
         ;
 
     }
@@ -951,7 +956,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                         FacetEntryMatcher.hasContentInOriginalBundleFacetInSearchObjects(false)
                 )))
                 //There always needs to be a self link available
-                .andExpect(jsonPath("$._links.self", containsString("/api/discover/search/objects")))
+                .andExpect(jsonPath("$._links.self.href", containsString("/api/discover/search/objects")))
         ;
     }
 
@@ -1024,7 +1029,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                         FacetEntryMatcher.hasContentInOriginalBundleFacetInSearchObjects(false)
                 )))
                 //There always needs to be a self link available
-                .andExpect(jsonPath("$._links.self", containsString("/api/discover/search/objects")))
+                .andExpect(jsonPath("$._links.self.href", containsString("/api/discover/search/objects")))
         ;
     }
 
@@ -1102,7 +1107,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                         FacetEntryMatcher.hasContentInOriginalBundleFacetInSearchObjects(false)
                 )))
                 //There always needs to be a self link available
-                .andExpect(jsonPath("$._links.self", containsString("/api/discover/search/objects")))
+                .andExpect(jsonPath("$._links.self.href", containsString("/api/discover/search/objects")))
         ;
     }
 
@@ -1173,7 +1178,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                         FacetEntryMatcher.hasContentInOriginalBundleFacetInSearchObjects(false)
                 )))
                 //There always needs to be a self link available
-                .andExpect(jsonPath("$._links.self", containsString("/api/discover/search/objects")))
+                .andExpect(jsonPath("$._links.self.href", containsString("/api/discover/search/objects")))
         ;
     }
 
@@ -1256,7 +1261,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                         SortOptionMatcher.sortByAndOrder("dc.title", "ASC")
                 )))
                 //There always needs to be a self link available
-                .andExpect(jsonPath("$._links.self", containsString("/api/discover/search/objects")))
+                .andExpect(jsonPath("$._links.self.href", containsString("/api/discover/search/objects")))
         ;
     }
 
@@ -1430,7 +1435,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                         FacetEntryMatcher.hasContentInOriginalBundleFacetInSearchObjects(false)
                 )))
                 //There always needs to be a self link available
-                .andExpect(jsonPath("$._links.self", containsString("/api/discover/search/objects")))
+                .andExpect(jsonPath("$._links.self.href", containsString("/api/discover/search/objects")))
         ;
 
     }
