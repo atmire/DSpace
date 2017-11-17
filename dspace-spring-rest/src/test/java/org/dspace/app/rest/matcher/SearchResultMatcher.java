@@ -60,15 +60,15 @@ public class SearchResultMatcher {
         );
     }
 
-    public static Matcher<? super Object> matchOnItemNameAndHitHighlight(String type, String typePlural, String itemName, String hitHighlightQuery) {
+    public static Matcher<? super Object> matchOnItemNameAndHitHighlight(String type, String typePlural, String itemName, String hitHighlightQuery, String expectedFieldInHitHighlightning) {
         return allOf(
-//                hasJsonPath("$.type", is("discover")),
+                hasJsonPath("$.type", is("discover")),
                 hasJsonPath("$.hitHighlights", is(
-                        HitHighlightMatcher.entry(hitHighlightQuery)
-//                hasJsonPath("$._links.dspaceObject.href", containsString("/api/core/"+typePlural)),
-//                hasJsonPath("$._embedded", notNullValue()),
-//                hasJsonPath("$._embedded.dspaceObject", is(
-//                        matchEmbeddedObjectOnItemName(type, itemName)
+                        HitHighlightMatcher.entry(hitHighlightQuery, expectedFieldInHitHighlightning))),
+                hasJsonPath("$._links.dspaceObject.href", containsString("/api/core/"+typePlural)),
+                hasJsonPath("$._embedded", notNullValue()),
+                hasJsonPath("$._embedded.dspaceObject", is(
+                        matchEmbeddedObjectOnItemName(type, itemName)
                 ))
         );
     }

@@ -14,9 +14,9 @@ import static org.hamcrest.Matchers.*;
 
 public class HitHighlightMatcher {
 
-    public static Matcher<? super Object> entry(String value) {
+    public static Matcher<? super Object> entry(String value, String expectedField) {
         return allOf(
-                hasJsonPath("$.*", contains(contains(containsString("Public"))))
+                hasJsonPath("$.['"+expectedField+"']", contains(containsString("Public")))
         );
     }
 
