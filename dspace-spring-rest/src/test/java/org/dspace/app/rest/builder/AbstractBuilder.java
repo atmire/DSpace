@@ -51,6 +51,7 @@ public abstract class AbstractBuilder<T extends DSpaceObject> {
     static AuthorizeService authorizeService;
     static ResourcePolicyService resourcePolicyService;
     static IndexingService indexingService;
+    static BitstreamFormatService bitstreamFormatService;
 
     protected Context context;
 
@@ -70,6 +71,7 @@ public abstract class AbstractBuilder<T extends DSpaceObject> {
         authorizeService = AuthorizeServiceFactory.getInstance().getAuthorizeService();
         resourcePolicyService = AuthorizeServiceFactory.getInstance().getResourcePolicyService();
         indexingService = DSpaceServicesFactory.getInstance().getServiceManager().getServiceByName(IndexingService.class.getName(),IndexingService.class);
+        bitstreamFormatService = ContentServiceFactory.getInstance().getBitstreamFormatService();
     }
 
     public static void destroy() {
@@ -85,6 +87,7 @@ public abstract class AbstractBuilder<T extends DSpaceObject> {
         authorizeService = null;
         resourcePolicyService = null;
         indexingService = null;
+        bitstreamFormatService = null;
     }
 
     protected <B> B handleException(final Exception e) {
