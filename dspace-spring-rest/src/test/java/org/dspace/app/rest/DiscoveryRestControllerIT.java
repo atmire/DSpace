@@ -341,7 +341,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 //The hasMore property has to be false because we don't have more than 20 authors that take part in the results
                 .andExpect(jsonPath("$.hasMore", is(Boolean.FALSE)))
                 //The applied filters have to be specified like this, applied filters are the parameters given below starting with f.
-                .andExpect(jsonPath("$.appliedFilters", containsInAnyOrder(
+                .andExpect(jsonPath("$.appliedFilters", contains(
                         AppliedFilterMatcher.appliedFilterEntry("title", "contains", "test", "test")
                 )))
                 //This is how the page object must look like because it's the default
@@ -683,7 +683,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 //The hasMore property needs to be false because all the dates are able to show in two intervals, therefore we don't need more pages
                 .andExpect(jsonPath("$.hasMore", is(Boolean.FALSE)))
                 //There needs to be an appliedFilters section that looks like this because we've specified a query in the parameters
-                .andExpect(jsonPath("$.appliedFilters", containsInAnyOrder(
+                .andExpect(jsonPath("$.appliedFilters", contains(
                         AppliedFilterMatcher.appliedFilterEntry("title", "contains", "test", "test")
                 )))
                 //The page object needs to look like this because we entered a size of 2 and we didn't specify a starting page so it defaults to 0
@@ -1018,7 +1018,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                         SearchResultMatcher.match("item", "items")
                 )))
                 //We need to display the appliedFilters object that contains the query that we've ran
-                .andExpect(jsonPath("$.appliedFilters", containsInAnyOrder(
+                .andExpect(jsonPath("$.appliedFilters", contains(
                         AppliedFilterMatcher.appliedFilterEntry("title", "contains", "test", "test")
                 )))
                 //These facets have to show up in the embedded.facets section as well with the given hasMore property because we don't exceed their default limit for a hasMore true (the default is 10)
@@ -1509,7 +1509,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 .andExpect(jsonPath("$.page", is(
                         PageMatcher.pageEntry(0,20)
                 )))
-                .andExpect(jsonPath("$._embedded.searchResults", Matchers.containsInAnyOrder(
+                .andExpect(jsonPath("$._embedded.searchResults", Matchers.contains(
                         SearchResultMatcher.matchOnItemName("item", "items", "Test")
                 )))
 
@@ -1828,7 +1828,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 .andExpect(jsonPath("$.page", is(
                         PageMatcher.pageEntry(0,20)
                 )))
-                .andExpect(jsonPath("$._embedded.searchResults", Matchers.containsInAnyOrder(
+                .andExpect(jsonPath("$._embedded.searchResults", Matchers.contains(
                         SearchResultMatcher.matchOnItemName("item","items", "Test 2")
 //                        SearchResultMatcher.matchOnItemName("item", "items", "Public item 2")
                 )))
@@ -1905,7 +1905,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 .andExpect(jsonPath("$.page", is(
                         PageMatcher.pageEntry(0,20)
                 )))
-                .andExpect(jsonPath("$._embedded.searchResults", Matchers.containsInAnyOrder(
+                .andExpect(jsonPath("$._embedded.searchResults", Matchers.contains(
                         SearchResultMatcher.matchOnItemNameAndHitHighlight("item", "items", "Public item 2", query)
                 )))
                 //These facets have to show up in the embedded.facets section as well with the given hasMore property because we don't exceed their default limit for a hasMore true (the default is 10)
@@ -1980,7 +1980,7 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 .andExpect(jsonPath("$.page", is(
                         PageMatcher.pageEntry(0,20)
                 )))
-                .andExpect(jsonPath("$._embedded.searchResults", Matchers.not(Matchers.containsInAnyOrder(
+                .andExpect(jsonPath("$._embedded.searchResults", Matchers.not(Matchers.contains(
                         SearchResultMatcher.matchOnItemNameAndHitHighlight("item", "items", "Public item 2", query)
                 ))))
                 //There always needs to be a self link available
