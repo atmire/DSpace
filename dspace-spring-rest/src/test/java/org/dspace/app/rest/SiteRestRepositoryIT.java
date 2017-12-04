@@ -1,3 +1,10 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.app.rest;
 
 import com.jayway.jsonpath.JsonPath;
@@ -24,6 +31,6 @@ public class SiteRestRepositoryIT extends AbstractControllerIntegrationTest {
                 .andExpect(jsonPath("$._embedded.sites[0]", SiteMatcher.matchEntry()))
                 .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/sites")))
                 .andExpect(jsonPath("$.page.size", is(20)));
-        
+
     }
 }
