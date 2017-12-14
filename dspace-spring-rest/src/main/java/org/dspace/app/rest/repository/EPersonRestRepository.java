@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 /**
@@ -51,28 +52,28 @@ public class EPersonRestRepository extends DSpaceRestRepository<EPersonRest, UUI
         return converter.fromModel(eperson);
     }
 
-    @Override
-    public Page<EPersonRest> findAll(Context context, Pageable pageable) {
-        List<EPerson> epersons = null;
-        int total = 0;
-        try {
-            total = es.countTotal(context);
-            epersons = es.findAll(context, EPerson.ID, pageable.getPageSize(), pageable.getOffset());
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-        Page<EPersonRest> page = new PageImpl<EPerson>(epersons, pageable, total).map(converter);
-        return page;
-    }
-
-    @Override
-    public Class<EPersonRest> getDomainClass() {
-        return EPersonRest.class;
-    }
-
-    @Override
-    public EPersonResource wrapResource(EPersonRest eperson, String... rels) {
-        return new EPersonResource(eperson, utils, rels);
-    }
+	@Override
+	@PreAuthorize("hasAuthority('ADMIN')")public Page<EPersonRest> findAll(Context context, Pageable pageable) {
+		List<EPerson> epersons = null;
+		int total = 0;
+		try {
+			total = es.countTotal(context);
+			epersons = es.findAll(context, EPerson.ID, pageable.getPageSize(), pageable.getOffset());
+		} catch (SQLException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		Page<EPersonRest> page = new PageImpl<EPerson>(epersons, pageable, total).map(converter);
+		return page;
+	}
+	
+	@Override
+	public Class<EPersonRest> getDomainClass() {
+		return EPersonRest.class;
+	}
+	
+	@Override
+	public EPersonResource wrapResource(EPersonRest eperson, String... rels) {
+		return new EPersonResource(eperson, utils, rels);
+	}
 
 }
