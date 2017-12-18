@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 /**
@@ -47,22 +48,23 @@ public class BitstreamRestRepository extends DSpaceRestRepository<BitstreamRest,
         System.out.println("Repository initialized by Spring");
     }
 
-    @Override
-    public BitstreamRest findOne(Context context, UUID id) {
-        Bitstream bit = null;
-        try {
-            bit = bs.find(context, id);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-        if (bit == null) {
-            return null;
-        }
-        return converter.fromModel(bit);
-    }
+	@Override
+	@PreAuthorize("hasPermission(#id, 'BITSTREAM', 'READ')")public BitstreamRest findOne( UUID id) {
+		Bitstream bit = null;
+		try {
+			bit = bs.find(obtainContext(), id);
+		} catch (SQLException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		if (bit == null) {
+			return null;
+		}
+		return converter.fromModel(bit);
+	}
 
     @Override
-    public Page<BitstreamRest> findAll(Context context, Pageable pageable) {
+    public Page<BitstreamRest> findAll(Pageable pageable) {
+		Context context = obtainContext();
         List<Bitstream> bit = new ArrayList<Bitstream>();
         Iterator<Bitstream> it = null;
         int total = 0;

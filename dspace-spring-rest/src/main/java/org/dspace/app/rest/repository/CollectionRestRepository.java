@@ -27,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 /**
@@ -52,22 +53,23 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
         System.out.println("Repository initialized by Spring");
     }
 
-    @Override
-    public CollectionRest findOne(Context context, UUID id) {
-        Collection collection = null;
-        try {
-            collection = cs.find(context, id);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-        if (collection == null) {
-            return null;
-        }
-        return converter.fromModel(collection);
-    }
+	@Override
+	@PreAuthorize("hasPermission(#id, 'COLLECTION', 'READ')")public CollectionRest findOne( UUID id) {
+		Collection collection = null;
+		try {
+			collection = cs.find(obtainContext(), id);
+		} catch (SQLException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		if (collection == null) {
+			return null;
+		}
+		return converter.fromModel(collection);
+	}
 
     @Override
-    public Page<CollectionRest> findAll(Context context, Pageable pageable) {
+    public Page<CollectionRest> findAll(Pageable pageable) {
+		Context context = obtainContext();
         List<Collection> it = null;
         List<Collection> collections = new ArrayList<Collection>();
         int total = 0;

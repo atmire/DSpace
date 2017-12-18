@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 /**
@@ -32,27 +33,28 @@ import org.springframework.stereotype.Component;
 
 @Component(GroupRest.CATEGORY + "." + GroupRest.NAME)
 public class GroupRestRepository extends DSpaceRestRepository<GroupRest, UUID> {
-    GroupService gs = EPersonServiceFactory.getInstance().getGroupService();
-
-    @Autowired
-    GroupConverter converter;
+	GroupService gs = EPersonServiceFactory.getInstance().getGroupService();
+	
+	@Autowired
+	GroupConverter converter;
+	
+	@Override
+	@PreAuthorize("hasPermission(#id, 'GROUP', 'READ')")public GroupRest findOne( UUID id) {
+		Group group = null;
+		try {
+			group = gs.find(obtainContext(), id);
+		} catch (SQLException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		if (group == null) {
+			return null;
+		}
+		return converter.fromModel(group);
+	}
 
     @Override
-    public GroupRest findOne(Context context, UUID id) {
-        Group group = null;
-        try {
-            group = gs.find(context, id);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-        if (group == null) {
-            return null;
-        }
-        return converter.fromModel(group);
-    }
-
-    @Override
-    public Page<GroupRest> findAll(Context context, Pageable pageable) {
+    public Page<GroupRest> findAll(Pageable pageable) {
+		Context context = obtainContext();
         List<Group> groups = null;
         int total = 0;
         try {

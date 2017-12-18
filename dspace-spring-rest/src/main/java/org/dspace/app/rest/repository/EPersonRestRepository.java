@@ -33,28 +33,30 @@ import org.springframework.stereotype.Component;
 
 @Component(EPersonRest.CATEGORY + "." + EPersonRest.NAME)
 public class EPersonRestRepository extends DSpaceRestRepository<EPersonRest, UUID> {
-    EPersonService es = EPersonServiceFactory.getInstance().getEPersonService();
-
-    @Autowired
-    EPersonConverter converter;
-
-    @Override
-    public EPersonRest findOne(Context context, UUID id) {
-        EPerson eperson = null;
-        try {
-            eperson = es.find(context, id);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-        if (eperson == null) {
-            return null;
-        }
-        return converter.fromModel(eperson);
-    }
+	EPersonService es = EPersonServiceFactory.getInstance().getEPersonService();
+	
+	@Autowired
+	EPersonConverter converter;
+	
+	@Override
+	@PreAuthorize("hasPermission(#id, 'EPERSON', 'READ')")public EPersonRest findOne( UUID id) {
+		EPerson eperson = null;
+		try {
+			eperson = es.find(obtainContext(), id);
+		} catch (SQLException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		if (eperson == null) {
+			return null;
+		}
+		return converter.fromModel(eperson);
+	}
 
 	@Override
-	@PreAuthorize("hasAuthority('ADMIN')")public Page<EPersonRest> findAll(Context context, Pageable pageable) {
+
+	public Page<EPersonRest> findAll( Pageable pageable) {
 		List<EPerson> epersons = null;
+		Context context = obtainContext();
 		int total = 0;
 		try {
 			total = es.countTotal(context);

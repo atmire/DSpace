@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 /**
@@ -45,22 +46,23 @@ public class ItemRestRepository extends DSpaceRestRepository<ItemRest, UUID> {
         System.out.println("Repository initialized by Spring");
     }
 
-    @Override
-    public ItemRest findOne(Context context, UUID id) {
-        Item item = null;
-        try {
-            item = is.find(context, id);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-        if (item == null) {
-            return null;
-        }
-        return converter.fromModel(item);
-    }
+	@Override
+	@PreAuthorize("hasPermission(#id, 'ITEM', 'READ')")public ItemRest findOne( UUID id) {
+		Item item = null;
+		try {
+			item = is.find(obtainContext(), id);
+		} catch (SQLException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		if (item == null) {
+			return null;
+		}
+		return converter.fromModel(item);
+	}
 
     @Override
-    public Page<ItemRest> findAll(Context context, Pageable pageable) {
+    public Page<ItemRest> findAll(Pageable pageable) {
+		Context context = obtainContext();
         Iterator<Item> it = null;
         List<Item> items = new ArrayList<Item>();
         int total = 0;
