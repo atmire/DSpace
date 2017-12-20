@@ -8,7 +8,6 @@
 package org.dspace.app.rest.model.hateoas;
 
 import org.dspace.app.rest.model.hateoas.annotations.RelNameDSpaceResource;
-import org.dspace.app.rest.doc.DSpaceCurieProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.core.EvoInflectorRelProvider;
 
