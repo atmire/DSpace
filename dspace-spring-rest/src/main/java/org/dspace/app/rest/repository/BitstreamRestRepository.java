@@ -62,8 +62,8 @@ public class BitstreamRestRepository extends DSpaceRestRepository<BitstreamRest,
 		return converter.fromModel(bit);
 	}
 
-    @Override
-    public Page<BitstreamRest> findAll(Pageable pageable) {
+	@Override
+	@PreAuthorize("hasAuthority('ADMIN')")public Page<BitstreamRest> findAll(Pageable pageable) {
 		Context context = obtainContext();
         List<Bitstream> bit = new ArrayList<Bitstream>();
         Iterator<Bitstream> it = null;

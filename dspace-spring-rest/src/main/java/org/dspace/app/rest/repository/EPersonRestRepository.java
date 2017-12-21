@@ -37,7 +37,7 @@ public class EPersonRestRepository extends DSpaceRestRepository<EPersonRest, UUI
 	
 	@Autowired
 	EPersonConverter converter;
-	
+
 	@Override
 	@PreAuthorize("hasPermission(#id, 'EPERSON', 'READ')")public EPersonRest findOne( UUID id) {
 		EPerson eperson = null;
@@ -53,8 +53,7 @@ public class EPersonRestRepository extends DSpaceRestRepository<EPersonRest, UUI
 	}
 
 	@Override
-
-	public Page<EPersonRest> findAll( Pageable pageable) {
+@PreAuthorize("hasAuthority('ADMIN')")	public Page<EPersonRest> findAll(Pageable pageable) {
 		List<EPerson> epersons = null;
 		Context context = obtainContext();
 		int total = 0;

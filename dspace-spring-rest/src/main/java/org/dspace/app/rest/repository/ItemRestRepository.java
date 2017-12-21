@@ -60,8 +60,8 @@ public class ItemRestRepository extends DSpaceRestRepository<ItemRest, UUID> {
 		return converter.fromModel(item);
 	}
 
-    @Override
-    public Page<ItemRest> findAll(Pageable pageable) {
+	@Override
+	@PreAuthorize("hasAuthority('ADMIN')")public Page<ItemRest> findAll(Pageable pageable) {
 		Context context = obtainContext();
         Iterator<Item> it = null;
         List<Item> items = new ArrayList<Item>();
