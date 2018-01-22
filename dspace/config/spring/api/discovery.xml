@@ -408,6 +408,8 @@
                 <value>dc.title</value>
             </list>
         </property>
+        <property name="isOpenByDefault" value="true"/>
+        <property name="pageSize" value="10"/>
     </bean>
 
     <bean id="searchFilterAuthor" class="org.dspace.discovery.configuration.DiscoverySearchFilterFacet">
@@ -434,6 +436,7 @@
         <property name="sortOrderSidebar" value="COUNT"/>
         <property name="sortOrderFilterPage" value="COUNT"/>
         <property name="isOpenByDefault" value="true"/>
+        <property name="pageSize" value="10"/>
         <property name="exposeMinMax" value="true"/>
 
     </bean>
@@ -464,6 +467,7 @@
         <property name="sortOrderSidebar" value="COUNT"/>
         <property name="sortOrderFilterPage" value="COUNT"/>
         <property name="isOpenByDefault" value="false"/>
+        <property name="pageSize" value="10"/>
         <property name="exposeMinMax" value="true"/>
 
     </bean>
@@ -478,6 +482,7 @@
         <property name="sortOrderSidebar" value="COUNT"/>
         <property name="sortOrderFilterPage" value="COUNT"/>
         <property name="isOpenByDefault" value="false"/>
+        <property name="pageSize" value="10"/>
 
     </bean>
 
