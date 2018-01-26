@@ -50,6 +50,30 @@ just adding new jar in the classloader</description>
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <executions>
+                    <execution>
+                        <id>yarn-install</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>prepare-package</phase>
+                        <configuration>
+                            <executable>yarn</executable>
+                            <arguments>
+                                <argument>install</argument>
+                            </arguments>
+                            <workingDirectory>${project.build.directory}/classes/yarn</workingDirectory>
+                            <environmentVariables>
+                                <PATH>${env.PATH}</PATH>
+                            </environmentVariables>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <configuration>
@@ -104,6 +128,34 @@ just adding new jar in the classloader</description>
             <artifactId>dspace-spring-rest</artifactId>
             <type>war</type>
         </dependency>
+        <dependency>
+            <groupId>org.dspace</groupId>
+            <artifactId>dspace-spring-rest</artifactId>
+            <classifier>classes</classifier>
+        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.apache.tomcat</groupId>-->
+            <!--<artifactId>tomcat-catalina</artifactId>-->
+            <!--<version>${tomcat.version}</version>-->
+            <!--<scope>provided</scope>-->
+        <!--</dependency>-->
+
+        <!--<dependency>-->
+            <!--<groupId>org.springframework.boot</groupId>-->
+            <!--<artifactId>spring-boot-starter-web</artifactId>-->
+            <!--<version>1.4.4.RELEASE</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>org.springframework.boot</groupId>-->
+            <!--<artifactId>spring-boot-starter-websocket</artifactId>-->
+            <!--<version>1.4.4.RELEASE</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-messaging</artifactId>-->
+            <!--<version>5.0.0.RELEASE</version>-->
+        <!--</dependency>-->
+
     </dependencies>
 
 </project>
