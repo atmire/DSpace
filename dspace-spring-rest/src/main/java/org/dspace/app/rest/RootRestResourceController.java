@@ -9,6 +9,7 @@ package org.dspace.app.rest;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.log4j.Logger;
 import org.dspace.app.rest.link.HalLinkService;
 import org.dspace.app.rest.model.RootRest;
 import org.dspace.app.rest.model.hateoas.RootResource;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 public class RootRestResourceController {
+	private final Logger log = Logger.getLogger(RootRestResourceController.class);
 
 	@Autowired
 	DiscoverableEndpointsService discoverableEndpointsService;
@@ -42,7 +44,7 @@ public class RootRestResourceController {
 
 	@RequestMapping(method = RequestMethod.GET)
 	public RootResource listDefinedEndpoint(HttpServletRequest request) {
-
+		log.info("This is a test");
 		String restUrl = getRestURL(request);
 
 		RootRest rootRest = rootRestRepository.getRoot(restUrl);
