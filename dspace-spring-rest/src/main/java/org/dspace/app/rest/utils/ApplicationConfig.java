@@ -60,12 +60,11 @@ public class ApplicationConfig {
 	public JmsListenerContainerFactory<?> myFactory(ConnectionFactory connectionFactory,
 													DefaultJmsListenerContainerFactoryConfigurer configurer) {
 		DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
-		factory.setConcurrency("5-10");
+		factory.setConcurrency("1");
 
 		// This provides all boot's default to this factory, including the message converter
 		configurer.configure(factory, connectionFactory);
 		factory.setConnectionFactory(connectionFactory);
-//		factory.setDestinationResolver(new JndiDestinationResolver());
 		factory.setPubSubDomain(true);
 		// You could still override some of Boot's default if necessary.
 		return factory;
