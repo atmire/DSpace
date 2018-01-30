@@ -10,6 +10,7 @@ package org.dspace.app.rest;
 import java.io.File;
 import java.util.List;
 
+import javax.jms.ConnectionFactory;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.servlet.Filter;
@@ -29,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jms.DefaultJmsListenerContainerFactoryConfigurer;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
@@ -40,6 +42,8 @@ import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.core.annotation.Order;
 import org.springframework.hateoas.RelProvider;
 import org.springframework.jms.annotation.EnableJms;
+import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
+import org.springframework.jms.config.JmsListenerContainerFactory;
 import org.springframework.web.context.request.RequestContextListener;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -244,5 +248,19 @@ public class Application extends SpringBootServletInitializer {
             }
             return providedHome;
         }
+    }
+
+    @Bean
+    public JmsListenerContainerFactory<?> myFactory(ConnectionFactory connectionFactory,
+                                                    DefaultJmsListenerContainerFactoryConfigurer configurer) {
+        DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
+        factory.setConcurrency("1");
+
+        // This provides all boot's default to this factory, including the message converter
+        configurer.configure(factory, connectionFactory);
+        factory.setConnectionFactory(connectionFactory);
+        factory.setPubSubDomain(true);
+        // You could still override some of Boot's default if necessary.
+        return factory;
     }
 }

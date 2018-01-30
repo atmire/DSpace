@@ -32,10 +32,8 @@ import javax.jms.JMSException;
  * @author Andrea Bollini (andrea.bollini at 4science.it)
  *
  */
-@EnableJms
 @Configuration
 @EnableSpringDataWebSupport
-@SpringBootApplication
 @ComponentScan({ "org.dspace.app.rest.converter", "org.dspace.app.rest.repository", "org.dspace.app.rest.utils", "org.dspace.log.appender" })
 public class ApplicationConfig {
 
@@ -54,19 +52,5 @@ public class ApplicationConfig {
 		if (corsAllowedOrigins != null)
 			return corsAllowedOrigins.split("\\s*,\\s*");
 		return null;
-	}
-
-	@Bean
-	public JmsListenerContainerFactory<?> myFactory(ConnectionFactory connectionFactory,
-													DefaultJmsListenerContainerFactoryConfigurer configurer) {
-		DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
-		factory.setConcurrency("1");
-
-		// This provides all boot's default to this factory, including the message converter
-		configurer.configure(factory, connectionFactory);
-		factory.setConnectionFactory(connectionFactory);
-		factory.setPubSubDomain(true);
-		// You could still override some of Boot's default if necessary.
-		return factory;
 	}
 }
