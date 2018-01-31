@@ -1,3 +1,10 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.log.appender;
 
 import org.apache.activemq.command.ActiveMQObjectMessage;
@@ -20,7 +27,7 @@ public class JMSListener{
 
     private final Logger log = Logger.getLogger(JMSListener.class);
 
-    @JmsListener(destination = "newTest", containerFactory = "myFactory")
+    @JmsListener(destination = "logTopic", containerFactory = "myFactory")
     public void processMessage(Object content) {
         ActiveMQObjectMessage msg = (ActiveMQObjectMessage) content;
         try {
