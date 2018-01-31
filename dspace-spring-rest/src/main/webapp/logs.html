@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Realtime Logs</title>
+</head>
+<body>
+<div>
+    <h3>Logs:</h3>
+    <ol id="logs"></ol>
+</div>
+<script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+<script type="text/javascript" src="js/sockjs-0.3.4.js"></script>
+<script type="text/javascript" src="js/stomp.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        var logList = $("#logs");
+        var getMessageString = function(log) {
+            var date = new Date(log.date);
+            var level = log.level;
+            return "<li><p>Received: " + date + ", with Log Level: " + level + "</p><div>" + log.content + "</li>";
+        };
+        var socket = new SockJS('/dspace7-rest/guestbook/');
+        var stompClient = Stomp.over(socket);
+        stompClient.connect({ }, function(frame) {
+            // subscribe to the /topic/entries endpoint which feeds newly added logs
+            stompClient.subscribe('/topic/entries', function(data) {
+                // when a log is received add it to the end of the list
+                var body = data.body;
+                var log = JSON.parse(body);
+                logList.append(getMessageString(log));
+            });
+        });
+    });
+</script>
+</body>
+</html>
