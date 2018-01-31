@@ -12,14 +12,11 @@ public class WebSocketConfig extends AbstractWebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        // use the /topic prefix for outgoing WebSocket communication
-        config.enableSimpleBroker("/topic");
-        // use the /app prefix for others
-        config.setApplicationDestinationPrefixes("/app");
+        // use the /api/topics prefix for outgoing WebSocket communication
+        config.enableSimpleBroker("/api/topics");
     }
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // use the /guestbook endpoint (prefixed with /app as configured above) for incoming requests
-        registry.addEndpoint("/guestbook").withSockJS();
+        registry.addEndpoint("/logs").withSockJS();
     }
 }

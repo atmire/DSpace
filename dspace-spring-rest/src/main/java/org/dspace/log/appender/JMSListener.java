@@ -28,7 +28,7 @@ public class JMSListener{
             String logContent = loggingEvent.getMessage().toString();
             Level level = loggingEvent.getLevel();
             log.info(logContent);
-            webSocket.convertAndSend("/topic/entries", new LogWebSocketController.LogDTO(logContent, level));
+            webSocket.convertAndSend("/api/topics/logs", new LogWebSocketController.LogDTO(logContent, level));
         } catch (JMSException e) {
             e.printStackTrace();
         }
