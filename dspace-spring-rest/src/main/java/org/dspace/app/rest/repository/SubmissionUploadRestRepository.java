@@ -37,105 +37,106 @@ import org.springframework.stereotype.Component;
  * during the submission
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
+ *
  */
 @Component(SubmissionUploadRest.CATEGORY + "." + SubmissionUploadRest.NAME)
 public class SubmissionUploadRestRepository extends DSpaceRestRepository<SubmissionUploadRest, String>
-    implements LinkRestRepository<SubmissionUploadRest> {
+		implements LinkRestRepository<SubmissionUploadRest> {
 
-    private static final Logger log = Logger.getLogger(SubmissionUploadRestRepository.class);
+	private static final Logger log = Logger.getLogger(SubmissionUploadRestRepository.class);
 
-    private SubmissionConfigReader submissionConfigReader;
+	private SubmissionConfigReader submissionConfigReader;
 
-    @Autowired
-    private SubmissionFormRestRepository submissionFormRestRepository;
+	@Autowired
+	private SubmissionFormRestRepository submissionFormRestRepository;
 
-    @Autowired
-    private UploadConfigurationService uploadConfigurationService;
+	@Autowired
+	private UploadConfigurationService uploadConfigurationService;
 
-    @Autowired
-    GroupService groupService;
+	@Autowired
+	GroupService groupService;
 
-    DateMathParser dateMathParser = new DateMathParser();
+	DateMathParser dateMathParser = new DateMathParser();
 
-    public SubmissionUploadRestRepository() throws SubmissionConfigReaderException {
-        submissionConfigReader = new SubmissionConfigReader();
-    }
+	public SubmissionUploadRestRepository() throws SubmissionConfigReaderException {
+		submissionConfigReader = new SubmissionConfigReader();
+	}
 
-    @Override
-    public SubmissionUploadRest findOne(Context context, String submitName) {
-        UploadConfiguration config = uploadConfigurationService.getMap().get(submitName);
-        try {
-            return convert(context, config);
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-        }
-        return null;
-    }
+	@Override
+	public SubmissionUploadRest findOne(String submitName) {
+		UploadConfiguration config = uploadConfigurationService.getMap().get(submitName);
+		try {
+			return convert(obtainContext(), config);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
+	}
 
-    @Override
-    public Page<SubmissionUploadRest> findAll(Context context, Pageable pageable) {
-        List<SubmissionConfig> subConfs = new ArrayList<SubmissionConfig>();
-        subConfs = submissionConfigReader.getAllSubmissionConfigs(pageable.getPageSize(), pageable.getOffset());
-        List<SubmissionUploadRest> results = new ArrayList<>();
-        for (SubmissionConfig config : subConfs) {
-            for (int i = 0; i < config.getNumberOfSteps(); i++) {
-                SubmissionStepConfig step = config.getStep(i);
-                if (SubmissionStepConfig.UPLOAD_STEP_NAME.equals(step.getType())) {
-                    UploadConfiguration uploadConfig = uploadConfigurationService.getMap().get(step.getId());
-                    if (uploadConfig != null) {
-                        try {
-                            results.add(convert(context, uploadConfig));
-                        } catch (Exception e) {
-                            log.error(e.getMessage(), e);
-                        }
-                    }
-                }
-            }
-        }
-        return new PageImpl<SubmissionUploadRest>(results, pageable, results.size());
-    }
+	@Override
+	public Page<SubmissionUploadRest> findAll(Pageable pageable) {
+		List<SubmissionConfig> subConfs = new ArrayList<SubmissionConfig>();
+		subConfs = submissionConfigReader.getAllSubmissionConfigs(pageable.getPageSize(), pageable.getOffset());
+		List<SubmissionUploadRest> results = new ArrayList<>();
+		for (SubmissionConfig config : subConfs) {
+			for (int i = 0; i < config.getNumberOfSteps(); i++) {
+				SubmissionStepConfig step = config.getStep(i);
+				if (SubmissionStepConfig.UPLOAD_STEP_NAME.equals(step.getType())) {
+					UploadConfiguration uploadConfig = uploadConfigurationService.getMap().get(step.getId());
+					if (uploadConfig != null) {
+						try {
+							results.add(convert(obtainContext(), uploadConfig));
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						}
+					}
+				}
+			}
+		}
+		return new PageImpl<SubmissionUploadRest>(results, pageable, results.size());
+	}
 
-    @Override
-    public Class<SubmissionUploadRest> getDomainClass() {
-        return SubmissionUploadRest.class;
-    }
+	@Override
+	public Class<SubmissionUploadRest> getDomainClass() {
+		return SubmissionUploadRest.class;
+	}
 
-    @Override
-    public SubmissionUploadResource wrapResource(SubmissionUploadRest sd, String... rels) {
-        return new SubmissionUploadResource(sd, utils, rels);
-    }
+	@Override
+	public SubmissionUploadResource wrapResource(SubmissionUploadRest sd, String... rels) {
+		return new SubmissionUploadResource(sd, utils, rels);
+	}
 
-    private SubmissionUploadRest convert(Context context, UploadConfiguration config) throws Exception {
-        SubmissionUploadRest result = new SubmissionUploadRest();
-        for (AccessConditionOption option : config.getOptions()) {
-            AccessConditionOptionRest optionRest = new AccessConditionOptionRest();
-            if (option.getGroupName() != null) {
-                Group group = groupService.findByName(context, option.getGroupName());
-                if (group != null) {
-                    optionRest.setGroupUUID(group.getID());
-                }
-            }
-            if (option.getSelectGroupName() != null) {
-                Group group = groupService.findByName(context, option.getSelectGroupName());
-                if (group != null) {
-                    optionRest.setSelectGroupUUID(group.getID());
-                }
-            }
-            optionRest.setHasStartDate(option.getHasStartDate());
-            optionRest.setHasEndDate(option.getHasEndDate());
-            if (StringUtils.isNotBlank(option.getStartDateLimit())) {
-                optionRest.setMaxStartDate(dateMathParser.parseMath(option.getStartDateLimit()));
-            }
-            if (StringUtils.isNotBlank(option.getEndDateLimit())) {
-                optionRest.setMaxEndDate(dateMathParser.parseMath(option.getEndDateLimit()));
-            }
-            optionRest.setName(option.getName());
-            result.getAccessConditionOptions().add(optionRest);
-        }
-        result.setMetadata(submissionFormRestRepository.findOne(config.getMetadata()));
-        result.setMaxSize(config.getMaxSize());
-        result.setRequired(config.isRequired());
-        result.setName(config.getName());
-        return result;
-    }
+	private SubmissionUploadRest convert(Context context, UploadConfiguration config) throws Exception {
+		SubmissionUploadRest result = new SubmissionUploadRest();
+		for (AccessConditionOption option : config.getOptions()) {
+			AccessConditionOptionRest optionRest = new AccessConditionOptionRest();
+			if (option.getGroupName() != null) {
+				Group group = groupService.findByName(context, option.getGroupName());
+				if (group != null) {
+					optionRest.setGroupUUID(group.getID());
+				}
+			}
+			if (option.getSelectGroupName() != null) {
+				Group group = groupService.findByName(context, option.getSelectGroupName());
+				if (group != null) {
+					optionRest.setSelectGroupUUID(group.getID());
+				}
+			}
+			optionRest.setHasStartDate(option.getHasStartDate());
+			optionRest.setHasEndDate(option.getHasEndDate());
+			if(StringUtils.isNotBlank(option.getStartDateLimit())) {
+				optionRest.setMaxStartDate(dateMathParser.parseMath(option.getStartDateLimit()));
+			}
+			if(StringUtils.isNotBlank(option.getEndDateLimit())) {
+				optionRest.setMaxEndDate(dateMathParser.parseMath(option.getEndDateLimit()));
+			}
+			optionRest.setName(option.getName());
+			result.getAccessConditionOptions().add(optionRest);
+		}
+		result.setMetadata(submissionFormRestRepository.findOne(config.getMetadata()));
+		result.setMaxSize(config.getMaxSize());
+		result.setRequired(config.isRequired());
+		result.setName(config.getName());
+		return result;
+	}
 }
