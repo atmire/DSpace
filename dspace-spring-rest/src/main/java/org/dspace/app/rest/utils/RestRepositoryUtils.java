@@ -19,6 +19,7 @@ import org.dspace.app.rest.repository.LinkRestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
@@ -85,29 +86,30 @@ public class RestRepositoryUtils {
         return searchMethods;
     }
 
-    /**
-     * @param searchMethodName
-     * @param repository
-     * @return the search method in the repository with the specified name or
-     * null if it is not found
-     */
-    public Method getSearchMethod(String searchMethodName, DSpaceRestRepository repository) {
-        Method searchMethod = null;
-        for (Method method : repository.getClass().getMethods()) {
-            SearchRestMethod ann = method.getAnnotation(SearchRestMethod.class);
-            if (ann != null) {
-                String name = ann.name();
-                if (name.isEmpty()) {
-                    name = method.getName();
-                }
-                if (StringUtils.equals(name, searchMethodName)) {
-                    searchMethod = method;
-                    break;
-                }
-            }
-        }
-        return searchMethod;
-    }
+	/**
+
+	 * @param searchMethodName
+	 * @param repository
+	 * @return the search method in the repository with the specified name or
+	 *         null if it is not found
+	 */
+	public Method getSearchMethod(String searchMethodName, DSpaceRestRepository repository) {
+		Method searchMethod = null;
+		Method [] methods = org.springframework.util.ClassUtils.getUserClass( repository.getClass()).getMethods();
+			for (Method method : methods) {SearchRestMethod ann = AnnotationUtils.findAnnotation(method,SearchRestMethod.class);
+			if (ann != null) {
+				String name = ann.name();
+				if (name.isEmpty()) {
+					name = method.getName();
+				}
+				if (StringUtils.equals(name, searchMethodName)) {
+					searchMethod = method;
+					break;
+				}
+			}
+		}
+		return searchMethod;
+	}
 
     /*
      * Adapted from
