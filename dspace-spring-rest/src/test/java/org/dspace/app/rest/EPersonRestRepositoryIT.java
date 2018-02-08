@@ -169,6 +169,22 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
                 )))
                 .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/eperson/epersons/" + ePerson2.getID())));
 
+
+        //EPerson can only access himself
+        String epersonToken = getAuthToken(eperson.getEmail(), password);
+
+        getClient(epersonToken).perform(get("/api/eperson/epersons/" + eperson.getID()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(contentType))
+                .andExpect(jsonPath("$", is(
+                        EPersonMatcher.matchEPersonEntry(ePerson2)
+                )))
+                .andExpect(jsonPath("$", Matchers.not(
+                        is(
+                                EPersonMatcher.matchEPersonEntry(eperson)
+                        )
+                )))
+                .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/eperson/epersons/" + ePerson2.getID())));
     }
 
 
