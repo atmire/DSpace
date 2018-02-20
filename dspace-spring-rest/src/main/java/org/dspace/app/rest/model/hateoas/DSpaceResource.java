@@ -70,7 +70,8 @@ public abstract class DSpaceResource<T extends RestAddressableModel> extends HAL
                                     // TODO add support for single linked object other than for collections
                                     Page<? extends Serializable> pageResult = (Page<? extends RestAddressableModel>) m
                                         .invoke(linkRepository, null, ((BaseObjectRest) data).getId(), null, null);
-                                    EmbeddedPage ep = new EmbeddedPage(linkToSubResource.getHref(), pageResult, null);
+                                    EmbeddedPage ep = new EmbeddedPage(linkToSubResource.getHref(), pageResult,
+                                                                       null, name);
                                     embedded.put(name, ep);
                                     found = true;
                                 }
@@ -128,7 +129,7 @@ public abstract class DSpaceResource<T extends RestAddressableModel> extends HAL
 //                                            PageImpl<RestAddressableModel> page = new PageImpl(linkedRMList);
                                             wrapObject = new EmbeddedPage(linkToSubResource.getHref(),
                                                                           page.map(resourceRepository::wrapResource),
-                                                                          linkedRMList);
+                                                                          linkedRMList, name);
                                         } else {
                                             wrapObject = null;
                                         }
@@ -153,7 +154,7 @@ public abstract class DSpaceResource<T extends RestAddressableModel> extends HAL
                                                     .invoke(linkRepository, null, ((BaseObjectRest) data).getId(), null,
                                                             null);
                                                 EmbeddedPage ep = new EmbeddedPage(linkToSubResource.getHref(),
-                                                                                   pageResult, null);
+                                                                                   pageResult, null, name);
                                                 embedded.put(name, ep);
                                             } else {
                                                 RestAddressableModel object = (RestAddressableModel) m
