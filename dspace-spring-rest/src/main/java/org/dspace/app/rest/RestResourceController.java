@@ -36,6 +36,9 @@ import org.dspace.app.rest.repository.DSpaceRestRepository;
 import org.dspace.app.rest.repository.LinkRestRepository;
 import org.dspace.app.rest.utils.RestRepositoryUtils;
 import org.dspace.app.rest.utils.Utils;
+import org.dspace.usage.UsageEvent;
+import org.dspace.websocket.stats.StatsEventWrapper;
+import org.dspace.websocket.stats.StatsWebSocketClient;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -97,31 +100,33 @@ public class RestResourceController implements InitializingBean {
 
 	@RequestMapping(method = RequestMethod.GET, value = "/{id:\\d+}")
 	@SuppressWarnings("unchecked")
-	public DSpaceResource<RestModel> findOne(@PathVariable String apiCategory, @PathVariable String model,
+	public DSpaceResource<RestModel> findOne(HttpServletRequest request, @PathVariable String apiCategory, @PathVariable String model,
 			@PathVariable Integer id, @RequestParam(required = false) String projection) {
-		return findOneInternal(apiCategory, model, id, projection);
+		return findOneInternal(apiCategory, model, id, projection,request);
 	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/{id:[A-z0-9]+}")
 	@SuppressWarnings("unchecked")
-	public DSpaceResource<RestModel> findOne(@PathVariable String apiCategory, @PathVariable String model,
+	public DSpaceResource<RestModel> findOne(HttpServletRequest request, @PathVariable String apiCategory, @PathVariable String model,
 			@PathVariable String id, @RequestParam(required = false) String projection) {
-		return findOneInternal(apiCategory, model, id, projection);
+		return findOneInternal(apiCategory, model, id, projection,request);
 	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}")
 	@SuppressWarnings("unchecked")
-	public DSpaceResource<RestModel> findOne(@PathVariable String apiCategory, @PathVariable String model,
+	public DSpaceResource<RestModel> findOne(HttpServletRequest request, @PathVariable String apiCategory, @PathVariable String model,
 			@PathVariable UUID uuid, @RequestParam(required = false) String projection) {
-		return findOneInternal(apiCategory, model, uuid, projection);
+		return findOneInternal(apiCategory, model, uuid, projection,request);
 	}
 
 	private <ID extends Serializable> DSpaceResource<RestModel> findOneInternal(String apiCategory, String model, ID id,
-			String projection) {
+			String projection,HttpServletRequest request) {
 		checkModelPluralForm(apiCategory, model);
 		DSpaceRestRepository<RestModel, ID> repository = utils.getResourceRepository(apiCategory, model);
 		RestModel modelObject = null;
 		try {
+			StatsWebSocketClient statsWebSocketClient = new StatsWebSocketClient();
+			statsWebSocketClient.sendMessage(new StatsEventWrapper(UsageEvent.Action.VIEW, request, id.toString()));
 			modelObject = repository.findOne(id);
 		} catch (ClassCastException e) {
 		}
@@ -220,6 +225,9 @@ public class RestResourceController implements InitializingBean {
 				}
 			}
 		}
+
+
+
 
 		RestModel modelObject = repository.findOne(uuid);
 		DSpaceResource resource = repository.wrapResource(modelObject, rel);

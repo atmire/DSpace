@@ -44,7 +44,6 @@ public class RootRestResourceController {
 
 	@RequestMapping(method = RequestMethod.GET)
 	public RootResource listDefinedEndpoint(HttpServletRequest request) {
-		log.info("This is a test");
 		String restUrl = getRestURL(request);
 
 		RootRest rootRest = rootRestRepository.getRoot(restUrl);

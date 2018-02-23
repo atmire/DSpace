@@ -16,13 +16,17 @@ import java.util.UUID;
 import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.model.ItemRest;
 import org.dspace.app.rest.model.hateoas.ItemResource;
+import org.dspace.app.rest.websocket.LogWebSocketController;
 import org.dspace.content.Item;
+import org.dspace.content.service.DSpaceObjectService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
+import org.dspace.websocket.stats.StatsWebSocketClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 /**
@@ -40,7 +44,9 @@ public class ItemRestRepository extends DSpaceRestRepository<ItemRest, UUID> {
 
 	@Autowired
 	ItemConverter converter;
-	
+
+	@Autowired
+	private SimpMessagingTemplate webSocket;
 	
 	public ItemRestRepository() {
 		System.out.println("Repository initialized by Spring");
