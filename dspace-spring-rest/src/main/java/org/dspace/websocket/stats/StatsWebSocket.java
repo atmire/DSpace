@@ -1,9 +1,15 @@
 package org.dspace.websocket.stats;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.log4j.Logger;
 import org.dspace.app.rest.websocket.LogWebSocketController;
 import org.dspace.log.appender.JMSListener;
 
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MessageProducer;
+import javax.jms.ObjectMessage;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
@@ -16,31 +22,46 @@ import java.io.IOException;
 public class StatsWebSocket {
 
     private final Logger log = Logger.getLogger(StatsWebSocket.class);
+    javax.jms.Session jmsSession;
+    MessageProducer messageProducer;
 
+    public StatsWebSocket(){
+        Connection connection = null;
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        try {
+            connection = cf.createConnection();
+            jmsSession = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+            Destination destination = jmsSession.createTopic("eventTopic");
+            messageProducer = jmsSession.createProducer(destination);
+        } catch (JMSException e) {
+            log.error(e.getMessage());
+        }
+    }
     @OnOpen
     public void onOpen(Session session) throws IOException {
-        // Get session and WebSocket connection
-        log.info("It opened");
+        log.debug("Stats WebSocket Opened");
     }
 
     @OnMessage
     public void onMessage(Session session, StatsEventWrapper message) throws IOException {
-        // Handle new messages
-        //TODO Send to JMS topic
-        log.info("on message");
-        log.info(message);
+        log.debug("Stats WebSocket OnMessage");
+        try {
+            ObjectMessage jmsMessage = jmsSession.createObjectMessage();
+            jmsMessage.setObject(message);
+            messageProducer.send(jmsMessage);
+        } catch (JMSException e){
+            log.error(e.getMessage());
+        }
     }
 
     @OnClose
     public void onClose(Session session) throws IOException {
-        // WebSocket connection closes
-        log.info(" on close ");
+        log.debug("Stats WebSocket OnClose");
     }
 
     @OnError
     public void onError(Session session, Throwable throwable) {
-        // Do error handling here
-        log.info("on error");
+        log.debug("Stats WebSocket OnError");
 
     }
 }

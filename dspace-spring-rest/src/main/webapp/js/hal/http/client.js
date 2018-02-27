@@ -30,6 +30,17 @@ HAL.Http.Client.prototype.get = function(url) {
                 jqxhr: jqXHR,
                 headers: jqXHR.getAllResponseHeaders()
             });
+            //add call to websocket
+            var websocket = new WebSocket("ws://127.0.0.1:8080/dspace7-rest/stats")
+            websocket.onopen = () =>
+            {
+                websocket.send(JSON.stringify({
+                    uuid: resource.uuid,
+                    action: "view",
+                    type: resource.type
+                }));
+            }
+
         }
     }).error(function() {
         self.vent.trigger('fail-response', { jqxhr: jqxhr });

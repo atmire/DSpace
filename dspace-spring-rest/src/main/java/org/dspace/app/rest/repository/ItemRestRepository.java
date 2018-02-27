@@ -45,9 +45,6 @@ public class ItemRestRepository extends DSpaceRestRepository<ItemRest, UUID> {
 	@Autowired
 	ItemConverter converter;
 
-	@Autowired
-	private SimpMessagingTemplate webSocket;
-	
 	public ItemRestRepository() {
 		System.out.println("Repository initialized by Spring");
 	}

@@ -5,40 +5,26 @@ import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.DSpaceObjectService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
+import org.dspace.eperson.EPerson;
 import org.dspace.usage.UsageEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.UUID;
 
-public class StatsEventWrapper {
+public class StatsEventWrapper implements Serializable {
 
-    private transient HttpServletRequest request;
-    private transient final Logger log = Logger.getLogger(StatsEventWrapper.class);
-    private transient UsageEvent event;
-
+    private String xForwardedFor;
+    private String userAgent;
     private String uuid;
+    private String action;
+    private String ipAdress;
+    private String type;
+    private EPerson currentUser;
 
-    public StatsEventWrapper(UsageEvent.Action action, HttpServletRequest request, String uuid){
-        Context ctx = new Context();
-        try {
-            //TODO Generalize which service to use
-            UsageEvent usageEvent = new UsageEvent(action, request, ctx, ContentServiceFactory.getInstance().getItemService().find(ctx, UUID.fromString(uuid)));
-            this.event = usageEvent;
-        } catch (SQLException e) {
-            log.error(e.getMessage());
-        }
-        this.request = request;
-        this.uuid = uuid;
-    }
-
-    public HttpServletRequest getRequest() {
-        return request;
-    }
-
-    public void setRequest(HttpServletRequest request) {
-        this.request = request;
+    public StatsEventWrapper(){
     }
 
     public String getUuid() {
@@ -49,11 +35,51 @@ public class StatsEventWrapper {
         this.uuid = uuid;
     }
 
-    public UsageEvent getEvent() {
-        return event;
+    public String getAction() {
+        return action;
     }
 
-    public void setEvent(UsageEvent event) {
-        this.event = event;
+    public void setAction(String action) {
+        this.action = action;
+    }
+
+    public String getIpAdress() {
+        return ipAdress;
+    }
+
+    public void setIpAdress(String ipAdress) {
+        this.ipAdress = ipAdress;
+    }
+
+    public String getxForwardedFor() {
+        return xForwardedFor;
+    }
+
+    public void setxForwardedFor(String xForwardedFor) {
+        this.xForwardedFor = xForwardedFor;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
+    }
+
+    public EPerson getCurrentUser() {
+        return currentUser;
+    }
+
+    public void setCurrentUser(EPerson currentUser) {
+        this.currentUser = currentUser;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

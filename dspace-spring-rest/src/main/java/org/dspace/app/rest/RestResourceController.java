@@ -36,9 +36,6 @@ import org.dspace.app.rest.repository.DSpaceRestRepository;
 import org.dspace.app.rest.repository.LinkRestRepository;
 import org.dspace.app.rest.utils.RestRepositoryUtils;
 import org.dspace.app.rest.utils.Utils;
-import org.dspace.usage.UsageEvent;
-import org.dspace.websocket.stats.StatsEventWrapper;
-import org.dspace.websocket.stats.StatsWebSocketClient;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -70,6 +67,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/{apiCategory}/{model}")
 @SuppressWarnings("rawtypes")
 public class RestResourceController implements InitializingBean {
+
 	@Autowired
 	DiscoverableEndpointsService discoverableEndpointsService;
 
@@ -125,8 +123,6 @@ public class RestResourceController implements InitializingBean {
 		DSpaceRestRepository<RestModel, ID> repository = utils.getResourceRepository(apiCategory, model);
 		RestModel modelObject = null;
 		try {
-			StatsWebSocketClient statsWebSocketClient = new StatsWebSocketClient();
-			statsWebSocketClient.sendMessage(new StatsEventWrapper(UsageEvent.Action.VIEW, request, id.toString()));
 			modelObject = repository.findOne(id);
 		} catch (ClassCastException e) {
 		}
