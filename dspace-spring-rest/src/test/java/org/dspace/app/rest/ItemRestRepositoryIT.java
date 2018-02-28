@@ -32,7 +32,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
-
+    
     @Test
     public void findAllTest() throws Exception {
         context.turnOffAuthorisationSystem();
@@ -356,7 +356,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    public void privateAnonymousAccessTest() throws Exception{
+    public void undiscoverableAnonymousAccessTest() throws Exception{
         context.turnOffAuthorisationSystem();
 
         //** GIVEN **
@@ -370,12 +370,12 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
         //2. Three public items that are readable by Anonymous with different subjects
-        Item privateItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("private item 1")
+        Item unDiscoverableYetAccessibleItem1 = ItemBuilder.createItem(context, col1)
+                .withTitle("Undiscoverable item 1")
                 .withIssueDate("2017-10-17")
                 .withAuthor("Smith, Donald").withAuthor("Doe, John")
                 .withSubject("ExtraEntry")
-                .makePrivate()
+                .makeUnDiscoverable()
                 .build();
 
 
@@ -383,9 +383,12 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.restoreAuthSystemState();
 
 
-        getClient().perform(get("/api/core/items/" + privateItem1.getID()))
-                .andExpect(status().isUnauthorized());
-
+        getClient().perform(get("/api/core/items/" + unDiscoverableYetAccessibleItem1.getID()))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$", Matchers.is(
+                           ItemMatcher.matchItemWithTitleAndDateIssued(unDiscoverableYetAccessibleItem1,
+                                               "Undiscoverable item 1", "2017-10-17")
+                   )));
     }
 
     @Test
@@ -477,7 +480,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                 .withIssueDate("2017-10-17")
                 .withAuthor("Smith, Donald").withAuthor("Doe, John")
                 .withSubject("ExtraEntry")
-                .makePrivate()
+                .makeUnDiscoverable()
                 .build();
 
 

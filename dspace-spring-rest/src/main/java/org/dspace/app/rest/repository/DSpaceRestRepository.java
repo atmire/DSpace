@@ -40,10 +40,12 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
     extends AbstractDSpaceRestRepository
     implements PagingAndSortingRepository<T, ID> {
 
-	private static final Logger log = Logger.getLogger(DSpaceRestRepository.class);@Override
-	public <S extends T> S save(S entity) {
-		Context context = obtainContext();
-		return save(context, entity);
+    private static final Logger log = Logger.getLogger(DSpaceRestRepository.class);
+
+    @Override
+    public <S extends T> S save(S entity) {
+        Context context = obtainContext();
+        return save(context, entity);
     }
 
     protected <S extends T> S save(Context context, S entity) {
@@ -54,27 +56,25 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
             throw new RuntimeException(e.getMessage());
         }
         return entity;
-	}
+    }
 
-	@Override
-	public <S extends T> Iterable<S> save(Iterable<S> entities) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	@Override
-	public boolean exists(ID id) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public <S extends T> Iterable<S> save(Iterable<S> entities) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 
+    @Override
+    public boolean exists(ID id) {
+        // TODO Auto-generated method stub
+        return false;
+    }
 
-	@Override
-	public Iterable<T> findAll() {
-		throw new RuntimeException("findAll MUST be paginated");
-	}
+    @Override
+    public Iterable<T> findAll() {
+        throw new RuntimeException("findAll MUST be paginated");
+    }
 
     @Override
     public Iterable<T> findAll(Iterable<ID> ids) {
@@ -87,9 +87,9 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
         return 0;
     }
 
-	@Override
-	public void delete(ID id) {
-		Context context = obtainContext();
+    @Override
+    public void delete(ID id) {
+        Context context = obtainContext();
         try {
             delete(context, id);
             context.commit();
@@ -98,18 +98,18 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
         }
     }
 
-	protected void delete(Context context, ID id) throws RepositoryMethodNotImplementedException {
-        throw new RepositoryMethodNotImplementedException("No implementation found; Method not allowed!", "");}
+    protected void delete(Context context, ID id) throws RepositoryMethodNotImplementedException {
+        throw new RepositoryMethodNotImplementedException("No implementation found; Method not allowed!", "");
+    }
 
-	@Override
-	public void delete(T entity) {
-		// TODO Auto-generated method stub
+    @Override
+    public void delete(T entity) {
+        // TODO Auto-generated method stub
+    }
 
-	}
-
-	@Override
-	public void delete(Iterable<? extends T> entities) {
-		// TODO Auto-generated method stub
+    @Override
+    public void delete(Iterable<? extends T> entities) {
+        // TODO Auto-generated method stub
 
     }
 
@@ -119,16 +119,20 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
 
     }
 
-	public abstract T findOne(ID id);
+    public abstract T findOne(ID id);
 
-	public abstract Page<T> findAll(Pageable pageable);@Override
-	public Iterable<T> findAll(Sort sort) {
-		throw new RuntimeException("findAll MUST be paginated");
-	}
+    public abstract Page<T> findAll(Pageable pageable);
 
-	public abstract Class<T> getDomainClass();
+    @Override
+    public Iterable<T> findAll(Sort sort) {
+        throw new RuntimeException("findAll MUST be paginated");
+    }
 
-	public abstract DSpaceResource<T> wrapResource(T model, String... rels);public T createAndReturn() {
+    public abstract Class<T> getDomainClass();
+
+    public abstract DSpaceResource<T> wrapResource(T model, String... rels);
+
+    public T createAndReturn() {
         Context context = obtainContext();
         T entity = createAndReturn(context);
         try {
@@ -166,4 +170,5 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
         throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException, DCInputsReaderException {
         throw new RepositoryMethodNotImplementedException(apiCategory, model);
     }
+
 }

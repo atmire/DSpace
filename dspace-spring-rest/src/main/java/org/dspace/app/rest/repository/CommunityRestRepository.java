@@ -47,23 +47,24 @@ public class CommunityRestRepository extends DSpaceRestRepository<CommunityRest,
         System.out.println("Repository initialized by Spring");
     }
 
-	@Override
-	@PreAuthorize("hasPermission(#id, 'COMMUNITY', 'READ')")public CommunityRest findOne( UUID id) {
-		Community community = null;
-		try {
-			community = cs.find(obtainContext(), id);
-		} catch (SQLException e) {
-			throw new RuntimeException(e.getMessage(), e);
-		}
-		if (community == null) {
-			throw new ResourceNotFoundException();
-		}
-		return converter.fromModel(community);
-	}
+    @Override
+    @PreAuthorize("hasPermission(#id, 'COMMUNITY', 'READ')")
+    public CommunityRest findOne(UUID id) {
+        Community community = null;
+        try {
+            community = cs.find(obtainContext(), id);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        if (community == null) {
+            throw new ResourceNotFoundException();
+        }
+        return converter.fromModel(community);
+    }
 
     @Override
     public Page<CommunityRest> findAll(Pageable pageable) {
-		Context context = obtainContext();
+        Context context = obtainContext();
         List<Community> it = null;
         List<Community> communities = new ArrayList<Community>();
         int total = 0;

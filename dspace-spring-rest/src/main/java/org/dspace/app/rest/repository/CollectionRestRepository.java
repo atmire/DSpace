@@ -54,23 +54,24 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
         System.out.println("Repository initialized by Spring");
     }
 
-	@Override
-	@PreAuthorize("hasPermission(#id, 'COLLECTION', 'READ')")public CollectionRest findOne( UUID id) {
-		Collection collection = null;
-		try {
-			collection = cs.find(obtainContext(), id);
-		} catch (SQLException e) {
-			throw new RuntimeException(e.getMessage(), e);
-		}
-		if (collection == null) {
-			throw new ResourceNotFoundException();
-		}
-		return converter.fromModel(collection);
-	}
+    @Override
+    @PreAuthorize("hasPermission(#id, 'COLLECTION', 'READ')")
+    public CollectionRest findOne(UUID id) {
+        Collection collection = null;
+        try {
+            collection = cs.find(obtainContext(), id);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        if (collection == null) {
+            throw new ResourceNotFoundException();
+        }
+        return converter.fromModel(collection);
+    }
 
     @Override
     public Page<CollectionRest> findAll(Pageable pageable) {
-		Context context = obtainContext();
+        Context context = obtainContext();
         List<Collection> it = null;
         List<Collection> collections = new ArrayList<Collection>();
         int total = 0;

@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 import org.dspace.app.rest.model.DSpaceObjectRest;
-import org.dspace.app.rest.model.RestModel;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.DSpaceObject;
@@ -42,7 +41,6 @@ public class DSpacePermissionEvaluator implements PermissionEvaluator {
     private EPersonService ePersonService;
 
 
-
     public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
         Request request = requestService.getCurrentRequest();
         Context context = ContextUtil.obtainContext(request.getServletRequest());
@@ -51,17 +49,25 @@ public class DSpacePermissionEvaluator implements PermissionEvaluator {
             ePerson = ePersonService.findByEmail(context, (String) authentication.getPrincipal());
 
             DSpaceObjectRest dSpaceObject = (DSpaceObjectRest) targetDomainObject;
-            DSpaceObjectService<DSpaceObject> dSpaceObjectService = ContentServiceFactory.getInstance().getDSpaceObjectService(Constants.getTypeID(dSpaceObject.getType().toUpperCase()));
+            DSpaceObjectService<DSpaceObject> dSpaceObjectService =
+                    ContentServiceFactory.getInstance()
+                                         .getDSpaceObjectService(
+                                                 Constants.getTypeID(
+                                                         dSpaceObject
+                                                                 .getType()
+                                                                 .toUpperCase()));
             int action = Constants.getActionID((permission.toString()));
 
-            return authorizeService.authorizeActionBoolean(context, ePerson, dSpaceObjectService.find(context, UUID.fromString(dSpaceObject.getUuid())), action, false);
+            return authorizeService.authorizeActionBoolean(context, ePerson, dSpaceObjectService
+                    .find(context, UUID.fromString(dSpaceObject.getUuid())), action, false);
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
     }
 
-    public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType, Object permission) {
+    public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType,
+                                 Object permission) {
         Request request = requestService.getCurrentRequest();
         Context context = ContextUtil.obtainContext(request.getServletRequest());
         EPerson ePerson = null;
@@ -69,7 +75,12 @@ public class DSpacePermissionEvaluator implements PermissionEvaluator {
             ePerson = ePersonService.findByEmail(context, (String) authentication.getPrincipal());
 
             UUID dsoId = UUID.fromString(targetId.toString());
-            DSpaceObjectService<DSpaceObject> dSpaceObjectService = ContentServiceFactory.getInstance().getDSpaceObjectService(Constants.getTypeID(targetType.toString()));
+            DSpaceObjectService<DSpaceObject> dSpaceObjectService =
+                    ContentServiceFactory.getInstance()
+                                         .getDSpaceObjectService(
+                                                 Constants.getTypeID(
+                                                         targetType
+                                                                 .toString()));
             DSpaceObject dSpaceObject = dSpaceObjectService.find(context, dsoId);
             //If the dso is null then we give permission so we can throw another status code instead
             if (dSpaceObject == null) {

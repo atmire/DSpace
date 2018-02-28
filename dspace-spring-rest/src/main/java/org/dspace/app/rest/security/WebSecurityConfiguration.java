@@ -11,7 +11,6 @@ import org.dspace.services.RequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -20,7 +19,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -57,14 +55,15 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.headers().cacheControl();
         http
-                //Tell Spring to not create Sessions
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                //Anonymous requests should have the "ANONYMOUS" security grant
-                .anonymous().authorities(ANONYMOUS_GRANT).and()
-                //Wire up the HttpServletRequest with the current SecurityContext values
-                .servletApi().and()
-                //Disable CSRF as our API can be used by clients on an other domain, we are also protected against this,// since we pass the token in a header
-                .csrf().disable()
+            //Tell Spring to not create Sessions
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+            //Anonymous requests should have the "ANONYMOUS" security grant
+            .anonymous().authorities(ANONYMOUS_GRANT).and()
+            //Wire up the HttpServletRequest with the current SecurityContext values
+            .servletApi().and()
+            //Disable CSRF as our API can be used by clients on an other domain, we are also protected against this,
+            // since we pass the token in a header
+            .csrf().disable()
 
             //Logout configuration
             .logout()
@@ -78,13 +77,13 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
             .permitAll()
             .and()
 
-                //Configure the URL patterns with their authentication requirements
-                .authorizeRequests()
-                    ////Allow GET and POST by anyone on the login endpoint
-                    .antMatchers( "/api/authn/login").permitAll()
-                    ////Everyone can call GET on the status endpoint
-                    .antMatchers(HttpMethod.GET, "/api/authn/status").permitAll()
-                .and()
+            //Configure the URL patterns with their authentication requirements
+            .authorizeRequests()
+            //Allow GET and POST by anyone on the login endpoint
+            .antMatchers("/api/authn/login").permitAll()
+            //Everyone can call GET on the status endpoint
+            .antMatchers(HttpMethod.GET, "/api/authn/status").permitAll()
+            .and()
 
             //Add a filter before our login endpoints to do the authentication based on the data in the HTTP request
             .addFilterBefore(new StatelessLoginFilter("/api/authn/login", authenticationManager(),
@@ -102,7 +101,5 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.authenticationProvider(ePersonRestAuthenticationProvider);
     }
-
-
 
 }

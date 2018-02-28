@@ -33,28 +33,29 @@ import org.springframework.stereotype.Component;
 
 @Component(GroupRest.CATEGORY + "." + GroupRest.NAME)
 public class GroupRestRepository extends DSpaceRestRepository<GroupRest, UUID> {
-	GroupService gs = EPersonServiceFactory.getInstance().getGroupService();
-	
-	@Autowired
-	GroupConverter converter;
-	
-	@Override
-	@PreAuthorize("hasPermission(#id, 'GROUP', 'READ')")public GroupRest findOne( UUID id) {
-		Group group = null;
-		try {
-			group = gs.find(obtainContext(), id);
-		} catch (SQLException e) {
-			throw new RuntimeException(e.getMessage(), e);
-		}
-		if (group == null) {
-			return null;
-		}
-		return converter.fromModel(group);
-	}
+    GroupService gs = EPersonServiceFactory.getInstance().getGroupService();
+
+    @Autowired
+    GroupConverter converter;
+
+    @Override
+    @PreAuthorize("hasPermission(#id, 'GROUP', 'READ')")
+    public GroupRest findOne(UUID id) {
+        Group group = null;
+        try {
+            group = gs.find(obtainContext(), id);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        if (group == null) {
+            return null;
+        }
+        return converter.fromModel(group);
+    }
 
     @Override
     public Page<GroupRest> findAll(Pageable pageable) {
-		Context context = obtainContext();
+        Context context = obtainContext();
         List<Group> groups = null;
         int total = 0;
         try {

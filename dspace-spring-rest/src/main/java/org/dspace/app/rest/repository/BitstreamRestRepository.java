@@ -49,23 +49,25 @@ public class BitstreamRestRepository extends DSpaceRestRepository<BitstreamRest,
         System.out.println("Repository initialized by Spring");
     }
 
-	@Override
-	@PreAuthorize("hasPermission(#id, 'BITSTREAM', 'READ')")public BitstreamRest findOne( UUID id) {
-		Bitstream bit = null;
-		try {
-			bit = bs.find(obtainContext(), id);
-		} catch (SQLException e) {
-			throw new RuntimeException(e.getMessage(), e);
-		}
-		if (bit == null) {
-			throw new ResourceNotFoundException();
-		}
-		return converter.fromModel(bit);
-	}
+    @Override
+    @PreAuthorize("hasPermission(#id, 'BITSTREAM', 'READ')")
+    public BitstreamRest findOne(UUID id) {
+        Bitstream bit = null;
+        try {
+            bit = bs.find(obtainContext(), id);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        if (bit == null) {
+            throw new ResourceNotFoundException();
+        }
+        return converter.fromModel(bit);
+    }
 
-	@Override
-	@PreAuthorize("hasAuthority('ADMIN')")public Page<BitstreamRest> findAll(Pageable pageable) {
-		Context context = obtainContext();
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public Page<BitstreamRest> findAll(Pageable pageable) {
+        Context context = obtainContext();
         List<Bitstream> bit = new ArrayList<Bitstream>();
         Iterator<Bitstream> it = null;
         int total = 0;

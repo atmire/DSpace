@@ -34,48 +34,50 @@ import org.springframework.stereotype.Component;
 
 @Component(EPersonRest.CATEGORY + "." + EPersonRest.NAME)
 public class EPersonRestRepository extends DSpaceRestRepository<EPersonRest, UUID> {
-	EPersonService es = EPersonServiceFactory.getInstance().getEPersonService();
-	
-	@Autowired
-	EPersonConverter converter;
+    EPersonService es = EPersonServiceFactory.getInstance().getEPersonService();
 
-	@Override
-	@PreAuthorize("hasPermission(#id, 'EPERSON', 'READ')")public EPersonRest findOne( UUID id) {
-		EPerson eperson = null;
-		try {
-			eperson = es.find(obtainContext(), id);
-		} catch (SQLException e) {
-			throw new RuntimeException(e.getMessage(), e);
-		}
-		if (eperson == null) {
-			throw new ResourceNotFoundException();
-		}
-		return converter.fromModel(eperson);
-	}
+    @Autowired
+    EPersonConverter converter;
 
-	@Override
-@PreAuthorize("hasAuthority('ADMIN')")	public Page<EPersonRest> findAll(Pageable pageable) {
-		List<EPerson> epersons = null;
-		Context context = obtainContext();
-		int total = 0;
-		try {
-			total = es.countTotal(context);
-			epersons = es.findAll(context, EPerson.ID, pageable.getPageSize(), pageable.getOffset());
-		} catch (SQLException e) {
-			throw new RuntimeException(e.getMessage(), e);
-		}
-		Page<EPersonRest> page = new PageImpl<EPerson>(epersons, pageable, total).map(converter);
-		return page;
-	}
-	
-	@Override
-	public Class<EPersonRest> getDomainClass() {
-		return EPersonRest.class;
-	}
-	
-	@Override
-	public EPersonResource wrapResource(EPersonRest eperson, String... rels) {
-		return new EPersonResource(eperson, utils, rels);
-	}
+    @Override
+    @PreAuthorize("hasPermission(#id, 'EPERSON', 'READ')")
+    public EPersonRest findOne(UUID id) {
+        EPerson eperson = null;
+        try {
+            eperson = es.find(obtainContext(), id);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        if (eperson == null) {
+            throw new ResourceNotFoundException();
+        }
+        return converter.fromModel(eperson);
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public Page<EPersonRest> findAll(Pageable pageable) {
+        List<EPerson> epersons = null;
+        Context context = obtainContext();
+        int total = 0;
+        try {
+            total = es.countTotal(context);
+            epersons = es.findAll(context, EPerson.ID, pageable.getPageSize(), pageable.getOffset());
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        Page<EPersonRest> page = new PageImpl<EPerson>(epersons, pageable, total).map(converter);
+        return page;
+    }
+
+    @Override
+    public Class<EPersonRest> getDomainClass() {
+        return EPersonRest.class;
+    }
+
+    @Override
+    public EPersonResource wrapResource(EPersonRest eperson, String... rels) {
+        return new EPersonResource(eperson, utils, rels);
+    }
 
 }
