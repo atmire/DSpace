@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.UUID;
 
+import org.apache.xmlbeans.impl.regex.Match;
 import org.dspace.app.rest.builder.EPersonBuilder;
 import org.dspace.app.rest.matcher.EPersonMatcher;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
@@ -22,7 +23,6 @@ import org.dspace.eperson.EPerson;
 import org.dspace.eperson.factory.EPersonServiceFactory;
 import org.dspace.eperson.service.EPersonService;
 import org.hamcrest.Matchers;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
@@ -30,7 +30,6 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
     EPersonService ePersonService = EPersonServiceFactory.getInstance().getEPersonService();
 
     @Test
-    @Ignore
     public void findAllTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
@@ -46,10 +45,11 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
                        EPersonMatcher.matchEPersonEntry(ePerson),
-                       EPersonMatcher.matchDefaultTestEPerson()
+                       EPersonMatcher.matchEPersonOnEmail(admin.getEmail()),
+                       EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())
                    )))
                    .andExpect(jsonPath("$.page.size", is(20)))
-                   .andExpect(jsonPath("$.page.totalElements", is(2)))
+                   .andExpect(jsonPath("$.page.totalElements", is(3)))
         ;
 
         getClient().perform(get("/api/eperson/eperson"))
@@ -58,7 +58,6 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    @Ignore
     public void findAllPaginationTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
@@ -73,14 +72,12 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
                                 .param("size", "1"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
-                   .andExpect(jsonPath("$._embedded.epersons", Matchers.contains(
-                       EPersonMatcher.matchDefaultTestEPerson()
-                   )))
-                   .andExpect(jsonPath("$._embedded.epersons", Matchers.not(
-                       Matchers.contains(
-                           EPersonMatcher.matchEPersonEntry(admin)
-                       )
-                   )))
+                        .andExpect(jsonPath("$._embedded.epersons", Matchers.contains(Matchers.anyOf(
+                       EPersonMatcher.matchEPersonOnEmail(eperson.getEmail()),
+                       EPersonMatcher.matchEPersonOnEmail(admin.getEmail()),
+                       EPersonMatcher.matchEPersonOnEmail(ePerson.getEmail())
+                   ))))
+                    .andExpect(jsonPath("$._embedded.epersons", Matchers.hasSize(1)))
                    .andExpect(jsonPath("$.page.size", is(1)))
                    .andExpect(jsonPath("$.page.totalElements", is(3)))
         ;
@@ -89,13 +86,16 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         getClient(token).perform(get("/api/eperson/epersons")
                                 .param("size", "1")
                                 .param("page", "1"))
-                   .andExpect(status().isOk())
-                   .andExpect(content().contentType(contentType))
-                   .andExpect(jsonPath("$._embedded.epersons", Matchers.contains(
-                       EPersonMatcher.matchEPersonEntry(admin)
-                   )))
-                   .andExpect(jsonPath("$.page.size", is(1)))
-                   .andExpect(jsonPath("$.page.totalElements", is(3)))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(contentType))
+                        .andExpect(jsonPath("$._embedded.epersons", Matchers.contains(Matchers.anyOf(
+                                EPersonMatcher.matchEPersonOnEmail(eperson.getEmail()),
+                                EPersonMatcher.matchEPersonOnEmail(admin.getEmail()),
+                                EPersonMatcher.matchEPersonOnEmail(ePerson.getEmail())
+                        ))))
+                        .andExpect(jsonPath("$._embedded.epersons", Matchers.hasSize(1)))
+                        .andExpect(jsonPath("$.page.size", is(1)))
+                        .andExpect(jsonPath("$.page.totalElements", is(3)))
         ;
 
         getClient().perform(get("/api/eperson/epersons"))
@@ -105,7 +105,6 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
 
     @Test
-    @Ignore
     public void findOneTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
@@ -118,15 +117,14 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))
                 .andExpect(jsonPath("$", is(
-                        EPersonMatcher.matchEPersonEntry(admin
-                        )
+                        EPersonMatcher.matchEPersonOnEmail(admin.getEmail()
+                        )                                                   
                 )));
 
     }
 
     @Test
-    @Ignore
-    public void findOneRelsTest() throws Exception {
+    public void readEpersonAuthorizationTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
 
@@ -156,18 +154,17 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         //EPerson can only access himself
         String epersonToken = getAuthToken(eperson.getEmail(), password);
 
+        getClient(epersonToken).perform(get("/api/eperson/epersons/" + ePerson2.getID()))
+                .andExpect(status().isForbidden());
+
+
         getClient(epersonToken).perform(get("/api/eperson/epersons/" + eperson.getID()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))
                 .andExpect(jsonPath("$", is(
-                        EPersonMatcher.matchEPersonEntry(ePerson2)
+                        EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())
                 )))
-                .andExpect(jsonPath("$", Matchers.not(
-                        is(
-                                EPersonMatcher.matchEPersonEntry(eperson)
-                        )
-                )))
-                .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/eperson/epersons/" + ePerson2.getID())));
+                .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/eperson/epersons/" + eperson.getID())));
 
     }
 

@@ -40,8 +40,8 @@ public class GroupRestRepositoryIT extends AbstractControllerIntegrationTest {
                    .andExpect(jsonPath("$._embedded.groups", hasSize(2)))
                    // The default groups should consist of "Anonymous" and "Anonymous"
                    .andExpect(jsonPath("$._embedded.groups", Matchers.containsInAnyOrder(
-                       GroupMatcher.matchGroupWithName("Administrator"),
-                       GroupMatcher.matchGroupWithName("Anonymous")
+                           GroupMatcher.matchGroupWithName("Administrator"),
+                           GroupMatcher.matchGroupWithName("Anonymous")
                    )))
         ;
     }
@@ -74,24 +74,24 @@ public class GroupRestRepositoryIT extends AbstractControllerIntegrationTest {
         String generatedGroupId = group.getID().toString();
         String groupIdCall = "/api/eperson/groups/" + generatedGroupId;
         getClient(token).perform(get(groupIdCall))
-                   //The status has to be 200 OK
-                   .andExpect(status().isOk())
-                   .andExpect(content().contentType(contentType))
-                   .andExpect(jsonPath("$", Matchers.is(
-                       GroupMatcher.matchGroupEntry(group.getID(), group.getName())
-                   )))
+                        //The status has to be 200 OK
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(contentType))
+                        .andExpect(jsonPath("$", Matchers.is(
+                                GroupMatcher.matchGroupEntry(group.getID(), group.getName())
+                        )))
         ;
         getClient(token).perform(get("/api/eperson/groups"))
-                   //The status has to be 200 OK
-                   .andExpect(status().isOk())
-                   .andExpect(content().contentType(contentType))
+                        //The status has to be 200 OK
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(contentType))
 
-                   .andExpect(jsonPath("$.page.totalElements", is(3)));
+                        .andExpect(jsonPath("$.page.totalElements", is(3)));
 
     }
 
     @Test
-    public void findOneRelsTest() throws Exception {
+    public void readGroupAuthorizationTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
         Group group = GroupBuilder.createGroup(context)
@@ -100,43 +100,42 @@ public class GroupRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         Group group2 = GroupBuilder.createGroup(context)
                                    .withName("Group2")
+                                   .addMember(eperson)
                                    .build();
 
 //Admin can access
-        String token = getAuthToken(admin.getEmail(), password);        getClient(token).perform(get("/api/eperson/groups/" + group2.getID()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$", Matchers.is(
-                        GroupMatcher.matchGroupEntry(group2.getID(), group2.getName())
-                )))
-                .andExpect(jsonPath("$", Matchers.not(
-                        Matchers.is(
-                                GroupMatcher.matchGroupEntry(group.getID(), group.getName())
-                        )
-                )))
-                .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/eperson/groups/" + group2.getID())));
+        String token = getAuthToken(admin.getEmail(), password);
+        getClient(token).perform(get("/api/eperson/groups/" + group2.getID()))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(contentType))
+                        .andExpect(jsonPath("$", Matchers.is(
+                                GroupMatcher.matchGroupEntry(group2.getID(), group2.getName())
+                        )))
+                        .andExpect(jsonPath("$", Matchers.not(
+                                Matchers.is(
+                                        GroupMatcher.matchGroupEntry(group.getID(), group.getName())
+                                )
+                        )))
+                        .andExpect(jsonPath("$._links.self.href",
+                                        Matchers.containsString("/api/eperson/groups/" + group2.getID())));
 
 
-        //THIS SHOULD WORK
-//        //People in group should be able to access token
-//        token = getAuthToken(eperson.getEmail(), password);
-//
-//        GroupService groupService = EPersonServiceFactory.getInstance().getGroupService();
-//
-//        groupService.addMember(context, group2, eperson);
-//
-//        getClient(token).perform(get("/api/eperson/groups/" + group2.getID()))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(contentType))
-//                .andExpect(jsonPath("$", Matchers.is(
- //                       GroupMatcher.matchGroupEntry(group2.getID(), group2.getName())
-//                )))
-//                .andExpect(jsonPath("$", Matchers.not(
- //                       Matchers.is(
-     //                           GroupMatcher.matchGroupEntry(group.getID(), group.getName())
- //                       )
-//                )))
-//                .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/eperson/groups/" + group2.getID())));
+        //People in group should be able to access token
+        token = getAuthToken(eperson.getEmail(), password);
+
+        getClient(token).perform(get("/api/eperson/groups/" + group2.getID()))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(contentType))
+                        .andExpect(jsonPath("$", Matchers.is(
+                                GroupMatcher.matchGroupEntry(group2.getID(), group2.getName())
+                        )))
+                        .andExpect(jsonPath("$", Matchers.not(
+                                Matchers.is(
+                                        GroupMatcher.matchGroupEntry(group.getID(), group.getName())
+                                )
+                        )))
+                        .andExpect(jsonPath("$._links.self.href",
+                                        Matchers.containsString("/api/eperson/groups/" + group2.getID())));
     }
 
     @Test
