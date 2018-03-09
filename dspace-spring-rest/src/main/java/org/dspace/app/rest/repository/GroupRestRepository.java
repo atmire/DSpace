@@ -53,6 +53,7 @@ public class GroupRestRepository extends DSpaceRestRepository<GroupRest, UUID> {
         return converter.fromModel(group);
     }
 
+    //TODO @PreAuthorize("hasAuthority('ADMIN')")
     @Override
     public Page<GroupRest> findAll(Pageable pageable) {
         Context context = obtainContext();

@@ -47,6 +47,7 @@ public class SubmissionDefinitionRestRepository extends DSpaceRestRepository<Sub
         submissionConfigReader = new SubmissionConfigReader();
     }
 
+    //TODO @PreAuthorize("hasAuthority('EPERSON')")
     @Override
     public SubmissionDefinitionRest findOne(String submitName) {
         SubmissionConfig subConfig = submissionConfigReader.getSubmissionConfigByName(submitName);
@@ -56,6 +57,7 @@ public class SubmissionDefinitionRestRepository extends DSpaceRestRepository<Sub
         return converter.convert(subConfig);
     }
 
+    //TODO @PreAuthorize("hasAuthority('EPERSON')")
     @Override
     public Page<SubmissionDefinitionRest> findAll(Pageable pageable) {
         List<SubmissionConfig> subConfs = new ArrayList<SubmissionConfig>();
@@ -65,6 +67,7 @@ public class SubmissionDefinitionRestRepository extends DSpaceRestRepository<Sub
         return page;
     }
 
+    //TODO @PreAuthorize("hasAuthority('EPERSON')")
     @SearchRestMethod(name = "findByCollection")
     public SubmissionDefinitionRest findByCollection(@Param(value = "uuid") UUID collectionUuid) throws SQLException {
         Collection col = collectionService.find(obtainContext(), collectionUuid);

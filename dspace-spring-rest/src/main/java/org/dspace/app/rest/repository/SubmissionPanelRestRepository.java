@@ -41,6 +41,7 @@ public class SubmissionPanelRestRepository extends DSpaceRestRepository<Submissi
         submissionConfigReader = new SubmissionConfigReader();
     }
 
+    //TODO @PreAuthorize("hasAuthority('EPERSON')")
     @Override
     public SubmissionSectionRest findOne(String id) {
         try {
@@ -52,6 +53,7 @@ public class SubmissionPanelRestRepository extends DSpaceRestRepository<Submissi
         }
     }
 
+    //TODO @PreAuthorize("hasAuthority('EPERSON')")
     @Override
     public Page<SubmissionSectionRest> findAll(Pageable pageable) {
         List<SubmissionConfig> subConfs = new ArrayList<SubmissionConfig>();

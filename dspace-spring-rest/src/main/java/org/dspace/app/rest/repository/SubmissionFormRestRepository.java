@@ -40,6 +40,7 @@ public class SubmissionFormRestRepository extends DSpaceRestRepository<Submissio
         inputReader = new DCInputsReader();
     }
 
+    //TODO @PreAuthorize("hasAuthority('EPERSON')")
     @Override
     public SubmissionFormRest findOne(String submitName) {
         DCInputSet inputConfig;
@@ -54,6 +55,7 @@ public class SubmissionFormRestRepository extends DSpaceRestRepository<Submissio
         return converter.convert(inputConfig);
     }
 
+    //TODO @PreAuthorize("hasAuthority('EPERSON')")
     @Override
     public Page<SubmissionFormRest> findAll(Pageable pageable) {
         List<DCInputSet> subConfs = new ArrayList<DCInputSet>();

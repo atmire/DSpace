@@ -38,6 +38,7 @@ public class ResourcePolicyRestRepository extends DSpaceRestRepository<ResourceP
     @Autowired
     Utils utils;
 
+    //TODO @PreAuthorize("hasAuthority('EPERSON')")
     @Override
     public ResourcePolicyRest findOne(Integer id) {
         ResourcePolicy source = null;
@@ -52,6 +53,7 @@ public class ResourcePolicyRestRepository extends DSpaceRestRepository<ResourceP
         return resourcePolicyConverter.convert(source);
     }
 
+    //TODO @PreAuthorize("hasAuthority('EPERSON')")
     @Override
     public Page<ResourcePolicyRest> findAll(Pageable pageable) {
         throw new RepositoryMethodNotImplementedException(ResourcePolicyRest.NAME, "findAll");
