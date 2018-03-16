@@ -1,18 +1,8 @@
 package org.dspace.websocket.stats;
 
-import org.apache.log4j.Logger;
-import org.dspace.content.factory.ContentServiceFactory;
-import org.dspace.content.service.DSpaceObjectService;
-import org.dspace.content.service.ItemService;
-import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
-import org.dspace.usage.UsageEvent;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
-import java.sql.SQLException;
-import java.util.UUID;
 
 public class StatsEventWrapper implements Serializable {
 
@@ -20,7 +10,7 @@ public class StatsEventWrapper implements Serializable {
     private String userAgent;
     private String uuid;
     private String action;
-    private String ipAdress;
+    private String ipAddress;
     private String type;
     private EPerson currentUser;
 
@@ -43,12 +33,12 @@ public class StatsEventWrapper implements Serializable {
         this.action = action;
     }
 
-    public String getIpAdress() {
-        return ipAdress;
+    public String getIpAddress() {
+        return ipAddress;
     }
 
-    public void setIpAdress(String ipAdress) {
-        this.ipAdress = ipAdress;
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
     }
 
     public String getxForwardedFor() {

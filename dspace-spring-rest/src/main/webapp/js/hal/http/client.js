@@ -17,6 +17,10 @@ HAL.Http.Client = function(opts) {
 HAL.Http.Client.prototype.get = function(url) {
     var self = this;
     this.vent.trigger('location-change', { url: url });
+    var ip;
+    $.getJSON('//api.ipify.org?format=jsonp&callback=?', function(data) {
+        ip = data.ip;
+    });
     var jqxhr = $.ajax({
         url: url,
         dataType: 'json',
@@ -35,6 +39,7 @@ HAL.Http.Client.prototype.get = function(url) {
             websocket.onopen = () =>
             {
                 websocket.send(JSON.stringify({
+                    ipAddress: ip,
                     uuid: resource.uuid,
                     action: "view",
                     type: resource.type
