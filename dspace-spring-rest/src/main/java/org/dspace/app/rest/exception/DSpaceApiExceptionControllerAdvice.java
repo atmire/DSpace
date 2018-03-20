@@ -18,7 +18,9 @@ import org.dspace.app.rest.security.RestAuthenticationService;
 import org.dspace.authorize.AuthorizeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.support.QueryMethodParameterConversionException;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -32,6 +34,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
  */
 @ControllerAdvice
 public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionHandler {
+
     @Autowired
     private RestAuthenticationService restAuthenticationService;
 
@@ -43,6 +46,18 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
         } else {
             sendErrorResponse(request, response, ex, ex.getMessage(), HttpServletResponse.SC_UNAUTHORIZED);
         }
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    protected void handleIllegalArgumentException(HttpServletRequest request, HttpServletResponse response,
+                                                  Exception ex) throws IOException {
+        sendErrorResponse(request, response, ex, ex.getMessage(), HttpServletResponse.SC_BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    protected void handleResourceNotFoundException(HttpServletRequest request, HttpServletResponse response,
+                                                   Exception ex) throws IOException {
+        sendErrorResponse(request, response, ex, ex.getMessage(), HttpServletResponse.SC_NOT_FOUND);
     }
 
     @ExceptionHandler(SQLException.class)
@@ -82,6 +97,13 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
         sendErrorResponse(request, response, null,
                           ex.getMessage(),
                           HttpStatus.UNPROCESSABLE_ENTITY.value());
+    }
+
+    @ExceptionHandler(Exception.class)
+    protected void handleOtherException(HttpServletRequest request, HttpServletResponse response, Exception ex)
+            throws IOException {
+        sendErrorResponse(request, response, ex,
+                "An unexpected occurred", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 
     private void sendErrorResponse(final HttpServletRequest request, final HttpServletResponse response,
