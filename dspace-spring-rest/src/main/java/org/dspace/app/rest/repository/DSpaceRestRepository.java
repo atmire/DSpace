@@ -132,18 +132,18 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
 
     public abstract DSpaceResource<T> wrapResource(T model, String... rels);
 
-    public T createAndReturn() {
+    public T createAndReturn() throws AuthorizeException {
         Context context = obtainContext();
         T entity = createAndReturn(context);
         try {
             context.commit();
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
         return entity;
     }
 
-    protected T createAndReturn(Context context) {
+    protected T createAndReturn(Context context) throws AuthorizeException {
         //nothing default implementation
         return null;
     }

@@ -9,6 +9,7 @@ package org.dspace.app.rest;
 
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -420,5 +421,85 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
         getClient().perform(get("/api/core/communities/" + UUID.randomUUID())).andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void createUnauthenticated() throws Exception {
+
+        getClient().perform(post("/api/core/communities")
+                .param("name", "test"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void createUnauthorized() throws Exception {
+
+        String nonAdminToken = getAuthToken(eperson.getEmail(), password);
+
+        getClient(nonAdminToken).perform(post("/api/core/communities")
+                .param("name", "test"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void createWithNoName() throws Exception {
+
+        String adminToken = getAuthToken(admin.getEmail(), password);
+
+        getClient(adminToken).perform(post("/api/core/communities"))
+                .andExpect(status().isBadRequest());
+
+        getClient(adminToken).perform(post("/api/core/communities")
+                .param("name", ""))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void createWithParentMalformed() throws Exception {
+
+        String adminToken = getAuthToken(admin.getEmail(), password);
+
+        getClient(adminToken).perform(post("/api/core/communities")
+                .param("name", "test")
+                .param("parent", "malformed-uuid"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void createWithParentNonExisting() throws Exception {
+
+        String adminToken = getAuthToken(admin.getEmail(), password);
+
+        getClient(adminToken).perform(post("/api/core/communities")
+                .param("name", "test")
+                .param("parent", UUID.randomUUID().toString()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void createWithoutParent() throws Exception {
+
+        String adminToken = getAuthToken(admin.getEmail(), password);
+
+        getClient(adminToken).perform(post("/api/core/communities")
+                .param("name", "test"))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    public void createWithParent() throws Exception {
+
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                .withName("parent")
+                .build();
+
+        String adminToken = getAuthToken(admin.getEmail(), password);
+
+        getClient(adminToken).perform(post("/api/core/communities")
+                .param("name", "test")
+                .param("parent", parentCommunity.getID().toString()))
+                .andExpect(status().isCreated());
     }
 }

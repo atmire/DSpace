@@ -44,6 +44,7 @@ import org.dspace.app.rest.repository.DSpaceRestRepository;
 import org.dspace.app.rest.repository.LinkRestRepository;
 import org.dspace.app.rest.utils.RestRepositoryUtils;
 import org.dspace.app.rest.utils.Utils;
+import org.dspace.authorize.AuthorizeException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -384,7 +385,7 @@ public class RestResourceController implements InitializingBean {
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<ResourceSupport> post(HttpServletRequest request, @PathVariable String apiCategory,
                                                 @PathVariable String model)
-        throws HttpRequestMethodNotSupportedException {
+        throws HttpRequestMethodNotSupportedException, AuthorizeException {
         return postInternal(request, apiCategory, model);
     }
 
@@ -400,7 +401,7 @@ public class RestResourceController implements InitializingBean {
     public <ID extends Serializable> ResponseEntity<ResourceSupport> postInternal(HttpServletRequest request,
                                                                                   String apiCategory,
                                                                                   String model)
-        throws HttpRequestMethodNotSupportedException {
+        throws HttpRequestMethodNotSupportedException, AuthorizeException {
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
         RestAddressableModel modelObject = null;
