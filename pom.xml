@@ -898,22 +898,6 @@
                 </plugins>
             </build>
         </profile>
-        <profile>
-            <id>atmire-dev</id>
-            <properties>
-                <clientname>entities-7</clientname>
-                <tomcat.port>13720</tomcat.port>
-
-                <dspace.dir>/home2/${clientname}/dspace</dspace.dir>
-                <dspace.hostname>dev2.atmire.com</dspace.hostname>
-                <dspace.url>https://${dspace.hostname}/dspace-${clientname}</dspace.url>
-                <db.name>postgres</db.name>
-                <db.driver>org.postgresql.Driver</db.driver>
-                <db.url>jdbc:postgresql://localhost:5432/dspace-${clientname}</db.url>
-                <db.username>dspace</db.username>
-                <db.password>dspace</db.password>
-            </properties>
-        </profile>
     </profiles>
 
     <!--
