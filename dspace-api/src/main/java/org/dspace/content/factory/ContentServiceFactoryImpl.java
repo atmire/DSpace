@@ -17,11 +17,14 @@ import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.CommunityService;
 import org.dspace.content.service.DSpaceObjectLegacySupportService;
 import org.dspace.content.service.DSpaceObjectService;
+import org.dspace.content.service.EntityTypeService;
 import org.dspace.content.service.InstallItemService;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.MetadataFieldService;
 import org.dspace.content.service.MetadataSchemaService;
 import org.dspace.content.service.MetadataValueService;
+import org.dspace.content.service.RelationshipService;
+import org.dspace.content.service.RelationshipTypeService;
 import org.dspace.content.service.SiteService;
 import org.dspace.content.service.SupervisedItemService;
 import org.dspace.content.service.WorkspaceItemService;
@@ -68,6 +71,12 @@ public class ContentServiceFactoryImpl extends ContentServiceFactory {
     @Autowired(required = true)
     private SiteService siteService;
 
+    @Autowired(required = true)
+    private RelationshipService relationshipService;
+    @Autowired(required = true)
+    private RelationshipTypeService relationshipTypeService;
+    @Autowired(required = true)
+    private EntityTypeService entityTypeService;
 
     @Override
     public List<DSpaceObjectService<? extends DSpaceObject>> getDSpaceObjectServices() {
@@ -142,5 +151,17 @@ public class ContentServiceFactoryImpl extends ContentServiceFactory {
     @Override
     public SiteService getSiteService() {
         return siteService;
+    }
+
+    public RelationshipTypeService getRelationshipTypeService() {
+        return relationshipTypeService;
+    }
+
+    public RelationshipService getRelationshipService() {
+        return relationshipService;
+    }
+
+    public EntityTypeService getEntityTypeService() {
+        return entityTypeService;
     }
 }

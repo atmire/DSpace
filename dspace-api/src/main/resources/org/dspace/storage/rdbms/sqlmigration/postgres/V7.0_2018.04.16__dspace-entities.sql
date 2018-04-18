@@ -26,14 +26,16 @@ CREATE TABLE entity_type
 CREATE TABLE relationship_type
 (
     uuid                    uuid NOT NULL PRIMARY KEY,
-    left_type               uuid NOT NULL FOREIGN KEY REFERENCES entity_type(uuid),
-    right_type              uuid NOT NULL FOREIGN KEY REFERENCES entity_type(uuid),
+    left_type               uuid NOT NULL,
+    right_type              uuid NOT NULL,
     left_label              varchar(32) NOT NULL,
     right_label             varchar(32) NOT NULL,
     left_min_cardinality    INTEGER,
     left_max_cardinality    INTEGER,
     right_min_cardinality   INTEGER,
-    right_max_cardinality   INTEGER
+    right_max_cardinality   INTEGER,
+    FOREIGN KEY (left_type)   REFERENCES entity_type(uuid),
+    FOREIGN KEY (right_type)  REFERENCES entity_type(uuid)
 );
 
 CREATE TABLE relationship
