@@ -4,26 +4,26 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-
-import org.hibernate.annotations.GenericGenerator;
 
 @Entity
 @Table(name = "relationship")
 public class Relationship {
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid2")
-    @Column(name = "uuid", unique = true, nullable = false, insertable = true, updatable = false)
-    protected java.util.UUID id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "relationship_id_seq")
+    @SequenceGenerator(name = "relationship_id_seq", sequenceName = "relationship_id_seq", allocationSize = 1)
+    @Column(name = "id", unique = true, nullable = false, insertable = true, updatable = false)
+    protected Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "left_id", nullable = false)
-    private EntityType leftEntity;
+    private Item leftItem;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "type_id", nullable = false)
@@ -31,9 +31,48 @@ public class Relationship {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "right_id", nullable = false)
-    private EntityType rightEntity;
+    private Item rightItem;
 
     @Column(name = "place")
     private int place;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Item getLeftItem() {
+        return leftItem;
+    }
+
+    public void setLeftItem(Item leftItem) {
+        this.leftItem = leftItem;
+    }
+
+    public RelationshipType getRelationshipType() {
+        return relationshipType;
+    }
+
+    public void setRelationshipType(RelationshipType relationshipType) {
+        this.relationshipType = relationshipType;
+    }
+
+    public Item getRightItem() {
+        return rightItem;
+    }
+
+    public void setRightItem(Item rightItem) {
+        this.rightItem = rightItem;
+    }
+
+    public int getPlace() {
+        return place;
+    }
+
+    public void setPlace(int place) {
+        this.place = place;
+    }
 }

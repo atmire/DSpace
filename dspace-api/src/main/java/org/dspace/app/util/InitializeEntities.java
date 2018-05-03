@@ -89,8 +89,8 @@ public class InitializeEntities {
     private void saveRelations(Context context, List<RelationshipType> list) throws SQLException, AuthorizeException {
         for (RelationshipType relationshipType : list) {
             RelationshipType relationshipTypeFromDb = relationshipTypeService.findbyTypesAndLabels(context,
-                                                                               relationshipType.getLeftType().getId(),
-                                                                               relationshipType.getRightType().getId(),
+                                                                               relationshipType.getLeftType(),
+                                                                               relationshipType.getRightType(),
                                                                                relationshipType.getLeftLabel(),
                                                                                relationshipType.getRightLabel());
             if (relationshipTypeFromDb == null) {
@@ -107,7 +107,7 @@ public class InitializeEntities {
         context.complete();
     }
 
-    private List<RelationshipType> parseXMLToRelations(Context context, String fileLocation) {
+    private List<RelationshipType> parseXMLToRelations(Context context, String fileLocation) throws AuthorizeException {
         try {
             File fXmlFile = new File(fileLocation);
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -132,8 +132,8 @@ public class InitializeEntities {
                     String rightLabel = eElement.getElementsByTagName("rightLabel").item(0).getTextContent();
 
 
-                    NodeList leftCardinalityList = doc.getElementsByTagName("leftCardinality");
-                    NodeList rightCardinalityList = doc.getElementsByTagName("rightCardinality");
+                    NodeList leftCardinalityList = eElement.getElementsByTagName("leftCardinality");
+                    NodeList rightCardinalityList = eElement.getElementsByTagName("rightCardinality");
 
                     String leftCardinalityMin = "";
                     String leftCardinalityMax = "";
@@ -142,14 +142,14 @@ public class InitializeEntities {
                     String rightCardinalityMax = "";
 
                     for (int j = 0; j < leftCardinalityList.getLength(); j++) {
-                        Node node = nList.item(i);
+                        Node node = leftCardinalityList.item(j);
                         leftCardinalityMin = getString(leftCardinalityMin,(Element) node, "min");
                         leftCardinalityMax = getString(leftCardinalityMax,(Element) node, "max");
 
                     }
 
                     for (int j = 0; j < rightCardinalityList.getLength(); j++) {
-                        Node node = nList.item(i);
+                        Node node = rightCardinalityList.item(j);
                         rightCardinalityMin = getString(rightCardinalityMin,(Element) node, "min");
                         rightCardinalityMax = getString(rightCardinalityMax,(Element) node, "max");
 
@@ -181,7 +181,8 @@ public class InitializeEntities {
     private RelationshipType populateRelationshipType(Context context,String leftType,String rightType,String leftLabel,
                                                       String rightLabel,String leftCardinalityMin,
                                                       String leftCardinalityMax,String rightCardinalityMin,
-                                                      String rightCardinalityMax) throws SQLException {
+                                                      String rightCardinalityMax)
+        throws SQLException, AuthorizeException {
         RelationshipType relationshipType = new RelationshipType();
 
         EntityType leftEntityType = entityTypeService.findByEntityType(context,leftType);

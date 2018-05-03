@@ -3,7 +3,6 @@ package org.dspace.content;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.dspace.authorize.AuthorizeException;
@@ -22,15 +21,24 @@ public class RelationshipTypeServiceImpl implements RelationshipTypeService {
     protected AuthorizeService authorizeService;
 
     public RelationshipType create(Context context) throws SQLException, AuthorizeException {
+        if (!authorizeService.isAdmin(context)) {
+            throw new AuthorizeException(
+                "Only administrators can modify relationshipType");
+        }
         return relationshipTypeDAO.create(context, new RelationshipType());
     }
 
-    public RelationshipType create(Context context, RelationshipType relationshipType) throws SQLException {
+    public RelationshipType create(Context context, RelationshipType relationshipType)
+        throws SQLException, AuthorizeException {
+        if (!authorizeService.isAdmin(context)) {
+            throw new AuthorizeException(
+                "Only administrators can modify relationshipType");
+        }
         return relationshipTypeDAO.create(context, relationshipType);
     }
 
-    public RelationshipType findbyTypesAndLabels(Context context,UUID leftType,UUID rightType,String leftLabel,
-                                                       String rightLabel) throws SQLException {
+    public RelationshipType findbyTypesAndLabels(Context context,EntityType leftType,EntityType rightType,
+                                                 String leftLabel,String rightLabel) throws SQLException {
         return relationshipTypeDAO.findbyTypesAndLabels(context, leftType, rightType, leftLabel, rightLabel);
     }
 

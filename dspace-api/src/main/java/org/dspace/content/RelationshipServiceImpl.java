@@ -21,6 +21,10 @@ public class RelationshipServiceImpl implements RelationshipService {
     protected AuthorizeService authorizeService;
 
     public Relationship create(Context context) throws SQLException, AuthorizeException {
+        if (!authorizeService.isAdmin(context)) {
+            throw new AuthorizeException(
+                "Only administrators can modify entityType");
+        }
         return relationshipDAO.create(context, new Relationship());
     }
 
@@ -39,7 +43,7 @@ public class RelationshipServiceImpl implements RelationshipService {
             // Check authorisation - only administrators can change formats
             if (!authorizeService.isAdmin(context)) {
                 throw new AuthorizeException(
-                    "Only administrators can modify entityType");
+                    "Only administrators can modify relationship");
             }
 
             for (Relationship relationship : relationships) {
@@ -51,7 +55,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     public void delete(Context context,Relationship relationship) throws SQLException, AuthorizeException {
         if (!authorizeService.isAdmin(context)) {
             throw new AuthorizeException(
-                "Only administrators can delete entityType");
+                "Only administrators can delete relationship");
         }
         relationshipDAO.delete(context, relationship);
     }

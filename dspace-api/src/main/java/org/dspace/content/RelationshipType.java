@@ -1,27 +1,27 @@
 package org.dspace.content;
 
-import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.GenericGenerator;
 
 @Entity
 @Table(name = "relationship_type")
 public class RelationshipType {
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid2")
-    @Column(name = "uuid", unique = true, nullable = false, insertable = true, updatable = false)
-    protected java.util.UUID id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "relationship_type_id_seq")
+    @SequenceGenerator(name = "relationship_type_id_seq", sequenceName = "relationship_type_id_seq", allocationSize = 1)
+    @Column(name = "id", unique = true, nullable = false, insertable = true, updatable = false)
+    protected Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST})
     @JoinColumn(name = "left_type", nullable = false)
@@ -50,7 +50,7 @@ public class RelationshipType {
     private int rightMaxCardinality;
 
 
-    public UUID getId() {
+    public Integer getId() {
         return id;
     }
 

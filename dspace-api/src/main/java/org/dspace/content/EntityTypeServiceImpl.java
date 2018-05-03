@@ -25,10 +25,18 @@ public class EntityTypeServiceImpl implements EntityTypeService {
     }
 
     public EntityType create(Context context) throws SQLException, AuthorizeException {
+        if (!authorizeService.isAdmin(context)) {
+            throw new AuthorizeException(
+                "Only administrators can modify entityType");
+        }
         return entityTypeDAO.create(context, new EntityType());
     }
 
-    public EntityType create(Context context, String entityTypeString) throws SQLException {
+    public EntityType create(Context context, String entityTypeString) throws SQLException, AuthorizeException {
+        if (!authorizeService.isAdmin(context)) {
+            throw new AuthorizeException(
+                "Only administrators can modify entityType");
+        }
         EntityType entityType = new EntityType();
         entityType.setLabel(entityTypeString);
         return entityTypeDAO.create(context, entityType);
