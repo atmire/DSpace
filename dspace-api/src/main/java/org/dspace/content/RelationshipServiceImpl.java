@@ -23,7 +23,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     public Relationship create(Context context) throws SQLException, AuthorizeException {
         if (!authorizeService.isAdmin(context)) {
             throw new AuthorizeException(
-                "Only administrators can modify entityType");
+                "Only administrators can modify relationship");
         }
         return relationshipDAO.create(context, new Relationship());
     }
@@ -31,6 +31,14 @@ public class RelationshipServiceImpl implements RelationshipService {
     public Relationship find(Context context,int id) throws SQLException {
         Relationship relationship = relationshipDAO.findByID(context, Relationship.class, id);
         return relationship;
+    }
+
+    public List<Relationship> findByItem(Context context, Item item) throws SQLException {
+        return relationshipDAO.findByItem(context, item);
+    }
+
+    public List<Relationship> findAll(Context context) throws SQLException {
+        return relationshipDAO.findAll(context, Relationship.class);
     }
 
     public void update(Context context,Relationship relationship) throws SQLException, AuthorizeException {
