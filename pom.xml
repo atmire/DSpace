@@ -922,6 +922,11 @@
                 <mail.admin></mail.admin>
                 <alert.recipient></alert.recipient>
 
+                <dspace.rest.contextPath>dspace-${clientname}-rest</dspace.rest.contextPath>
+                <dspace.contextpath.rest>dspace-${clientname}-rest</dspace.contextpath.rest>
+                <rest.base.url>${dspace.baseUrl}/dspace-${clientname}-rest</rest.base.url>
+                <rest.url.path>/dspace-${clientname}-rest/api</rest.url.path>
+                <rest.scheme>https</rest.scheme>
             </properties>
         </profile>
     </profiles>
