@@ -17,6 +17,7 @@ import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.CommunityService;
 import org.dspace.content.service.DSpaceObjectLegacySupportService;
 import org.dspace.content.service.DSpaceObjectService;
+import org.dspace.content.service.EntityService;
 import org.dspace.content.service.EntityTypeService;
 import org.dspace.content.service.InstallItemService;
 import org.dspace.content.service.ItemService;
@@ -77,6 +78,8 @@ public class ContentServiceFactoryImpl extends ContentServiceFactory {
     private RelationshipTypeService relationshipTypeService;
     @Autowired(required = true)
     private EntityTypeService entityTypeService;
+    @Autowired(required = true)
+    private EntityService entityService;
 
     @Override
     public List<DSpaceObjectService<? extends DSpaceObject>> getDSpaceObjectServices() {
@@ -153,15 +156,22 @@ public class ContentServiceFactoryImpl extends ContentServiceFactory {
         return siteService;
     }
 
+    @Override
     public RelationshipTypeService getRelationshipTypeService() {
         return relationshipTypeService;
     }
 
+    @Override
     public RelationshipService getRelationshipService() {
         return relationshipService;
     }
 
+    @Override
     public EntityTypeService getEntityTypeService() {
         return entityTypeService;
+    }
+
+    public EntityService getEntityService() {
+        return entityService;
     }
 }

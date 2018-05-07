@@ -24,6 +24,10 @@ public class EntityTypeServiceImpl implements EntityTypeService {
         return entityTypeDAO.findByEntityType(context, entityType);
     }
 
+    public List<EntityType> findAll(Context context) throws SQLException {
+        return entityTypeDAO.findAll(context, EntityType.class);
+    }
+
     public EntityType create(Context context) throws SQLException, AuthorizeException {
         if (!authorizeService.isAdmin(context)) {
             throw new AuthorizeException(

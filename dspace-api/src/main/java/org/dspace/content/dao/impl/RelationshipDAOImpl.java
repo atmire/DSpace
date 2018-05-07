@@ -16,10 +16,20 @@ public class RelationshipDAOImpl extends AbstractHibernateDAO<Relationship> impl
     public List<Relationship> findByItem(Context context,Item item) throws SQLException {
         Criteria criteria = createCriteria(context,Relationship.class);
         criteria.add(Restrictions.or(
-            Restrictions.eq("left_id", item),
-            Restrictions.eq("right_id", item)
+            Restrictions.eq("leftItem", item),
+            Restrictions.eq("rightItem", item)
         ));
 
         return list(criteria);
+    }
+
+    public int findPlaceByLeftItem(Context context, Item item) throws SQLException {
+        Criteria criteria = createCriteria(context, Relationship.class);
+        criteria.add(Restrictions.and(
+            Restrictions.eq("leftItem", item)
+        ));
+
+        Relationship relationship = singleResult(criteria);
+        return relationship == null ? 0 : relationship.getPlace();
     }
 }

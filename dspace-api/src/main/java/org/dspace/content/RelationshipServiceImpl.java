@@ -28,6 +28,18 @@ public class RelationshipServiceImpl implements RelationshipService {
         return relationshipDAO.create(context, new Relationship());
     }
 
+    public Relationship create(Context context, Relationship relationship) throws SQLException, AuthorizeException {
+        if (!authorizeService.isAdmin(context)) {
+            throw new AuthorizeException(
+                "Only administrators can modify relationship");
+        }
+        return relationshipDAO.create(context, relationship);
+    }
+
+    public int findPlaceByLeftItem(Context context,Item item) throws SQLException {
+        return relationshipDAO.findPlaceByLeftItem(context, item);
+    }
+
     public Relationship find(Context context,int id) throws SQLException {
         Relationship relationship = relationshipDAO.findByID(context, Relationship.class, id);
         return relationship;

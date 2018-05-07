@@ -10,6 +10,7 @@ import org.dspace.content.service.EntityService;
 import org.dspace.content.service.EntityTypeService;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.RelationshipService;
+import org.dspace.content.service.RelationshipTypeService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -20,6 +21,9 @@ public class EntityServiceImpl implements EntityService {
 
     @Autowired(required = true)
     protected RelationshipService relationshipService;
+
+    @Autowired(required = true)
+    protected RelationshipTypeService relationshipTypeService;
 
     @Autowired(required = true)
     protected ItemService itemService;
@@ -82,8 +86,7 @@ public class EntityServiceImpl implements EntityService {
     public List<RelationshipType> getAllRelationshipTypes(Context context, Entity entity) throws SQLException {
         EntityType entityType = this.getType(context, entity);
         List<RelationshipType> listToReturn = new LinkedList<>();
-        for (Relationship relationship : entity.getRelationships()) {
-            RelationshipType relationshipType = relationship.getRelationshipType();
+        for (RelationshipType relationshipType : relationshipTypeService.findAll(context)) {
             if (relationshipType.getLeftType() == entityType ||
                 relationshipType.getRightType() == entityType) {
                 listToReturn.add(relationshipType);
@@ -95,8 +98,7 @@ public class EntityServiceImpl implements EntityService {
     public List<RelationshipType> getLeftRelationshipTypes(Context context, Entity entity) throws SQLException {
         EntityType entityType = this.getType(context, entity);
         List<RelationshipType> listToReturn = new LinkedList<>();
-        for (Relationship relationship : entity.getRelationships()) {
-            RelationshipType relationshipType = relationship.getRelationshipType();
+        for (RelationshipType relationshipType : relationshipTypeService.findAll(context)) {
             if (relationshipType.getLeftType() == entityType) {
                 listToReturn.add(relationshipType);
             }
@@ -107,8 +109,7 @@ public class EntityServiceImpl implements EntityService {
     public List<RelationshipType> getRightRelationshipTypes(Context context, Entity entity) throws SQLException {
         EntityType entityType = this.getType(context, entity);
         List<RelationshipType> listToReturn = new LinkedList<>();
-        for (Relationship relationship : entity.getRelationships()) {
-            RelationshipType relationshipType = relationship.getRelationshipType();
+        for (RelationshipType relationshipType : relationshipTypeService.findAll(context)) {
             if (relationshipType.getRightType() == entityType) {
                 listToReturn.add(relationshipType);
             }
@@ -118,8 +119,7 @@ public class EntityServiceImpl implements EntityService {
 
     public List<RelationshipType> getRelationshipTypesByLabel(Context context, String label) throws SQLException {
         List<RelationshipType> listToReturn = new LinkedList<>();
-        for (Relationship relationship : relationshipService.findAll(context)) {
-            RelationshipType relationshipType = relationship.getRelationshipType();
+        for (RelationshipType relationshipType : relationshipTypeService.findAll(context)) {
             if (StringUtils.equals(relationshipType.getLeftLabel(),label) ||
                 StringUtils.equals(relationshipType.getRightLabel(),label)) {
                 listToReturn.add(relationshipType);

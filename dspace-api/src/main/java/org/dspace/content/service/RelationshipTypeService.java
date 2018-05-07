@@ -1,6 +1,7 @@
 package org.dspace.content.service;
 
 import java.sql.SQLException;
+import java.util.List;
 
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.EntityType;
@@ -15,4 +16,5 @@ public interface RelationshipTypeService extends DSpaceCRUDService<RelationshipT
     RelationshipType findbyTypesAndLabels(Context context,EntityType leftType,EntityType rightType,
                                           String leftLabel,String rightLabel)
                                             throws SQLException;
+    List<RelationshipType> findAll(Context context) throws SQLException;
 }

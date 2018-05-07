@@ -42,6 +42,10 @@ public class RelationshipTypeServiceImpl implements RelationshipTypeService {
         return relationshipTypeDAO.findbyTypesAndLabels(context, leftType, rightType, leftLabel, rightLabel);
     }
 
+    public List<RelationshipType> findAll(Context context) throws SQLException {
+        return relationshipTypeDAO.findAll(context, RelationshipType.class);
+    }
+
     public RelationshipType find(Context context,int id) throws SQLException {
         return relationshipTypeDAO.findByID(context, RelationshipType.class, id);
     }
