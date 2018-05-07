@@ -62,7 +62,7 @@ public class EPersonRestRepository extends DSpaceRestRepository<EPersonRest, UUI
         int total = 0;
         try {
             total = es.countTotal(context);
-            epersons = es.findAll(context, EPerson.ID, pageable.getPageSize(), pageable.getOffset());
+            epersons = es.findAll(context, EPerson.EMAIL, pageable.getPageSize(), pageable.getOffset());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }

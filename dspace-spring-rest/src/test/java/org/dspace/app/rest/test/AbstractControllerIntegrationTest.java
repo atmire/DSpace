@@ -55,9 +55,10 @@ import org.springframework.web.context.WebApplicationContext;
  * @author Tom Desair (tom dot desair at atmire dot com)
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = {Application.class, ApplicationConfig.class, WebSecurityConfiguration.class, MethodSecurityConfig.class})
-@TestExecutionListeners( {DependencyInjectionTestExecutionListener.class, DirtiesContextTestExecutionListener.class,
-    TransactionalTestExecutionListener.class})
+@SpringBootTest(classes = {Application.class, ApplicationConfig.class, WebSecurityConfiguration.class,
+        MethodSecurityConfig.class})
+@TestExecutionListeners({DependencyInjectionTestExecutionListener.class, DirtiesContextTestExecutionListener.class,
+        TransactionalTestExecutionListener.class})
 @DirtiesContext
 @WebAppConfiguration
 public class AbstractControllerIntegrationTest extends AbstractIntegrationTestWithDatabase {
@@ -83,7 +84,7 @@ public class AbstractControllerIntegrationTest extends AbstractIntegrationTestWi
     void setConverters(HttpMessageConverter<?>[] converters) {
 
         this.mappingJackson2HttpMessageConverter = Arrays.asList(converters).stream().filter(
-            hmc -> hmc instanceof MappingJackson2HttpMessageConverter).findAny().get();
+                hmc -> hmc instanceof MappingJackson2HttpMessageConverter).findAny().get();
 
         Assert.assertNotNull("the JSON message converter must not be null",
                              this.mappingJackson2HttpMessageConverter);
@@ -99,24 +100,25 @@ public class AbstractControllerIntegrationTest extends AbstractIntegrationTestWi
         }
 
         DefaultMockMvcBuilder mockMvcBuilder = webAppContextSetup(webApplicationContext)
-            //Always log the response to debug
-            .alwaysDo(MockMvcResultHandlers.log())
-            //Add all filter implementations
-            .addFilters(new ErrorPageFilter())
-            .addFilters(requestFilters.toArray(new Filter[requestFilters.size()]));
+                //Always log the response to debug
+                .alwaysDo(MockMvcResultHandlers.print())
+                //Add all filter implementations
+                .addFilters(new ErrorPageFilter())
+                .addFilters(requestFilters.toArray(new Filter[requestFilters.size()]));
 
         if (StringUtils.isNotBlank(authToken)) {
-            mockMvcBuilder.defaultRequest(get("").header(AUTHORIZATION_HEADER, AUTHORIZATION_TYPE + " " + authToken));
+            mockMvcBuilder.defaultRequest(
+                    get("").header(AUTHORIZATION_HEADER, AUTHORIZATION_TYPE + " " + authToken));
         }
 
         return mockMvcBuilder
-            .build();
+                .build();
     }
 
     public MockHttpServletResponse getAuthResponse(String user, String password) throws Exception {
         return getClient().perform(post("/api/authn/login")
-                                       .param("user", user)
-                                       .param("password", password))
+                                           .param("user", user)
+                                           .param("password", password))
                           .andReturn().getResponse();
     }
 

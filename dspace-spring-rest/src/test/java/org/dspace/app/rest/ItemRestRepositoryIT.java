@@ -80,15 +80,19 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         String token = getAuthToken(admin.getEmail(), password);
 
         getClient(token).perform(get("/api/core/items"))
-                   .andExpect(status().isOk())
-                   .andExpect(jsonPath("$._embedded.items", Matchers.containsInAnyOrder(
-                       ItemMatcher.matchItemWithTitleAndDateIssued(publicItem1, "Public item 1", "2017-10-17"),
-                       ItemMatcher.matchItemWithTitleAndDateIssued(publicItem2, "Public item 2", "2016-02-13"),
-                       ItemMatcher.matchItemWithTitleAndDateIssued(publicItem3, "Public item 3", "2016-02-13")
-                   )))
-                   .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/items")))
-                   .andExpect(jsonPath("$.page.size", is(20)))
-                   .andExpect(jsonPath("$.page.totalElements", is(3)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.items", Matchers.containsInAnyOrder(
+                                ItemMatcher.matchItemWithTitleAndDateIssued(
+                                        publicItem1, "Public item 1", "2017-10-17"),
+                                ItemMatcher.matchItemWithTitleAndDateIssued(
+                                        publicItem2, "Public item 2", "2016-02-13"),
+                                ItemMatcher.matchItemWithTitleAndDateIssued(
+                                        publicItem3, "Public item 3", "2016-02-13")
+                        )))
+                        .andExpect(jsonPath("$._links.self.href",
+                                            Matchers.containsString("/api/core/items")))
+                        .andExpect(jsonPath("$.page.size", is(20)))
+                        .andExpect(jsonPath("$.page.totalElements", is(3)))
         ;
     }
 
@@ -133,36 +137,44 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         String token = getAuthToken(admin.getEmail(), password);
 
         getClient(token).perform(get("/api/core/items")
-                   .param("size", "2"))
-                   .andExpect(status().isOk())
-                   .andExpect(jsonPath("$._embedded.items", Matchers.containsInAnyOrder(
-                       ItemMatcher.matchItemWithTitleAndDateIssued(publicItem1, "Public item 1", "2017-10-17"),
-                       ItemMatcher.matchItemWithTitleAndDateIssued(publicItem2, "Public item 2", "2016-02-13")
-                   )))
-                   .andExpect(jsonPath("$._embedded.items", Matchers.not(
-                       Matchers.contains(
-                           ItemMatcher.matchItemWithTitleAndDateIssued(publicItem3, "Public item 3", "2016-02-13")
-                       )
-                   )))
-                   .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/items")))
+                                         .param("size", "2"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.items", Matchers.containsInAnyOrder(
+                                ItemMatcher.matchItemWithTitleAndDateIssued(
+                                        publicItem1, "Public item 1", "2017-10-17"),
+                                ItemMatcher.matchItemWithTitleAndDateIssued
+                                        (publicItem2, "Public item 2", "2016-02-13")
+                        )))
+                        .andExpect(jsonPath("$._embedded.items", Matchers.not(
+                                Matchers.contains(
+                                        ItemMatcher.matchItemWithTitleAndDateIssued(publicItem3, "Public item 3",
+                                                                                    "2016-02-13")
+                                )
+                        )))
+                        .andExpect(jsonPath("$._links.self.href",
+                                            Matchers.containsString("/api/core/items")))
         ;
 
         getClient(token).perform(get("/api/core/items")
-                   .param("size", "2")
-                   .param("page", "1"))
-                   .andExpect(status().isOk())
-                   .andExpect(jsonPath("$._embedded.items", Matchers.contains(
-                       ItemMatcher.matchItemWithTitleAndDateIssued(publicItem3, "Public item 3", "2016-02-13")
-                   )))
-                   .andExpect(jsonPath("$._embedded.items", Matchers.not(
-                       Matchers.contains(
-                           ItemMatcher.matchItemWithTitleAndDateIssued(publicItem1, "Public item 1", "2017-10-17"),
-                           ItemMatcher.matchItemWithTitleAndDateIssued(publicItem2, "Public item 2", "2016-02-13")
-                       )
-                   )))
-                   .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/items")))
-                   .andExpect(jsonPath("$.page.size", is(2)))
-                   .andExpect(jsonPath("$.page.totalElements", is(3)))
+                                         .param("size", "2")
+                                         .param("page", "1"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.items", Matchers.contains(
+                                ItemMatcher.matchItemWithTitleAndDateIssued(
+                                        publicItem3, "Public item 3", "2016-02-13")
+                        )))
+                        .andExpect(jsonPath("$._embedded.items", Matchers.not(
+                                Matchers.contains(
+                                        ItemMatcher.matchItemWithTitleAndDateIssued(publicItem1, "Public item 1",
+                                                                                    "2017-10-17"),
+                                        ItemMatcher.matchItemWithTitleAndDateIssued(publicItem2, "Public item 2",
+                                                                                    "2016-02-13")
+                                )
+                        )))
+                        .andExpect(jsonPath("$._links.self.href",
+                                            Matchers.containsString("/api/core/items")))
+                        .andExpect(jsonPath("$.page.size", is(2)))
+                        .andExpect(jsonPath("$.page.totalElements", is(3)))
         ;
     }
 
@@ -208,14 +220,18 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         getClient().perform(get("/api/core/items/" + publicItem1.getID()))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$", Matchers.is(
-                       ItemMatcher.matchItemWithTitleAndDateIssued(publicItem1, "Public item 1", "2017-10-17")
+                           ItemMatcher.matchItemWithTitleAndDateIssued(
+                                   publicItem1, "Public item 1", "2017-10-17")
                    )))
                    .andExpect(jsonPath("$", Matchers.not(
-                       Matchers.is(
-                           ItemMatcher.matchItemWithTitleAndDateIssued(publicItem2, "Public item 2", "2016-02-13")
-                       )
+                           Matchers.is(
+                                   ItemMatcher
+                                           .matchItemWithTitleAndDateIssued(
+                                                   publicItem2, "Public item 2", "2016-02-13")
+                           )
                    )))
-                   .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/items")))
+                   .andExpect(jsonPath("$._links.self.href",
+                                       Matchers.containsString("/api/core/items")))
         ;
     }
 
@@ -262,7 +278,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         Bitstream bitstream1 = null;
         try (InputStream is = IOUtils.toInputStream(bitstreamContent, CharEncoding.UTF_8)) {
             bitstream1 = BitstreamBuilder.
-                                             createBitstream(context, publicItem1, is)
+                                                 createBitstream(context, publicItem1, is)
                                          .withName("Bitstream1")
                                          .withMimeType("text/plain")
                                          .build();
@@ -271,27 +287,32 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         getClient().perform(get("/api/core/items/" + publicItem1.getID()))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$", Matchers.is(
-                       ItemMatcher.matchItemWithTitleAndDateIssued(publicItem1, "Public item 1", "2017-10-17")
+                           ItemMatcher.matchItemWithTitleAndDateIssued(
+                                   publicItem1, "Public item 1", "2017-10-17")
                    )))
                    .andExpect(jsonPath("$", Matchers.not(
-                       Matchers.is(
-                           ItemMatcher.matchItemWithTitleAndDateIssued(publicItem2, "Public item 2", "2016-02-13")
-                       )
+                           Matchers.is(
+                                   ItemMatcher
+                                           .matchItemWithTitleAndDateIssued(
+                                                   publicItem2, "Public item 2", "2016-02-13")
+                           )
                    )))
-                   .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/items")))
+                   .andExpect(jsonPath("$._links.self.href",
+                                       Matchers.containsString("/api/core/items")))
         ;
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/bitstreams"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._links.self.href", Matchers
-                       .containsString("/api/core/items/" + publicItem1.getID() + "/bitstreams")))
+                           .containsString("/api/core/items/" + publicItem1.getID() + "/bitstreams")))
         ;
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/owningCollection"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
-                   .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/collections")))
+                   .andExpect(jsonPath("$._links.self.href",
+                                       Matchers.containsString("/api/core/collections")))
         ;
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/templateItemOf"))
@@ -318,7 +339,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         String token = getAuthToken(admin.getEmail(), password);
 
         getClient(token).perform(get("/api/core/items/" + UUID.randomUUID()))
-                   .andExpect(status().isNotFound())
+                        .andExpect(status().isNotFound())
         ;
 
     }
@@ -1039,67 +1060,66 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    public void embargoAnonymousAccessTest() throws Exception{
+    public void embargoAnonymousAccessTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and two collections.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
         //2. Three public items that are readable by Anonymous with different subjects
         Item embargoedItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("embargoed item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .withEmbargoPeriod("6 months")
-                .build();
+                                         .withTitle("embargoed item 1")
+                                         .withIssueDate("2017-10-17")
+                                         .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                         .withSubject("ExtraEntry")
+                                         .withEmbargoPeriod("6 months")
+                                         .build();
 
         //2. Three public items that are readable by Anonymous with different subjects
         Item publicItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("Public item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .build();
+                                      .withTitle("Public item 1")
+                                      .withIssueDate("2017-10-17")
+                                      .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                      .withSubject("ExtraEntry")
+                                      .build();
 
         context.restoreAuthSystemState();
 
 
         getClient().perform(get("/api/core/items/" + embargoedItem1.getID()))
-                .andExpect(status().isForbidden());
+                   .andExpect(status().isForbidden());
 
     }
 
     @Test
-    public void undiscoverableAnonymousAccessTest() throws Exception{
+    public void undiscoverableAnonymousAccessTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and two collections.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
         //2. Three public items that are readable by Anonymous with different subjects
         Item unDiscoverableYetAccessibleItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("Undiscoverable item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .makeUnDiscoverable()
-                .build();
-
+                                                           .withTitle("Undiscoverable item 1")
+                                                           .withIssueDate("2017-10-17")
+                                                           .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                                           .withSubject("ExtraEntry")
+                                                           .makeUnDiscoverable()
+                                                           .build();
 
 
         context.restoreAuthSystemState();
@@ -1109,7 +1129,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$", Matchers.is(
                            ItemMatcher.matchItemWithTitleAndDateIssued(unDiscoverableYetAccessibleItem1,
-                                               "Undiscoverable item 1", "2017-10-17")
+                                                                "Undiscoverable item 1", "2017-10-17")
                    )));
     }
 
@@ -1118,93 +1138,91 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.turnOffAuthorisationSystem();
 
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
 
         Item publicItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("private item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .build();
+                                      .withTitle("private item 1")
+                                      .withIssueDate("2017-10-17")
+                                      .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                      .withSubject("ExtraEntry")
+                                      .build();
 
         context.restoreAuthSystemState();
 
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID()))
-                .andExpect(status().isOk());
+                   .andExpect(status().isOk());
     }
 
     @Test
-    public void embargoAdminAccessTest() throws Exception{
+    public void embargoAdminAccessTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and two collections.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
         //2. Three public items that are readable by Anonymous with different subjects
         Item embargoedItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("embargoed item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .withEmbargoPeriod("6 months")
-                .build();
+                                         .withTitle("embargoed item 1")
+                                         .withIssueDate("2017-10-17")
+                                         .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                         .withSubject("ExtraEntry")
+                                         .withEmbargoPeriod("6 months")
+                                         .build();
 
         //2. Three public items that are readable by Anonymous with different subjects
         Item publicItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("Public item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .build();
+                                      .withTitle("Public item 1")
+                                      .withIssueDate("2017-10-17")
+                                      .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                      .withSubject("ExtraEntry")
+                                      .build();
 
         context.restoreAuthSystemState();
 
         String token1 = getAuthToken(admin.getEmail(), password);
 
 
-
         getClient(token1).perform(get("/api/core/items/" + embargoedItem1.getID()))
-                .andExpect(status().isOk());
+                         .andExpect(status().isOk());
 
     }
 
     @Test
-    public void privateAdminAccessTest() throws Exception{
+    public void privateAdminAccessTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and two collections.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
         //2. Three public items that are readable by Anonymous with different subjects
         Item privateItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("private item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .makeUnDiscoverable()
-                .build();
-
+                                       .withTitle("private item 1")
+                                       .withIssueDate("2017-10-17")
+                                       .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                       .withSubject("ExtraEntry")
+                                       .makeUnDiscoverable()
+                                       .build();
 
 
         context.restoreAuthSystemState();
@@ -1213,7 +1231,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
 
 
         getClient(token1).perform(get("/api/core/items/" + privateItem1.getID()))
-                .andExpect(status().isOk());
+                         .andExpect(status().isOk());
 
     }
 
@@ -1222,29 +1240,27 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.turnOffAuthorisationSystem();
 
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
 
         Item publicItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("private item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .build();
+                                      .withTitle("private item 1")
+                                      .withIssueDate("2017-10-17")
+                                      .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                      .withSubject("ExtraEntry")
+                                      .build();
 
         context.restoreAuthSystemState();
 
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID()))
-                .andExpect(status().isOk());
+                   .andExpect(status().isOk());
     }
-
-
 
 
 }

@@ -15,7 +15,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.UUID;
 
-import org.apache.xmlbeans.impl.regex.Match;
 import org.dspace.app.rest.builder.EPersonBuilder;
 import org.dspace.app.rest.matcher.EPersonMatcher;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
@@ -40,7 +39,7 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         String token = getAuthToken(admin.getEmail(), password);
 
-        getClient(token).perform(get("/api/eperson/eperson"))
+        getClient(token).perform(get("/api/eperson/epersons"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
@@ -52,8 +51,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
                    .andExpect(jsonPath("$.page.totalElements", is(3)))
         ;
 
-        getClient().perform(get("/api/eperson/eperson"))
-                .andExpect(status().isForbidden())
+        getClient().perform(get("/api/eperson/epersons"))
+                   .andExpect(status().isForbidden())
         ;
     }
 
@@ -61,7 +60,7 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
     public void findAllPaginationTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
-        EPerson ePerson = EPersonBuilder.createEPerson(context)
+        EPerson testEPerson = EPersonBuilder.createEPerson(context)
                                         .withNameInMetadata("John", "Doe")
                                         .withEmail("Johndoe@gmail.com")
                                         .build();
@@ -69,13 +68,13 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         String token = getAuthToken(admin.getEmail(), password);
 
         // using size = 2 the first page will contains our test user and admin
-        getClient(token).perform(get("/api/eperson/eperson")
+        getClient(token).perform(get("/api/eperson/epersons")
                                 .param("size", "2"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
-                           EPersonMatcher.matchDefaultTestEPerson(),
-                           EPersonMatcher.matchDefaultTestEPerson()
+                           EPersonMatcher.matchEPersonEntry(admin),
+                           EPersonMatcher.matchEPersonEntry(testEPerson)
                    )))
                    .andExpect(jsonPath("$._embedded.epersons", Matchers.not(
                        Matchers.contains(
@@ -87,20 +86,21 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         ;
 
         // using size = 2 the first page will contains our test user and admin
-        getClient(token).perform(get("/api/eperson/eperson")
+        getClient(token).perform(get("/api/eperson/epersons")
                                 .param("size", "2")
                                 .param("page", "1"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.epersons", Matchers.contains(
-                       EPersonMatcher.matchEPersonEntry(admin)
+                       EPersonMatcher.matchEPersonEntry(eperson)
                    )))
+                   .andExpect(jsonPath("$._embedded.epersons", Matchers.hasSize(1)))
                    .andExpect(jsonPath("$.page.size", is(2)))
                    .andExpect(jsonPath("$.page.totalElements", is(3)))
         ;
 
         getClient().perform(get("/api/eperson/epersons"))
-                .andExpect(status().isForbidden())
+                   .andExpect(status().isForbidden())
         ;
     }
 
@@ -112,7 +112,7 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         ePersonService.setPassword(eperson, password);
 
         //Only works with admin
-                String token = getAuthToken(admin.getEmail(), password);
+        String token = getAuthToken(admin.getEmail(), password);
 
         getClient(token).perform(get("/api/eperson/epersons/" + admin.getID()))
                 .andExpect(status().isOk())
@@ -129,7 +129,7 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.turnOffAuthorisationSystem();
 
 
-        EPerson ePerson2 = EPersonBuilder.createEPerson(context)
+        EPerson testEPerson = EPersonBuilder.createEPerson(context)
                                          .withNameInMetadata("Jane", "Smith")
                                          .withEmail("janesmith@gmail.com")
                                          .build();
@@ -137,35 +137,37 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         //Admin can access everyone
         String adminToken = getAuthToken(admin.getEmail(), password);
 
-        getClient(adminToken).perform(get("/api/eperson/epersons/" + ePerson2.getID()))
-                   .andExpect(status().isOk())
-                   .andExpect(content().contentType(contentType))
-                   .andExpect(jsonPath("$", is(
-                       EPersonMatcher.matchEPersonEntry(ePerson2)
-                   )))
-                   .andExpect(jsonPath("$", Matchers.not(
-                       is(
-                           EPersonMatcher.matchEPersonEntry(eperson)
-                       )
-                   )))
-                   .andExpect(jsonPath("$._links.self.href",
-                                       Matchers.containsString("/api/eperson/epersons/" + ePerson2.getID())));
+        getClient(adminToken).perform(get("/api/eperson/epersons/" + testEPerson.getID()))
+                             .andExpect(status().isOk())
+                             .andExpect(content().contentType(contentType))
+                             .andExpect(jsonPath("$", is(
+                                     EPersonMatcher.matchEPersonEntry(testEPerson)
+                             )))
+                             .andExpect(jsonPath("$", Matchers.not(
+                                     is(
+                                             EPersonMatcher.matchEPersonEntry(eperson)
+                                     )
+                             )))
+                             .andExpect(jsonPath("$._links.self.href",
+                                     Matchers.containsString("/api/eperson/epersons/" + testEPerson.getID())));
 
 
         //EPerson can only access himself
         String epersonToken = getAuthToken(eperson.getEmail(), password);
 
-        getClient(epersonToken).perform(get("/api/eperson/epersons/" + ePerson2.getID()))
-                .andExpect(status().isForbidden());
+        getClient(epersonToken).perform(get("/api/eperson/epersons/" + testEPerson.getID()))
+                               .andExpect(status().isForbidden());
 
 
         getClient(epersonToken).perform(get("/api/eperson/epersons/" + eperson.getID()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$", is(
-                        EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())
-                )))
-                .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/eperson/epersons/" + eperson.getID())));
+                               .andExpect(status().isOk())
+                               .andExpect(content().contentType(contentType))
+                               .andExpect(jsonPath("$", is(
+                                       EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())
+                               )))
+                               .andExpect(jsonPath("$._links.self.href",
+                                                   Matchers.containsString(
+                                                           "/api/eperson/epersons/" + eperson.getID())));
 
     }
 
@@ -174,12 +176,12 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
     public void findOneTestWrongUUID() throws Exception {
         context.turnOffAuthorisationSystem();
 
-        EPerson ePerson = EPersonBuilder.createEPerson(context)
+        EPerson testEPerson1 = EPersonBuilder.createEPerson(context)
                                         .withNameInMetadata("John", "Doe")
                                         .withEmail("Johndoe@gmail.com")
                                         .build();
 
-        EPerson ePerson2 = EPersonBuilder.createEPerson(context)
+        EPerson testEPerson2 = EPersonBuilder.createEPerson(context)
                                          .withNameInMetadata("Jane", "Smith")
                                          .withEmail("janesmith@gmail.com")
                                          .build();
