@@ -1159,67 +1159,66 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    public void embargoAnonymousAccessTest() throws Exception{
+    public void embargoAnonymousAccessTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and two collections.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
         //2. Three public items that are readable by Anonymous with different subjects
         Item embargoedItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("embargoed item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .withEmbargoPeriod("6 months")
-                .build();
+                                         .withTitle("embargoed item 1")
+                                         .withIssueDate("2017-10-17")
+                                         .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                         .withSubject("ExtraEntry")
+                                         .withEmbargoPeriod("6 months")
+                                         .build();
 
         //2. Three public items that are readable by Anonymous with different subjects
         Item publicItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("Public item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .build();
+                                      .withTitle("Public item 1")
+                                      .withIssueDate("2017-10-17")
+                                      .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                      .withSubject("ExtraEntry")
+                                      .build();
 
         context.restoreAuthSystemState();
 
 
         getClient().perform(get("/api/core/items/" + embargoedItem1.getID()))
-                .andExpect(status().isForbidden());
+                   .andExpect(status().isForbidden());
 
     }
 
     @Test
-    public void undiscoverableAnonymousAccessTest() throws Exception{
+    public void undiscoverableAnonymousAccessTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and two collections.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
         //2. Three public items that are readable by Anonymous with different subjects
         Item unDiscoverableYetAccessibleItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("Undiscoverable item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .makeUnDiscoverable()
-                .build();
-
+                                                           .withTitle("Undiscoverable item 1")
+                                                           .withIssueDate("2017-10-17")
+                                                           .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                                           .withSubject("ExtraEntry")
+                                                           .makeUnDiscoverable()
+                                                           .build();
 
 
         context.restoreAuthSystemState();
@@ -1229,7 +1228,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$", Matchers.is(
                            ItemMatcher.matchItemWithTitleAndDateIssued(unDiscoverableYetAccessibleItem1,
-                                               "Undiscoverable item 1", "2017-10-17")
+                                                                "Undiscoverable item 1", "2017-10-17")
                    )));
     }
 
@@ -1238,93 +1237,91 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.turnOffAuthorisationSystem();
 
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
 
         Item publicItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("private item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .build();
+                                      .withTitle("private item 1")
+                                      .withIssueDate("2017-10-17")
+                                      .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                      .withSubject("ExtraEntry")
+                                      .build();
 
         context.restoreAuthSystemState();
 
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID()))
-                .andExpect(status().isOk());
+                   .andExpect(status().isOk());
     }
 
     @Test
-    public void embargoAdminAccessTest() throws Exception{
+    public void embargoAdminAccessTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and two collections.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
         //2. Three public items that are readable by Anonymous with different subjects
         Item embargoedItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("embargoed item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .withEmbargoPeriod("6 months")
-                .build();
+                                         .withTitle("embargoed item 1")
+                                         .withIssueDate("2017-10-17")
+                                         .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                         .withSubject("ExtraEntry")
+                                         .withEmbargoPeriod("6 months")
+                                         .build();
 
         //2. Three public items that are readable by Anonymous with different subjects
         Item publicItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("Public item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .build();
+                                      .withTitle("Public item 1")
+                                      .withIssueDate("2017-10-17")
+                                      .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                      .withSubject("ExtraEntry")
+                                      .build();
 
         context.restoreAuthSystemState();
 
         String token1 = getAuthToken(admin.getEmail(), password);
 
 
-
         getClient(token1).perform(get("/api/core/items/" + embargoedItem1.getID()))
-                .andExpect(status().isOk());
+                         .andExpect(status().isOk());
 
     }
 
     @Test
-    public void privateAdminAccessTest() throws Exception{
+    public void privateAdminAccessTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and two collections.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
         //2. Three public items that are readable by Anonymous with different subjects
         Item privateItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("private item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .makeUnDiscoverable()
-                .build();
-
+                                       .withTitle("private item 1")
+                                       .withIssueDate("2017-10-17")
+                                       .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                       .withSubject("ExtraEntry")
+                                       .makeUnDiscoverable()
+                                       .build();
 
 
         context.restoreAuthSystemState();
@@ -1333,7 +1330,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
 
 
         getClient(token1).perform(get("/api/core/items/" + privateItem1.getID()))
-                .andExpect(status().isOk());
+                         .andExpect(status().isOk());
 
     }
 
@@ -1342,29 +1339,27 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.turnOffAuthorisationSystem();
 
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
 
         Item publicItem1 = ItemBuilder.createItem(context, col1)
-                .withTitle("private item 1")
-                .withIssueDate("2017-10-17")
-                .withAuthor("Smith, Donald").withAuthor("Doe, John")
-                .withSubject("ExtraEntry")
-                .build();
+                                      .withTitle("private item 1")
+                                      .withIssueDate("2017-10-17")
+                                      .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                      .withSubject("ExtraEntry")
+                                      .build();
 
         context.restoreAuthSystemState();
 
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID()))
-                .andExpect(status().isOk());
+                   .andExpect(status().isOk());
     }
-
-
 
 
 }
