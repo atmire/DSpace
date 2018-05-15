@@ -918,7 +918,7 @@
                 <feedback.recipient></feedback.recipient>
                 <mail.from.address></mail.from.address>
                 <dspace.name></dspace.name>
-                <solr.server></solr.server>
+                <solr.server>http://localhost:${tomcat.port}/solr</solr.server>
                 <mail.server></mail.server>
                 <mail.admin></mail.admin>
                 <alert.recipient></alert.recipient>
