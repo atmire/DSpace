@@ -908,6 +908,7 @@
                 <dspace.hostname>dev2.atmire.com</dspace.hostname>
                 <dspace.url>https://entities-7.dev2.atmire.com/dspace-entities-7</dspace.url>
                 <dspace.baseUrl>https://entities-7.dev2.atmire.com/dspace-entities-7 </dspace.baseUrl>
+                <dspace.restUrl>http://entities-7.dev2.atmire.com/dspace-entities-7-rest</dspace.restUrl>
                 <db.name>postgres</db.name>
                 <db.driver>org.postgresql.Driver</db.driver>
                 <db.url>jdbc:postgresql://localhost:5432/dspace-${clientname}</db.url>
