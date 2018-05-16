@@ -18,6 +18,10 @@
 	<!-- for handle "default". -->
 	<submission-map>
 		<name-map collection-handle="default" submission-name="traditional" />
+		<name-map collection-handle="123456789/6" submission-name="People"/>
+		<name-map collection-handle="123456789/7" submission-name="Project"/>
+		<name-map collection-handle="123456789/8" submission-name="OrgUnit"/>
+
 	</submission-map>
 
 
@@ -57,6 +61,23 @@
 			<processing-class>org.dspace.app.rest.submit.step.DescribeStep</processing-class>
 			<type>submission-form</type>
 		</step>
+
+		<step id="peopleStep" mandatory="true">
+			<heading>submit.progressbar.describe.stepone</heading>
+			<processing-class>org.dspace.app.rest.submit.step.DescribeStep</processing-class>
+			<type>submission-form</type>
+		</step>
+		<step id="projectStep" mandatory="true">
+			<heading>submit.progressbar.describe.stepone</heading>
+			<processing-class>org.dspace.app.rest.submit.step.DescribeStep</processing-class>
+			<type>submission-form</type>
+		</step>
+		<step id="orgUnitStep" mandatory="true">
+			<heading>submit.progressbar.describe.stepone</heading>
+			<processing-class>org.dspace.app.rest.submit.step.DescribeStep</processing-class>
+			<type>submission-form</type>
+		</step>
+
 		<step id="traditionalpagetwo" mandatory="true">
 			<heading>submit.progressbar.describe.steptwo</heading>
 			<processing-class>org.dspace.app.rest.submit.step.DescribeStep</processing-class>
@@ -150,6 +171,17 @@
 			<!-- <step id="verify"/> -->
 		</submission-process>
 
+		<submission-process name="People">
+			<step id="peopleStep"/>
+		</submission-process>
+
+		<submission-process name="Project">
+			<step id="projectStep"/>
+		</submission-process>
+
+		<submission-process name="OrgUnit">
+			<step id="orgUnitStep"/>
+		</submission-process>
 	</submission-definitions>
 
 </item-submission>
