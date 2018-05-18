@@ -1526,7 +1526,13 @@ public class SolrServiceImpl implements SearchService, IndexingService {
     public DiscoverResult search(Context context, DSpaceObject dso,
                                  DiscoverQuery query)
         throws SearchServiceException {
-        return search(context, dso, query, false);
+        // TODO REVERT THIS CHANGE, JUST FOR TESTING
+        DiscoverResult discoverResult = search(context, dso, query, false);
+
+
+        itemService.getMetadata((Item) discoverResult.getDspaceObjects().get(0), "*", "*", "*", "*");
+
+        return discoverResult;
     }
 
     @Override

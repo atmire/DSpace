@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd" default-lazy-init="true">
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+    default-lazy-init="true">
 
 
     <!-- ******************** -->
@@ -115,5 +116,22 @@
     <bean class="org.dspace.xmlworkflow.XmlWorkflowServiceImpl"/>
     <bean class="org.dspace.xmlworkflow.WorkflowRequirementsServiceImpl"/>
     <bean class="org.dspace.xmlworkflow.XmlWorkflowFactoryImpl"/>-->
+    <bean class="org.dspace.content.virtual.VirtualMetadataPopulator">
+        <property name="map">
+            <map>
+                <entry key="publicationAuthorRelation" value-ref="publicationAuthor"/>
+                <entry key="nogEenRelation" value-ref="nogIets"/>
+            </map>
+        </property>
+    </bean>
 
+    <util:list id="publicationAuthor">
+        <value>test</value>
+        <value>test2</value>
+    </util:list>
+
+    <util:list id="nogIets">
+        <value>azeeaz</value>
+        <value>erztghgt</value>
+    </util:list>
 </beans>

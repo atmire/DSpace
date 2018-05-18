@@ -69,6 +69,7 @@ public class ScoreEvaluationAction extends ProcessingAction {
             itemService.addMetadata(c, wfi.getItem(), MetadataSchema.DC_SCHEMA, "description", "provenance", "en",
                                     provDescription);
             itemService.update(c, wfi.getItem());
+            itemService.getMetadata(wfi.getItem(), "","","","");
         }
         if (hasPassed) {
             return new ActionResult(ActionResult.TYPE.TYPE_OUTCOME, ActionResult.OUTCOME_COMPLETE);
