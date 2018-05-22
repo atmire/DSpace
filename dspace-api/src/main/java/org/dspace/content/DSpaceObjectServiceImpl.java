@@ -235,9 +235,11 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
         boolean authorityControlled = metadataAuthorityService.isAuthorityControlled(metadataField);
         boolean authorityRequired = metadataAuthorityService.isAuthorityRequired(metadataField);
 
-        for (String s : authorities) {
-            if (StringUtils.equals(s, "virtual")) {
-                return;
+        if (authorities != null) {
+            for (String s : authorities) {
+                if (StringUtils.equals(s, "virtual")) {
+                    return;
+                }
             }
         }
         // We will not verify that they are valid entries in the registry

@@ -17,34 +17,38 @@
 -------------------------------------------------------------
 -- This will create the setup for the dspace 7 entities usage
 -------------------------------------------------------------
+CREATE SEQUENCE entity_type_id_seq;
+CREATE SEQUENCE relationship_type_id_seq;
+CREATE SEQUENCE relationship_id_seq;
+
 CREATE TABLE entity_type
 (
-    id                      NUMBER(38) NOT NULL PRIMARY KEY,
+    id                      INTEGER NOT NULL PRIMARY KEY,
     label                   varchar(32) UNIQUE NOT NULL
 );
 
 CREATE TABLE relationship_type
 (
-    id                        NUMBER(38) NOT NULL PRIMARY KEY,
-    left_type                 NUMBER(38) NOT NULL,
-    right_type                NUMBER(38) NOT NULL,
+    id                        INTEGER NOT NULL PRIMARY KEY,
+    left_type                 INTEGER NOT NULL,
+    right_type                INTEGER NOT NULL,
     left_label                varchar(32) NOT NULL,
     right_label               varchar(32) NOT NULL,
-    left_min_cardinality      NUMBER(38),
-    left_max_cardinality      NUMBER(38),
-    right_min_cardinality     NUMBER(38),
-    right_max_cardinality     NUMBER(38),
+    left_min_cardinality      INTEGER,
+    left_max_cardinality      INTEGER,
+    right_min_cardinality     INTEGER,
+    right_max_cardinality     INTEGER,
     FOREIGN KEY (left_type)   REFERENCES entity_type(id),
     FOREIGN KEY (right_type)  REFERENCES entity_type(id)
 );
 
 CREATE TABLE relationship
 (
-    id                      NUMBER(38) NOT NULL PRIMARY KEY,
+    id                      INTEGER NOT NULL PRIMARY KEY,
     left_id                 uuid NOT NULL REFERENCES item(uuid),
-    type_id                 NUMBER(38) NOT NULL REFERENCES relationship_type(id),
+    type_id                 INTEGER NOT NULL REFERENCES relationship_type(id),
     right_id                uuid NOT NULL REFERENCES item(uuid),
-    place                   NUMBER(38),
+    place                   INTEGER,
     CONSTRAINT u_constraint UNIQUE (left_id, type_id, right_id)
 
 );
