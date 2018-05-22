@@ -41,7 +41,7 @@ public class SubmissionFormsControllerIT extends AbstractControllerIntegrationTe
                    .andExpect(jsonPath("$.page.totalPages", greaterThanOrEqualTo(1)))
                    .andExpect(jsonPath("$.page.number", is(0)))
                    .andExpect(
-                       jsonPath("$._links.self.href", Matchers.startsWith(REST_SERVER_URL + "config/submissionforms")))
+                       jsonPath("$._links.self.href", Matchers.startsWith(REST_SERVER_URL + "api/config/submissionforms")))
 
                    //The array of browse index should have a size greater or equals to 1
                    .andExpect(jsonPath("$._embedded.submissionforms", hasSize(greaterThanOrEqualTo(1))))
@@ -62,7 +62,7 @@ public class SubmissionFormsControllerIT extends AbstractControllerIntegrationTe
                    .andExpect(jsonPath("$.name", is("traditionalpageone")))
                    .andExpect(jsonPath("$.type", is("submissionform")))
                    .andExpect(jsonPath("$._links.self.href", Matchers
-                       .startsWith(REST_SERVER_URL + "config/submissionforms/traditionalpageone")))
+                       .startsWith(REST_SERVER_URL + "api/config/submissionforms/traditionalpageone")))
         ;
     }
 }
