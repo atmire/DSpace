@@ -40,9 +40,6 @@ public class DiscoverResultConverter {
     @Autowired
     private List<DSpaceObjectConverter> converters;
 
-    @Autowired
-    private ItemService itemService;
-
     private DiscoverFacetValueConverter facetValueConverter = new DiscoverFacetValueConverter();
 
     public SearchResultsRest convert(final Context context, final String query, final String dsoType,
@@ -104,10 +101,6 @@ public class DiscoverResultConverter {
             //Convert the DSpace Object to its REST model
             resultEntry.setDspaceObject(convertDSpaceObject(dspaceObject));
 
-            //TODO Remove this again
-            if (dspaceObject instanceof Item) {
-                itemService.getMetadata((Item) dspaceObject, "*", "*", "*", "*");
-            }
             //Add hit highlighting for this DSO if present
             DiscoverResult.DSpaceObjectHighlightResult highlightedResults = searchResult
                 .getHighlightedResults(dspaceObject);
