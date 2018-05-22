@@ -119,19 +119,21 @@
     <bean class="org.dspace.content.virtual.VirtualMetadataPopulator">
         <property name="map">
             <map>
-                <entry key="publicationAuthorRelation" value-ref="publicationAuthor"/>
-                <entry key="nogEenRelation" value-ref="nogIets"/>
+                <entry key="isAuthorOfPublication" value-ref="isAuthorOfPublicationMap"/>
             </map>
         </property>
     </bean>
 
-    <util:list id="publicationAuthor">
-        <value>test</value>
-        <value>test2</value>
+    <util:map id="isAuthorOfPublicationMap">
+        <entry key="dc_contributor_author" value-ref="publicationAuthor_author"/>
+        <entry key="dc_contributor_editor" value-ref="publicationAuthor_editor"/>
+    </util:map>
+    <util:list id="publicationAuthor_author">
+        <value>person.identifier.lastname</value>
+        <value>person.identifier.firstname</value>
     </util:list>
-
-    <util:list id="nogIets">
-        <value>azeeaz</value>
-        <value>erztghgt</value>
+    <util:list id="publicationAuthor_editor">
+        <value>person.identifier.lastname</value>
+        <value>person.identifier.firstname</value>
     </util:list>
 </beans>

@@ -20,6 +20,8 @@ import org.dspace.app.rest.model.SearchResultEntryRest;
 import org.dspace.app.rest.model.SearchResultsRest;
 import org.dspace.app.rest.parameter.SearchFilter;
 import org.dspace.content.DSpaceObject;
+import org.dspace.content.Item;
+import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
 import org.dspace.discovery.DiscoverResult;
 import org.dspace.discovery.configuration.DiscoveryConfiguration;
@@ -37,6 +39,9 @@ public class DiscoverResultConverter {
 
     @Autowired
     private List<DSpaceObjectConverter> converters;
+
+    @Autowired
+    private ItemService itemService;
 
     private DiscoverFacetValueConverter facetValueConverter = new DiscoverFacetValueConverter();
 
@@ -99,6 +104,10 @@ public class DiscoverResultConverter {
             //Convert the DSpace Object to its REST model
             resultEntry.setDspaceObject(convertDSpaceObject(dspaceObject));
 
+            //TODO Remove this again
+            if (dspaceObject instanceof Item) {
+                itemService.getMetadata((Item) dspaceObject, "*", "*", "*", "*");
+            }
             //Add hit highlighting for this DSO if present
             DiscoverResult.DSpaceObjectHighlightResult highlightedResults = searchResult
                 .getHighlightedResults(dspaceObject);

@@ -12,9 +12,11 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -1243,15 +1245,131 @@ prevent the generation of resource policy entry values with null dspace_object a
         List<MetadataValue> fullMetadataValueList = new LinkedList<>();
         List<MetadataValue> dbMetadataValues = super.getMetadata(item, schema, element, qualifier, lang);
 
+        if (!(StringUtils.equals(schema, "*") && StringUtils.equals(element, "*") &&
+            StringUtils.equals(qualifier, "*") && StringUtils.equals(lang, "*") )) {
+            return  dbMetadataValues;
+        }
         Context context = new Context();
         try {
+            List<MetadataValue> list = item.getMetadata();
+            String entityType = getEntityTypeStringFromMetadata(list);
             List<Relationship> relationships = relationshipService.findByItem(context, item);
 
+            for (Relationship relationship : relationships) {
+                fullMetadataValueList = handleItemRelationship(item,entityType,relationship);
+            }
+
+            fullMetadataValueList.addAll(dbMetadataValues);
         } catch (SQLException e) {
             log.error(e, e);
         }
 
-        return dbMetadataValues;
+        return fullMetadataValueList;
 
+    }
+
+    private List<MetadataValue> handleItemRelationship(Item item,String entityType,
+                                        Relationship relationship) {
+        List<MetadataValue> resultingMetadataValueList = new LinkedList<>();
+        RelationshipType relationshipType = relationship.getRelationshipType();
+        HashMap<String, List<String>> hashMaps = new HashMap<>();
+        Item otherItem = null;
+        if (StringUtils.equals(relationshipType.getLeftType().getLabel(),entityType)) {
+            hashMaps = (HashMap<String, List<String>>) virtualMetadataPopulator
+                .getMap().get(relationshipType.getLeftLabel());
+            otherItem = relationship.getRightItem();
+        } else if (StringUtils.equals(relationshipType.getRightType().getLabel(), entityType)) {
+            hashMaps = (HashMap<String, List<String>>) virtualMetadataPopulator
+                .getMap().get(relationshipType.getRightLabel());
+            otherItem = relationship.getLeftItem();
+        }
+
+        if (hashMaps != null) {
+            resultingMetadataValueList.addAll(handleRelationshipTypeMetadataMappping(item,hashMaps,otherItem));
+        }
+        return resultingMetadataValueList;
+    }
+
+    private List<MetadataValue> handleRelationshipTypeMetadataMappping(Item item,
+                                                        HashMap<String, List<String>> hashMaps,Item otherItem) {
+        List<MetadataValue> resultingMetadataValueList = new LinkedList<>();
+        for (Map.Entry<String, List<String>> entry : hashMaps.entrySet()) {
+            String key = entry.getKey();
+            List<String> value = entry.getValue();
+
+            MetadataValue metadataValue = constructMetadataValue(key);
+            metadataValue = constructResultingMetadataValue(item,otherItem,value,metadataValue);
+            if (StringUtils.isNotBlank(metadataValue.getValue())) {
+                resultingMetadataValueList.add(metadataValue);
+            }
+        }
+
+        resultingMetadataValueList.add(getRelationMetadataFromOtherItem(otherItem));
+        return resultingMetadataValueList;
+    }
+
+    private MetadataValue getRelationMetadataFromOtherItem(Item otherItem) {
+        MetadataValue metadataValue = constructMetadataValue("relation_relationname");
+        metadataValue.setAuthority("virtual");
+        metadataValue.setValue(otherItem.getID().toString());
+        return metadataValue;
+    }
+
+    private String getEntityTypeStringFromMetadata(List<MetadataValue> list) {
+        String entityType = null;
+        for (MetadataValue mdv : list) {
+            if (StringUtils.equals(mdv.getMetadataField().getMetadataSchema().getName(),
+                                   "relationship")
+                && StringUtils.equals(mdv.getMetadataField().getElement(),
+                                      "type")) {
+
+                entityType = mdv.getValue();
+            }
+        }
+        return entityType;
+    }
+
+    private MetadataValue constructResultingMetadataValue(Item item,Item otherItem,List<String> value,
+                                                   MetadataValue metadataValue) {
+        List<String> resultValues = new LinkedList<>();
+        for (String s : value) {
+            String[] splittedString = s.split("\\.");
+
+            List<MetadataValue> resultList = this.getMetadata(otherItem,
+                             splittedString.length > 0 ? splittedString[0] : null,
+                             splittedString.length > 1 ? splittedString[1] : null,
+                             splittedString.length > 2 ? splittedString[2] : null,
+                             Item.ANY);
+
+            String resultString = "";
+            for (int i = 0; i < resultList.size(); i ++) {
+                resultString += resultList.get(i).getValue();
+                if (i < resultList.size() - 1) {
+                    resultString += ", ";
+                }
+            }
+            resultValues.add(resultString);
+        }
+
+        String result = StringUtils.join(resultValues,", ");
+        metadataValue.setValue(result);
+        metadataValue.setAuthority("virtual");
+        metadataValue.setConfidence(-1);
+        metadataValue.setDSpaceObject(item);
+        return metadataValue;
+    }
+
+    private MetadataValue constructMetadataValue(String key) {
+        String[] splittedKey = key.split("_");
+        MetadataValue metadataValue = new MetadataValue();
+        MetadataField metadataField = new MetadataField();
+        MetadataSchema metadataSchema = new MetadataSchema();
+        metadataSchema.setName(splittedKey.length > 0 ? splittedKey[0] : null);
+        metadataField.setMetadataSchema(metadataSchema);
+        metadataField.setElement(splittedKey.length > 1 ? splittedKey[1] : null);
+        metadataField.setQualifier(splittedKey.length > 2 ? splittedKey[2] : null);
+        metadataValue.setMetadataField(metadataField);
+        metadataValue.setLanguage(Item.ANY);
+        return metadataValue;
     }
 }
