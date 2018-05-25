@@ -1,7 +1,7 @@
 package org.dspace.app.rest.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.dspace.app.rest.RestResourceController;
-import org.dspace.content.EntityType;
 
 public class RelationshipTypeRest extends BaseObjectRest<Integer> {
 
@@ -14,8 +14,8 @@ public class RelationshipTypeRest extends BaseObjectRest<Integer> {
     private int leftMaxCardinality;
     private int rightMinCardinality;
     private int rightMaxCardinality;
-    private EntityType leftType;
-    private EntityType rightType;
+    private EntityTypeRest leftType;
+    private EntityTypeRest rightType;
 
     public String getType() {
         return NAME;
@@ -77,19 +77,23 @@ public class RelationshipTypeRest extends BaseObjectRest<Integer> {
         this.rightMaxCardinality = rightMaxCardinality;
     }
 
-    public EntityType getLeftType() {
+    @LinkRest(linkClass = EntityTypeRest.class)
+    @JsonIgnore
+    public EntityTypeRest getLeftType() {
         return leftType;
     }
 
-    public void setLeftType(EntityType leftType) {
+    public void setLeftType(EntityTypeRest leftType) {
         this.leftType = leftType;
     }
 
-    public EntityType getRightType() {
+    @LinkRest(linkClass = EntityTypeRest.class)
+    @JsonIgnore
+    public EntityTypeRest getRightType() {
         return rightType;
     }
 
-    public void setRightType(EntityType rightType) {
+    public void setRightType(EntityTypeRest rightType) {
         this.rightType = rightType;
     }
 }

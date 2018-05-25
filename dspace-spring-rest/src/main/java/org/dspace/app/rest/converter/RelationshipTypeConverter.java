@@ -2,11 +2,15 @@ package org.dspace.app.rest.converter;
 
 import org.dspace.app.rest.model.RelationshipTypeRest;
 import org.dspace.content.RelationshipType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class RelationshipTypeConverter extends DSpaceConverter<org.dspace.content.RelationshipType,
-    org.dspace.app.rest.model.RelationshipTypeRest>  {
+public class RelationshipTypeConverter extends DSpaceConverter<RelationshipType, RelationshipTypeRest>  {
+
+    @Autowired
+    private EntityTypeConverter entityTypeConverter;
+
     public RelationshipTypeRest fromModel(RelationshipType obj) {
         RelationshipTypeRest relationshipTypeRest = new RelationshipTypeRest();
 
@@ -17,8 +21,8 @@ public class RelationshipTypeConverter extends DSpaceConverter<org.dspace.conten
         relationshipTypeRest.setLeftMaxCardinality(obj.getLeftMaxCardinality());
         relationshipTypeRest.setRightMinCardinality(obj.getRightMinCardinality());
         relationshipTypeRest.setRightMaxCardinality(obj.getRightMaxCardinality());
-        relationshipTypeRest.setLeftType(obj.getLeftType());
-        relationshipTypeRest.setRightType(obj.getRightType());
+        relationshipTypeRest.setLeftType(entityTypeConverter.fromModel(obj.getLeftType()));
+        relationshipTypeRest.setRightType(entityTypeConverter.fromModel(obj.getRightType()));
 
         return relationshipTypeRest;
     }
@@ -33,8 +37,8 @@ public class RelationshipTypeConverter extends DSpaceConverter<org.dspace.conten
         relationshipType.setLeftMaxCardinality(obj.getLeftMaxCardinality());
         relationshipType.setRightMinCardinality(obj.getRightMinCardinality());
         relationshipType.setRightMaxCardinality(obj.getRightMaxCardinality());
-        relationshipType.setLeftType(obj.getLeftType());
-        relationshipType.setRightType(obj.getRightType());
+        relationshipType.setLeftType(entityTypeConverter.toModel(obj.getLeftType()));
+        relationshipType.setRightType(entityTypeConverter.toModel(obj.getRightType()));
 
         return relationshipType;
     }

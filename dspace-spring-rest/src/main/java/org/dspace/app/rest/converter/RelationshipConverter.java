@@ -11,8 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class RelationshipConverter extends DSpaceConverter<org.dspace.content.Relationship,
-    org.dspace.app.rest.model.RelationshipRest> {
+public class RelationshipConverter extends DSpaceConverter<Relationship, RelationshipRest> {
+
     private static final Logger log = Logger.getLogger(RelationshipConverter.class);
 
     @Autowired
