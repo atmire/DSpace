@@ -18,12 +18,15 @@ public class RelationshipConverter extends DSpaceConverter<org.dspace.content.Re
     @Autowired
     private ItemService itemService;
 
+    @Autowired
+    private RelationshipTypeConverter relationshipTypeConverter;
+
 
     public RelationshipRest fromModel(Relationship obj) {
         RelationshipRest relationshipRest = new RelationshipRest();
         relationshipRest.setId(obj.getId());
         relationshipRest.setLeftId(obj.getLeftItem().getID());
-        relationshipRest.setRelationshipType(obj.getRelationshipType());
+        relationshipRest.setRelationshipType(relationshipTypeConverter.fromModel(obj.getRelationshipType()));
         relationshipRest.setRightId(obj.getRightItem().getID());
         relationshipRest.setPlace(obj.getPlace());
         return relationshipRest;
@@ -38,7 +41,7 @@ public class RelationshipConverter extends DSpaceConverter<org.dspace.content.Re
         } catch (SQLException e) {
             log.error(e,e);
         }
-        relationship.setRelationshipType(obj.getRelationshipType());
+        relationship.setRelationshipType(relationshipTypeConverter.toModel(obj.getRelationshipType()));
         relationship.setPlace(obj.getPlace());
         relationship.setId(obj.getId());
         return relationship;

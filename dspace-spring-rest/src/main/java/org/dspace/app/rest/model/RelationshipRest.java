@@ -2,15 +2,15 @@ package org.dspace.app.rest.model;
 
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.dspace.app.rest.RestResourceController;
-import org.dspace.content.RelationshipType;
 
 public class RelationshipRest extends BaseObjectRest<Integer> {
     public static final String NAME = "relationship";
     public static final String CATEGORY = "entities";
 
     private UUID leftId;
-    private RelationshipType relationshipType;
+    private RelationshipTypeRest relationshipType;
     private UUID rightId;
     private int place;
 
@@ -34,11 +34,13 @@ public class RelationshipRest extends BaseObjectRest<Integer> {
         this.leftId = leftId;
     }
 
-    public RelationshipType getRelationshipType() {
+    @LinkRest(linkClass = RelationshipTypeRest.class)
+    @JsonIgnore
+    public RelationshipTypeRest getRelationshipType() {
         return relationshipType;
     }
 
-    public void setRelationshipType(RelationshipType relationshipType) {
+    public void setRelationshipType(RelationshipTypeRest relationshipType) {
         this.relationshipType = relationshipType;
     }
 
