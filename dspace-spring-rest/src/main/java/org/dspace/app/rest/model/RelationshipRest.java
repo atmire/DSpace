@@ -7,7 +7,7 @@ import org.dspace.app.rest.RestResourceController;
 
 public class RelationshipRest extends BaseObjectRest<Integer> {
     public static final String NAME = "relationship";
-    public static final String CATEGORY = "entities";
+    public static final String CATEGORY = "core";
 
     private UUID leftId;
     private RelationshipTypeRest relationshipType;

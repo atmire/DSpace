@@ -6,7 +6,7 @@ import org.dspace.content.EntityType;
 public class RelationshipTypeRest extends BaseObjectRest<Integer> {
 
     public static final String NAME = "relationshiptype";
-    public static final String CATEGORY = "entities";
+    public static final String CATEGORY = "core";
 
     private String leftLabel;
     private String rightLabel;
