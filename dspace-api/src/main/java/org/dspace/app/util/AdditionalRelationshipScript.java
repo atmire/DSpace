@@ -122,7 +122,6 @@ public class AdditionalRelationshipScript {
         constructRelationshipAndStore(context, project2, orgUnit3, isOrgUnitOfProject, 1);
         constructRelationshipAndStore(context, project1, orgUnit3, isOrgUnitOfProject, 1);
         constructRelationshipAndStore(context, project3, orgUnit3, isOrgUnitOfProject, 1);
-        
         context.complete();
     }
 
