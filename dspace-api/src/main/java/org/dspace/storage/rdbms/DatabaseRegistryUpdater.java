@@ -75,6 +75,9 @@ public class DatabaseRegistryUpdater implements FlywayCallback {
             MetadataImporter.loadRegistry(base + "person-types.xml", true);
             MetadataImporter.loadRegistry(base + "project-types.xml", true);
             MetadataImporter.loadRegistry(base + "orgunit-types.xml", true);
+            MetadataImporter.loadRegistry(base + "journal-types.xml", true);
+            MetadataImporter.loadRegistry(base + "journalissue-types.xml", true);
+            MetadataImporter.loadRegistry(base + "journalvolume-types.xml", true);
             MetadataImporter.loadRegistry(base + "eperson-types.xml", true);
             MetadataImporter.loadRegistry(base + "sword-metadata.xml", true);
 

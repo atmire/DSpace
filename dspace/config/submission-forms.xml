@@ -387,6 +387,142 @@ it, please enter the types and the actual numbers or codes.</hint>
        <hint>Enter the description of the orgunit</hint>
      </field>
    </form>
+
+   <form name="journalStep">
+
+     <field>
+       <dc-schema>journal</dc-schema>
+       <dc-element>identifier</dc-element>
+       <dc-qualifier>name</dc-qualifier>
+       <label>Name</label>
+       <input-type>textarea</input-type>
+       <hint>Enter the name of the journal</hint>
+     </field>
+
+     <field>
+       <dc-schema>journal</dc-schema>
+       <dc-element>contributor</dc-element>
+       <dc-qualifier>editor</dc-qualifier>
+       <label>Editor</label>
+       <input-type>textarea</input-type>
+       <hint>Enter the editor of the journal</hint>
+     </field>
+
+     <field>
+       <dc-schema>journal</dc-schema>
+       <dc-element>identifier</dc-element>
+       <dc-qualifier>issn</dc-qualifier>
+       <label>Name</label>
+       <input-type>textarea</input-type>
+       <hint>Enter the issn of the journal</hint>
+     </field>
+
+     <field>
+       <dc-schema>journal</dc-schema>
+       <dc-element>identifier</dc-element>
+       <dc-qualifier>description</dc-qualifier>
+       <label>Description</label>
+       <input-type>textarea</input-type>
+       <hint>Enter the description of the journal</hint>
+     </field>
+
+     <field>
+       <dc-schema>journal</dc-schema>
+       <dc-element>publisher</dc-element>
+       <label>Publisher</label>
+       <input-type>textarea</input-type>
+       <hint>Enter the publisher of the journal</hint>
+     </field>
+
+   </form>
+
+   <form name="journalVolumeStep">
+
+     <field>
+       <dc-schema>journalvolume</dc-schema>
+       <dc-element>identifier</dc-element>
+       <dc-qualifier>name</dc-qualifier>
+       <label>Name</label>
+       <input-type>textarea</input-type>
+       <hint>Enter the name of the journal volume</hint>
+     </field>
+
+     <field>
+       <dc-schema>journalvolume</dc-schema>
+       <dc-element>identifier</dc-element>
+       <dc-qualifier>volume</dc-qualifier>
+       <label>Volume</label>
+       <input-type>textarea</input-type>
+       <hint>Enter the volume of the journal volume</hint>
+     </field>
+
+     <field>
+       <dc-schema>journalvolume</dc-schema>
+       <dc-element>issuedate</dc-element>
+       <label>Issue date</label>
+       <input-type>date</input-type>
+       <hint>Enter the issue date of the journal volume</hint>
+     </field>
+
+     <field>
+       <dc-schema>journalvolume</dc-schema>
+       <dc-element>identifier</dc-element>
+       <dc-qualifier>description</dc-qualifier>
+       <label>Description</label>
+       <input-type>textarea</input-type>
+       <hint>Enter the description of the journal volume</hint>
+     </field>
+
+   </form>
+
+   <form name="journalIssueStep">
+
+     <field>
+       <dc-schema>journalissue</dc-schema>
+       <dc-element>identifier</dc-element>
+       <dc-qualifier>name</dc-qualifier>
+       <label>Name</label>
+       <input-type>textarea</input-type>
+       <hint>Enter the name of the journal issue</hint>
+     </field>
+
+     <field>
+       <dc-schema>journalissue</dc-schema>
+       <dc-element>identifier</dc-element>
+       <dc-qualifier>number</dc-qualifier>
+       <label>Number</label>
+       <input-type>textarea</input-type>
+       <hint>Enter the number of the journal issue</hint>
+     </field>
+
+     <field>
+       <dc-schema>journalissue</dc-schema>
+       <dc-element>issuedate</dc-element>
+       <label>Issue date</label>
+       <input-type>date</input-type>
+       <hint>Enter the issue date of the journal issue</hint>
+     </field>
+
+     <field>
+       <dc-schema>journalissue</dc-schema>
+       <dc-element>identifier</dc-element>
+       <dc-qualifier>description</dc-qualifier>
+       <label>Description</label>
+       <input-type>textarea</input-type>
+       <hint>Enter the description of the journal issue</hint>
+     </field>
+
+     <field>
+       <dc-schema>journalissue</dc-schema>
+       <dc-element>identifier</dc-element>
+       <dc-qualifier>keyword</dc-qualifier>
+       <label>Keywords</label>
+       <input-type>textarea</input-type>
+       <hint>Enter the keywords of the journal issue</hint>
+     </field>
+
+   </form>
+
  </form-definitions>
 
 
