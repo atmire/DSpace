@@ -61,12 +61,40 @@ public class AdditionalRelationshipScript {
         Item project2 = itemService.findByIdOrLegacyId(context, "b1bc3a49-49b1-417a-ac90-8d5c7ba5e0ac");
         Item project3 = itemService.findByIdOrLegacyId(context, "18e7924c-f15b-4953-9fe3-3de370bccc97");
 
+        Item journal1 = itemService.findByIdOrLegacyId(context, "d4af6c3e-53d0-4757-81eb-566f3b45d63a");
+        Item journal2 = itemService.findByIdOrLegacyId(context, "a23eae5a-7857-4ef9-8e52-989436ad2955");
+
+        Item journalVolume1OfJournal1 = itemService.findByIdOrLegacyId(context, "07c6249f-4bf7-494d-9ce3-6ffdb2aed538");
+        Item journalVolume2OfJournal1 = itemService.findByIdOrLegacyId(context, "66bb4e5d-b419-42b7-a648-f270a527f17c");
+
+        Item journalVolume1OfJournal2 = itemService.findByIdOrLegacyId(context, "f9b89a11-b44e-4a64-a3b4-ab24a33553c7");
+        Item journalVolume2OfJournal2 = itemService.findByIdOrLegacyId(context, "343d3263-2733-4367-9dc4-216a01b4a461");
+
+        Item journalIssue1OfJournalVolume1OfJournal1 = itemService.findByIdOrLegacyId
+            (context, "44c29473-5de2-48fa-b005-e5029aa1a50b");
+        Item journalIssue2OfJournalVolume1OfJournal1 = itemService.findByIdOrLegacyId
+            (context, "c3076837-e5df-4221-80bc-2661cd390a7b");
+        Item journalIssue1OfJournalVolume2OfJournal1 = itemService.findByIdOrLegacyId
+            (context, "a4a63ab5-8c0b-4456-b5f7-5b5d9828cb69");
+
+        Item journalIssue1OfJournalVolume1OfJournal2 = itemService.findByIdOrLegacyId
+            (context, "77877343-3f75-4c33-9492-6ed7c98ed84e");
+        Item journalIssue2OfJournalVolume1OfJournal2 = itemService.findByIdOrLegacyId
+            (context, "f4dcd8a6-4cc4-4806-8bb9-a7e8202e05b0");
+        Item journalIssue1OfJournalVolume2OfJournal2 = itemService.findByIdOrLegacyId
+            (context, "b7003f66-80e9-4c98-99a2-3695e8150b80");
+        Item journalIssue2OfJournalVolume2OfJournal2 = itemService.findByIdOrLegacyId
+            (context, "db55298c-a21f-4677-8793-a21f1194a226");
+
         RelationshipType isAuthorOfPublication = relationshipTypeService.find(context, 1);
         RelationshipType isProjectOfPublication = relationshipTypeService.find(context, 2);
         RelationshipType isOrgUnitOfPublication = relationshipTypeService.find(context, 3);
         RelationshipType isProjectOfPerson = relationshipTypeService.find(context, 4);
         RelationshipType isOrgUnitOfPerson = relationshipTypeService.find(context, 5);
         RelationshipType isOrgUnitOfProject = relationshipTypeService.find(context, 6);
+        RelationshipType isVolumeOfJournal = relationshipTypeService.find(context, 7);
+        RelationshipType isIssueOfJournalVolume = relationshipTypeService.find(context, 8);
+
 
         constructRelationshipAndStore(context, article1, author1, isAuthorOfPublication, 1);
         constructRelationshipAndStore(context, article1, author2, isAuthorOfPublication, 1);
@@ -122,6 +150,31 @@ public class AdditionalRelationshipScript {
         constructRelationshipAndStore(context, project2, orgUnit3, isOrgUnitOfProject, 1);
         constructRelationshipAndStore(context, project1, orgUnit3, isOrgUnitOfProject, 1);
         constructRelationshipAndStore(context, project3, orgUnit3, isOrgUnitOfProject, 1);
+
+        constructRelationshipAndStore(context, journal1, journalVolume1OfJournal1, isVolumeOfJournal, 1);
+        constructRelationshipAndStore(context, journal1, journalVolume2OfJournal1, isVolumeOfJournal, 1);
+
+        constructRelationshipAndStore(context, journal2, journalVolume1OfJournal2, isVolumeOfJournal, 1);
+        constructRelationshipAndStore(context, journal2, journalVolume2OfJournal2, isVolumeOfJournal, 1);
+
+
+        constructRelationshipAndStore(context, journalVolume1OfJournal1,
+                                      journalIssue1OfJournalVolume1OfJournal1, isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume1OfJournal1,
+                                      journalIssue2OfJournalVolume1OfJournal1, isIssueOfJournalVolume, 1);
+
+        constructRelationshipAndStore(context, journalVolume2OfJournal1,
+                                      journalIssue1OfJournalVolume2OfJournal1, isIssueOfJournalVolume, 1);
+
+        constructRelationshipAndStore(context, journalVolume1OfJournal2,
+                                      journalIssue1OfJournalVolume1OfJournal2,isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume1OfJournal2,
+                                      journalIssue2OfJournalVolume1OfJournal2,isIssueOfJournalVolume, 1);
+
+        constructRelationshipAndStore(context, journalVolume2OfJournal2,
+                                      journalIssue1OfJournalVolume2OfJournal2,isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume2OfJournal2,
+                                      journalIssue2OfJournalVolume2OfJournal2,isIssueOfJournalVolume, 1);
         context.complete();
     }
 
