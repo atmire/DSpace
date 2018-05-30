@@ -1242,14 +1242,23 @@ prevent the generation of resource policy entry values with null dspace_object a
 
     @Override
     public List<MetadataValue> getMetadata(Item item, String schema, String element, String qualifier, String lang) {
-        List<MetadataValue> fullMetadataValueList = new LinkedList<>();
         List<MetadataValue> dbMetadataValues = super.getMetadata(item, schema, element, qualifier, lang);
 
         if (!(StringUtils.equals(schema, "*") && StringUtils.equals(element, "*") &&
             StringUtils.equals(qualifier, "*") && StringUtils.equals(lang, "*"))) {
             return dbMetadataValues;
         }
+        List<MetadataValue> fullMetadataValueList = getRelationshipMetadata(item);
+        fullMetadataValueList.addAll(dbMetadataValues);
+
+        return fullMetadataValueList;
+
+    }
+
+    @Override
+    public List<MetadataValue> getRelationshipMetadata(Item item) {
         Context context = new Context();
+        List<MetadataValue> fullMetadataValueList = new LinkedList<>();
         try {
             List<MetadataValue> list = item.getMetadata();
             String entityType = getEntityTypeStringFromMetadata(list);
@@ -1257,17 +1266,14 @@ prevent the generation of resource policy entry values with null dspace_object a
                 List<Relationship> relationships = relationshipService.findByItem(context, item);
 
                 for (Relationship relationship : relationships) {
-                    fullMetadataValueList = handleItemRelationship(item, entityType, relationship);
+                    fullMetadataValueList.addAll(handleItemRelationship(item, entityType, relationship));
                 }
 
-                fullMetadataValueList.addAll(dbMetadataValues);
             }
         } catch (SQLException e) {
             log.error(e, e);
         }
-
         return fullMetadataValueList;
-
     }
 
     private List<MetadataValue> handleItemRelationship(Item item, String entityType,
