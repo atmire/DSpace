@@ -120,20 +120,69 @@
         <property name="map">
             <map>
                 <entry key="isAuthorOfPublication" value-ref="isAuthorOfPublicationMap"/>
+                <entry key="isOrgUnitOfPublication" value-ref="isOrgUnitOfPublicationMap"/>
+                <entry key="isPersonOfProject" value-ref="isPersonOfProjectMap"/>
+                <entry key="isOrgUnitOfProject" value-ref="isOrgUnitOfProjectMap"/>
+                <entry key="isOrgUnitOfPerson" value-ref="isOrgUnitOfPersonMap"/>
+                <entry key="isJournalVolumeOfIssue" value-ref="isJournalVolumeOfIssueMap"/>
+                <entry key="isJournalOfVolume" value-ref="isJournalOfVolumeMap"/>
             </map>
         </property>
     </bean>
 
     <util:map id="isAuthorOfPublicationMap">
         <entry key="dc_contributor_author" value-ref="publicationAuthor_author"/>
-        <entry key="dc_contributor_editor" value-ref="publicationAuthor_editor"/>
     </util:map>
     <util:list id="publicationAuthor_author">
         <value>person.identifier.lastname</value>
         <value>person.identifier.firstname</value>
     </util:list>
-    <util:list id="publicationAuthor_editor">
+
+    <util:map id="isOrgUnitOfPublicationMap">
+        <entry key="dc_contributor_other" value-ref="publicationOrgUnit_name"/>
+    </util:map>
+    <util:list id="publicationOrgUnit_name">
+        <value>orgunit.identifier.name</value>
+    </util:list>
+
+    <util:map id="isPersonOfProjectMap">
+        <entry key="project_contributor_author" value-ref="projectPerson_author"/>
+    </util:map>
+    <util:list id="projectPerson_author">
         <value>person.identifier.lastname</value>
         <value>person.identifier.firstname</value>
     </util:list>
+
+    <util:map id="isOrgUnitOfProjectMap">
+        <entry key="project_contributor_other" value-ref="projectOrgUnit_other"/>
+    </util:map>
+    <util:list id="projectOrgUnit_other">
+        <value>orgunit.identifier.name</value>
+    </util:list>
+
+    <util:map id="isOrgUnitOfPersonMap">
+        <entry key="person_contributor_other" value-ref="personProject_other"/>
+    </util:map>
+    <util:list id="personProject_other">
+        <value>orgunit.identifier.name</value>
+    </util:list>
+
+    <util:map id="isJournalVolumeOfIssueMap">
+        <entry key="journalvolume_identifier_volume" value-ref="issueVolume_volume"/>
+    </util:map>
+    <util:list id="issueVolume_volume">
+        <value>journalvolume.identifier.volume</value>
+    </util:list>
+
+    <util:map id="isJournalOfVolumeMap">
+        <entry key="journal_identifier_issn" value-ref="volumeJournal_issn"/>
+        <entry key="dc_title" value-ref="volumeJournal_title"/>
+    </util:map>
+    <util:list id="volumeJournal_issn">
+        <value>journal.identifier.issn</value>
+    </util:list>
+    <util:list id="volumeJournal_title">
+        <value>journal.identifier.name</value>
+    </util:list>
 </beans>
+

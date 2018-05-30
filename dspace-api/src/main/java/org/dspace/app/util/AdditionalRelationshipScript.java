@@ -151,6 +151,21 @@ public class AdditionalRelationshipScript {
         constructRelationshipAndStore(context, project1, orgUnit3, isOrgUnitOfProject, 1);
         constructRelationshipAndStore(context, project3, orgUnit3, isOrgUnitOfProject, 1);
 
+
+        constructRelationshipAndStore(context, author1, project1, isProjectOfPerson, 1);
+        constructRelationshipAndStore(context, author2, project2, isProjectOfPerson, 1);
+        constructRelationshipAndStore(context, author2, project3, isProjectOfPerson, 1);
+        constructRelationshipAndStore(context, author3, project1, isProjectOfPerson, 1);
+        constructRelationshipAndStore(context, author3, project2, isProjectOfPerson, 1);
+        constructRelationshipAndStore(context, author3, project3, isProjectOfPerson, 1);
+
+        constructRelationshipAndStore(context, author1,orgUnit1 ,isOrgUnitOfPerson, 1);
+        constructRelationshipAndStore(context, author2,orgUnit2 ,isOrgUnitOfPerson, 1);
+        constructRelationshipAndStore(context, author2,orgUnit3 ,isOrgUnitOfPerson, 1);
+        constructRelationshipAndStore(context, author3,orgUnit1 ,isOrgUnitOfPerson, 1);
+        constructRelationshipAndStore(context, author3,orgUnit2 ,isOrgUnitOfPerson, 1);
+        constructRelationshipAndStore(context, author3,orgUnit3 ,isOrgUnitOfPerson, 1);
+
         constructRelationshipAndStore(context, journal1, journalVolume1OfJournal1, isVolumeOfJournal, 1);
         constructRelationshipAndStore(context, journal1, journalVolume2OfJournal1, isVolumeOfJournal, 1);
 
