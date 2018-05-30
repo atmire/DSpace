@@ -170,6 +170,5 @@ public class DatabaseRegistryUpdater implements FlywayCallback {
 
     @Override
     public void afterInfo(Connection connection) {
-        updateRegistries();
     }
 }
