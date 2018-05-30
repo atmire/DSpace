@@ -45,4 +45,11 @@
         <scope_note></scope_note>
     </dc-type>
 
+    <dc-type>
+        <schema>journal</schema>
+        <element>title</element>
+        <qualifier></qualifier>
+        <scope_note></scope_note>
+    </dc-type>
+
 </dspace-dc-types>

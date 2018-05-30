@@ -176,7 +176,7 @@
 
     <util:map id="isJournalOfVolumeMap">
         <entry key="journal_identifier_issn" value-ref="volumeJournal_issn"/>
-        <entry key="dc_title" value-ref="volumeJournal_title"/>
+        <entry key="journal_title" value-ref="volumeJournal_title"/>
     </util:map>
     <util:list id="volumeJournal_issn">
         <value>journal.identifier.issn</value>
