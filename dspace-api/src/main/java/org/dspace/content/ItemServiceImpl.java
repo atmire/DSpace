@@ -1253,13 +1253,15 @@ prevent the generation of resource policy entry values with null dspace_object a
         try {
             List<MetadataValue> list = item.getMetadata();
             String entityType = getEntityTypeStringFromMetadata(list);
-            List<Relationship> relationships = relationshipService.findByItem(context, item);
+            if(StringUtils.isNotBlank(entityType)) {
+                List<Relationship> relationships = relationshipService.findByItem(context, item);
 
-            for (Relationship relationship : relationships) {
-                fullMetadataValueList = handleItemRelationship(item, entityType, relationship);
+                for (Relationship relationship : relationships) {
+                    fullMetadataValueList = handleItemRelationship(item, entityType, relationship);
+                }
+
+                fullMetadataValueList.addAll(dbMetadataValues);
             }
-
-            fullMetadataValueList.addAll(dbMetadataValues);
         } catch (SQLException e) {
             log.error(e, e);
         }
