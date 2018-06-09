@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.builder;
 
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -145,6 +146,12 @@ public abstract class AbstractBuilder<T, S> {
     }
 
     public static void cleanupObjects() throws Exception {
+        builders.sort(new Comparator<AbstractBuilder>() {
+            @Override
+            public int compare(AbstractBuilder o1, AbstractBuilder o2) {
+                return o1.getPriority() - o2.getPriority();
+            }
+        });
         for (AbstractBuilder builder : builders) {
             builder.cleanup();
         }
@@ -162,6 +169,10 @@ public abstract class AbstractBuilder<T, S> {
             }
             c.complete();
         }
+    }
+
+    protected int getPriority() {
+        return 0;
     }
 
     protected abstract void cleanup() throws Exception;
