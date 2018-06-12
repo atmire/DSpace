@@ -9,23 +9,36 @@ package org.dspace.content;
 
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.dao.RelationshipDAO;
+import org.dspace.content.service.ItemService;
 import org.dspace.content.service.RelationshipService;
+import org.dspace.content.service.RelationshipTypeService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class RelationshipServiceImpl implements RelationshipService {
+
+    private static final Logger log = Logger.getLogger(RelationshipServiceImpl.class);
 
     @Autowired(required = true)
     protected RelationshipDAO relationshipDAO;
 
     @Autowired(required = true)
     protected AuthorizeService authorizeService;
+
+    @Autowired(required = true)
+    protected ItemService itemService;
+
+    @Autowired(required = true)
+    protected RelationshipTypeService relationshipTypeService;
 
     public Relationship create(Context context) throws SQLException, AuthorizeException {
         if (!authorizeService.isAdmin(context)) {
@@ -36,11 +49,80 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     public Relationship create(Context context, Relationship relationship) throws SQLException, AuthorizeException {
-        if (!authorizeService.isAdmin(context)) {
-            throw new AuthorizeException(
-                "Only administrators can modify relationship");
+        if (isRelationshipValid(context, relationship)) {
+            if (!authorizeService.isAdmin(context)) {
+                throw new AuthorizeException(
+                    "Only administrators can modify relationship");
+            }
+            return relationshipDAO.create(context, relationship);
+        } else {
+            throw new IllegalArgumentException("The relationship given was not valid");
         }
-        return relationshipDAO.create(context, relationship);
+    }
+
+    private boolean isRelationshipValid(Context context, Relationship relationship) throws SQLException {
+        RelationshipType relationshipType = relationship.getRelationshipType();
+
+        if (!verifyEntityTypes(relationship.getLeftItem(), relationshipType.getLeftType())) {
+            log.warn("The relationship has been deemed invalid since the leftItem" +
+                         " and leftType do no match on entityType");
+            logRelationshipTypeDetails(relationshipType);
+            return false;
+        }
+        if (!verifyEntityTypes(relationship.getRightItem(), relationshipType.getRightType())) {
+            log.warn("The relationship has been deemed invalid since the rightItem" +
+                         " and rightType do no match on entityType");
+            logRelationshipTypeDetails(relationshipType);
+            return false;
+        }
+        if (!verifyMaxCardinality(context, relationship.getLeftItem(),
+                                  relationshipType.getLeftMaxCardinality(), relationshipType)) {
+            log.warn("The relationship has been deemed invalid since the left item has more" +
+                         " relationships than the left max cardinality allows after we'd store this relationship");
+            logRelationshipTypeDetails(relationshipType);
+            return false;
+        }
+        if (!verifyMaxCardinality(context, relationship.getRightItem(),
+                                  relationshipType.getRightMaxCardinality(), relationshipType)) {
+            log.warn("The relationship has been deemed invalid since the right item has more" +
+                         " relationships than the right max cardinality allows after we'd store this relationship");
+            logRelationshipTypeDetails(relationshipType);
+            return false;
+        }
+        return true;
+    }
+
+    private void logRelationshipTypeDetails(RelationshipType relationshipType) {
+        log.warn("The relationshipType's ID is: " + relationshipType.getId());
+        log.warn("The relationshipType's left label is: " + relationshipType.getLeftLabel());
+        log.warn("The relationshipType's right label is: " + relationshipType.getRightLabel());
+        log.warn("The relationshipType's left entityType label is: " + relationshipType.getLeftType().getLabel());
+        log.warn("The relationshipType's right entityType label is: " + relationshipType.getRightType().getLabel());
+        log.warn("The relationshipType's left min cardinality is: " + relationshipType.getLeftMinCardinality());
+        log.warn("The relationshipType's left max cardinality is: " + relationshipType.getLeftMaxCardinality());
+        log.warn("The relationshipType's right min cardinality is: " + relationshipType.getRightMinCardinality());
+        log.warn("The relationshipType's right max cardinality is: " + relationshipType.getRightMaxCardinality());
+    }
+
+    private boolean verifyMaxCardinality(Context context, Item itemToProcess,
+                                         int maxCardinality, RelationshipType relationshipType) throws SQLException {
+        List<Relationship> rightRelationships = findByItemAndRelationshipType(context, itemToProcess, relationshipType);
+        if (rightRelationships.size() >= maxCardinality && maxCardinality != 0) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean verifyEntityTypes(Item itemToProcess, EntityType entityTypeToProcess) {
+        List<MetadataValue> list = itemService.getMetadata(itemToProcess, "relationship", "type", null, Item.ANY);
+        if (list.isEmpty()) {
+            return false;
+        }
+        String leftEntityType = list.get(0).getValue();
+        if (!StringUtils.equals(leftEntityType, entityTypeToProcess.getLabel())) {
+            return false;
+        }
+        return true;
     }
 
     public int findPlaceByLeftItem(Context context,Item item) throws SQLException {
@@ -85,5 +167,19 @@ public class RelationshipServiceImpl implements RelationshipService {
                 "Only administrators can delete relationship");
         }
         relationshipDAO.delete(context, relationship);
+    }
+
+    public List<Relationship> findByItemAndRelationshipType(Context context, Item item,
+                                                            RelationshipType relationshipType)
+
+        throws SQLException {
+        List<Relationship> list = this.findByItem(context, item);
+        List<Relationship> listToReturn = new LinkedList<>();
+        for (Relationship relationship : list) {
+            if (relationship.getRelationshipType() == relationshipType) {
+                listToReturn.add(relationship);
+            }
+        }
+        return listToReturn;
     }
 }
