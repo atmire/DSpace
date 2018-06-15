@@ -198,7 +198,7 @@ public class AdditionalRelationshipScript {
                                       article2 ,isPublicationOfJournalIssue, 1);
         constructRelationshipAndStore(context, journalIssue1OfJournalVolume2OfJournal1,
                                       article3 ,isPublicationOfJournalIssue, 1);
-        
+
         context.complete();
     }
 

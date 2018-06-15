@@ -174,6 +174,10 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     private boolean isRelationshipValidToDelete(Context context, Relationship relationship) throws SQLException {
+        if (relationship == null) {
+            log.warn("The relationship has been deemed invalid since the relation was null");
+            return false;
+        }
         if (relationship.getId() == null) {
             log.warn("The relationship has been deemed invalid since the ID" +
                          " off the given relationship was null");
@@ -185,7 +189,7 @@ public class RelationshipServiceImpl implements RelationshipService {
             logRelationshipTypeDetails(relationship.getRelationshipType());
             return false;
         }
-        if (checkMinCardinality(context, relationship.getLeftItem(),
+        if (!checkMinCardinality(context, relationship.getLeftItem(),
                                 relationship, relationship.getRelationshipType().getLeftMinCardinality())) {
             log.warn("The relationship has been deemed invalid since the leftMinCardinality" +
                          " constraint would not violated upon deletion");
@@ -193,7 +197,7 @@ public class RelationshipServiceImpl implements RelationshipService {
             return false;
         }
 
-        if (checkMinCardinality(context, relationship.getRightItem(),
+        if (!checkMinCardinality(context, relationship.getRightItem(),
                                 relationship, relationship.getRelationshipType().getRightMinCardinality())) {
             log.warn("The relationship has been deemed invalid since the rightMinCardinality" +
                          " constraint would not violated upon deletion");
@@ -208,9 +212,9 @@ public class RelationshipServiceImpl implements RelationshipService {
                                         int minCardinality) throws SQLException {
         List<Relationship> list = this.findByItemAndRelationshipType(context, item, relationship.getRelationshipType());
         if (!(list.size() > minCardinality)) {
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 
     public List<Relationship> findByItemAndRelationshipType(Context context, Item item,
