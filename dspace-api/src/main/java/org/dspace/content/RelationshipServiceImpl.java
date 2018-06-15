@@ -49,7 +49,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     public Relationship create(Context context, Relationship relationship) throws SQLException, AuthorizeException {
-        if (isRelationshipValid(context, relationship)) {
+        if (isRelationshipValidToCreate(context, relationship)) {
             if (!authorizeService.isAdmin(context)) {
                 throw new AuthorizeException(
                     "Only administrators can modify relationship");
@@ -60,7 +60,7 @@ public class RelationshipServiceImpl implements RelationshipService {
         }
     }
 
-    private boolean isRelationshipValid(Context context, Relationship relationship) throws SQLException {
+    private boolean isRelationshipValidToCreate(Context context, Relationship relationship) throws SQLException {
         RelationshipType relationshipType = relationship.getRelationshipType();
 
         if (!verifyEntityTypes(relationship.getLeftItem(), relationshipType.getLeftType())) {
@@ -162,11 +162,55 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     public void delete(Context context,Relationship relationship) throws SQLException, AuthorizeException {
-        if (!authorizeService.isAdmin(context)) {
-            throw new AuthorizeException(
-                "Only administrators can delete relationship");
+        if (isRelationshipValidToDelete(context, relationship)) {
+            if (!authorizeService.isAdmin(context)) {
+                throw new AuthorizeException(
+                    "Only administrators can delete relationship");
+            }
+            relationshipDAO.delete(context, relationship);
+        } else {
+            throw new IllegalArgumentException("The relationship given was not valid");
         }
-        relationshipDAO.delete(context, relationship);
+    }
+
+    private boolean isRelationshipValidToDelete(Context context, Relationship relationship) throws SQLException {
+        if (relationship.getId() == null) {
+            log.warn("The relationship has been deemed invalid since the ID" +
+                         " off the given relationship was null");
+            return false;
+        }
+        if (this.find(context, relationship.getId()) == null) {
+            log.warn("The relationship has been deemed invalid since the relationship" +
+                         " is not present in the DB with the current ID");
+            logRelationshipTypeDetails(relationship.getRelationshipType());
+            return false;
+        }
+        if (checkMinCardinality(context, relationship.getLeftItem(),
+                                relationship, relationship.getRelationshipType().getLeftMinCardinality())) {
+            log.warn("The relationship has been deemed invalid since the leftMinCardinality" +
+                         " constraint would not violated upon deletion");
+            logRelationshipTypeDetails(relationship.getRelationshipType());
+            return false;
+        }
+
+        if (checkMinCardinality(context, relationship.getRightItem(),
+                                relationship, relationship.getRelationshipType().getRightMinCardinality())) {
+            log.warn("The relationship has been deemed invalid since the rightMinCardinality" +
+                         " constraint would not violated upon deletion");
+            logRelationshipTypeDetails(relationship.getRelationshipType());
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkMinCardinality(Context context, Item item,
+                                        Relationship relationship,
+                                        int minCardinality) throws SQLException {
+        List<Relationship> list = this.findByItemAndRelationshipType(context, item, relationship.getRelationshipType());
+        if (!(list.size() > minCardinality)) {
+            return true;
+        }
+        return false;
     }
 
     public List<Relationship> findByItemAndRelationshipType(Context context, Item item,
