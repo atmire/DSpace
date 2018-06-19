@@ -54,10 +54,43 @@ public class RelationshipServiceImpl implements RelationshipService {
                 throw new AuthorizeException(
                     "Only administrators can modify relationship");
             }
+            updatePlaceInRelationship(context, relationship);
+
             return relationshipDAO.create(context, relationship);
         } else {
             throw new IllegalArgumentException("The relationship given was not valid");
         }
+    }
+
+    private void updatePlaceInRelationship(Context context, Relationship relationship) throws SQLException {
+        List<Relationship> leftRelationships = findByItemAndRelationshipType(context,
+                                                                             relationship.getLeftItem(),
+                                                                             relationship.getRelationshipType());
+        List<Relationship> rightRelationships = findByItemAndRelationshipType(context,
+                                                                              relationship.getRightItem(),
+                                                                              relationship.getRelationshipType());
+
+        if (!leftRelationships.isEmpty()) {
+            leftRelationships.sort((o1, o2) -> o2.getLeftPlace() - o1.getRightPlace());
+            relationship.setLeftPlace(leftRelationships.get(0).getLeftPlace() + 1);
+        } else {
+            relationship.setLeftPlace(1);
+        }
+
+        if (!rightRelationships.isEmpty()) {
+            rightRelationships.sort((o1, o2) -> o2.getLeftPlace() - o1.getRightPlace());
+            relationship.setRightPlace(rightRelationships.get(0).getRightPlace() + 1);
+        } else {
+            relationship.setRightPlace(1);
+        }
+    }
+
+    public int findLeftPlaceByLeftItem(Context context, Item item) throws SQLException {
+        return relationshipDAO.findLeftPlaceByLeftItem(context, item);
+    }
+
+    public int findRightPlaceByRightItem(Context context, Item item) throws SQLException {
+        return relationshipDAO.findRightPlaceByRightItem(context, item);
     }
 
     private boolean isRelationshipValidToCreate(Context context, Relationship relationship) throws SQLException {
@@ -125,17 +158,28 @@ public class RelationshipServiceImpl implements RelationshipService {
         return true;
     }
 
-    public int findPlaceByLeftItem(Context context,Item item) throws SQLException {
-        return relationshipDAO.findPlaceByLeftItem(context, item);
-    }
-
     public Relationship find(Context context,int id) throws SQLException {
         Relationship relationship = relationshipDAO.findByID(context, Relationship.class, id);
         return relationship;
     }
 
     public List<Relationship> findByItem(Context context, Item item) throws SQLException {
-        return relationshipDAO.findByItem(context, item);
+
+        List<Relationship> list = relationshipDAO.findByItem(context, item);
+
+        list.sort((o1, o2) -> {
+            int relationshipType = o1.getRelationshipType().getId().compareTo(o2.getRelationshipType().getId());
+            if (relationshipType != 0) {
+                return relationshipType;
+            } else {
+                if (o1.getLeftItem() == item) {
+                    return o2.getLeftPlace() - o1.getLeftPlace();
+                } else {
+                    return o2.getRightPlace() - o1.getRightPlace();
+                }
+            }
+        });
+        return list;
     }
 
     public List<Relationship> findAll(Context context) throws SQLException {

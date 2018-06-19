@@ -23,5 +23,7 @@ public interface RelationshipService extends DSpaceCRUDService<Relationship> {
 
     public Relationship create(Context context, Relationship relationship) throws SQLException, AuthorizeException;
 
-    int findPlaceByLeftItem(Context context, Item item) throws SQLException;
+    int findLeftPlaceByLeftItem(Context context, Item item) throws SQLException;
+
+    int findRightPlaceByRightItem(Context context, Item item) throws SQLException;
 }

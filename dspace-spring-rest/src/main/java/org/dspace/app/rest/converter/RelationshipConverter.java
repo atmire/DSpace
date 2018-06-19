@@ -35,7 +35,8 @@ public class RelationshipConverter extends DSpaceConverter<Relationship, Relatio
         relationshipRest.setLeftId(obj.getLeftItem().getID());
         relationshipRest.setRelationshipType(relationshipTypeConverter.fromModel(obj.getRelationshipType()));
         relationshipRest.setRightId(obj.getRightItem().getID());
-        relationshipRest.setPlace(obj.getPlace());
+        relationshipRest.setLeftPlace(obj.getLeftPlace());
+        relationshipRest.setRightPlace(obj.getRightPlace());
         return relationshipRest;
     }
 
@@ -49,7 +50,8 @@ public class RelationshipConverter extends DSpaceConverter<Relationship, Relatio
             log.error(e,e);
         }
         relationship.setRelationshipType(relationshipTypeConverter.toModel(obj.getRelationshipType()));
-        relationship.setPlace(obj.getPlace());
+        relationship.setLeftPlace(obj.getLeftPlace());
+        relationship.setRightPlace(obj.getRightPlace());
         relationship.setId(obj.getId());
         return relationship;
     }

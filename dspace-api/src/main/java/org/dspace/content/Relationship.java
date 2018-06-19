@@ -40,8 +40,11 @@ public class Relationship {
     @JoinColumn(name = "right_id", nullable = false)
     private Item rightItem;
 
-    @Column(name = "place")
-    private int place;
+    @Column(name = "left_place")
+    private int leftPlace;
+
+    @Column(name = "right_place")
+    private int rightPlace;
 
     public Integer getId() {
         return id;
@@ -75,11 +78,19 @@ public class Relationship {
         this.rightItem = rightItem;
     }
 
-    public int getPlace() {
-        return place;
+    public int getLeftPlace() {
+        return leftPlace;
     }
 
-    public void setPlace(int place) {
-        this.place = place;
+    public void setLeftPlace(int leftPlace) {
+        this.leftPlace = leftPlace;
+    }
+
+    public int getRightPlace() {
+        return rightPlace;
+    }
+
+    public void setRightPlace(int rightPlace) {
+        this.rightPlace = rightPlace;
     }
 }

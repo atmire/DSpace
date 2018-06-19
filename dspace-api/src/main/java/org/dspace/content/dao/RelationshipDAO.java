@@ -19,5 +19,7 @@ public interface RelationshipDAO extends GenericDAO<Relationship> {
 
     List<Relationship> findByItem(Context context,Item item) throws SQLException;
 
-    int findPlaceByLeftItem(Context context,Item item) throws SQLException;
+    int findLeftPlaceByLeftItem(Context context,Item item) throws SQLException;
+
+    int findRightPlaceByRightItem(Context context,Item item) throws SQLException;
 }

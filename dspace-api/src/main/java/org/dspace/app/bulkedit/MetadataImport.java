@@ -678,7 +678,8 @@ public class MetadataImport {
             relationship.setLeftItem(itemService.findByIdOrLegacyId(c, values.get(0)));
         }
         relationship.setRelationshipType(acceptedRelationshipType);
-        relationship.setPlace(relationshipService.findPlaceByLeftItem(c, relationship.getLeftItem()) + 1);
+        relationship.setLeftPlace(relationshipService.findLeftPlaceByLeftItem(c, relationship.getLeftItem()) + 1);
+        relationship.setRightPlace(relationshipService.findRightPlaceByRightItem(c, relationship.getLeftItem()) + 1);
         Relationship persistedRelationship = relationshipService.create(c, relationship);
         relationshipService.update(c, persistedRelationship);
     }

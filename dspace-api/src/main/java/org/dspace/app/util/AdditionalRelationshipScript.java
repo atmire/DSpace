@@ -209,7 +209,8 @@ public class AdditionalRelationshipScript {
         relationship.setLeftItem(leftItem);
         relationship.setRightItem(rightItem);
         relationship.setRelationshipType(relationshipType);
-        relationship.setPlace(place);
+        relationship.setLeftPlace(place);
+        relationship.setRightPlace(place);
         relationshipService.create(context, relationship);
     }
 

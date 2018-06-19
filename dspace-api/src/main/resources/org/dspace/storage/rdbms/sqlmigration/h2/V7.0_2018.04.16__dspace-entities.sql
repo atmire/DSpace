@@ -48,7 +48,8 @@ CREATE TABLE relationship
     left_id                 uuid NOT NULL REFERENCES item(uuid),
     type_id                 INTEGER NOT NULL REFERENCES relationship_type(id),
     right_id                uuid NOT NULL REFERENCES item(uuid),
-    place                   INTEGER,
+    left_place              INTEGER,
+    right_place             INTEGER,
     CONSTRAINT u_constraint UNIQUE (left_id, type_id, right_id)
 
 );

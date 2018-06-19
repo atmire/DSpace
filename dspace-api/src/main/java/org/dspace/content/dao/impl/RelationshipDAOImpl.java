@@ -30,13 +30,33 @@ public class RelationshipDAOImpl extends AbstractHibernateDAO<Relationship> impl
         return list(criteria);
     }
 
-    public int findPlaceByLeftItem(Context context, Item item) throws SQLException {
+    public int findLeftPlaceByLeftItem(Context context, Item item) throws SQLException {
         Criteria criteria = createCriteria(context, Relationship.class);
         criteria.add(Restrictions.and(
             Restrictions.eq("leftItem", item)
         ));
 
-        Relationship relationship = singleResult(criteria);
-        return relationship == null ? 0 : relationship.getPlace();
+        List<Relationship> list = list(criteria);
+        list.sort((o1, o2) -> o2.getLeftPlace() - o1.getLeftPlace());
+        if (!list.isEmpty()) {
+            return list.get(0).getLeftPlace();
+        } else {
+            return 1;
+        }
+    }
+
+    public int findRightPlaceByRightItem(Context context, Item item) throws SQLException {
+        Criteria criteria = createCriteria(context, Relationship.class);
+        criteria.add(Restrictions.and(
+            Restrictions.eq("rightItem", item)
+        ));
+
+        List<Relationship> list = list(criteria);
+        list.sort((o1, o2) -> o2.getRightPlace() - o1.getRightPlace());
+        if (!list.isEmpty()) {
+            return list.get(0).getLeftPlace();
+        } else {
+            return 1;
+        }
     }
 }
