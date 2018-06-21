@@ -130,6 +130,16 @@
         </property>
     </bean>
 
+    <bean class="org.dspace.content.virtual.EntityTypeToFilterQueryService">
+        <property name="map">
+            <map>
+                <entry key="Publication" value="f.entityType=Publication,equals"/>
+                <entry key="Person" value="f.entityType=entityType_keyword:Person,equals"/>
+                <entry key="Journal" value="f.entityType=entityType_keyword:Journal,equals"/>
+            </map>
+        </property>
+    </bean>
+
     <util:map id="isAuthorOfPublicationMap">
         <entry key="dc_contributor_author" value-ref="publicationAuthor_author"/>
     </util:map>
