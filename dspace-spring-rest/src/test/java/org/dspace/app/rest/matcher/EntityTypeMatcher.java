@@ -12,16 +12,45 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
+import org.dspace.content.Bitstream;
 import org.dspace.content.EntityType;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 
 public class EntityTypeMatcher {
     public static Matcher<? super Object> matchEntityTypeEntry(EntityType entityType) {
+        return matchEntityTypeExplicitValuesEntry(entityType.getId(), entityType.getLabel());
+    }
+    public static Matcher<? super Object> matchEntityTypeEntryForLabel(String label) {
+        return matchEntityTypeExplicitValuesEntry(0, label);
+    }
+
+    private static Matcher<? super Object> matchId(int id) {
+        return id == 0 ?
+            allOf(
+                hasJsonPath("$.id", Matchers.not(Matchers.empty()))
+            ) :
+            allOf(
+                hasJsonPath("$.id", Matchers.is(id))
+            );
+    }
+
+    private static Matcher<? super Object> matchSelfLink(int id) {
+        return id == 0 ?
+            allOf(
+                hasJsonPath("$._links.self.href", containsString("/api/core/entitytypes/"))
+            ) :
+            allOf(
+                hasJsonPath("$._links.self.href", containsString("/api/core/entitytypes/" + id))
+            );
+    }
+
+    public static Matcher<? super Object> matchEntityTypeExplicitValuesEntry(int id, String label) {
         return allOf(
-            hasJsonPath("$.id", is(entityType.getId())),
-            hasJsonPath("$.label", is(entityType.getLabel())),
+            matchId(id),
+            hasJsonPath("$.label", is(label)),
             hasJsonPath("$.type", is("entitytype")),
-            hasJsonPath("$._links.self.href", containsString("/api/core/entitytypes/" + entityType.getId().toString()))
+            matchSelfLink(id)
         );
     }
 }

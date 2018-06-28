@@ -30,11 +30,11 @@ public class RelationshipType {
     @Column(name = "id", unique = true, nullable = false, insertable = true, updatable = false)
     protected Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST})
+    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST})
     @JoinColumn(name = "left_type", nullable = false)
     private EntityType leftType;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST})
+    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST})
     @JoinColumn(name = "right_type", nullable = false)
     private EntityType rightType;
 

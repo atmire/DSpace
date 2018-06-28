@@ -28,15 +28,15 @@ public class Relationship {
     @Column(name = "id", unique = true, nullable = false, insertable = true, updatable = false)
     protected Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "left_id", nullable = false)
     private Item leftItem;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "type_id", nullable = false)
     private RelationshipType relationshipType;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "right_id", nullable = false)
     private Item rightItem;
 
