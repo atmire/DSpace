@@ -1,0 +1,27 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
+package org.dspace.app.rest.matcher;
+
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+
+import org.dspace.content.EntityType;
+import org.hamcrest.Matcher;
+
+public class EntityTypeMatcher {
+    public static Matcher<? super Object> matchEntityTypeEntry(EntityType entityType) {
+        return allOf(
+            hasJsonPath("$.id", is(entityType.getId())),
+            hasJsonPath("$.label", is(entityType.getLabel())),
+            hasJsonPath("$.type", is("entitytype")),
+            hasJsonPath("$._links.self.href", containsString("/api/core/entitytypes/" + entityType.getId().toString()))
+        );
+    }
+}
