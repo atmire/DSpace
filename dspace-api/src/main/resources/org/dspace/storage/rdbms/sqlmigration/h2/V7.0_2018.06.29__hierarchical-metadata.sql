@@ -1,0 +1,1 @@
+ALTER TABLE MetadataValue ADD COLUMN parentMetadataValue integer REFERENCES MetadataValue(metadata_value_id);
