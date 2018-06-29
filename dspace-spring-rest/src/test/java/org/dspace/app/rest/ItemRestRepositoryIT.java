@@ -27,6 +27,7 @@ import org.dspace.app.rest.builder.BitstreamBuilder;
 import org.dspace.app.rest.builder.CollectionBuilder;
 import org.dspace.app.rest.builder.CommunityBuilder;
 import org.dspace.app.rest.builder.ItemBuilder;
+import org.dspace.app.rest.builder.WorkspaceItemBuilder;
 import org.dspace.app.rest.matcher.ItemMatcher;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.model.patch.ReplaceOperation;
@@ -35,7 +36,6 @@ import org.dspace.content.Bitstream;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.dspace.content.Item;
-import org.dspace.content.WorkspaceItem;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -78,7 +78,6 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                                       .withSubject("AnotherTest").withSubject("TestingForMore")
                                       .withSubject("ExtraEntry")
                                       .build();
-
 
         getClient().perform(get("/api/core/items"))
                    .andExpect(status().isOk())
@@ -203,7 +202,6 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                                       .withSubject("ExtraEntry")
                                       .build();
 
-
         getClient().perform(get("/api/core/items/" + publicItem1.getID()))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$", Matchers.is(
@@ -297,7 +295,6 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                    .andExpect(status().isNoContent())
         ;
     }
-
 
     @Test
     public void findOneTestWrongUUID() throws Exception {
@@ -632,6 +629,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
     }
 
 
+
     public void deleteOneTemplateTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
@@ -654,6 +652,32 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         //Trying to delete a templateItem should fail with 422
         getClient(token).perform(delete("/api/core/items/" + templateItem.getID()))
+                    .andExpect(status().is(422));
+    }
+
+    public void deleteOneWorkspaceTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        //1. A community with one collection.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 1").build();
+
+        //2. One workspace item.
+        Item workspaceItem = WorkspaceItemBuilder.createWorkspaceItem(context, col1)
+                            .build();
+
+        String token = getAuthToken(admin.getEmail(), password);
+
+        //Check workspaceItem creation
+        getClient().perform(get("/api/core/items/" + workspaceItem.getID()))
+                   .andExpect(status().isOk());
+
+        //Trying to delete a workspaceItem should fail with 422
+        getClient(token).perform(delete("/api/core/items/" + workspaceItem.getID()))
                     .andExpect(status().is(422));
     }
 }

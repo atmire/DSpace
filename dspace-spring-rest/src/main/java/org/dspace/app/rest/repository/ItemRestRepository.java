@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
-import org.dspace.authorize.AuthorizeException;
-import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.apache.log4j.Logger;
 import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.exception.PatchBadRequestException;
@@ -125,10 +123,12 @@ public class ItemRestRepository extends DSpaceRestRepository<ItemRest, UUID> {
         try {
             item = is.find(context, id);
             if (is.isInProgressSubmission(context, item)) {
-                throw new UnprocessableEntityException("The item cannot be deleted. It's part of a in-progress submission.");
+                throw new UnprocessableEntityException("The item cannot be deleted. "
+                                                           + "It's part of a in-progress submission.");
             }
             if (item.getTemplateItemOf() != null) {
-                throw new UnprocessableEntityException("The item cannot be deleted. It's a template for a collection");
+                throw new UnprocessableEntityException("The item cannot be deleted. "
+                                                           + "It's a template for a collection");
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
