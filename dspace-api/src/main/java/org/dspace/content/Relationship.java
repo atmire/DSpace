@@ -18,9 +18,11 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.dspace.core.ReloadableEntity;
+
 @Entity
 @Table(name = "relationship")
-public class Relationship {
+public class Relationship implements ReloadableEntity<Integer> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "relationship_id_seq")
@@ -92,5 +94,9 @@ public class Relationship {
 
     public void setRightPlace(int rightPlace) {
         this.rightPlace = rightPlace;
+    }
+
+    public Integer getID() {
+        return id;
     }
 }

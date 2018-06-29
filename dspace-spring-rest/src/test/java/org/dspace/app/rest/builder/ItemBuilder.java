@@ -66,6 +66,10 @@ public class ItemBuilder extends AbstractDSpaceObjectBuilder<Item> {
         return addMetadataValue(item, MetadataSchema.DC_SCHEMA, "subject", null, subject);
     }
 
+    public ItemBuilder withRelationshipType(final String relationshipType) {
+        return addMetadataValue(item, "relationship", "type", null, relationshipType);
+    }
+
     public ItemBuilder makePrivate() {
         item.setDiscoverable(false);
         return this;
