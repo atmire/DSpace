@@ -8,6 +8,7 @@
 package org.dspace.app.rest;
 
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -34,6 +35,7 @@ import org.dspace.content.Bitstream;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.dspace.content.Item;
+import org.dspace.content.WorkspaceItem;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -313,6 +315,63 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         Collection col2 = CollectionBuilder.createCollection(context, child1).withName("Collection 2").build();
 
         getClient().perform(get("/api/core/items/" + UUID.randomUUID()))
+                   .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void deleteOneArchivedTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        //1. A community with one collection.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 1").build();
+
+        //2. One public item, one workspace item and one template item.
+        Item publicItem = ItemBuilder.createItem(context, col1)
+                                      .withTitle("Public item 1")
+                                      .withIssueDate("2017-10-17")
+                                      .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                      .withSubject("ExtraEntry")
+                                      .build();
+
+        //Add a bitstream to an item
+        String bitstreamContent = "ThisIsSomeDummyText";
+        Bitstream bitstream = null;
+        try (InputStream is = IOUtils.toInputStream(bitstreamContent, CharEncoding.UTF_8)) {
+            bitstream = BitstreamBuilder.
+                                             createBitstream(context, publicItem, is)
+                                         .withName("Bitstream1")
+                                         .withMimeType("text/plain")
+                                         .build();
+        }
+
+        // Check publicItem creation
+        getClient().perform(get("/api/core/items/" + publicItem.getID()))
+                   .andExpect(status().isOk());
+
+        // Check publicItem bitstream creatino
+        getClient().perform(get("/api/core/items/" + publicItem.getID() + "/bitstreams"))
+                   .andExpect(status().isOk())
+                   .andExpect(content().contentType(contentType))
+                   .andExpect(jsonPath("$._links.self.href", Matchers
+                   .containsString("/api/core/items/" + publicItem.getID() + "/bitstreams")));
+
+        String token = getAuthToken(admin.getEmail(), password);
+
+        //Delete public item
+        getClient(token).perform(delete("/api/core/items/" + publicItem.getID()))
+                    .andExpect(status().is(204));
+
+        //Trying to get deleted item should fail with 404
+        getClient().perform(get("/api/core/items/" + publicItem.getID()))
+                   .andExpect(status().is(404));
+
+        //Trying to get deleted item bitstream should fail with 404
+        getClient().perform(get("/api/core/biststreams/" + bitstream.getID()))
+                   .andExpect(status().is(404))
                    .andExpect(status().isNotFound())
         ;
 
@@ -572,4 +631,29 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                         .andExpect(status().isBadRequest());
     }
 
+
+    public void deleteOneTemplateTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        //1. A community with one collection.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 1").build();
+
+        //2. One template item.
+        Item templateItem = ItemBuilder.createTemplateItem(context, col1);
+
+        String token = getAuthToken(admin.getEmail(), password);
+
+        //Check templateItem creation
+        getClient().perform(get("/api/core/items/" + templateItem.getID()))
+                   .andExpect(status().isOk());
+
+        //Trying to delete a templateItem should fail with 422
+        getClient(token).perform(delete("/api/core/items/" + templateItem.getID()))
+                    .andExpect(status().is(422));
+    }
 }

@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.repository;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -14,6 +15,8 @@ import java.util.List;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
+import org.dspace.authorize.AuthorizeException;
+import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.apache.log4j.Logger;
 import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.exception.PatchBadRequestException;
@@ -118,17 +121,21 @@ public class ItemRestRepository extends DSpaceRestRepository<ItemRest, UUID> {
 
     @Override
     protected void delete(Context context, UUID id) throws AuthorizeException {
-        Bitstream bit = null;
+        Item item = null;
         try {
-            bit = bs.find(context, id);
-            if (bit.getCommunity() != null | bit.getCollection() != null) {
-                throw new UnprocessableEntityException("The bitstream cannot be deleted it is a logo");
+            item = is.find(context, id);
+            if (is.isInProgressSubmission(context, item)) {
+                throw new UnprocessableEntityException("The item cannot be deleted. It's part of a in-progress submission.");
+            }
+            if (item.getTemplateItemOf() != null) {
+                throw new UnprocessableEntityException("The item cannot be deleted. It's a template for a collection");
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
         try {
-            bs.delete(context, bit);
+            is.delete(context, item);
+            is.removeAllBundles(context, item);
         } catch (SQLException | IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
