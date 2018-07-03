@@ -21,7 +21,7 @@ public class EntityTypeDAOImpl extends AbstractHibernateDAO<EntityType> implemen
     public EntityType findByEntityType(Context context,String entityType) throws SQLException {
         Criteria criteria = createCriteria(context,EntityType.class);
         criteria.add(Restrictions.and(
-            Restrictions.eq("label", entityType)
+            Restrictions.eq("label", entityType).ignoreCase()
         ));
 
         return singleResult(criteria);
