@@ -134,8 +134,8 @@
         <property name="map">
             <map>
                 <entry key="Publication" value="f.entityType=Publication,equals"/>
-                <entry key="Person" value="f.entityType=entityType_keyword:Person,equals"/>
-                <entry key="Journal" value="f.entityType=entityType_keyword:Journal,equals"/>
+                <entry key="Person" value="f.entityType=Person,equals"/>
+                <entry key="Journal" value="f.entityType=Journal,equals"/>
             </map>
         </property>
     </bean>
