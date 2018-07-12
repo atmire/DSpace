@@ -135,7 +135,6 @@ public class ItemRestRepository extends DSpaceRestRepository<ItemRest, UUID> {
         }
         try {
             is.delete(context, item);
-            is.removeAllBundles(context, item);
         } catch (SQLException | IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
