@@ -64,7 +64,7 @@ import org.springframework.web.context.WebApplicationContext;
 public class AbstractControllerIntegrationTest extends AbstractIntegrationTestWithDatabase {
 
     protected static final String AUTHORIZATION_HEADER = "Authorization";
-    protected static final String AUTHORIZATION_TYPE = "Bearer";
+    protected static final String AUTHORIZATION_TYPE = "Bearer ";
 
     public static final String REST_SERVER_URL = "http://localhost/api/";
 
@@ -108,7 +108,7 @@ public class AbstractControllerIntegrationTest extends AbstractIntegrationTestWi
 
         if (StringUtils.isNotBlank(authToken)) {
             mockMvcBuilder.defaultRequest(
-                    get("").header(AUTHORIZATION_HEADER, AUTHORIZATION_TYPE + " " + authToken));
+                    get("").header(AUTHORIZATION_HEADER, AUTHORIZATION_TYPE + authToken));
         }
 
         return mockMvcBuilder
@@ -123,7 +123,9 @@ public class AbstractControllerIntegrationTest extends AbstractIntegrationTestWi
     }
 
     public String getAuthToken(String user, String password) throws Exception {
-        return getAuthResponse(user, password).getHeader(AUTHORIZATION_HEADER);
+        return StringUtils.substringAfter(
+                getAuthResponse(user, password).getHeader(AUTHORIZATION_HEADER),
+                AUTHORIZATION_TYPE);
     }
 
     public String getPatchContent(List<Operation> ops) {
