@@ -29,7 +29,6 @@ import org.dspace.app.rest.builder.EPersonBuilder;
 import org.dspace.app.rest.builder.GroupBuilder;
 import org.dspace.app.rest.builder.ItemBuilder;
 import org.dspace.app.rest.matcher.ItemMatcher;
-import org.dspace.app.rest.model.EPersonRest;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.model.patch.ReplaceOperation;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
@@ -43,7 +42,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
-    
+
     @Test
     public void findAllTest() throws Exception {
         context.turnOffAuthorisationSystem();
