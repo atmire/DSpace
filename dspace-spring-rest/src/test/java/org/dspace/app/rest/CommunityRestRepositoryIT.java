@@ -420,7 +420,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
 
         getClient(nonAdminToken).perform(post("/api/core/communities")
                 .param("name", "test"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
