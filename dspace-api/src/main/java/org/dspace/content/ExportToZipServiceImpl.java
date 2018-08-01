@@ -64,4 +64,11 @@ public class ExportToZipServiceImpl implements ExportToZipService {
         }
         exportToZipDAO.delete(context, exportToZip);
     }
+
+    public List<ExportToZip> findAll(Context context) throws SQLException {
+        return exportToZipDAO.findAll(context, ExportToZip.class);
+    }
+    public List<ExportToZip> findAllByStatus(Context context, String status) throws SQLException {
+        return exportToZipDAO.findAllByStatus(context, ExportToZip.class, status);
+    }
 }
