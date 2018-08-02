@@ -2,6 +2,11 @@ package org.dspace.app.rest;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -13,11 +18,14 @@ import org.dspace.app.rest.link.HalLinkService;
 import org.dspace.app.rest.model.CollectionRest;
 import org.dspace.app.rest.model.ExportToZipRest;
 import org.dspace.app.rest.model.ExportToZipRestWrapper;
+import org.dspace.app.rest.model.hateoas.ExportToZipResource;
 import org.dspace.app.rest.model.hateoas.ExportToZipResourceWrapper;
 import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.Collection;
 import org.dspace.content.DCDate;
 import org.dspace.content.ExportToZip;
+import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.ExportToZipService;
 import org.dspace.core.Context;
 import org.dspace.export.ExportToZipTask;
@@ -81,5 +89,28 @@ public class ExportToZipRestController {
 
         DCDate currentDate = DCDate.getCurrent();
         threadPoolTaskExecutor.submit(new ExportToZipTask(uuid, currentDate));
+    }
+
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/view/{dateString:.+}")
+    public ExportToZipResource viewSpecific(@PathVariable UUID uuid,
+                                            @PathVariable String dateString,
+                                            HttpServletResponse response,
+                                            HttpServletRequest request)
+        throws IOException, SQLException, AuthorizeException, ParseException {
+
+        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        Date date = sf.parse(dateString.replace("T", " "));
+        if (date != null) {
+            Context context = new Context();
+            Collection collection = ContentServiceFactory.getInstance().getCollectionService()
+                                                         .find(context, uuid);
+            ExportToZip exportToZip = exportToZipService.findByCollectionAndDate(context, collection, date);
+            if (exportToZip != null) {
+                ExportToZipResource exportToZipResource = new ExportToZipResource(exportToZipConverter.fromModel(exportToZip), utils);
+                halLinkService.addLinks(exportToZipResource);
+                return exportToZipResource;
+            }
+        }
+        return null;
     }
 }

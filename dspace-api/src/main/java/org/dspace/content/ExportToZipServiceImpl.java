@@ -2,6 +2,7 @@ package org.dspace.content;
 
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -33,7 +34,8 @@ public class ExportToZipServiceImpl implements ExportToZipService {
             throw new AuthorizeException(
                 "Only administrators can modify relationship");
         }
-        return exportToZipDAO.create(context, new ExportToZip());       }
+        return exportToZipDAO.create(context, new ExportToZip());
+    }
 
     public ExportToZip find(Context context, int id) throws SQLException {
         return exportToZipDAO.findByID(context, ExportToZip.class, id);
@@ -68,7 +70,12 @@ public class ExportToZipServiceImpl implements ExportToZipService {
     public List<ExportToZip> findAll(Context context) throws SQLException {
         return exportToZipDAO.findAll(context, ExportToZip.class);
     }
+
     public List<ExportToZip> findAllByStatus(Context context, String status) throws SQLException {
         return exportToZipDAO.findAllByStatus(context, ExportToZip.class, status);
+    }
+
+    public ExportToZip findByCollectionAndDate(Context context, Collection collection, Date date) throws SQLException {
+        return exportToZipDAO.findByCollectionAndDate(context, ExportToZip.class, collection, date);
     }
 }
