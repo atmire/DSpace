@@ -12,14 +12,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.CollectionConverter;
 import org.dspace.app.rest.model.CollectionRest;
 import org.dspace.app.rest.model.CommunityRest;
 import org.dspace.app.rest.model.hateoas.CollectionResource;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
+import org.dspace.content.Item;
+import org.dspace.content.MetadataSchema;
 import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.CommunityService;
 import org.dspace.core.Constants;
@@ -128,6 +134,50 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
         }
         Page<CollectionRest> page = utils.getPage(collections, pageable).map(converter);
         return page;
+    }
+
+
+
+    @Nullable
+    private String getRequestParameter(String name) {
+        String value = requestService.getCurrentRequest().getHttpServletRequest().getParameter(name);
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
+    }
+    @Nonnull
+    private String requireRequestParameter(String name) {
+        String value = getRequestParameter(name);
+        if (value == null) {
+            throw new IllegalArgumentException("Request is missing required parameter: " + name);
+        }
+        return value;
+    }
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    protected CollectionRest createAndReturn(Context context) throws AuthorizeException {
+        String name = requireRequestParameter("name");
+        String parent = requireRequestParameter("parent");
+        try {
+            Community parentCommunity = null;
+            if (parent != null) {
+                parentCommunity = communityService.find(context, UUID.fromString(parent));
+                if (parentCommunity == null) {
+                    throw new ResourceNotFoundException("No such community: " + parent);
+                }
+            }
+
+            Collection community = cs.create(context,parentCommunity);
+
+            cs.setMetadataSingleValue(context, community, MetadataSchema.DC_SCHEMA, "title", null, Item.ANY, name);
+            cs.update(context, community);
+            context.commit();
+
+            return converter.convert(community);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
