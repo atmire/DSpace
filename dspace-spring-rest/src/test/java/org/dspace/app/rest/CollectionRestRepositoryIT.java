@@ -9,6 +9,7 @@ package org.dspace.app.rest;
 
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,7 +23,9 @@ import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.hamcrest.Matchers;
+import org.json.JSONObject;
 import org.junit.Test;
+import org.springframework.test.web.servlet.ResultActions;
 
 public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTest {
 
@@ -275,5 +278,106 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         getClient().perform(get("/api/core/collections/" + UUID.randomUUID()))
                    .andExpect(status().isNotFound());
     }
+
+    @Test
+    public void createUnauthenticated() throws Exception {
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                .withName("Parent Community")
+                .build();
+        getClient().perform(post("/api/core/collections")
+                .param("name", "test")
+                .param("parent", parentCommunity.getID().toString()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void createUnauthorized() throws Exception {
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                .withName("Parent Community")
+                .build();
+        String nonAdminToken = getAuthToken(eperson.getEmail(), password);
+
+        getClient(nonAdminToken).perform(post("/api/core/collections")
+                .param("name", "test")
+                .param("parent", parentCommunity.getID().toString()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void createWithNoName() throws Exception {
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                .withName("Parent Community")
+                .build();
+        String adminToken = getAuthToken(admin.getEmail(), password);
+
+        getClient(adminToken).perform(post("/api/core/collections")
+                .param("parent",parentCommunity.getID().toString()))
+                .andExpect(status().isBadRequest());
+
+        getClient(adminToken).perform(post("/api/core/collections")
+                .param("name", "")
+                .param("parent",parentCommunity.getID().toString()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void createWithParentMalformed() throws Exception {
+
+        String adminToken = getAuthToken(admin.getEmail(), password);
+
+        getClient(adminToken).perform(post("/api/core/collections")
+                .param("name", "test")
+                .param("parent", "malformed-uuid"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void createWithParentNonExisting() throws Exception {
+
+        String adminToken = getAuthToken(admin.getEmail(), password);
+
+        getClient(adminToken).perform(post("/api/core/collections")
+                .param("name", "test")
+                .param("parent", UUID.randomUUID().toString()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void createWithoutParent() throws Exception {
+
+        String adminToken = getAuthToken(admin.getEmail(), password);
+
+        getClient(adminToken).perform(post("/api/core/collections")
+                .param("name", "test"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void createWithValidParentAndName() throws Exception {
+
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                .withName("parent")
+                .build();
+
+        String adminToken = getAuthToken(admin.getEmail(), password);
+
+        String collectionName = "test";
+        ResultActions perform = getClient(adminToken).perform(post("/api/core/collections")
+                .param("name", collectionName)
+                .param("parent", parentCommunity.getID().toString()));
+        perform.andExpect(status().isCreated());
+        JSONObject json = new JSONObject(perform.andReturn().getResponse().getContentAsString());
+        String createdID = String.valueOf(json.get("id"));
+        String handle = String.valueOf(json.get("handle"));
+
+        getClient().perform(get("/api/core/collections/" + createdID)).andExpect(status().isOk())
+                .andExpect(jsonPath("$",
+                        CollectionMatcher.matchCollectionEntry(collectionName, UUID.fromString(createdID), handle)));
+
+    }
+
+
 
 }
