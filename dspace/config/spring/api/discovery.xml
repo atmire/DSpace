@@ -175,6 +175,8 @@
                             <property name="field" value="project.identifier.name"/>
                             <property name="snippets" value="5"/>
                         </bean>
+                        <!-- By default, full text snippets are disabled, as snippets of embargoed/restricted bitstreams
+                             may appear in search results when the Item is public. See DS-3498
                         <bean class="org.dspace.discovery.configuration.DiscoveryHitHighlightFieldConfiguration">
                             <property name="field" value="project.identifier.status"/>
                             <property name="snippets" value="5"/>
@@ -188,6 +190,7 @@
                             <property name="maxSize" value="250"/>
                             <property name="snippets" value="5"/>
                         </bean>
+                        -->
                     </list>
                 </property>
             </bean>
@@ -296,11 +299,14 @@
                             <property name="field" value="orgunit.identifier.name"/>
                             <property name="snippets" value="5"/>
                         </bean>
+                         <!-- By default, full text snippets are disabled, as snippets of embargoed/restricted bitstreams
+                             may appear in search results when the Item is public. See DS-3498
                         <bean class="org.dspace.discovery.configuration.DiscoveryHitHighlightFieldConfiguration">
                             <property name="field" value="orgunit.identifier.description"/>
                             <property name="maxSize" value="250"/>
                             <property name="snippets" value="5"/>
                         </bean>
+                        -->
                     </list>
                 </property>
             </bean>
