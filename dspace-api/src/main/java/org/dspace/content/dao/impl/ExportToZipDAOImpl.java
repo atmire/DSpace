@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.dspace.content.Collection;
-import org.dspace.content.DCDate;
 import org.dspace.content.ExportToZip;
 import org.dspace.content.dao.ExportToZipDAO;
 import org.dspace.core.AbstractHibernateDAO;

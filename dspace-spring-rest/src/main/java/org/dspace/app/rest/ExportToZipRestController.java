@@ -85,7 +85,8 @@ public class ExportToZipRestController {
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/create")
     public ExportToZipResource create(@PathVariable UUID uuid, HttpServletResponse response,
-                                      HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
+                                      HttpServletRequest request)
+        throws IOException, SQLException, AuthorizeException, ParseException {
 
         DCDate currentDate = DCDate.getCurrent();
         Context context = ContextUtil.obtainContext(request);
@@ -99,11 +100,14 @@ public class ExportToZipRestController {
     }
 
     private ExportToZip initializeExportToZip(Collection collection, DCDate currentDate, Context context)
-        throws SQLException, AuthorizeException {
+        throws SQLException, AuthorizeException, ParseException {
         ExportToZip exportToZip = new ExportToZip();
         exportToZip.setDso(collection);
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        exportToZip.setDate(currentDate.toDate());
+        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String dateString = sf.format(currentDate.toDate());
+        Date date = sf.parse(dateString);
+        exportToZip.setDate(date);
         exportToZip.setStatus("In Progress");
         exportToZipService.create(context, exportToZip);
         exportToZipService.update(context, exportToZip);
@@ -118,7 +122,7 @@ public class ExportToZipRestController {
                                             HttpServletRequest request)
         throws IOException, SQLException, AuthorizeException, ParseException {
 
-        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date date = sf.parse(dateString.replace("T", " "));
         if (date != null) {
             Context context = new Context();
