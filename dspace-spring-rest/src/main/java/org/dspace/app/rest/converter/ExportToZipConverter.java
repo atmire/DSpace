@@ -2,11 +2,15 @@ package org.dspace.app.rest.converter;
 
 import java.sql.SQLException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.dspace.app.rest.model.ExportToZipRest;
+import org.dspace.content.Bitstream;
 import org.dspace.content.ExportToZip;
+import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.CollectionService;
 import org.dspace.core.Context;
+import org.jbibtex.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -19,13 +23,25 @@ public class ExportToZipConverter
     @Autowired
     CollectionService collectionService;
 
+    @Autowired
+    BitstreamService bitstreamService;
+
     @Override
     public ExportToZipRest fromModel(ExportToZip obj) {
         ExportToZipRest exportToZipRest = new ExportToZipRest();
         exportToZipRest.setCollectionId(obj.getDso().getID());
         exportToZipRest.setDate(obj.getDate());
-        //TODO Change
-        exportToZipRest.setSize(1234);
+
+        if (StringUtils.equals(obj.getStatus(), "completed")) {
+            Bitstream linkedBitstream = null;
+
+            try {
+                linkedBitstream = bitstreamService.find(new Context(), obj.getBitstreamId());
+            } catch (SQLException e) {
+                log.error(e.getMessage(), e);
+            }
+            exportToZipRest.setSize(linkedBitstream.getSize());
+        }
         exportToZipRest.setState(obj.getStatus());
         return exportToZipRest;
     }

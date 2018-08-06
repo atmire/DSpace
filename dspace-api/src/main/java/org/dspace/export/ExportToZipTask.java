@@ -33,7 +33,7 @@ public class ExportToZipTask implements Runnable {
                                                          .createDownloadableExport(collection, context, false, true);
             ExportToZip exportToZip = exportToZipService.find(context, exportToZipId);
             exportToZip.setBitstreamId(bitstreamUuid);
-            exportToZip.setStatus("Completed");
+            exportToZip.setStatus("completed");
             exportToZipService.update(context, exportToZip);
             context.commit();
             context.complete();
