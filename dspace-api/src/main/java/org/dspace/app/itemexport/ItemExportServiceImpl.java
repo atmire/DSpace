@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import javax.mail.MessagingException;
@@ -406,9 +407,11 @@ public class ItemExportServiceImpl implements ItemExportService {
                         if (fout.createNewFile()) {
                             InputStream is = bitstreamService.retrieve(c, bitstream);
                             FileOutputStream fos = new FileOutputStream(fout);
-                            Utils.bufferedCopy(is, fos);
+                            if (is != null) {
+                                Utils.bufferedCopy(is, fos);
+                                is.close();
+                            }
                             // close streams
-                            is.close();
                             fos.close();
 
                             isDone = true;
@@ -480,6 +483,16 @@ public class ItemExportServiceImpl implements ItemExportService {
     }
 
     @Override
+    public UUID createDownloadableExport(DSpaceObject dso,
+                                         Context context, boolean migrate, boolean apiCall) throws Exception {
+        EPerson eperson = context.getCurrentUser();
+        ArrayList<DSpaceObject> list = new ArrayList<DSpaceObject>(1);
+        list.add(dso);
+        return processDownloadableExport(list, context, eperson == null ? null
+            : eperson.getEmail(), migrate, apiCall);
+    }
+
+    @Override
     public void createDownloadableExport(List<DSpaceObject> dsObjects,
                                          Context context, boolean migrate) throws Exception {
         EPerson eperson = context.getCurrentUser();
@@ -528,6 +541,238 @@ public class ItemExportServiceImpl implements ItemExportService {
         // it will be checked against the config file entry
         double size = 0;
         final HashMap<String, List<UUID>> itemsMap = new HashMap<>();
+        size = handleDSpaceObjects(dsObjects, context, size, itemsMap);
+        handleSizeChecking(size);
+
+
+        // if we have any items to process then kick off anonymous thread
+        if (itemsMap.size() > 0) {
+            AtomicReference<UUID> zipfileBitstreamUuid = null;
+            Thread go = new Thread(() -> {
+                Context context1 = null;
+                Iterator<Item> iitems = null;
+                try {
+                    // create a new dspace context
+                    context1 = new Context();
+                    // ignore auths
+                    context1.turnOffAuthorisationSystem();
+
+                    String fileName = assembleFileName("item", eperson,
+                                                       new Date());
+                    String workParentDir = getExportWorkDirectory()
+                        + System.getProperty("file.separator")
+                        + fileName;
+                    String downloadDir = getExportDownloadDirectory(eperson);
+                    File dnDir = new File(downloadDir);
+                    if (!dnDir.exists() && !dnDir.mkdirs()) {
+                        log.error("Unable to create download directory");
+                    }
+
+                    Iterator<String> iter = itemsMap.keySet().iterator();
+                    while (iter.hasNext()) {
+                        String keyName = iter.next();
+                        List<UUID> uuids = itemsMap.get(keyName);
+                        List<Item> items = new ArrayList<Item>();
+                        for (UUID uuid : uuids) {
+                            items.add(itemService.find(context1, uuid));
+                        }
+                        iitems = items.iterator();
+
+                        String workDir = workParentDir
+                            + System.getProperty("file.separator")
+                            + keyName;
+
+                        File wkDir = new File(workDir);
+                        if (!wkDir.exists() && !wkDir.mkdirs()) {
+                            log.error("Unable to create working directory");
+                        }
+
+
+                        // export the items using normal export method
+                        exportItem(context1, iitems, workDir, 1, migrate, false);
+                    }
+                    // now zip up the export directory created above
+                    String zipFilePath = downloadDir
+                        + System.getProperty("file.separator")
+                        + fileName + ".zip";
+                    zip(workParentDir, zipFilePath);
+
+                    InputStream targetStream = new FileInputStream(zipFilePath);
+
+                    Bitstream zipFileBitstream = bitstreamService.create(context, targetStream);
+                    bitstreamService.update(context, zipFileBitstream);
+                    zipfileBitstreamUuid.set(zipFileBitstream.getID());
+                    // email message letting user know the file is ready for
+                    // download
+                    emailSuccessMessage(context1, eperson, fileName + ".zip");
+                    // return to enforcing auths
+                    context1.restoreAuthSystemState();
+                } catch (Exception e1) {
+                    try {
+                        emailErrorMessage(eperson, e1.getMessage());
+                    } catch (Exception e) {
+                        // wont throw here
+                    }
+                    throw new IllegalStateException(e1);
+                } finally {
+                    // Make sure the database connection gets closed in all conditions.
+                    try {
+                        context1.complete();
+                    } catch (SQLException sqle) {
+                        context1.abort();
+                    }
+                }
+            });
+
+            go.isDaemon();
+            go.start();
+        } else {
+            Locale supportedLocale = I18nUtil.getEPersonLocale(eperson);
+            emailErrorMessage(eperson, I18nUtil.getMessage("org.dspace.app.itemexport.no-result", supportedLocale));
+        }
+    }
+
+    private void handleSizeChecking(double size) throws ItemExportException {
+        // check the size of all the bitstreams against the configuration file
+        // entry if it exists
+        String megaBytes = ConfigurationManager
+            .getProperty("org.dspace.app.itemexport.max.size");
+        if (megaBytes != null) {
+            float maxSize = 0;
+            try {
+                maxSize = Float.parseFloat(megaBytes);
+            } catch (Exception e) {
+                // ignore...configuration entry may not be present
+            }
+
+            if (maxSize > 0 && maxSize < (size / 1048576.00)) { // a megabyte
+                throw new ItemExportException(ItemExportException.EXPORT_TOO_LARGE,
+                                              "The overall size of this export is too large.  Please contact your " +
+                                                  "administrator for more information.");
+            }
+        }
+    }
+
+    /**
+     * Does the work creating a List with all the Items in the Community or
+     * Collection It then kicks off a new Thread to export the items, zip the
+     * export directory and send confirmation email
+     *
+     * @param dsObjects       - List of dspace objects to process
+     * @param context         - the dspace context
+     * @param additionalEmail - email address to cc in addition the the current user email
+     * @param toMigrate       Whether to use the migrate option or not
+     * @throws Exception if error
+     */
+    protected UUID processDownloadableExport(List<DSpaceObject> dsObjects,
+                                             Context context, final String additionalEmail, boolean toMigrate,
+                                             boolean apiCall)
+        throws Exception {
+        UUID zipfileBitstreamUuid = null;
+        final EPerson eperson = context.getCurrentUser();
+        final boolean migrate = toMigrate;
+
+        // before we create a new export archive lets delete the 'expired'
+        // archives
+        //deleteOldExportArchives(eperson.getID());
+        deleteOldExportArchives();
+
+        // keep track of the commulative size of all bitstreams in each of the
+        // items
+        // it will be checked against the config file entry
+        double size = 0;
+        final HashMap<String, List<UUID>> itemsMap = new HashMap<>();
+        size = handleDSpaceObjects(dsObjects, context, size, itemsMap);
+
+        // check the size of all the bitstreams against the configuration file
+        // entry if it exists
+        handleSizeChecking(size);
+
+        // if we have any items to process then kick off anonymous thread
+        if (itemsMap.size() > 0) {
+            Context context1 = null;
+            Iterator<Item> iitems = null;
+            try {
+                // create a new dspace context
+                context1 = new Context();
+                // ignore auths
+                context1.turnOffAuthorisationSystem();
+
+                String fileName = assembleFileName("item", eperson,
+                                                   new Date());
+                String workParentDir = getExportWorkDirectory()
+                    + System.getProperty("file.separator")
+                    + fileName;
+                String downloadDir = getExportDownloadDirectory(eperson);
+                File dnDir = new File(downloadDir);
+                if (!dnDir.exists() && !dnDir.mkdirs()) {
+                    log.error("Unable to create download directory");
+                }
+
+                Iterator<String> iter = itemsMap.keySet().iterator();
+                while (iter.hasNext()) {
+                    String keyName = iter.next();
+                    List<UUID> uuids = itemsMap.get(keyName);
+                    List<Item> items = new ArrayList<Item>();
+                    for (UUID uuid : uuids) {
+                        items.add(itemService.find(context1, uuid));
+                    }
+                    iitems = items.iterator();
+
+                    String workDir = workParentDir
+                        + System.getProperty("file.separator")
+                        + keyName;
+
+                    File wkDir = new File(workDir);
+                    if (!wkDir.exists() && !wkDir.mkdirs()) {
+                        log.error("Unable to create working directory");
+                    }
+
+
+                    // export the items using normal export method
+                    exportItem(context1, iitems, workDir, 1, migrate, false);
+                }
+                // now zip up the export directory created above
+                String zipFilePath = downloadDir
+                    + System.getProperty("file.separator")
+                    + fileName + ".zip";
+                zip(workParentDir, zipFilePath);
+
+                InputStream targetStream = new FileInputStream(zipFilePath);
+
+                Bitstream zipFileBitstream = bitstreamService.create(context, targetStream);
+                bitstreamService.update(context, zipFileBitstream);
+                zipfileBitstreamUuid = zipFileBitstream.getID();
+                // email message letting user know the file is ready for
+                // download
+                emailSuccessMessage(context1, eperson, fileName + ".zip");
+                // return to enforcing auths
+                context1.restoreAuthSystemState();
+            } catch (Exception e1) {
+                try {
+                    emailErrorMessage(eperson, e1.getMessage());
+                } catch (Exception e) {
+                    // wont throw here
+                }
+                throw new IllegalStateException(e1);
+            } finally {
+                // Make sure the database connection gets closed in all conditions.
+                try {
+                    context1.complete();
+                } catch (SQLException sqle) {
+                    context1.abort();
+                }
+            }
+        } else {
+            Locale supportedLocale = I18nUtil.getEPersonLocale(eperson);
+            emailErrorMessage(eperson, I18nUtil.getMessage("org.dspace.app.itemexport.no-result", supportedLocale));
+        }
+        return zipfileBitstreamUuid;
+    }
+
+
+    private double handleDSpaceObjects(List<DSpaceObject> dsObjects, Context context, double size,
+                                       HashMap<String, List<UUID>> itemsMap) throws SQLException {
         for (DSpaceObject dso : dsObjects) {
             if (dso.getType() == Constants.COMMUNITY) {
                 Community community = (Community) dso;
@@ -603,109 +848,9 @@ public class ItemExportServiceImpl implements ItemExportService {
                 // nothing to do just ignore this type of DSpaceObject
             }
         }
-
-        // check the size of all the bitstreams against the configuration file
-        // entry if it exists
-        String megaBytes = ConfigurationManager
-            .getProperty("org.dspace.app.itemexport.max.size");
-        if (megaBytes != null) {
-            float maxSize = 0;
-            try {
-                maxSize = Float.parseFloat(megaBytes);
-            } catch (Exception e) {
-                // ignore...configuration entry may not be present
-            }
-
-            if (maxSize > 0 && maxSize < (size / 1048576.00)) { // a megabyte
-                throw new ItemExportException(ItemExportException.EXPORT_TOO_LARGE,
-                                              "The overall size of this export is too large.  Please contact your " +
-                                                  "administrator for more information.");
-            }
-        }
-
-        // if we have any items to process then kick off anonymous thread
-        if (itemsMap.size() > 0) {
-            Thread go = new Thread() {
-                @Override
-                public void run() {
-                    Context context = null;
-                    Iterator<Item> iitems = null;
-                    try {
-                        // create a new dspace context
-                        context = new Context();
-                        // ignore auths
-                        context.turnOffAuthorisationSystem();
-
-                        String fileName = assembleFileName("item", eperson,
-                                                           new Date());
-                        String workParentDir = getExportWorkDirectory()
-                            + System.getProperty("file.separator")
-                            + fileName;
-                        String downloadDir = getExportDownloadDirectory(eperson);
-                        File dnDir = new File(downloadDir);
-                        if (!dnDir.exists() && !dnDir.mkdirs()) {
-                            log.error("Unable to create download directory");
-                        }
-
-                        Iterator<String> iter = itemsMap.keySet().iterator();
-                        while (iter.hasNext()) {
-                            String keyName = iter.next();
-                            List<UUID> uuids = itemsMap.get(keyName);
-                            List<Item> items = new ArrayList<Item>();
-                            for (UUID uuid : uuids) {
-                                items.add(itemService.find(context, uuid));
-                            }
-                            iitems = items.iterator();
-
-                            String workDir = workParentDir
-                                + System.getProperty("file.separator")
-                                + keyName;
-
-                            File wkDir = new File(workDir);
-                            if (!wkDir.exists() && !wkDir.mkdirs()) {
-                                log.error("Unable to create working directory");
-                            }
-
-
-                            // export the items using normal export method
-                            exportItem(context, iitems, workDir, 1, migrate, false);
-                        }
-
-                        // now zip up the export directory created above
-                        zip(workParentDir, downloadDir
-                            + System.getProperty("file.separator")
-                            + fileName + ".zip");
-                        // email message letting user know the file is ready for
-                        // download
-                        emailSuccessMessage(context, eperson, fileName + ".zip");
-                        // return to enforcing auths
-                        context.restoreAuthSystemState();
-                    } catch (Exception e1) {
-                        try {
-                            emailErrorMessage(eperson, e1.getMessage());
-                        } catch (Exception e) {
-                            // wont throw here
-                        }
-                        throw new IllegalStateException(e1);
-                    } finally {
-                        // Make sure the database connection gets closed in all conditions.
-                        try {
-                            context.complete();
-                        } catch (SQLException sqle) {
-                            context.abort();
-                        }
-                    }
-                }
-
-            };
-
-            go.isDaemon();
-            go.start();
-        } else {
-            Locale supportedLocale = I18nUtil.getEPersonLocale(eperson);
-            emailErrorMessage(eperson, I18nUtil.getMessage("org.dspace.app.itemexport.no-result", supportedLocale));
-        }
+        return size;
     }
+
 
     @Override
     public String assembleFileName(String type, EPerson eperson,
@@ -903,18 +1048,20 @@ public class ItemExportServiceImpl implements ItemExportService {
             for (File dir : dirs) {
                 // For each sub-directory delete any old files.
                 File[] files = dir.listFiles();
-                for (File file : files) {
-                    if (file.lastModified() < now.getTimeInMillis()) {
-                        if (!file.delete()) {
-                            log.error("Unable to delete old files");
+                if (files != null) {
+                    for (File file : files) {
+                        if (file.lastModified() < now.getTimeInMillis()) {
+                            if (!file.delete()) {
+                                log.error("Unable to delete old files");
+                            }
                         }
                     }
-                }
 
-                // If the directory is now empty then we delete it too.
-                if (dir.listFiles().length == 0) {
-                    if (!dir.delete()) {
-                        log.error("Unable to delete directory");
+                    // If the directory is now empty then we delete it too.
+                    if (dir.listFiles().length == 0) {
+                        if (!dir.delete()) {
+                            log.error("Unable to delete directory");
+                        }
                     }
                 }
             }

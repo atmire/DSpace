@@ -24,7 +24,7 @@ CREATE TABLE export_zip_file
     dso                     uuid NOT NULL REFERENCES collection(uuid),
     id                      INTEGER NOT NULL PRIMARY KEY,
     date                    TIMESTAMP NOT NULL,
-    bitstream_id            INTEGER,
+    bitstream_id            uuid,
     status                  varchar(32)
 );
 

@@ -1,6 +1,7 @@
 package org.dspace.content;
 
 import java.util.Date;
+import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -35,7 +36,7 @@ public class ExportToZip implements ReloadableEntity<Integer> {
     private Date date;
 
     @Column(name = "bitstream_id")
-    private Integer bitstreamId;
+    private UUID bitstreamId;
 
     @Column(name = "status")
     private String status;
@@ -64,11 +65,11 @@ public class ExportToZip implements ReloadableEntity<Integer> {
         this.date = date;
     }
 
-    public Integer getBitstreamId() {
+    public UUID getBitstreamId() {
         return bitstreamId;
     }
 
-    public void setBitstreamId(Integer bitstreamId) {
+    public void setBitstreamId(UUID bitstreamId) {
         this.bitstreamId = bitstreamId;
     }
 

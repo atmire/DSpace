@@ -53,8 +53,8 @@ public class ExportToZipServiceImpl implements ExportToZipService {
                     "Only administrators can modify relationship");
             }
 
-            for (ExportToZip relationship : exportToZipList) {
-                exportToZipDAO.save(context, relationship);
+            for (ExportToZip exportToZip : exportToZipList) {
+                exportToZipDAO.save(context, exportToZip);
             }
         }
     }

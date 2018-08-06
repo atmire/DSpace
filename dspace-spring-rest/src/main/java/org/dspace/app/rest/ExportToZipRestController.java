@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -20,6 +19,7 @@ import org.dspace.app.rest.model.ExportToZipRest;
 import org.dspace.app.rest.model.ExportToZipRestWrapper;
 import org.dspace.app.rest.model.hateoas.ExportToZipResource;
 import org.dspace.app.rest.model.hateoas.ExportToZipResourceWrapper;
+import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
@@ -84,11 +84,31 @@ public class ExportToZipRestController {
     }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/create")
-    public void create(@PathVariable UUID uuid, HttpServletResponse response,
-                       HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
+    public ExportToZipResource create(@PathVariable UUID uuid, HttpServletResponse response,
+                                      HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
 
         DCDate currentDate = DCDate.getCurrent();
-        threadPoolTaskExecutor.submit(new ExportToZipTask(uuid, currentDate));
+        Context context = ContextUtil.obtainContext(request);
+        Collection collection = ContentServiceFactory.getInstance().getCollectionService().find(context, uuid);
+        ExportToZip exportToZip = initializeExportToZip(collection, currentDate, context);
+        threadPoolTaskExecutor.submit(new ExportToZipTask(context, collection, exportToZip.getID()));
+        ExportToZipRest exportToZipRest = exportToZipConverter.fromModel(exportToZip);
+        ExportToZipResource exportToZipResource = new ExportToZipResource(exportToZipRest, utils);
+        halLinkService.addLinks(exportToZipResource);
+        return exportToZipResource;
+    }
+
+    private ExportToZip initializeExportToZip(Collection collection, DCDate currentDate, Context context)
+        throws SQLException, AuthorizeException {
+        ExportToZip exportToZip = new ExportToZip();
+        exportToZip.setDso(collection);
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        exportToZip.setDate(currentDate.toDate());
+        exportToZip.setStatus("In Progress");
+        exportToZipService.create(context, exportToZip);
+        exportToZipService.update(context, exportToZip);
+        context.commit();
+        return exportToZip;
     }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/view/{dateString:.+}")
@@ -106,7 +126,8 @@ public class ExportToZipRestController {
                                                          .find(context, uuid);
             ExportToZip exportToZip = exportToZipService.findByCollectionAndDate(context, collection, date);
             if (exportToZip != null) {
-                ExportToZipResource exportToZipResource = new ExportToZipResource(exportToZipConverter.fromModel(exportToZip), utils);
+                ExportToZipResource exportToZipResource = new ExportToZipResource(
+                    exportToZipConverter.fromModel(exportToZip), utils);
                 halLinkService.addLinks(exportToZipResource);
                 return exportToZipResource;
             }
