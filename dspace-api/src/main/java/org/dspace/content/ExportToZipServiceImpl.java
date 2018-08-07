@@ -78,4 +78,9 @@ public class ExportToZipServiceImpl implements ExportToZipService {
     public ExportToZip findByCollectionAndDate(Context context, Collection collection, Date date) throws SQLException {
         return exportToZipDAO.findByCollectionAndDate(context, ExportToZip.class, collection, date);
     }
+
+    public List<ExportToZip> findAllByStatusAndCollection(Context context, Collection collection, String status)
+        throws SQLException {
+        return exportToZipDAO.findAllByStatusAndCollection(context, ExportToZip.class, collection, status);
+    }
 }

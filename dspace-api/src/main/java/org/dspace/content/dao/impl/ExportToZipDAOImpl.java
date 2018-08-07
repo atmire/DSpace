@@ -36,4 +36,14 @@ public class ExportToZipDAOImpl extends AbstractHibernateDAO<ExportToZip> implem
 
         return uniqueResult(criteria);
     }
+
+    public List<ExportToZip> findAllByStatusAndCollection(Context context, Class<ExportToZip> clazz,
+                                                          Collection collection, String status) throws SQLException {
+        Criteria criteria = createCriteria(context, clazz);
+        criteria.add(Restrictions.and(
+            Restrictions.eq("status", status),
+            Restrictions.eq("dso", collection)
+        ));
+
+        return list(criteria);    }
 }

@@ -19,4 +19,7 @@ public interface ExportToZipService extends DSpaceCRUDService<ExportToZip> {
     public List<ExportToZip> findAllByStatus(Context context, String status) throws SQLException;
 
     ExportToZip findByCollectionAndDate(Context context, Collection collection, Date date) throws SQLException;
+
+    List<ExportToZip> findAllByStatusAndCollection(Context context, Collection collection, String status)
+        throws SQLException;
 }

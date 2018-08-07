@@ -11,7 +11,10 @@ import java.util.TimeZone;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.converter.ExportToZipConverter;
 import org.dspace.app.rest.link.HalLinkService;
 import org.dspace.app.rest.model.CollectionRest;
@@ -20,18 +23,25 @@ import org.dspace.app.rest.model.ExportToZipRestWrapper;
 import org.dspace.app.rest.model.hateoas.ExportToZipResource;
 import org.dspace.app.rest.model.hateoas.ExportToZipResourceWrapper;
 import org.dspace.app.rest.utils.ContextUtil;
+import org.dspace.app.rest.utils.MultipartFileSender;
 import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.Bitstream;
+import org.dspace.content.BitstreamFormat;
 import org.dspace.content.Collection;
 import org.dspace.content.DCDate;
 import org.dspace.content.ExportToZip;
 import org.dspace.content.factory.ContentServiceFactory;
+import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.ExportToZipService;
 import org.dspace.core.Context;
 import org.dspace.export.ExportToZipTask;
+import org.dspace.services.EventService;
+import org.dspace.usage.UsageEvent;
 import org.dspace.utils.DSpace;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -42,12 +52,20 @@ import org.springframework.web.bind.annotation.RestController;
     + "/{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/exportToZip")
 public class ExportToZipRestController {
 
+    //Most file systems are configured to use block sizes of 4096 or 8192 and our buffer should be a multiple of that.
+    private static final int BUFFER_SIZE = 4096 * 10;
 
     @Autowired
     ExportToZipConverter exportToZipConverter;
 
     @Autowired
     ExportToZipService exportToZipService;
+
+    @Autowired
+    BitstreamService bitstreamService;
+
+    @Autowired
+    private EventService eventService;
 
     @Autowired
     protected Utils utils;
@@ -61,7 +79,10 @@ public class ExportToZipRestController {
     public ExportToZipResourceWrapper retrieve(@PathVariable UUID uuid, HttpServletResponse response,
                                                HttpServletRequest request) throws SQLException {
 
-        List<ExportToZip> list = exportToZipService.findAllByStatus(new Context(), "completed");
+        Context context = ContextUtil.obtainContext(request);
+        Collection collection = ContentServiceFactory.getInstance().getCollectionService()
+                                                     .find(context, uuid);
+        List<ExportToZip> list = exportToZipService.findAllByStatusAndCollection(context, collection, "completed");
         List<ExportToZipRest> exportToZipRests = new LinkedList<>();
         for (ExportToZip exportToZip : list) {
             ExportToZipRest exportToZipRest = exportToZipConverter.fromModel(exportToZip);
@@ -125,7 +146,7 @@ public class ExportToZipRestController {
         SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date date = sf.parse(dateString.replace("T", " "));
         if (date != null) {
-            Context context = new Context();
+            Context context = ContextUtil.obtainContext(request);
             Collection collection = ContentServiceFactory.getInstance().getCollectionService()
                                                          .find(context, uuid);
             ExportToZip exportToZip = exportToZipService.findByCollectionAndDate(context, collection, date);
@@ -137,5 +158,76 @@ public class ExportToZipRestController {
             }
         }
         return null;
+    }
+
+    @GetMapping(produces = MediaType.APPLICATION_OCTET_STREAM)
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/download/{dateString:.+}")
+    public MultipartFileSender downloadSpecific(@PathVariable UUID uuid,
+                                                @PathVariable String dateString,
+                                                HttpServletResponse response,
+                                                HttpServletRequest request)
+        throws IOException, SQLException, AuthorizeException, ParseException {
+
+        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date = sf.parse(dateString.replace("T", " "));
+        MultipartFileSender sender = null;
+        if (date != null) {
+            Context context = ContextUtil.obtainContext(request);
+            Collection collection = ContentServiceFactory.getInstance().getCollectionService()
+                                                         .find(context, uuid);
+            ExportToZip exportToZip = exportToZipService.findByCollectionAndDate(context, collection, date);
+            if (exportToZip != null && StringUtils.equals(exportToZip.getStatus(), "completed")) {
+                Bitstream bitstream = bitstreamService.find(context, exportToZip.getBitstreamId());
+
+                BitstreamFormat format = bitstream.getFormat(context);
+                sender = MultipartFileSender
+                    .fromInputStream(bitstreamService.retrieve(context, bitstream))
+                    .withBufferSize(BUFFER_SIZE)
+                    .withFileName(getBitstreamName(bitstream, format))
+                    .withLength(bitstream.getSize())
+                    .withChecksum(bitstream.getChecksum())
+                    .withMimetype(format.getMIMEType())
+                    .withLastModified(bitstreamService.getLastModified(bitstream))
+                    .withDisposition("attachment")
+                    .with(request)
+                    .with(response);
+
+                if (sender.isNoRangeRequest() && isNotAnErrorResponse(response)) {
+                    //We only log a download request when serving a request without Range header. This is because
+                    //a browser always sends a regular request first to check for Range support.
+                    eventService.fireEvent(
+                        new UsageEvent(
+                            UsageEvent.Action.VIEW,
+                            request,
+                            context,
+                            bitstream));
+                }
+
+                //We have all the data we need, close the connection to the database so that it doesn't stay open during
+                //download/streaming
+                context.complete();
+
+                //Send the data
+                if (sender.isValid()) {
+                    sender.serveResource();
+                }
+            }
+        }
+        return sender;
+    }
+
+    private String getBitstreamName(Bitstream bit, BitstreamFormat format) {
+        String name = bit.getName();
+        if (name == null) {
+            // give a default name to the file based on the UUID and the primary extension of the format
+            name = bit.getID().toString();
+        }
+        return name + ".zip";
+    }
+
+    private boolean isNotAnErrorResponse(HttpServletResponse response) {
+        Response.Status.Family responseCode = Response.Status.Family.familyOf(response.getStatus());
+        return responseCode.equals(Response.Status.Family.SUCCESSFUL)
+            || responseCode.equals(Response.Status.Family.REDIRECTION);
     }
 }

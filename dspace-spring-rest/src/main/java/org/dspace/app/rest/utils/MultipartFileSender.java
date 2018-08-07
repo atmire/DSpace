@@ -62,7 +62,7 @@ public class MultipartFileSender {
     private static final String CONTENT_DISPOSITION = "Content-Disposition";
     private static final String CONTENT_LENGTH = "Content-Length";
     private static final String BYTES_RANGE_FORMAT = "bytes %d-%d/%d";
-    private static final String CONTENT_DISPOSITION_FORMAT = "%s;filename=\"%s\"";
+    private static final String CONTENT_DISPOSITION_FORMAT = "%s; filename=\"%s\"";
     private static final String BYTES_DINVALID_BYTE_RANGE_FORMAT = "bytes */%d";
     private static final String CACHE_CONTROL = "Cache-Control";
 
@@ -135,6 +135,16 @@ public class MultipartFileSender {
         return this;
     }
 
+    public MultipartFileSender withDisposition(String disposition) {
+        if (StringUtils.isNotBlank(disposition) && (StringUtils
+            .equals(disposition, CONTENT_DISPOSITION_ATTACHMENT) || StringUtils
+            .equals(disposition, CONTENT_DISPOSITION_INLINE))) {
+
+            this.disposition = disposition;
+        }
+        return this;
+    }
+
     public void serveResource() throws IOException {
 
         // Validate and process range -------------------------------------------------------------
@@ -172,6 +182,9 @@ public class MultipartFileSender {
                     CONTENT_DISPOSITION_ATTACHMENT;
             }
 
+            response.setHeader(CONTENT_DISPOSITION, String.format(CONTENT_DISPOSITION_FORMAT, disposition, fileName));
+            log.debug("Content-Disposition : {}", disposition);
+        } else {
             response.setHeader(CONTENT_DISPOSITION, String.format(CONTENT_DISPOSITION_FORMAT, disposition, fileName));
             log.debug("Content-Disposition : {}", disposition);
         }
