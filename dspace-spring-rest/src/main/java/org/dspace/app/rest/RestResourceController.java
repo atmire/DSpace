@@ -391,8 +391,51 @@ public class RestResourceController implements InitializingBean {
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<ResourceSupport> post(HttpServletRequest request, @PathVariable String apiCategory,
                                                 @PathVariable String model)
-        throws HttpRequestMethodNotSupportedException, AuthorizeException {
+            throws HttpRequestMethodNotSupportedException, AuthorizeException {
         return postInternal(request, apiCategory, model);
+    }
+
+    @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT)
+    public ResponseEntity<ResourceSupport> put(@PathVariable String apiCategory,
+                                               @PathVariable String model, @PathVariable Integer id)
+            throws HttpRequestMethodNotSupportedException, AuthorizeException {
+        return putInternal(apiCategory, model, id);
+    }
+
+    @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID)
+    public ResponseEntity<ResourceSupport> put(@PathVariable String apiCategory,
+                                               @PathVariable String model, @PathVariable(name = "uuid") UUID id)
+            throws HttpRequestMethodNotSupportedException, AuthorizeException {
+        return putInternal(apiCategory, model, id);
+    }
+
+    /**
+     * Internal method to execute PUT;
+     *
+     * @param apiCategory
+     * @param model
+     * @param id
+     * @return
+     * @throws HttpRequestMethodNotSupportedException
+     */
+    public <ID extends Serializable> ResponseEntity<ResourceSupport> putInternal(String apiCategory,
+                                                                                 String model, ID id)
+            throws HttpRequestMethodNotSupportedException, AuthorizeException {
+        checkModelPluralForm(apiCategory, model);
+        DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
+        RestAddressableModel modelObject = null;
+        try {
+            modelObject = repository.put(id);
+        } catch (ClassCastException e) {
+            log.error(e.getMessage(), e);
+            return ControllerUtils.toEmptyResponse(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        if (modelObject == null) {
+            throw new HttpRequestMethodNotSupportedException(RequestMethod.POST.toString());
+        }
+        DSpaceResource result = repository.wrapResource(modelObject);
+        linkService.addLinks(result);
+        return ControllerUtils.toResponseEntity(HttpStatus.OK, null, result);
     }
 
     /**
@@ -425,6 +468,7 @@ public class RestResourceController implements InitializingBean {
         //TODO manage HTTPHeader
         return ControllerUtils.toResponseEntity(HttpStatus.CREATED, null, result);
     }
+
 
     /**
      * Called in POST, multipart, upload a resource passed into "file" request parameter
