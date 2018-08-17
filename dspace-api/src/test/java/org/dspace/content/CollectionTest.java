@@ -1780,6 +1780,9 @@ public class CollectionTest extends AbstractDSpaceObjectTest {
             // Allow Collection WRITE perms
             authorizeService.authorizeAction((Context) any, (Collection) any,
                                              Constants.WRITE, anyBoolean);
+            // Allow Collection WRITE perms
+            authorizeService.authorizeAction((Context) any, (Collection) any,
+                                             Constants.DELETE);
             result = null;
         }};
 
