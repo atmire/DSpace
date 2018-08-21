@@ -993,6 +993,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
 
     }
 
+    @Test
     public void makeUnDiscoverablePatchForbiddenTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
@@ -1208,7 +1209,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         //An anonymous user is not allowed to view embargoed items
         getClient().perform(get("/api/core/items/" + embargoedItem1.getID()))
-                   .andExpect(status().isForbidden());
+                   .andExpect(status().isUnauthorized());
 
         //An admin user is allowed to access the embargoed item
         String token1 = getAuthToken(admin.getEmail(), password);
@@ -1326,7 +1327,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         //An anonymous user is not allowed to the restricted item
         getClient().perform(get("/api/core/items/" + restrictedItem1.getID()))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         //An admin user is allowed to access the restricted item
         String token1 = getAuthToken(admin.getEmail(), password);
