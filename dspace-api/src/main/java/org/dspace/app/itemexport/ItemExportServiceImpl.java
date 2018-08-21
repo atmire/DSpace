@@ -37,6 +37,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.dspace.app.itemexport.service.ItemExportService;
 import org.dspace.content.Bitstream;
+import org.dspace.content.BitstreamFormat;
 import org.dspace.content.Bundle;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
@@ -45,6 +46,7 @@ import org.dspace.content.Item;
 import org.dspace.content.MetadataField;
 import org.dspace.content.MetadataSchema;
 import org.dspace.content.MetadataValue;
+import org.dspace.content.service.BitstreamFormatService;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.CommunityService;
 import org.dspace.content.service.ItemService;
@@ -86,6 +88,8 @@ public class ItemExportServiceImpl implements ItemExportService {
 
     @Autowired(required = true)
     protected BitstreamService bitstreamService;
+    @Autowired(required = true)
+    protected BitstreamFormatService bitstreamFormatService;
     @Autowired(required = true)
     protected CommunityService communityService;
     @Autowired(required = true)
@@ -741,6 +745,16 @@ public class ItemExportServiceImpl implements ItemExportService {
                 InputStream targetStream = new FileInputStream(zipFilePath);
 
                 Bitstream zipFileBitstream = bitstreamService.create(context, targetStream);
+                zipFileBitstream.setName(context, zipFileBitstream.getID() + ".zip");
+                BitstreamFormat zipBitstreamFormat = bitstreamFormatService.findByMIMEType(context, "zip");
+                if (zipBitstreamFormat != null) {
+                    zipFileBitstream.setFormat(context, zipBitstreamFormat);
+                } else {
+                    BitstreamFormat applicationOctetStreamFormat = bitstreamFormatService.findByMIMEType(context, "application/octet-stream");
+                    if (applicationOctetStreamFormat != null) {
+                        zipFileBitstream.setFormat(context, applicationOctetStreamFormat);
+                    }
+                }
                 bitstreamService.update(context, zipFileBitstream);
                 zipfileBitstreamUuid = zipFileBitstream.getID();
                 // email message letting user know the file is ready for

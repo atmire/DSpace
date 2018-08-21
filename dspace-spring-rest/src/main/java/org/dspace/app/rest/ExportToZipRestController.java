@@ -1,6 +1,8 @@
 package org.dspace.app.rest;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -11,7 +13,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
@@ -33,15 +34,16 @@ import org.dspace.content.DCDate;
 import org.dspace.content.ExportToZip;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.BitstreamService;
+import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.ExportToZipService;
 import org.dspace.core.Context;
 import org.dspace.export.ExportToZipTask;
+import org.dspace.services.ConfigurationService;
 import org.dspace.services.EventService;
 import org.dspace.usage.UsageEvent;
 import org.dspace.utils.DSpace;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -59,6 +61,9 @@ public class ExportToZipRestController {
     ExportToZipConverter exportToZipConverter;
 
     @Autowired
+    CollectionService collectionService;
+
+    @Autowired
     ExportToZipService exportToZipService;
 
     @Autowired
@@ -72,6 +77,12 @@ public class ExportToZipRestController {
 
     @Autowired
     private HalLinkService halLinkService;
+
+    @Autowired
+    private ConfigurationService configurationService;
+
+    /** The <code>OutputStream</code> to write on. */
+    protected OutputStream out;
 
     private ThreadPoolTaskExecutor threadPoolTaskExecutor = loadThreadPool();
 
@@ -111,7 +122,7 @@ public class ExportToZipRestController {
 
         DCDate currentDate = DCDate.getCurrent();
         Context context = ContextUtil.obtainContext(request);
-        Collection collection = ContentServiceFactory.getInstance().getCollectionService().find(context, uuid);
+        Collection collection = collectionService.find(context, uuid);
         ExportToZip exportToZip = initializeExportToZip(collection, currentDate, context);
         threadPoolTaskExecutor.submit(new ExportToZipTask(context, collection, exportToZip.getID()));
         ExportToZipRest exportToZipRest = exportToZipConverter.fromModel(exportToZip);
@@ -160,17 +171,15 @@ public class ExportToZipRestController {
         return null;
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_OCTET_STREAM)
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/download/{dateString:.+}")
-    public MultipartFileSender downloadSpecific(@PathVariable UUID uuid,
-                                                @PathVariable String dateString,
-                                                HttpServletResponse response,
-                                                HttpServletRequest request)
+    public void downloadSpecific(@PathVariable UUID uuid,
+                                 @PathVariable String dateString,
+                                 HttpServletResponse response,
+                                 HttpServletRequest request)
         throws IOException, SQLException, AuthorizeException, ParseException {
 
         SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date date = sf.parse(dateString.replace("T", " "));
-        MultipartFileSender sender = null;
         if (date != null) {
             Context context = ContextUtil.obtainContext(request);
             Collection collection = ContentServiceFactory.getInstance().getCollectionService()
@@ -180,8 +189,9 @@ public class ExportToZipRestController {
                 Bitstream bitstream = bitstreamService.find(context, exportToZip.getBitstreamId());
 
                 BitstreamFormat format = bitstream.getFormat(context);
-                sender = MultipartFileSender
-                    .fromInputStream(bitstreamService.retrieve(context, bitstream))
+                InputStream inputstream = bitstreamService.retrieve(context, bitstream);
+                MultipartFileSender sender = MultipartFileSender
+                    .fromInputStream(inputstream)
                     .withBufferSize(BUFFER_SIZE)
                     .withFileName(getBitstreamName(bitstream, format))
                     .withLength(bitstream.getSize())
@@ -193,8 +203,6 @@ public class ExportToZipRestController {
                     .with(response);
 
                 if (sender.isNoRangeRequest() && isNotAnErrorResponse(response)) {
-                    //We only log a download request when serving a request without Range header. This is because
-                    //a browser always sends a regular request first to check for Range support.
                     eventService.fireEvent(
                         new UsageEvent(
                             UsageEvent.Action.VIEW,
@@ -203,17 +211,14 @@ public class ExportToZipRestController {
                             bitstream));
                 }
 
-                //We have all the data we need, close the connection to the database so that it doesn't stay open during
-                //download/streaming
-                context.complete();
 
-                //Send the data
                 if (sender.isValid()) {
                     sender.serveResource();
                 }
+
+                context.complete();
             }
         }
-        return sender;
     }
 
     private String getBitstreamName(Bitstream bit, BitstreamFormat format) {
