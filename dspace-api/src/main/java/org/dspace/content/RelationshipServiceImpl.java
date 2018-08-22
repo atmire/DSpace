@@ -71,14 +71,14 @@ public class RelationshipServiceImpl implements RelationshipService {
                                                                               relationship.getRelationshipType());
 
         if (!leftRelationships.isEmpty()) {
-            leftRelationships.sort((o1, o2) -> o2.getLeftPlace() - o1.getRightPlace());
+            leftRelationships.sort((o1, o2) -> o2.getLeftPlace() - o1.getLeftPlace());
             relationship.setLeftPlace(leftRelationships.get(0).getLeftPlace() + 1);
         } else {
             relationship.setLeftPlace(1);
         }
 
         if (!rightRelationships.isEmpty()) {
-            rightRelationships.sort((o1, o2) -> o2.getLeftPlace() - o1.getRightPlace());
+            rightRelationships.sort((o1, o2) -> o2.getRightPlace() - o1.getRightPlace());
             relationship.setRightPlace(rightRelationships.get(0).getRightPlace() + 1);
         } else {
             relationship.setRightPlace(1);
