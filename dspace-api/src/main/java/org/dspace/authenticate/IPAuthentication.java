@@ -26,6 +26,9 @@ import org.dspace.eperson.Group;
 import org.dspace.eperson.factory.EPersonServiceFactory;
 import org.dspace.eperson.service.GroupService;
 import org.dspace.services.factory.DSpaceServicesFactory;
+import org.dspace.statistics.factory.StatisticsServiceFactory;
+import org.dspace.statistics.util.SpiderDetector;
+import org.dspace.statistics.util.SpiderDetectorService;
 
 /**
  * Adds users to special groups based on IP address. Configuration parameter
@@ -67,6 +70,7 @@ public class IPAuthentication implements AuthenticationMethod {
     protected List<IPMatcher> ipNegativeMatchers;
 
     protected GroupService groupService;
+    protected SpiderDetectorService spiderDetectorService;
 
 
     /**
@@ -91,6 +95,7 @@ public class IPAuthentication implements AuthenticationMethod {
         ipMatcherGroupIDs = new HashMap<>();
         ipMatcherGroupNames = new HashMap<>();
         groupService = EPersonServiceFactory.getInstance().getGroupService();
+        spiderDetectorService = StatisticsServiceFactory.getInstance().getSpiderDetectorService();
 
         List<String> propNames = DSpaceServicesFactory.getInstance().getConfigurationService()
                                                       .getPropertyKeys("authentication-ip");
@@ -169,18 +174,7 @@ public class IPAuthentication implements AuthenticationMethod {
         List<Group> groups = new ArrayList<Group>();
 
         // Get the user's IP address
-        String addr = request.getRemoteAddr();
-        if (useProxies == null) {
-            useProxies = ConfigurationManager.getBooleanProperty("useProxies", false);
-        }
-        if (useProxies && request.getHeader("X-Forwarded-For") != null) {
-            /* This header is a comma delimited list */
-            for (String xfip : request.getHeader("X-Forwarded-For").split(",")) {
-                if (!request.getHeader("X-Forwarded-For").contains(addr)) {
-                    addr = xfip.trim();
-                }
-            }
-        }
+        String addr = spiderDetectorService.getClientIp(request);
 
         for (IPMatcher ipm : ipMatchers) {
             try {
