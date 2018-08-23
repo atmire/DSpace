@@ -172,7 +172,7 @@ public class ExportToZipRestController {
     }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/download/{dateString:.+}")
-    public void downloadSpecific(@PathVariable UUID uuid,
+    public ExportToZipResource downloadSpecific(@PathVariable UUID uuid,
                                  @PathVariable String dateString,
                                  HttpServletResponse response,
                                  HttpServletRequest request)
@@ -219,6 +219,7 @@ public class ExportToZipRestController {
                 context.complete();
             }
         }
+        return null;
     }
 
     private String getBitstreamName(Bitstream bit, BitstreamFormat format) {
