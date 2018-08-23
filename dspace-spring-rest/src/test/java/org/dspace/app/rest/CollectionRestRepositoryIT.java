@@ -40,25 +40,25 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and one collection.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Community child2 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community Two")
-                .build();
+                                           .withName("Sub Community Two")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
         Collection col2 = CollectionBuilder.createCollection(context, child2).withName("Collection 2").build();
 
 
         getClient().perform(get("/api/core/collections"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$._embedded.collections", Matchers.containsInAnyOrder(
-                        CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle()),
-                        CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
-                )));
+                   .andExpect(status().isOk())
+                   .andExpect(content().contentType(contentType))
+                   .andExpect(jsonPath("$._embedded.collections", Matchers.containsInAnyOrder(
+                           CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle()),
+                           CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
+                   )));
     }
 
     @Test
@@ -69,44 +69,44 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and one collection.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Community child2 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community Two")
-                .build();
+                                           .withName("Sub Community Two")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
         Collection col2 = CollectionBuilder.createCollection(context, child2).withName("Collection 2").build();
 
 
         getClient().perform(get("/api/core/collections")
-                .param("size", "1"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$._embedded.collections", Matchers.contains(
-                        CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
-                )))
-                .andExpect(jsonPath("$._embedded.collections", Matchers.not(
-                        Matchers.contains(
-                                CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
-                        )
-                )));
+                                    .param("size", "1"))
+                   .andExpect(status().isOk())
+                   .andExpect(content().contentType(contentType))
+                   .andExpect(jsonPath("$._embedded.collections", Matchers.contains(
+                           CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
+                   )))
+                   .andExpect(jsonPath("$._embedded.collections", Matchers.not(
+                           Matchers.contains(
+                                   CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
+                           )
+                   )));
 
         getClient().perform(get("/api/core/collections")
-                .param("size", "1")
-                .param("page", "1"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$._embedded.collections", Matchers.contains(
-                        CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
-                )))
-                .andExpect(jsonPath("$._embedded.collections", Matchers.not(
-                        Matchers.contains(
-                                CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
-                        )
-                )));
+                                    .param("size", "1")
+                                    .param("page", "1"))
+                   .andExpect(status().isOk())
+                   .andExpect(content().contentType(contentType))
+                   .andExpect(jsonPath("$._embedded.collections", Matchers.contains(
+                           CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
+                   )))
+                   .andExpect(jsonPath("$._embedded.collections", Matchers.not(
+                           Matchers.contains(
+                                   CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
+                           )
+                   )));
     }
 
 
@@ -118,28 +118,28 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and one collection.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Community child2 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community Two")
-                .build();
+                                           .withName("Sub Community Two")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
         Collection col2 = CollectionBuilder.createCollection(context, child2).withName("Collection 2").build();
 
 
         getClient().perform(get("/api/core/collections/" + col1.getID()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$", is(
-                        CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
-                )))
-                .andExpect(jsonPath("$", Matchers.not(
-                        is(
-                                CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
-                        ))));
+                   .andExpect(status().isOk())
+                   .andExpect(content().contentType(contentType))
+                   .andExpect(jsonPath("$", is(
+                           CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
+                   )))
+                   .andExpect(jsonPath("$", Matchers.not(
+                           is(
+                                   CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
+                           ))));
     }
 
     @Test
@@ -150,39 +150,39 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and one collection.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Community child2 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community Two")
-                .build();
+                                           .withName("Sub Community Two")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1")
-                .withLogo("TestingContentForLogo").build();
+                                           .withLogo("TestingContentForLogo").build();
         Collection col2 = CollectionBuilder.createCollection(context, child2).withName("Collection 2").build();
 
         getClient().perform(get("/api/core/collections/" + col1.getID()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$", is(
-                        CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
-                )))
-                .andExpect(jsonPath("$", Matchers.not(
-                        is(
-                                CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
-                        )))
-                )
+                   .andExpect(status().isOk())
+                   .andExpect(content().contentType(contentType))
+                   .andExpect(jsonPath("$", is(
+                           CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
+                   )))
+                   .andExpect(jsonPath("$", Matchers.not(
+                           is(
+                                   CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
+                           )))
+                   )
         ;
 
         getClient().perform(get("/api/core/collections/" + col1.getID() + "/logo"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$._links.format.href", Matchers.containsString("/api/core/bitstreams")))
-                .andExpect(jsonPath("$._links.format.href", Matchers.containsString("/format")))
-                .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/bitstreams")))
-                .andExpect(jsonPath("$._links.content.href", Matchers.containsString("/api/core/bitstreams")))
-                .andExpect(jsonPath("$._links.content.href", Matchers.containsString("/content")))
+                   .andExpect(status().isOk())
+                   .andExpect(content().contentType(contentType))
+                   .andExpect(jsonPath("$._links.format.href", Matchers.containsString("/api/core/bitstreams")))
+                   .andExpect(jsonPath("$._links.format.href", Matchers.containsString("/format")))
+                   .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/bitstreams")))
+                   .andExpect(jsonPath("$._links.content.href", Matchers.containsString("/api/core/bitstreams")))
+                   .andExpect(jsonPath("$._links.content.href", Matchers.containsString("/content")))
         ;
 
     }
@@ -196,22 +196,22 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and one collection.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Community child2 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community Two")
-                .build();
+                                           .withName("Sub Community Two")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
         Collection col2 = CollectionBuilder.createCollection(context, child2).withName("Collection 2").build();
 
         getClient().perform(get("/api/core/collections/search/findAuthorized"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$.page.totalElements", is(0)))
-                .andExpect(jsonPath("$._embedded").doesNotExist())
+                   .andExpect(status().isOk())
+                   .andExpect(content().contentType(contentType))
+                   .andExpect(jsonPath("$.page.totalElements", is(0)))
+                   .andExpect(jsonPath("$._embedded").doesNotExist())
         ;
 
     }
@@ -225,36 +225,36 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and one collection.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Community child2 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community Two")
-                .build();
+                                           .withName("Sub Community Two")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
         Collection col2 = CollectionBuilder.createCollection(context, child2).withName("Collection 2").build();
 
         getClient().perform(get("/api/core/collections/search/findAuthorizedByCommunity")
-                .param("uuid", parentCommunity.getID().toString()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$.page.totalElements", is(0)))
-                .andExpect(jsonPath("$._embedded").doesNotExist());
+                                    .param("uuid", parentCommunity.getID().toString()))
+                   .andExpect(status().isOk())
+                   .andExpect(content().contentType(contentType))
+                   .andExpect(jsonPath("$.page.totalElements", is(0)))
+                   .andExpect(jsonPath("$._embedded").doesNotExist());
     }
 
     @Test
     public void findAuthorizedByCommunityWithoutUUIDTest() throws Exception {
         getClient().perform(get("/api/core/collections/search/findAuthorizedByCommunity"))
-                .andExpect(status().isUnprocessableEntity());
+                   .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
     public void findAuthorizedByCommunityWithUnexistentUUIDTest() throws Exception {
         getClient().perform(get("/api/core/collections/search/findAuthorizedByCommunity")
-                .param("uuid", UUID.randomUUID().toString()))
-                .andExpect(status().isNotFound());
+                                    .param("uuid", UUID.randomUUID().toString()))
+                   .andExpect(status().isNotFound());
     }
 
     @Test
@@ -265,61 +265,61 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and one collection.
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community")
-                .build();
+                                           .withName("Sub Community")
+                                           .build();
         Community child2 = CommunityBuilder.createSubCommunity(context, parentCommunity)
-                .withName("Sub Community Two")
-                .build();
+                                           .withName("Sub Community Two")
+                                           .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
         Collection col2 = CollectionBuilder.createCollection(context, child2).withName("Collection 2").build();
 
 
         getClient().perform(get("/api/core/collections/" + UUID.randomUUID()))
-                .andExpect(status().isNotFound());
+                   .andExpect(status().isNotFound());
     }
 
     @Test
     public void createUnauthenticated() throws Exception {
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         getClient().perform(post("/api/core/collections")
-                .param("name", "test")
-                .param("parent", parentCommunity.getID().toString()))
-                .andExpect(status().isUnauthorized());
+                                    .param("name", "test")
+                                    .param("parent", parentCommunity.getID().toString()))
+                   .andExpect(status().isUnauthorized());
     }
 
     @Test
     public void createUnauthorized() throws Exception {
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         String nonAdminToken = getAuthToken(eperson.getEmail(), password);
 
         getClient(nonAdminToken).perform(post("/api/core/collections")
-                .param("name", "test")
-                .param("parent", parentCommunity.getID().toString()))
-                .andExpect(status().isForbidden());
+                                                 .param("name", "test")
+                                                 .param("parent", parentCommunity.getID().toString()))
+                                .andExpect(status().isForbidden());
     }
 
     @Test
     public void createWithNoName() throws Exception {
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
+                                          .withName("Parent Community")
+                                          .build();
         String adminToken = getAuthToken(admin.getEmail(), password);
 
         getClient(adminToken).perform(post("/api/core/collections")
-                .param("parent", parentCommunity.getID().toString()))
-                .andExpect(status().isBadRequest());
+                                              .param("parent",parentCommunity.getID().toString()))
+                             .andExpect(status().isBadRequest());
 
         getClient(adminToken).perform(post("/api/core/collections")
-                .param("name", "")
-                .param("parent", parentCommunity.getID().toString()))
-                .andExpect(status().isBadRequest());
+                                              .param("name", "")
+                                              .param("parent",parentCommunity.getID().toString()))
+                             .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -328,9 +328,9 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         String adminToken = getAuthToken(admin.getEmail(), password);
 
         getClient(adminToken).perform(post("/api/core/collections")
-                .param("name", "test")
-                .param("parent", "malformed-uuid"))
-                .andExpect(status().isBadRequest());
+                                              .param("name", "test")
+                                              .param("parent", "malformed-uuid"))
+                             .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -339,9 +339,9 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         String adminToken = getAuthToken(admin.getEmail(), password);
 
         getClient(adminToken).perform(post("/api/core/collections")
-                .param("name", "test")
-                .param("parent", UUID.randomUUID().toString()))
-                .andExpect(status().isNotFound());
+                                              .param("name", "test")
+                                              .param("parent", UUID.randomUUID().toString()))
+                             .andExpect(status().isNotFound());
     }
 
     @Test
@@ -350,8 +350,8 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         String adminToken = getAuthToken(admin.getEmail(), password);
 
         getClient(adminToken).perform(post("/api/core/collections")
-                .param("name", "test"))
-                .andExpect(status().isBadRequest());
+                                              .param("name", "test"))
+                             .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -360,23 +360,23 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         context.turnOffAuthorisationSystem();
 
         parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("parent")
-                .build();
+                                          .withName("parent")
+                                          .build();
 
         String adminToken = getAuthToken(admin.getEmail(), password);
 
         String collectionName = "test";
         ResultActions perform = getClient(adminToken).perform(post("/api/core/collections")
-                .param("name", collectionName)
-                .param("parent", parentCommunity.getID().toString()));
+                                                                      .param("name", collectionName)
+                                                                      .param("parent", parentCommunity.getID().toString()));
         perform.andExpect(status().isCreated());
         JSONObject json = new JSONObject(perform.andReturn().getResponse().getContentAsString());
         String createdID = String.valueOf(json.get("id"));
         String handle = String.valueOf(json.get("handle"));
 
         getClient().perform(get("/api/core/collections/" + createdID)).andExpect(status().isOk())
-                .andExpect(jsonPath("$",
-                        CollectionMatcher.matchCollectionEntry(collectionName, UUID.fromString(createdID), handle)));
+                   .andExpect(jsonPath("$",
+                                       CollectionMatcher.matchCollectionEntry(collectionName, UUID.fromString(createdID), handle)));
 
     }
 
