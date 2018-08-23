@@ -56,8 +56,8 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.collections", Matchers.containsInAnyOrder(
-                           CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle()),
-                           CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
+                       CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle()),
+                       CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
                    )));
     }
 
@@ -82,30 +82,30 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
 
 
         getClient().perform(get("/api/core/collections")
-                                    .param("size", "1"))
+                                .param("size", "1"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.collections", Matchers.contains(
-                           CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
+                       CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
                    )))
                    .andExpect(jsonPath("$._embedded.collections", Matchers.not(
-                           Matchers.contains(
-                                   CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
-                           )
+                       Matchers.contains(
+                           CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
+                       )
                    )));
 
         getClient().perform(get("/api/core/collections")
-                                    .param("size", "1")
-                                    .param("page", "1"))
+                                .param("size", "1")
+                                .param("page", "1"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.collections", Matchers.contains(
-                           CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
+                       CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
                    )))
                    .andExpect(jsonPath("$._embedded.collections", Matchers.not(
-                           Matchers.contains(
-                                   CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
-                           )
+                       Matchers.contains(
+                           CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
+                       )
                    )));
     }
 
@@ -134,12 +134,12 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$", is(
-                           CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
+                       CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
                    )))
                    .andExpect(jsonPath("$", Matchers.not(
-                           is(
-                                   CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
-                           ))));
+                       is(
+                           CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
+                       ))));
     }
 
     @Test
@@ -166,12 +166,12 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$", is(
-                           CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
+                       CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
                    )))
                    .andExpect(jsonPath("$", Matchers.not(
-                           is(
-                                   CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
-                           )))
+                       is(
+                           CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
+                       )))
                    )
         ;
 
@@ -237,7 +237,7 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         Collection col2 = CollectionBuilder.createCollection(context, child2).withName("Collection 2").build();
 
         getClient().perform(get("/api/core/collections/search/findAuthorizedByCommunity")
-                                    .param("uuid", parentCommunity.getID().toString()))
+                                .param("uuid", parentCommunity.getID().toString()))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$.page.totalElements", is(0)))
@@ -253,7 +253,7 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
     @Test
     public void findAuthorizedByCommunityWithUnexistentUUIDTest() throws Exception {
         getClient().perform(get("/api/core/collections/search/findAuthorizedByCommunity")
-                                    .param("uuid", UUID.randomUUID().toString()))
+                                .param("uuid", UUID.randomUUID().toString()))
                    .andExpect(status().isNotFound());
     }
 
