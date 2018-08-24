@@ -18,17 +18,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
-import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Context;
 import org.dspace.core.LogManager;
+import org.dspace.core.factory.CoreServiceFactory;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
 import org.dspace.eperson.factory.EPersonServiceFactory;
 import org.dspace.eperson.service.GroupService;
+import org.dspace.service.ClientInfoService;
 import org.dspace.services.factory.DSpaceServicesFactory;
-import org.dspace.statistics.factory.StatisticsServiceFactory;
-import org.dspace.statistics.util.SpiderDetector;
-import org.dspace.statistics.util.SpiderDetectorService;
 
 /**
  * Adds users to special groups based on IP address. Configuration parameter
@@ -70,7 +68,7 @@ public class IPAuthentication implements AuthenticationMethod {
     protected List<IPMatcher> ipNegativeMatchers;
 
     protected GroupService groupService;
-    protected SpiderDetectorService spiderDetectorService;
+    protected ClientInfoService clientInfoService;
 
 
     /**
@@ -95,7 +93,7 @@ public class IPAuthentication implements AuthenticationMethod {
         ipMatcherGroupIDs = new HashMap<>();
         ipMatcherGroupNames = new HashMap<>();
         groupService = EPersonServiceFactory.getInstance().getGroupService();
-        spiderDetectorService = StatisticsServiceFactory.getInstance().getSpiderDetectorService();
+        clientInfoService = CoreServiceFactory.getInstance().getClientInfoService();
 
         List<String> propNames = DSpaceServicesFactory.getInstance().getConfigurationService()
                                                       .getPropertyKeys("authentication-ip");
@@ -174,7 +172,7 @@ public class IPAuthentication implements AuthenticationMethod {
         List<Group> groups = new ArrayList<Group>();
 
         // Get the user's IP address
-        String addr = spiderDetectorService.getClientIp(request);
+        String addr = clientInfoService.getClientIp(request);
 
         for (IPMatcher ipm : ipMatchers) {
             try {
