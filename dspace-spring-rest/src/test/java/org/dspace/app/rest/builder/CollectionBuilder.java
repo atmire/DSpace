@@ -19,6 +19,8 @@ import org.dspace.content.Community;
 import org.dspace.content.MetadataSchema;
 import org.dspace.content.service.DSpaceObjectService;
 import org.dspace.core.Context;
+import org.dspace.eperson.EPerson;
+import org.dspace.eperson.Group;
 
 /**
  * Builder to construct Collection objects
@@ -67,6 +69,13 @@ public class CollectionBuilder extends AbstractDSpaceObjectBuilder<Collection> {
 
     public CollectionBuilder withTemplateItem() throws SQLException, AuthorizeException {
         collectionService.createTemplateItem(context, collection);
+        return this;
+    }
+
+    public CollectionBuilder withAdmin(final EPerson collectionAdmin) throws SQLException, AuthorizeException {
+        Group adminGroup = collectionService.createAdministrators(context, this.collection);
+        groupService.addMember(context, adminGroup, collectionAdmin);
+        groupService.update(context, adminGroup);
         return this;
     }
 

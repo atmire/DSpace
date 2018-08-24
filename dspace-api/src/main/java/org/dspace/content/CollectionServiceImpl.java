@@ -682,6 +682,7 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
     public void delete(Context context, Collection collection) throws SQLException, AuthorizeException, IOException {
         log.info(LogManager.getHeader(context, "delete_collection",
                                       "collection_id=" + collection.getID()));
+        authorizeService.authorizeAction(context, collection, Constants.DELETE);
 
         // remove harvested collections.
         HarvestedCollection hc = harvestedCollectionService.find(context, collection);

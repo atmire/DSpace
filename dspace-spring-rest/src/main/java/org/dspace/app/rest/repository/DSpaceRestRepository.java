@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.repository;
@@ -39,8 +39,8 @@ import org.springframework.web.multipart.MultipartFile;
  * @author Andrea Bollini (andrea.bollini at 4science.it)
  */
 public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID extends Serializable>
-    extends AbstractDSpaceRestRepository
-    implements PagingAndSortingRepository<T, ID> {
+        extends AbstractDSpaceRestRepository
+        implements PagingAndSortingRepository<T, ID> {
 
     private static final Logger log = Logger.getLogger(DSpaceRestRepository.class);
 
@@ -67,7 +67,7 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
     }
 
     protected <S extends T> S save(Context context, S entity) throws AuthorizeException,
-        RepositoryMethodNotImplementedException {
+            RepositoryMethodNotImplementedException {
         throw new RepositoryMethodNotImplementedException("No implementation found; Method not allowed!", "");
     }
 
@@ -182,7 +182,7 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
     }
 
     public T patch(HttpServletRequest request, String apiCategory, String model, ID id, Patch patch)
-        throws HttpRequestMethodNotSupportedException, UnprocessableEntityException, PatchBadRequestException {
+            throws HttpRequestMethodNotSupportedException, UnprocessableEntityException, PatchBadRequestException {
         Context context = obtainContext();
         try {
             thisRepository.patch(context, request, apiCategory, model, id, patch);
@@ -197,8 +197,27 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
 
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, ID id,
                          Patch patch)
-        throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException, DCInputsReaderException {
+            throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException, DCInputsReaderException {
         throw new RepositoryMethodNotImplementedException(apiCategory, model);
+    }
+
+    public T put(ID id)
+            throws HttpRequestMethodNotSupportedException, UnprocessableEntityException, PatchBadRequestException {
+        Context context = obtainContext();
+        try {
+            put(context, id);
+            context.commit();
+        } catch (AuthorizeException ae) {
+            throw new RESTAuthorizationException(ae);
+        } catch (SQLException | DCInputsReaderException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        return findOne(id);
+    }
+
+    protected T put(Context context, ID id)
+            throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException, DCInputsReaderException {
+        throw new RepositoryMethodNotImplementedException("No implementation found; Method not allowed!", "");
     }
 
 }
