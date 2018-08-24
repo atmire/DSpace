@@ -26,6 +26,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.core.Constants;
+import org.dspace.service.ClientInfoService;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.model.Event;
 import org.dspace.statistics.util.SpiderDetectorService;
@@ -50,7 +51,7 @@ public class GoogleRecorderEventListener extends AbstractUsageEventListener {
 
     protected ContentServiceFactory contentServiceFactory;
     protected ConfigurationService configurationService;
-    protected SpiderDetectorService spiderDetectorService;
+    protected ClientInfoService clientInfoService;
 
     public GoogleRecorderEventListener() {
         // httpclient is threadsafe so we only need one.
@@ -68,8 +69,8 @@ public class GoogleRecorderEventListener extends AbstractUsageEventListener {
     }
 
     @Autowired
-    public void setSpiderDetectorService(SpiderDetectorService spiderDetectorService) {
-        this.spiderDetectorService = spiderDetectorService;
+    public void setClientInfoService(ClientInfoService clientInfoService) {
+        this.clientInfoService = clientInfoService;
     }
 
     @Override
@@ -193,7 +194,7 @@ public class GoogleRecorderEventListener extends AbstractUsageEventListener {
     }
 
     private String getIPAddress(HttpServletRequest request) {
-        return spiderDetectorService.getClientIp(request);
+        return clientInfoService.getClientIp(request);
     }
 
 }
