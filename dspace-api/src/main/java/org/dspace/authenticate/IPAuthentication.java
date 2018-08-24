@@ -18,7 +18,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
-import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Context;
 import org.dspace.core.LogManager;
 import org.dspace.core.factory.CoreServiceFactory;
@@ -28,9 +27,6 @@ import org.dspace.eperson.factory.EPersonServiceFactory;
 import org.dspace.eperson.service.GroupService;
 import org.dspace.service.ClientInfoService;
 import org.dspace.services.factory.DSpaceServicesFactory;
-import org.dspace.statistics.factory.StatisticsServiceFactory;
-import org.dspace.statistics.util.SpiderDetector;
-import org.dspace.statistics.util.SpiderDetectorService;
 
 /**
  * Adds users to special groups based on IP address. Configuration parameter

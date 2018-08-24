@@ -29,7 +29,6 @@ import org.dspace.core.Constants;
 import org.dspace.service.ClientInfoService;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.model.Event;
-import org.dspace.statistics.util.SpiderDetectorService;
 import org.dspace.usage.AbstractUsageEventListener;
 import org.dspace.usage.UsageEvent;
 import org.springframework.beans.factory.annotation.Autowired;
