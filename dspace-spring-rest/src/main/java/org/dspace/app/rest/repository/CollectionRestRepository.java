@@ -184,7 +184,7 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasPermission(#id, 'COLLECTION', 'WRITE')")
     protected CollectionRest put(Context context, UUID id) throws AuthorizeException {
         String name = getRequestParameter("name");
 
