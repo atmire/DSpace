@@ -27,8 +27,8 @@
        <resource.delimiter>@</resource.delimiter>
        <!-- Define our starting class for our Spring Boot Application -->
        <start-class>org.dspace.app.rest.Application</start-class>
-       <spring-boot.version>1.4.4.RELEASE</spring-boot.version>
        <json-path.version>2.2.0</json-path.version>
+       <spring-boot.version>1.4.4.RELEASE</spring-boot.version>
        <!-- <springdata.commons>1.13.0.RELEASE</springdata.commons> -->
    </properties>
 
@@ -146,6 +146,10 @@
         </profile>
     </profiles>
 
+    <dependencyManagement>
+
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>log4j</groupId>
@@ -177,12 +181,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
             <version>${spring-boot.version}</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.springframework/spring-messaging -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-messaging</artifactId>
-            <version>4.3.2.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -235,7 +233,14 @@
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-pool</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-broker</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-kahadb-store</artifactId>
+        </dependency>
 
          <!-- Add in Spring Security for AuthN and AuthZ -->
         <dependency>
@@ -255,10 +260,6 @@
                     <artifactId>spring-boot-starter-logging</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-log4j</artifactId>
         </dependency>-->
 
         <!-- DSpace dependencies -->
