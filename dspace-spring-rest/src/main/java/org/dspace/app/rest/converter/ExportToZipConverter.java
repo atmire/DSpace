@@ -40,7 +40,7 @@ public class ExportToZipConverter
             } catch (SQLException e) {
                 log.error(e.getMessage(), e);
             }
-            exportToZipRest.setSize(linkedBitstream.getSize());
+            exportToZipRest.setSize(linkedBitstream.getSizeBytes());
         }
         exportToZipRest.setState(obj.getStatus());
         return exportToZipRest;
