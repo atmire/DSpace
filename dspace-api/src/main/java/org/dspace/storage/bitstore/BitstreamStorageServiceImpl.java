@@ -216,7 +216,15 @@ public class BitstreamStorageServiceImpl implements BitstreamStorageService, Ini
     public InputStream retrieve(Context context, Bitstream bitstream)
         throws SQLException, IOException {
         Integer storeNumber = bitstream.getStoreNumber();
-        return stores.get(storeNumber).get(bitstream);
+        if (stores.get(storeNumber) != null) {
+            try {
+                return stores.get(storeNumber).get(bitstream);
+            } catch (Exception e) {
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 
     @Override

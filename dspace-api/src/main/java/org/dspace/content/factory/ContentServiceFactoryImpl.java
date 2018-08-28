@@ -17,6 +17,7 @@ import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.CommunityService;
 import org.dspace.content.service.DSpaceObjectLegacySupportService;
 import org.dspace.content.service.DSpaceObjectService;
+import org.dspace.content.service.ExportToZipService;
 import org.dspace.content.service.InstallItemService;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.MetadataFieldService;
@@ -67,6 +68,8 @@ public class ContentServiceFactoryImpl extends ContentServiceFactory {
     private SupervisedItemService supervisedItemService;
     @Autowired(required = true)
     private SiteService siteService;
+    @Autowired(required = true)
+    private ExportToZipService exportToZipService;
 
 
     @Override
@@ -142,5 +145,10 @@ public class ContentServiceFactoryImpl extends ContentServiceFactory {
     @Override
     public SiteService getSiteService() {
         return siteService;
+    }
+
+    @Override
+    public ExportToZipService getExportToZipService() {
+        return exportToZipService;
     }
 }

@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 import javax.mail.MessagingException;
 
 import org.dspace.content.DSpaceObject;
@@ -79,6 +80,17 @@ public interface ItemExportService {
     public void createDownloadableExport(DSpaceObject dso,
                                          Context context, boolean migrate) throws Exception;
 
+    /**
+     * Convenience methot to create export a single Community, Collection, or
+     * Item
+     *
+     * @param dso     - the dspace object to export
+     * @param context - the dspace context
+     * @param migrate Whether to use the migrate option or not
+     * @throws Exception if error
+     */
+    public UUID createDownloadableExport(DSpaceObject dso,
+                                         Context context, boolean migrate, boolean apiCall) throws Exception;
     /**
      * Convenience method to export a List of dspace objects (Community,
      * Collection or Item)

@@ -19,6 +19,7 @@ import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.CommunityService;
 import org.dspace.content.service.DSpaceObjectLegacySupportService;
 import org.dspace.content.service.DSpaceObjectService;
+import org.dspace.content.service.ExportToZipService;
 import org.dspace.content.service.InProgressSubmissionService;
 import org.dspace.content.service.InstallItemService;
 import org.dspace.content.service.ItemService;
@@ -69,6 +70,8 @@ public abstract class ContentServiceFactory {
     public abstract SupervisedItemService getSupervisedItemService();
 
     public abstract SiteService getSiteService();
+
+    public abstract ExportToZipService getExportToZipService();
 
     public InProgressSubmissionService getInProgressSubmissionService(InProgressSubmission inProgressSubmission) {
         if (inProgressSubmission instanceof WorkspaceItem) {
