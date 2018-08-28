@@ -226,7 +226,7 @@ public class ExportToZipRestController {
                     .fromInputStream(inputstream)
                     .withBufferSize(BUFFER_SIZE)
                     .withFileName(getBitstreamName(bitstream, format))
-                    .withLength(bitstream.getSize())
+                    .withLength(bitstream.getSizeBytes())
                     .withChecksum(bitstream.getChecksum())
                     .withMimetype(format.getMIMEType())
                     .withLastModified(bitstreamService.getLastModified(bitstream))
