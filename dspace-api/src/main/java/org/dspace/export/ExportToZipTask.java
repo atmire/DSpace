@@ -28,6 +28,8 @@ public class ExportToZipTask implements Runnable {
 
     public void run() {
         Context context = new Context();
+        context.turnOffAuthorisationSystem();
+
         try {
             ePerson = context.reloadEntity(ePerson);
             dSpaceObject = context.reloadEntity(dSpaceObject);

@@ -876,8 +876,13 @@ public class ItemExportServiceImpl implements ItemExportService {
         boolean exists = true;
         String fileName = null;
         while (exists) {
-            fileName = type + "_export_" + sdf.format(date) + "_" + count + "_"
-                + eperson.getID();
+            if (eperson != null) {
+                fileName = type + "_export_" + sdf.format(date) + "_" + count + "_"
+                    + eperson.getID();
+            } else {
+                fileName = type + "_export_" + sdf.format(date) + "_" + count + "_"
+                    + UUID.randomUUID();
+            }
             exists = new File(downloadDir
                                   + System.getProperty("file.separator") + fileName + ".zip")
                 .exists();
@@ -895,8 +900,8 @@ public class ItemExportServiceImpl implements ItemExportService {
             throw new Exception(
                 "A dspace.cfg entry for 'org.dspace.app.itemexport.download.dir' does not exist.");
         }
-        File result = new File(downloadDir + System.getProperty("file.separator") + ePerson.getID());
-        if (!result.exists() && ePerson.getLegacyId() != null) {
+        File result = new File(downloadDir + System.getProperty("file.separator") + (ePerson == null ? UUID.randomUUID() : ePerson.getID()));
+        if (!result.exists() && ePerson != null && ePerson.getLegacyId() != null) {
             //Check for the old identifier
             result = new File(downloadDir + System.getProperty("file.separator") + ePerson.getLegacyId());
         }

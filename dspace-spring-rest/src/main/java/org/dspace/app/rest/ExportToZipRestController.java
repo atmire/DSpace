@@ -95,7 +95,7 @@ public class ExportToZipRestController {
 
         Context context = ContextUtil.obtainContext(request);
 
-
+        context.turnOffAuthorisationSystem();
         DSpaceObject dSpaceObject = null;
 
         for (DSpaceObjectService dSpaceObjectService : dSpaceObjectServices) {
@@ -135,6 +135,8 @@ public class ExportToZipRestController {
 
         DCDate currentDate = DCDate.getCurrent();
         Context context = ContextUtil.obtainContext(request);
+
+        context.turnOffAuthorisationSystem();
         DSpaceObject dSpaceObject = null;
 
         for (DSpaceObjectService dSpaceObjectService : dSpaceObjectServices) {
@@ -178,6 +180,8 @@ public class ExportToZipRestController {
         Date date = sf.parse(dateString.replace("T", " "));
         if (date != null) {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
+
             DSpaceObject dSpaceObject = null;
 
             for (DSpaceObjectService dSpaceObjectService : dSpaceObjectServices) {
@@ -208,6 +212,8 @@ public class ExportToZipRestController {
         Date date = sf.parse(dateString.replace("T", " "));
         if (date != null) {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
+
             DSpaceObject dSpaceObject = null;
 
             for (DSpaceObjectService dSpaceObjectService : dSpaceObjectServices) {
