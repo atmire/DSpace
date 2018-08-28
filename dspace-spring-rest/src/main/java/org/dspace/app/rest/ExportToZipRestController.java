@@ -2,7 +2,6 @@ package org.dspace.app.rest;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -19,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.converter.ExportToZipConverter;
 import org.dspace.app.rest.link.HalLinkService;
 import org.dspace.app.rest.model.CollectionRest;
+import org.dspace.app.rest.model.CommunityRest;
 import org.dspace.app.rest.model.ExportToZipRest;
 import org.dspace.app.rest.model.ExportToZipRestWrapper;
 import org.dspace.app.rest.model.hateoas.ExportToZipResource;
@@ -29,12 +29,12 @@ import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Bitstream;
 import org.dspace.content.BitstreamFormat;
-import org.dspace.content.Collection;
 import org.dspace.content.DCDate;
+import org.dspace.content.DSpaceObject;
 import org.dspace.content.ExportToZip;
-import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.CollectionService;
+import org.dspace.content.service.DSpaceObjectService;
 import org.dspace.content.service.ExportToZipService;
 import org.dspace.core.Context;
 import org.dspace.export.ExportToZipTask;
@@ -50,8 +50,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/" + CollectionRest.CATEGORY + "/" + CollectionRest.PLURAL_NAME
-    + "/{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/exportToZip")
+@RequestMapping(value = {"/api/" + CollectionRest.CATEGORY + "/" + CollectionRest.PLURAL_NAME
+    + "/{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/exportToZip",
+    "/api/" + CommunityRest.CATEGORY + "/" + CommunityRest.PLURAL_NAME
+        + "/{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/exportToZip"
+})
 public class ExportToZipRestController {
 
     //Most file systems are configured to use block sizes of 4096 or 8192 and our buffer should be a multiple of that.
@@ -81,8 +84,8 @@ public class ExportToZipRestController {
     @Autowired
     private ConfigurationService configurationService;
 
-    /** The <code>OutputStream</code> to write on. */
-    protected OutputStream out;
+    @Autowired(required = true)
+    private List<DSpaceObjectService<? extends DSpaceObject>> dSpaceObjectServices;
 
     private ThreadPoolTaskExecutor threadPoolTaskExecutor = loadThreadPool();
 
@@ -91,9 +94,19 @@ public class ExportToZipRestController {
                                                HttpServletRequest request) throws SQLException {
 
         Context context = ContextUtil.obtainContext(request);
-        Collection collection = ContentServiceFactory.getInstance().getCollectionService()
-                                                     .find(context, uuid);
-        List<ExportToZip> list = exportToZipService.findAllByStatusAndCollection(context, collection, "completed");
+
+
+        DSpaceObject dSpaceObject = null;
+
+        for (DSpaceObjectService dSpaceObjectService : dSpaceObjectServices) {
+            dSpaceObject = dSpaceObjectService.find(context, uuid);
+            if (dSpaceObject != null) {
+                break;
+            }
+        }
+
+
+        List<ExportToZip> list = exportToZipService.findAllByStatusAndDso(context, dSpaceObject, "completed");
         List<ExportToZipRest> exportToZipRests = new LinkedList<>();
         for (ExportToZip exportToZip : list) {
             ExportToZipRest exportToZipRest = exportToZipConverter.fromModel(exportToZip);
@@ -122,19 +135,26 @@ public class ExportToZipRestController {
 
         DCDate currentDate = DCDate.getCurrent();
         Context context = ContextUtil.obtainContext(request);
-        Collection collection = collectionService.find(context, uuid);
-        ExportToZip exportToZip = initializeExportToZip(collection, currentDate, context);
-        threadPoolTaskExecutor.submit(new ExportToZipTask(context, collection, exportToZip.getID()));
+        DSpaceObject dSpaceObject = null;
+
+        for (DSpaceObjectService dSpaceObjectService : dSpaceObjectServices) {
+            dSpaceObject = dSpaceObjectService.find(context, uuid);
+            if (dSpaceObject != null) {
+                break;
+            }
+        }
+        ExportToZip exportToZip = initializeExportToZip(dSpaceObject, currentDate, context);
+        threadPoolTaskExecutor.submit(new ExportToZipTask(context.getCurrentUser(), dSpaceObject, exportToZip.getID()));
         ExportToZipRest exportToZipRest = exportToZipConverter.fromModel(exportToZip);
         ExportToZipResource exportToZipResource = new ExportToZipResource(exportToZipRest, utils);
         halLinkService.addLinks(exportToZipResource);
         return exportToZipResource;
     }
 
-    private ExportToZip initializeExportToZip(Collection collection, DCDate currentDate, Context context)
+    private ExportToZip initializeExportToZip(DSpaceObject dSpaceObject, DCDate currentDate, Context context)
         throws SQLException, AuthorizeException, ParseException {
         ExportToZip exportToZip = new ExportToZip();
-        exportToZip.setDso(collection);
+        exportToZip.setDso(dSpaceObject);
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String dateString = sf.format(currentDate.toDate());
@@ -158,9 +178,15 @@ public class ExportToZipRestController {
         Date date = sf.parse(dateString.replace("T", " "));
         if (date != null) {
             Context context = ContextUtil.obtainContext(request);
-            Collection collection = ContentServiceFactory.getInstance().getCollectionService()
-                                                         .find(context, uuid);
-            ExportToZip exportToZip = exportToZipService.findByCollectionAndDate(context, collection, date);
+            DSpaceObject dSpaceObject = null;
+
+            for (DSpaceObjectService dSpaceObjectService : dSpaceObjectServices) {
+                dSpaceObject = dSpaceObjectService.find(context, uuid);
+                if (dSpaceObject != null) {
+                    break;
+                }
+            }
+            ExportToZip exportToZip = exportToZipService.findByDsoAndDate(context, dSpaceObject, date);
             if (exportToZip != null) {
                 ExportToZipResource exportToZipResource = new ExportToZipResource(
                     exportToZipConverter.fromModel(exportToZip), utils);
@@ -173,18 +199,24 @@ public class ExportToZipRestController {
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/download/{dateString:.+}")
     public ExportToZipResource downloadSpecific(@PathVariable UUID uuid,
-                                 @PathVariable String dateString,
-                                 HttpServletResponse response,
-                                 HttpServletRequest request)
+                                                @PathVariable String dateString,
+                                                HttpServletResponse response,
+                                                HttpServletRequest request)
         throws IOException, SQLException, AuthorizeException, ParseException {
 
         SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date date = sf.parse(dateString.replace("T", " "));
         if (date != null) {
             Context context = ContextUtil.obtainContext(request);
-            Collection collection = ContentServiceFactory.getInstance().getCollectionService()
-                                                         .find(context, uuid);
-            ExportToZip exportToZip = exportToZipService.findByCollectionAndDate(context, collection, date);
+            DSpaceObject dSpaceObject = null;
+
+            for (DSpaceObjectService dSpaceObjectService : dSpaceObjectServices) {
+                dSpaceObject = dSpaceObjectService.find(context, uuid);
+                if (dSpaceObject != null) {
+                    break;
+                }
+            }
+            ExportToZip exportToZip = exportToZipService.findByDsoAndDate(context, dSpaceObject, date);
             if (exportToZip != null && StringUtils.equals(exportToZip.getStatus(), "completed")) {
                 Bitstream bitstream = bitstreamService.find(context, exportToZip.getBitstreamId());
 

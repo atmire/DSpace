@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.dspace.content.Collection;
+import org.dspace.content.DSpaceObject;
 import org.dspace.content.ExportToZip;
 import org.dspace.content.dao.ExportToZipDAO;
 import org.dspace.core.AbstractHibernateDAO;
@@ -24,25 +25,26 @@ public class ExportToZipDAOImpl extends AbstractHibernateDAO<ExportToZip> implem
         return list(criteria);
     }
 
-    public ExportToZip findByCollectionAndDate(Context context, Class clazz, Collection collection, Date date)
+    public ExportToZip findByDsoAndDate(Context context, Class clazz, DSpaceObject dSpaceObject,
+                                        Date date)
         throws SQLException {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
         Criteria criteria = createCriteria(context, clazz);
         criteria.add(Restrictions.and(
-            Restrictions.eq("dso", collection),
+            Restrictions.eq("dso", dSpaceObject),
             Restrictions.eq("date", date)
         ));
 
         return uniqueResult(criteria);
     }
 
-    public List<ExportToZip> findAllByStatusAndCollection(Context context, Class<ExportToZip> clazz,
-                                                          Collection collection, String status) throws SQLException {
+    public List<ExportToZip> findAllByStatusAndDso(Context context, Class<ExportToZip> clazz,
+                                                          DSpaceObject dSpaceObject, String status) throws SQLException {
         Criteria criteria = createCriteria(context, clazz);
         criteria.add(Restrictions.and(
             Restrictions.eq("status", status),
-            Restrictions.eq("dso", collection)
+            Restrictions.eq("dso", dSpaceObject)
         ));
 
         return list(criteria);    }

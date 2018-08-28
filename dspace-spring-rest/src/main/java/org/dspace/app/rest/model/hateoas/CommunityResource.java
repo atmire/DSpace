@@ -22,5 +22,6 @@ import org.dspace.app.rest.utils.Utils;
 public class CommunityResource extends DSpaceResource<CommunityRest> {
     public CommunityResource(CommunityRest community, Utils utils, String... rels) {
         super(community, utils, rels);
+        add(utils.linkToSubResource(community, "exportToZip"));
     }
 }

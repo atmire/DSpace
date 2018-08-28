@@ -4,33 +4,37 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.dspace.app.itemexport.factory.ItemExportServiceFactory;
-import org.dspace.content.Collection;
+import org.dspace.content.DSpaceObject;
 import org.dspace.content.ExportToZip;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.ExportToZipService;
 import org.dspace.core.Context;
+import org.dspace.eperson.EPerson;
 
 public class ExportToZipTask implements Runnable {
 
     private static Logger log = Logger.getLogger(ExportToZipTask.class);
 
-    private Collection collection;
-    private Context context;
+    private DSpaceObject dSpaceObject;
+    private EPerson ePerson;
     private Integer exportToZipId;
     ExportToZipService exportToZipService = ContentServiceFactory.getInstance().getExportToZipService();
 
-    public ExportToZipTask(Context context, Collection collection, Integer exportToZipId) {
-        this.collection = collection;
-        this.context = context;
+    public ExportToZipTask(EPerson currentUser, DSpaceObject dSpaceObject, Integer exportToZipId) {
+        this.dSpaceObject = dSpaceObject;
+        this.ePerson = currentUser;
         this.exportToZipId = exportToZipId;
     }
 
     public void run() {
-        context.turnOffAuthorisationSystem();
+        Context context = new Context();
         try {
+            ePerson = context.reloadEntity(ePerson);
+            dSpaceObject = context.reloadEntity(dSpaceObject);
+            context.setCurrentUser(ePerson);
             UUID bitstreamUuid = ItemExportServiceFactory.getInstance()
                                                          .getItemExportService()
-                                                         .createDownloadableExport(collection, context, false, true);
+                                                         .createDownloadableExport(dSpaceObject, context, false, true);
             ExportToZip exportToZip = exportToZipService.find(context, exportToZipId);
             exportToZip.setBitstreamId(bitstreamUuid);
             exportToZip.setStatus("completed");

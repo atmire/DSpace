@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.dspace.authorize.AuthorizeException;
-import org.dspace.content.Collection;
+import org.dspace.content.DSpaceObject;
 import org.dspace.content.ExportToZip;
 import org.dspace.core.Context;
 import org.dspace.service.DSpaceCRUDService;
@@ -18,8 +18,8 @@ public interface ExportToZipService extends DSpaceCRUDService<ExportToZip> {
 
     public List<ExportToZip> findAllByStatus(Context context, String status) throws SQLException;
 
-    ExportToZip findByCollectionAndDate(Context context, Collection collection, Date date) throws SQLException;
+    ExportToZip findByDsoAndDate(Context context, DSpaceObject dSpaceObject, Date date) throws SQLException;
 
-    List<ExportToZip> findAllByStatusAndCollection(Context context, Collection collection, String status)
+    List<ExportToZip> findAllByStatusAndDso(Context context, DSpaceObject dSpaceObject, String status)
         throws SQLException;
 }

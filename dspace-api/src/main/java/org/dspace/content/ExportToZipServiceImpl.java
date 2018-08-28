@@ -75,12 +75,12 @@ public class ExportToZipServiceImpl implements ExportToZipService {
         return exportToZipDAO.findAllByStatus(context, ExportToZip.class, status);
     }
 
-    public ExportToZip findByCollectionAndDate(Context context, Collection collection, Date date) throws SQLException {
-        return exportToZipDAO.findByCollectionAndDate(context, ExportToZip.class, collection, date);
+    public ExportToZip findByDsoAndDate(Context context, DSpaceObject dSpaceObject, Date date) throws SQLException {
+        return exportToZipDAO.findByDsoAndDate(context, ExportToZip.class, dSpaceObject, date);
     }
 
-    public List<ExportToZip> findAllByStatusAndCollection(Context context, Collection collection, String status)
+    public List<ExportToZip> findAllByStatusAndDso(Context context, DSpaceObject dSpaceObject, String status)
         throws SQLException {
-        return exportToZipDAO.findAllByStatusAndCollection(context, ExportToZip.class, collection, status);
+        return exportToZipDAO.findAllByStatusAndDso(context, ExportToZip.class, dSpaceObject, status);
     }
 }

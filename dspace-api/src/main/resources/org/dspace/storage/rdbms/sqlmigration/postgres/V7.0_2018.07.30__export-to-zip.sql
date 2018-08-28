@@ -20,7 +20,7 @@
 CREATE SEQUENCE export_zip_file_id_seq;
 CREATE TABLE export_zip_file
 (
-    dso                     uuid NOT NULL REFERENCES collection(uuid),
+    dso                     uuid NOT NULL REFERENCES dspaceobject(uuid),
     id                      INTEGER NOT NULL PRIMARY KEY,
     date                    TIMESTAMP NOT NULL,
     bitstream_id            uuid,
