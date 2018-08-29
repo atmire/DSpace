@@ -10,11 +10,14 @@ package org.dspace.content;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -701,4 +704,30 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
             idx++;
         }
     }
+
+    public void processRequest(Context context, T dso, HttpServletRequest httpServletRequest, boolean overwriteMetadata)
+            throws SQLException {
+        Enumeration parameterNames = httpServletRequest.getParameterNames();
+        while (parameterNames.hasMoreElements()) {
+            Object nextElement = parameterNames.nextElement();
+            if (nextElement instanceof String && StringUtils.contains((String) nextElement, '.')) {
+                String metadataFieldString = (String) nextElement;
+                String[] split = metadataFieldString.split("\\.");
+                String schema = split[0];
+                String element = split[1];
+                String qualifier = (split.length > 2) ? split[2] : null;
+                MetadataField metadataField = metadataFieldService.findByElement(context, schema, element, qualifier);
+                if (metadataField != null) {
+                    if (overwriteMetadata) {
+                        clearMetadata(context, dso, schema, element, qualifier, Item.ANY);
+                    }
+                    String[] values = httpServletRequest.getParameterValues(metadataFieldString);
+                    if (ArrayUtils.isNotEmpty(values)) {
+                        addMetadata(context, dso, metadataField, Item.ANY, Arrays.asList(values));
+                    }
+                }
+            }
+        }
+    }
+
 }

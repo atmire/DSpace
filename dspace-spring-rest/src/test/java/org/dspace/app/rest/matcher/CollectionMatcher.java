@@ -12,6 +12,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.dspace.content.Bitstream;
@@ -23,20 +24,27 @@ public class CollectionMatcher {
     private CollectionMatcher() { }
 
     public static Matcher<? super Object> matchCollectionEntry(String name, UUID uuid, String handle) {
-        return matchCollectionEntry(name, uuid, handle, null);
+        return matchCollectionEntry(name, uuid, handle, null, null);
     }
 
+
     public static Matcher<? super Object> matchCollectionEntry(String name, UUID uuid, String handle, Bitstream logo) {
+        return matchCollectionEntry(name, uuid, handle, null, null);
+    }
+
+    public static Matcher<? super Object> matchCollectionEntry(String name, UUID uuid, String handle, Bitstream logo,
+                                                               Map<String, String> metadata) {
         return allOf(
-            hasJsonPath("$.uuid", is(uuid.toString())),
-            hasJsonPath("$.name", is(name)),
-            hasJsonPath("$.handle", is(handle)),
-            hasJsonPath("$.type", is("collection")),
-            hasJsonPath("$.metadata", Matchers.contains(
-                CollectionMetadataMatcher.matchTitle(name)
-            )),
-            matchLinks(uuid),
-            matchLogo(logo)
+                hasJsonPath("$.uuid", is(uuid.toString())),
+                hasJsonPath("$.name", is(name)),
+                hasJsonPath("$.handle", is(handle)),
+                hasJsonPath("$.type", is("collection")),
+                hasJsonPath("$", Matchers.allOf(
+                        CollectionMetadataMatcher.matchTitle(name),
+                        CollectionMetadataMatcher.matchMetadata(metadata)
+                )),
+                matchLinks(uuid),
+                matchLogo(logo)
         );
     }
 

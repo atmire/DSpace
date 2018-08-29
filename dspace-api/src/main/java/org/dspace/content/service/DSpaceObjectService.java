@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.MetadataField;
@@ -376,4 +378,7 @@ public interface DSpaceObjectService<T extends DSpaceObject> {
 
     void moveMetadata(Context context, T dso, String schema, String element, String qualifier, int from, int to)
         throws SQLException;
+
+    void processRequest(Context context, T dso, HttpServletRequest httpServletRequest, boolean overwriteMetadata)
+            throws SQLException;
 }
