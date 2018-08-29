@@ -4,8 +4,10 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.log4j.Logger;
 import org.dspace.app.rest.websocket.LogWebSocketController;
 import org.dspace.log.appender.JMSListener;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
@@ -25,9 +27,11 @@ public class StatsWebSocket {
     javax.jms.Session jmsSession;
     MessageProducer messageProducer;
 
+    @Autowired
+    ConnectionFactory cf;
+
     public StatsWebSocket(){
         Connection connection = null;
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("tcp://localhost:61616");
         try {
             connection = cf.createConnection();
             jmsSession = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
