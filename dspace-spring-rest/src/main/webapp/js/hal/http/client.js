@@ -22,7 +22,6 @@ function getAuthorizationHeader() {
         return undefined;
     }
 }
-
 function downloadFile(url) {
     var request = new XMLHttpRequest();
     request.open('GET', url, true);
@@ -38,34 +37,26 @@ function downloadFile(url) {
             var disposition = request.getResponseHeader('content-disposition');
             var matches = /"([^"]*)"/.exec(disposition);
             var filename = (matches != null && matches[1] ? matches[1] : 'file.pdf');
-
             // The actual download
-
             var contentTypeHeader = request.getResponseHeader("content-type");
-
             if (contentTypeHeader === undefined || contentTypeHeader === "") {
                 contentTypeHeader = "application/octet-stream";
             }
-
             var blob = new Blob([request.response], {type: contentTypeHeader});
             var link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
             link.download = filename;
-
             document.body.appendChild(link);
-
             link.click();
-
             document.body.removeChild(link);
         }
-
         // some error handling should be done here...
     };
-
     request.send();
 }
 
-HAL.Http.Client.prototype.get = function (url) {
+
+HAL.Http.Client.prototype.get = function(url) {
     var self = this;
     this.vent.trigger('location-change', {url: url});
     var jqxhr = $.ajax({
@@ -88,10 +79,8 @@ HAL.Http.Client.prototype.get = function (url) {
         if (contentTypeResponseHeader != undefined
                 && !contentTypeResponseHeader.startsWith("application/hal")
                 && !contentTypeResponseHeader.startsWith("application/json")) {
-
             downloadFile(url);
-        }
-    });
+        }});
 };
 
 HAL.Http.Client.prototype.request = function (opts) {
