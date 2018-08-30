@@ -134,10 +134,6 @@ public class MultipartFileSender {
         }
         return this;
     }
-    public MultipartFileSender withDisposition(String contentDisposition) {
-        this.disposition = contentDisposition;
-        return this;
-    }
 
     public MultipartFileSender withDisposition(String disposition) {
         if (StringUtils.isNotBlank(disposition) && (StringUtils
