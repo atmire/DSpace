@@ -139,8 +139,6 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
         return page;
     }
 
-
-
     @Nullable
     private String getRequestParameter(String name) {
         String value = requestService.getCurrentRequest().getHttpServletRequest().getParameter(name);
@@ -174,6 +172,7 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
             Collection collection = cs.create(context,parentCommunity);
 
             cs.setMetadataSingleValue(context, collection, MetadataSchema.DC_SCHEMA, "title", null, Item.ANY, name);
+            cs.processRequest(context, collection, requestService.getCurrentRequest().getHttpServletRequest(), false);
             cs.update(context, collection);
             context.commit();
 
@@ -191,6 +190,7 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
         try {
             Collection collection = cs.find(context, id);
             cs.setMetadataSingleValue(context, collection, MetadataSchema.DC_SCHEMA, "title", null, Item.ANY, name);
+            cs.processRequest(context, collection, requestService.getCurrentRequest().getHttpServletRequest(), true);
             cs.update(context, collection);
 
             return converter.convert(collection);

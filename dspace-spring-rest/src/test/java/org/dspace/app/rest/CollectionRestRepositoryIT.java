@@ -16,6 +16,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.dspace.app.rest.builder.CollectionBuilder;
@@ -28,6 +30,7 @@ import org.hamcrest.Matchers;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTest {
 
@@ -283,9 +286,11 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
 
     @Test
     public void createUnauthenticated() throws Exception {
+        context.turnOffAuthorisationSystem();
         parentCommunity = CommunityBuilder.createCommunity(context)
                                           .withName("Parent Community")
                                           .build();
+        context.restoreAuthSystemState();
         getClient().perform(post("/api/core/collections")
                                     .param("name", "test")
                                     .param("parent", parentCommunity.getID().toString()))
@@ -294,9 +299,11 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
 
     @Test
     public void createUnauthorized() throws Exception {
+        context.turnOffAuthorisationSystem();
         parentCommunity = CommunityBuilder.createCommunity(context)
                                           .withName("Parent Community")
                                           .build();
+        context.restoreAuthSystemState();
         String nonAdminToken = getAuthToken(eperson.getEmail(), password);
 
         getClient(nonAdminToken).perform(post("/api/core/collections")
@@ -307,9 +314,11 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
 
     @Test
     public void createWithNoName() throws Exception {
+        context.turnOffAuthorisationSystem();
         parentCommunity = CommunityBuilder.createCommunity(context)
                                           .withName("Parent Community")
                                           .build();
+        context.restoreAuthSystemState();
         String adminToken = getAuthToken(admin.getEmail(), password);
 
         getClient(adminToken).perform(post("/api/core/collections")
@@ -366,17 +375,62 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         String adminToken = getAuthToken(admin.getEmail(), password);
 
         String collectionName = "test";
-        ResultActions perform = getClient(adminToken).perform(post("/api/core/collections")
-                                                                      .param("name", collectionName)
-                                                                      .param("parent", parentCommunity.getID().toString()));
+        Map<String, String> metadata = getMetadataMap();
+        MockHttpServletRequestBuilder servletRequestBuilder = post("/api/core/collections/");
+        servletRequestBuilder.param("name", collectionName);
+        servletRequestBuilder.param("parent", parentCommunity.getID().toString());
+        for (Map.Entry<String, String> entry : metadata.entrySet()) {
+            servletRequestBuilder.param(entry.getKey(), entry.getValue());
+        }
+        ResultActions perform = getClient(adminToken).perform(servletRequestBuilder);
         perform.andExpect(status().isCreated());
         JSONObject json = new JSONObject(perform.andReturn().getResponse().getContentAsString());
         String createdID = String.valueOf(json.get("id"));
         String handle = String.valueOf(json.get("handle"));
 
-        getClient().perform(get("/api/core/collections/" + createdID)).andExpect(status().isOk())
-                   .andExpect(jsonPath("$",
-                                       CollectionMatcher.matchCollectionEntry(collectionName, UUID.fromString(createdID), handle)));
+        UUID uuid = UUID.fromString(createdID);
+        getClient().perform(get("/api/core/collections/" + createdID)).andExpect(status().isOk()).andExpect(
+                jsonPath("$",
+                         CollectionMatcher.matchCollectionEntry(collectionName, uuid, handle, null, metadata)));
+
+    }
+
+    @Test
+    public void createWithValidParentAndNameContainingNonExistingMetadata() throws Exception {
+
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("parent")
+                                          .build();
+
+        String adminToken = getAuthToken(admin.getEmail(), password);
+
+        String collectionName = "test";
+        Map<String, String> metadata = getMetadataMap();
+        Map<String, String> nonExistingMetadata = getNonExistingMetadataMap();
+        MockHttpServletRequestBuilder servletRequestBuilder = post("/api/core/collections/");
+        servletRequestBuilder.param("name", collectionName);
+        servletRequestBuilder.param("parent", parentCommunity.getID().toString());
+        for (Map.Entry<String, String> entry : metadata.entrySet()) {
+            servletRequestBuilder.param(entry.getKey(), entry.getValue());
+        }
+        for (Map.Entry<String, String> entry : nonExistingMetadata.entrySet()) {
+            servletRequestBuilder.param(entry.getKey(), entry.getValue());
+        }
+
+        ResultActions perform = getClient(adminToken).perform(servletRequestBuilder);
+        perform.andExpect(status().isCreated());
+        JSONObject json = new JSONObject(perform.andReturn().getResponse().getContentAsString());
+        String createdID = String.valueOf(json.get("id"));
+        String handle = String.valueOf(json.get("handle"));
+
+        UUID uuid = UUID.fromString(createdID);
+        getClient().perform(get("/api/core/collections/" + createdID)).andExpect(status().isOk()).andExpect(
+                jsonPath("$",
+                         CollectionMatcher.matchCollectionEntry(collectionName, uuid, handle, null, metadata)))
+                   .andExpect(jsonPath("$", CollectionMatcher
+                           .matchCollectionEntry(nonExistingMetadata)));
 
     }
 
@@ -455,8 +509,15 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
 
         String collectionAdminToken = getAuthToken(eperson.getEmail(), password);
         String updatedName = "UpdatedName";
-        ResultActions perform = getClient(collectionAdminToken).perform(put("/api/core/collections/" + col1.getID())
-                .param("name", updatedName));
+        Map<String, String> metadata = getMetadataMap();
+
+        MockHttpServletRequestBuilder servletRequestBuilder = put("/api/core/collections/" + col1.getID());
+        servletRequestBuilder.param("name", updatedName);
+        for (Map.Entry<String, String> entry : metadata.entrySet()) {
+            servletRequestBuilder.param(entry.getKey(), entry.getValue());
+        }
+        ResultActions perform = getClient(collectionAdminToken).perform(servletRequestBuilder);
+
         perform.andExpect(status().isOk());
 
         perform = getClient().perform(get("/api/core/collections/" + col1.getID()));
@@ -465,9 +526,9 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         String createdID = String.valueOf(json.get("id"));
         String handle = String.valueOf(json.get("handle"));
 
-        getClient().perform(get("/api/core/collections/" + createdID)).andExpect(status().isOk())
-                .andExpect(jsonPath("$",
-                        CollectionMatcher.matchCollectionEntry(updatedName, UUID.fromString(createdID), handle)));
+        getClient().perform(get("/api/core/collections/" + createdID)).andExpect(status().isOk()).andExpect(
+                jsonPath("$", CollectionMatcher
+                        .matchCollectionEntry(updatedName, UUID.fromString(createdID), handle, null, metadata)));
     }
 
     @Test
@@ -477,8 +538,13 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         String adminToken = getAuthToken(admin.getEmail(), password);
 
         String updatedName = "UpdatedName";
-        ResultActions perform = getClient(adminToken).perform(put("/api/core/collections/" + col1.getID())
-                .param("name", updatedName));
+        Map<String, String> metadata = getMetadataMap();
+        MockHttpServletRequestBuilder servletRequestBuilder = put("/api/core/collections/" + col1.getID());
+        servletRequestBuilder.param("name", updatedName);
+        for (Map.Entry<String, String> entry : metadata.entrySet()) {
+            servletRequestBuilder.param(entry.getKey(), entry.getValue());
+        }
+        ResultActions perform = getClient(adminToken).perform(servletRequestBuilder);
         perform.andExpect(status().isOk());
 
         perform = getClient().perform(get("/api/core/collections/" + col1.getID()));
@@ -487,9 +553,43 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         String createdID = String.valueOf(json.get("id"));
         String handle = String.valueOf(json.get("handle"));
 
+        UUID uuid = UUID.fromString(createdID);
         getClient().perform(get("/api/core/collections/" + createdID)).andExpect(status().isOk())
-                .andExpect(jsonPath("$",
-                        CollectionMatcher.matchCollectionEntry(updatedName, UUID.fromString(createdID), handle)));
+                   .andExpect(jsonPath("$",
+                        CollectionMatcher.matchCollectionEntry(updatedName, uuid, handle, null, metadata)));
+    }
+
+    @Test
+    public void updateByAuthorizedAdminContainingNonExistingMetadataField() throws Exception {
+        Collection col1 = createSingleCollection();
+
+        String adminToken = getAuthToken(admin.getEmail(), password);
+
+        String updatedName = "UpdatedName";
+        Map<String, String> metadata = getMetadataMap();
+        Map<String, String> nonExistingMetadataMap = getNonExistingMetadataMap();
+        MockHttpServletRequestBuilder servletRequestBuilder = put("/api/core/collections/" + col1.getID());
+        servletRequestBuilder.param("name", updatedName);
+        for (Map.Entry<String, String> entry : metadata.entrySet()) {
+            servletRequestBuilder.param(entry.getKey(), entry.getValue());
+        }
+        for (Map.Entry<String, String> entry : nonExistingMetadataMap.entrySet()) {
+            servletRequestBuilder.param(entry.getKey(), entry.getValue());
+        }
+        ResultActions perform = getClient(adminToken).perform(servletRequestBuilder);
+        perform.andExpect(status().isOk());
+
+        perform = getClient().perform(get("/api/core/collections/" + col1.getID()));
+
+        JSONObject json = new JSONObject(perform.andReturn().getResponse().getContentAsString());
+        String createdID = String.valueOf(json.get("id"));
+        String handle = String.valueOf(json.get("handle"));
+
+        UUID uuid = UUID.fromString(createdID);
+        getClient().perform(get("/api/core/collections/" + createdID)).andExpect(status().isOk())
+                   .andExpect(jsonPath("$",
+                        CollectionMatcher.matchCollectionEntry(updatedName, uuid, handle, null, metadata)))
+                   .andExpect(jsonPath("$",CollectionMatcher.matchCollectionEntry(nonExistingMetadataMap)));
     }
 
     private Collection createSingleCollection() {
@@ -502,5 +602,19 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         return col1;
     }
 
+    private Map<String, String> getMetadataMap() {
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("dc.rights", "RightsTest");
+        metadata.put("dc.rights.license", "RightsLicense");
+        metadata.put("dc.description.abstract", "AbstractValue");
+        return metadata;
+    }
+
+    private Map<String, String> getNonExistingMetadataMap() {
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("does.not.exist", "Should not end up in metadata");
+        metadata.put("also.nonexistinging", "Should not end up in metadata");
+        return metadata;
+    }
 
 }
