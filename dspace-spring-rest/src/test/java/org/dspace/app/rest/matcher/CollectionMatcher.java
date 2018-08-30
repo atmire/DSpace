@@ -48,6 +48,10 @@ public class CollectionMatcher {
         );
     }
 
+    public static Matcher<? super Object> matchCollectionEntry(Map<String, String> nonExistingMetadata) {
+        return allOf(
+                hasJsonPath("$", CollectionMetadataMatcher.matchMetadataNotInObject(nonExistingMetadata.keySet())));
+    }
     private static Matcher<? super Object> matchLinks(UUID uuid) {
         return allOf(
             hasJsonPath("$._links.logo.href", containsString("api/core/collections/" + uuid.toString() + "/logo")),

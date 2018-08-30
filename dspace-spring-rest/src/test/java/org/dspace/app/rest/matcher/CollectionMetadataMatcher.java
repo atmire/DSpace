@@ -8,12 +8,14 @@
 package org.dspace.app.rest.matcher;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasNoJsonPath;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hamcrest.Matcher;
 
@@ -33,6 +35,16 @@ public class CollectionMetadataMatcher {
             for (Map.Entry<String, String> entry : metadata.entrySet()) {
                 matchers.add(hasJsonPath("$.metadata[?(@.key=='" + entry.getKey() + "')].value",
                                          contains(entry.getValue())));
+            }
+        }
+        return allOf(matchers);
+    }
+
+    public static Matcher<? super Object> matchMetadataNotInObject(Set<String> metadataFieldKeys) {
+        List<Matcher<? super Object>> matchers = new LinkedList<>();
+        if (metadataFieldKeys != null) {
+            for (String metadataField : metadataFieldKeys) {
+                matchers.add(hasNoJsonPath("$.metadata[?(@.key=='" + metadataField + "')].value"));
             }
         }
         return allOf(matchers);
