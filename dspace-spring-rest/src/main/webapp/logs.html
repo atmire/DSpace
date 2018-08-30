@@ -28,7 +28,7 @@
             var level = log.level;
             return "<li><p>Received: " + date + ", with Log Level: " + level + "</p><div>" + log.content + "</li>";
         };
-        var socket = new SockJS('/dspace7-rest/logs/');
+        var socket = new SockJS('logs/');
         var stompClient = Stomp.over(socket);
         stompClient.connect({ }, function(frame) {
             // subscribe to the /topic/entries endpoint which feeds newly added logs
