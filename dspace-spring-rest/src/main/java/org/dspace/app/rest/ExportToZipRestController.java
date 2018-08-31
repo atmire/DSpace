@@ -21,6 +21,7 @@ import org.dspace.app.rest.model.CollectionRest;
 import org.dspace.app.rest.model.CommunityRest;
 import org.dspace.app.rest.model.ExportToZipRest;
 import org.dspace.app.rest.model.ExportToZipRestWrapper;
+import org.dspace.app.rest.model.ItemRest;
 import org.dspace.app.rest.model.hateoas.ExportToZipResource;
 import org.dspace.app.rest.model.hateoas.ExportToZipResourceWrapper;
 import org.dspace.app.rest.utils.ContextUtil;
@@ -53,6 +54,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = {"/api/" + CollectionRest.CATEGORY + "/" + CollectionRest.PLURAL_NAME
     + "/{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/exportToZip",
     "/api/" + CommunityRest.CATEGORY + "/" + CommunityRest.PLURAL_NAME
+        + "/{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/exportToZip",
+    "/api/" + ItemRest.CATEGORY + "/" + ItemRest.PLURAL_NAME
         + "/{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/exportToZip"
 })
 public class ExportToZipRestController {
