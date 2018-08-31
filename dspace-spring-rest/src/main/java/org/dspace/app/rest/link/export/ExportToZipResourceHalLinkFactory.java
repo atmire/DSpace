@@ -20,7 +20,7 @@ public class ExportToZipResourceHalLinkFactory extends ExportToZipRestHalLinkFac
         if (exportToZipRest != null) {
 
             UriComponentsBuilder uriBuilderSelfLink = uriBuilder(getMethodOn()
-                                                                     .viewSpecific(exportToZipRest.getCollectionId(),
+                                                                     .viewSpecific(exportToZipRest.getDsoUuid(),
                                                                                    exportToZipRest.getDate().toString()
                                                                                                   .replace(" ", "T"),
                                                                                    null,
@@ -29,7 +29,7 @@ public class ExportToZipResourceHalLinkFactory extends ExportToZipRestHalLinkFac
 
             if (StringUtils.equalsIgnoreCase(exportToZipRest.getState(), "completed")) {
                 UriComponentsBuilder uriBuilder = uriBuilder(getMethodOn()
-                                                                 .downloadSpecific(exportToZipRest.getCollectionId(),
+                                                                 .downloadSpecific(exportToZipRest.getDsoUuid(),
                                                                                    exportToZipRest.getDate().toString()
                                                                                                   .replace(" ", "T"),
                                                                                    null,

@@ -9,19 +9,19 @@ import org.dspace.app.rest.ExportToZipRestController;
 
 public class ExportToZipRest implements RestAddressableModel {
 
-    @JsonProperty("collection-id")
-    private UUID collectionId;
+    @JsonProperty("dso-id")
+    private UUID dsoUuid;
     private Date date;
     private String state;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long size = null;
 
-    public UUID getCollectionId() {
-        return collectionId;
+    public UUID getDsoUuid() {
+        return dsoUuid;
     }
 
-    public void setCollectionId(UUID collectionId) {
-        this.collectionId = collectionId;
+    public void setDsoUuid(UUID dsoUuid) {
+        this.dsoUuid = dsoUuid;
     }
 
     public Date getDate() {
