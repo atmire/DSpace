@@ -16,6 +16,9 @@ public class ExportToZipRest implements RestAddressableModel {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long size = null;
 
+    private String category;
+    private String type;
+
     public UUID getDsoUuid() {
         return dsoUuid;
     }
@@ -49,7 +52,7 @@ public class ExportToZipRest implements RestAddressableModel {
     }
 
     public String getCategory() {
-        return "category";
+        return category;
     }
 
     public Class getController() {
@@ -57,6 +60,14 @@ public class ExportToZipRest implements RestAddressableModel {
     }
 
     public String getType() {
-        return "exportToZip";
+        return type;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

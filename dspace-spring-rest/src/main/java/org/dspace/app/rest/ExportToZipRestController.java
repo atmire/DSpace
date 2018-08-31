@@ -50,14 +50,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+//@RestController
+//@RequestMapping(value = {
+//    "/api/" + CommunityRest.CATEGORY + "/" + CommunityRest.PLURAL_NAME
+//        + "/{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/exportToZip",
+//    "/api/" + ItemRest.CATEGORY + "/" + ItemRest.PLURAL_NAME
+//        + "/{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/exportToZip",
+//    "/api/" + CollectionRest.CATEGORY + "/" + CollectionRest.PLURAL_NAME
+//        + "/{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/exportToZip"
+//})
+
 @RestController
-@RequestMapping(value = {"/api/" + CollectionRest.CATEGORY + "/" + CollectionRest.PLURAL_NAME
-    + "/{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/exportToZip",
-    "/api/" + CommunityRest.CATEGORY + "/" + CommunityRest.PLURAL_NAME
-        + "/{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/exportToZip",
-    "/api/" + ItemRest.CATEGORY + "/" + ItemRest.PLURAL_NAME
-        + "/{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/exportToZip"
-})
+@RequestMapping("/api/{apiCategory}/{model}/" +
+    "{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/exportToZip")
 public class ExportToZipRestController {
 
     //Most file systems are configured to use block sizes of 4096 or 8192 and our buffer should be a multiple of that.
@@ -94,7 +99,8 @@ public class ExportToZipRestController {
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})
     public ExportToZipResourceWrapper retrieve(@PathVariable UUID uuid, HttpServletResponse response,
-                                               HttpServletRequest request) throws SQLException {
+                                               HttpServletRequest request, @PathVariable String model,
+                                               @PathVariable String apiCategory) throws SQLException {
 
         Context context = ContextUtil.obtainContext(request);
 
@@ -112,7 +118,7 @@ public class ExportToZipRestController {
         List<ExportToZip> list = exportToZipService.findAllByStatusAndDso(context, dSpaceObject, "completed");
         List<ExportToZipRest> exportToZipRests = new LinkedList<>();
         for (ExportToZip exportToZip : list) {
-            ExportToZipRest exportToZipRest = exportToZipConverter.fromModel(exportToZip);
+            ExportToZipRest exportToZipRest = exportToZipConverter.fromModel(exportToZip, model, apiCategory);
             exportToZipRests.add(exportToZipRest);
         }
 
@@ -133,7 +139,8 @@ public class ExportToZipRestController {
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/create")
     public ExportToZipResource create(@PathVariable UUID uuid, HttpServletResponse response,
-                                      HttpServletRequest request)
+                                      HttpServletRequest request, @PathVariable String model,
+                                      @PathVariable String apiCategory)
         throws IOException, SQLException, AuthorizeException, ParseException {
 
         DCDate currentDate = DCDate.getCurrent();
@@ -148,7 +155,7 @@ public class ExportToZipRestController {
         }
         ExportToZip exportToZip = initializeExportToZip(dSpaceObject, currentDate, context);
         threadPoolTaskExecutor.submit(new ExportToZipTask(context.getCurrentUser(), dSpaceObject, exportToZip.getID()));
-        ExportToZipRest exportToZipRest = exportToZipConverter.fromModel(exportToZip);
+        ExportToZipRest exportToZipRest = exportToZipConverter.fromModel(exportToZip, model, apiCategory);
         ExportToZipResource exportToZipResource = new ExportToZipResource(exportToZipRest, utils);
         halLinkService.addLinks(exportToZipResource);
         return exportToZipResource;
@@ -174,7 +181,8 @@ public class ExportToZipRestController {
     public ExportToZipResource viewSpecific(@PathVariable UUID uuid,
                                             @PathVariable String dateString,
                                             HttpServletResponse response,
-                                            HttpServletRequest request)
+                                            HttpServletRequest request, @PathVariable String model,
+                                            @PathVariable String apiCategory)
         throws IOException, SQLException, AuthorizeException, ParseException {
 
         SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -192,7 +200,7 @@ public class ExportToZipRestController {
             ExportToZip exportToZip = exportToZipService.findByDsoAndDate(context, dSpaceObject, date);
             if (exportToZip != null) {
                 ExportToZipResource exportToZipResource = new ExportToZipResource(
-                    exportToZipConverter.fromModel(exportToZip), utils);
+                    exportToZipConverter.fromModel(exportToZip, model, apiCategory), utils);
                 halLinkService.addLinks(exportToZipResource);
                 return exportToZipResource;
             }
@@ -204,7 +212,8 @@ public class ExportToZipRestController {
     public ExportToZipResource downloadSpecific(@PathVariable UUID uuid,
                                                 @PathVariable String dateString,
                                                 HttpServletResponse response,
-                                                HttpServletRequest request)
+                                                HttpServletRequest request, @PathVariable String model,
+                                                @PathVariable String apiCategory)
         throws IOException, SQLException, AuthorizeException, ParseException {
 
         SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

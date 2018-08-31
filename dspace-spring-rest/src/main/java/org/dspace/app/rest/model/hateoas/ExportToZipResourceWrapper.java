@@ -7,10 +7,10 @@ import org.dspace.app.rest.model.ExportToZipRest;
 import org.dspace.app.rest.model.ExportToZipRestWrapper;
 import org.dspace.app.rest.utils.Utils;
 
-public class ExportToZipResourceWrapper extends DSpaceResource<ExportToZipRestWrapper> {
+public class ExportToZipResourceWrapper extends HALResource<ExportToZipRestWrapper> {
 
     public ExportToZipResourceWrapper(ExportToZipRestWrapper content, Utils utils, String... rels) {
-        super(content, utils, rels);
+        super(content);
         addEmbeds(content, utils);
     }
 
