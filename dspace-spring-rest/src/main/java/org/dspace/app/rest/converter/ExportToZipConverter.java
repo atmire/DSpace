@@ -10,7 +10,6 @@ import org.dspace.content.ExportToZip;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.CollectionService;
 import org.dspace.core.Context;
-import org.jbibtex.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +28,7 @@ public class ExportToZipConverter
     @Override
     public ExportToZipRest fromModel(ExportToZip obj) {
         ExportToZipRest exportToZipRest = new ExportToZipRest();
-        exportToZipRest.setCollectionId(obj.getDso().getID());
+        exportToZipRest.setDsoUuid(obj.getDso().getID());
         exportToZipRest.setDate(obj.getDate());
 
         if (StringUtils.equals(obj.getStatus(), "completed")) {
@@ -51,7 +50,7 @@ public class ExportToZipConverter
         try {
             ExportToZip exportToZip = new ExportToZip();
             exportToZip.setStatus(obj.getState());
-            exportToZip.setDso(collectionService.find(new Context(), obj.getCollectionId()));
+            exportToZip.setDso(collectionService.find(new Context(), obj.getDsoUuid()));
             exportToZip.setDate(obj.getDate());
             return exportToZip;
         } catch (SQLException e) {
