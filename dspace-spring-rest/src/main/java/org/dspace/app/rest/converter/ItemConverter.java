@@ -8,12 +8,10 @@
 package org.dspace.app.rest.converter;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.dspace.app.rest.model.BitstreamRest;
-import org.dspace.app.rest.model.CollectionRest;
 import org.dspace.app.rest.model.ItemRest;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
@@ -44,9 +42,8 @@ public class ItemConverter extends DSpaceObjectConverter<org.dspace.content.Item
         item.setDiscoverable(obj.isDiscoverable());
         item.setWithdrawn(obj.isWithdrawn());
         item.setLastModified(obj.getLastModified());
-        Collection owningCollection = obj.getOwningCollection();
         try {
-            Collection c = owningCollection;
+            Collection c = obj.getOwningCollection();
             if (c != null) {
                 item.setOwningCollection(collectionConverter.fromModel(c));
             }
@@ -69,14 +66,6 @@ public class ItemConverter extends DSpaceObjectConverter<org.dspace.content.Item
             }
         }
         item.setBitstreams(bitstreams);
-        List<CollectionRest> mappingCollections = new LinkedList<>();
-        for (Collection c : obj.getCollections()) {
-            if (c.getID() != owningCollection.getID()) {
-                CollectionRest collectionRest = collectionConverter.fromModel(c);
-                mappingCollections.add(collectionRest);
-            }
-        }
-        item.setMappingCollections(mappingCollections);
         return item;
     }
 

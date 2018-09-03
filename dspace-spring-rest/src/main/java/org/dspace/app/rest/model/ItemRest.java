@@ -31,7 +31,6 @@ public class ItemRest extends DSpaceObjectRest {
     //private EPerson submitter;
 
     List<BitstreamRest> bitstreams;
-    List<CollectionRest> mappingCollections;
 
     @Override
     public String getCategory() {
@@ -101,13 +100,4 @@ public class ItemRest extends DSpaceObjectRest {
         this.bitstreams = bitstreams;
     }
 
-    @LinkRest(linkClass = CollectionRest.class)
-    @JsonIgnore
-    public List<CollectionRest> getMappingCollections() {
-        return mappingCollections;
-    }
-
-    public void setMappingCollections(List<CollectionRest> mappingCollections) {
-        this.mappingCollections = mappingCollections;
-    }
 }
