@@ -12,6 +12,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class ExportToZipResourceHalLinkFactory extends ExportToZipRestHalLinkFactory<ExportToZipResource> {
+
+
     protected void addLinks(ExportToZipResource halResource, Pageable pageable, LinkedList<Link> list)
         throws Exception {
 
@@ -24,7 +26,7 @@ public class ExportToZipResourceHalLinkFactory extends ExportToZipRestHalLinkFac
                                                                                    exportToZipRest.getDate().toString()
                                                                                                   .replace(" ", "T"),
                                                                                    null,
-                                                                                   null));
+                                                                                   null, exportToZipRest.getType(), exportToZipRest.getCategory()));
             list.add(buildLink(Link.REL_SELF, uriBuilderSelfLink.build().toString()));
 
             if (StringUtils.equalsIgnoreCase(exportToZipRest.getState(), "completed")) {
@@ -33,7 +35,7 @@ public class ExportToZipResourceHalLinkFactory extends ExportToZipRestHalLinkFac
                                                                                    exportToZipRest.getDate().toString()
                                                                                                   .replace(" ", "T"),
                                                                                    null,
-                                                                                   null));
+                                                                                   null, exportToZipRest.getType(), exportToZipRest.getCategory()));
                 list.add(buildLink("content", uriBuilder.build().toString()));
             }
         }

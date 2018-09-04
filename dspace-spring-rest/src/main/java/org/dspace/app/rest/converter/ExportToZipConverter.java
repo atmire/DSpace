@@ -10,6 +10,7 @@ import org.dspace.content.ExportToZip;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.CollectionService;
 import org.dspace.core.Context;
+import org.omg.CORBA.PUBLIC_MEMBER;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -42,6 +43,13 @@ public class ExportToZipConverter
             exportToZipRest.setSize(linkedBitstream.getSizeBytes());
         }
         exportToZipRest.setState(obj.getStatus());
+        return exportToZipRest;
+    }
+
+    public ExportToZipRest fromModel(ExportToZip obj, String model, String apiCategory) {
+        ExportToZipRest exportToZipRest = fromModel(obj);
+        exportToZipRest.setCategory(apiCategory);
+        exportToZipRest.setType(model);
         return exportToZipRest;
     }
 
