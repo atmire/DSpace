@@ -42,6 +42,7 @@ import org.dspace.usage.UsageEvent;
 import org.dspace.utils.DSpace;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -85,6 +86,7 @@ public class ExportToZipRestController {
     private ThreadPoolTaskExecutor threadPoolTaskExecutor = loadThreadPool();
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ExportToZipResourceWrapper retrieve(@PathVariable UUID uuid, HttpServletResponse response,
                                                HttpServletRequest request, @PathVariable String model,
                                                @PathVariable String apiCategory) throws SQLException {
@@ -125,6 +127,7 @@ public class ExportToZipRestController {
     }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/create")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ExportToZipResource create(@PathVariable UUID uuid, HttpServletResponse response,
                                       HttpServletRequest request, @PathVariable String model,
                                       @PathVariable String apiCategory)
@@ -165,6 +168,7 @@ public class ExportToZipRestController {
     }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/view/{dateString:.+}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ExportToZipResource viewSpecific(@PathVariable UUID uuid,
                                             @PathVariable String dateString,
                                             HttpServletResponse response,
@@ -196,6 +200,7 @@ public class ExportToZipRestController {
     }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/download/{dateString:.+}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ExportToZipResource downloadSpecific(@PathVariable UUID uuid,
                                                 @PathVariable String dateString,
                                                 HttpServletResponse response,
@@ -225,7 +230,7 @@ public class ExportToZipRestController {
                     .fromInputStream(inputstream)
                     .withBufferSize(BUFFER_SIZE)
                     .withFileName(getBitstreamName(bitstream, format))
-                    .withLength(bitstream.getSize())
+                    .withLength(bitstream.getSizeBytes())
                     .withChecksum(bitstream.getChecksum())
                     .withMimetype(format.getMIMEType())
                     .withLastModified(bitstreamService.getLastModified(bitstream))
