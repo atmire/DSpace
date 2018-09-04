@@ -276,9 +276,8 @@ public class ItemExportServiceImpl implements ItemExportService {
                             ("date".equals(metadataField.getElement()) && "accessioned".equals(qualifier)) ||
                             ("date".equals(metadataField.getElement()) && "available".equals(qualifier)) ||
                             ("identifier".equals(metadataField.getElement()) && "uri".equals(qualifier) &&
-                                (dcv.getValue() != null && dcv.getValue().startsWith("http://hdl.handle.net/" +
-                                                                                         handleService
-                                                                                             .getPrefix() + "/"))) ||
+                                (dcv.getValue() != null && dcv.getValue().startsWith(
+                                    handleService.getCanonicalPrefix() + handleService.getPrefix() + "/"))) ||
                             ("description".equals(metadataField.getElement()) && "provenance".equals(qualifier)) ||
                             ("format".equals(metadataField.getElement()) && "extent".equals(qualifier)) ||
                             ("format".equals(metadataField.getElement()) && "mimetype".equals(qualifier))))) {
@@ -806,7 +805,7 @@ public class ItemExportServiceImpl implements ItemExportService {
                                 List<Bitstream> bitstreams = bundle.getBitstreams();
                                 for (Bitstream bitstream : bitstreams) {
                                     // add up the size
-                                    size += bitstream.getSize();
+                                    size += bitstream.getSizeBytes();
                                 }
                             }
                             items.add(item.getID());
@@ -833,7 +832,7 @@ public class ItemExportServiceImpl implements ItemExportService {
                             List<Bitstream> bitstreams = bundle.getBitstreams();
                             for (Bitstream bitstream : bitstreams) {
                                 // add up the size
-                                size += bitstream.getSize();
+                                size += bitstream.getSizeBytes();
                             }
                         }
                         items.add(item.getID());
@@ -852,7 +851,7 @@ public class ItemExportServiceImpl implements ItemExportService {
                     List<Bitstream> bitstreams = bundle.getBitstreams();
                     for (Bitstream bitstream : bitstreams) {
                         // add up the size
-                        size += bitstream.getSize();
+                        size += bitstream.getSizeBytes();
                     }
                 }
                 ArrayList<UUID> items = new ArrayList<>();
