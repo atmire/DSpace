@@ -37,9 +37,9 @@ public class ExportToZipTask implements Runnable {
                                                          .createDownloadableExport(dSpaceObject, context, false, true);
             ExportToZip exportToZip = exportToZipService.find(context, exportToZipId);
             if (bitstreamUuid == null) {
-               exportToZipService.delete(context, exportToZip);
-               log.info("Deleted ExportToZip entry with UUID: " + exportToZipId
-                            + ", This record was corrupt and had no bitstreamUUID");
+                exportToZipService.delete(context, exportToZip);
+                log.info("Deleted ExportToZip entry with UUID: " + exportToZipId
+                             + ", This record was corrupt and had no bitstreamUUID");
             } else {
                 exportToZip.setBitstreamId(bitstreamUuid);
                 exportToZip.setStatus("completed");
