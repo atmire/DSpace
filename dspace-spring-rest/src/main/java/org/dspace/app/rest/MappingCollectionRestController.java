@@ -7,16 +7,18 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
 import org.dspace.app.rest.converter.CollectionConverter;
 import org.dspace.app.rest.link.HalLinkService;
 import org.dspace.app.rest.model.CollectionRest;
 import org.dspace.app.rest.model.MappingCollectionRestWrapper;
-import org.dspace.app.rest.model.hateoas.CollectionResource;
 import org.dspace.app.rest.model.hateoas.MappingCollectionResourceWrapper;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.Utils;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
 import org.dspace.content.Item;
+import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,12 +32,17 @@ import org.springframework.web.bind.annotation.RestController;
     "{uuid:[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}}/mappingCollections")
 public class MappingCollectionRestController {
 
+    private static final Logger log = Logger.getLogger(MappingCollectionRestController.class);
+
 
     @Autowired
     private ItemService itemService;
 
     @Autowired
     private CollectionConverter collectionConverter;
+
+    @Autowired
+    private CollectionService collectionService;
 
     @Autowired
     Utils utils;
@@ -45,7 +52,7 @@ public class MappingCollectionRestController {
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})
     public MappingCollectionResourceWrapper retrieve(@PathVariable UUID uuid, HttpServletResponse response,
-                                             HttpServletRequest request) throws SQLException {
+                                                     HttpServletRequest request) throws SQLException {
         Context context = ContextUtil.obtainContext(request);
         Item item = itemService.find(context, uuid);
         List<Collection> collections = item.getCollections();
@@ -67,6 +74,22 @@ public class MappingCollectionRestController {
 
         return mappingCollectionResourceWrapper;
 
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/{collectionUuid}")
+    public void createCollectionToItemRelation(@PathVariable UUID uuid, @PathVariable UUID collectionUuid,
+                                               HttpServletResponse response, HttpServletRequest request)
+        throws SQLException, AuthorizeException {
+
+        Context context = ContextUtil.obtainContext(request);
+        Collection collection = collectionService.find(context, collectionUuid);
+        Item item = itemService.find(context, uuid);
+        if (collection != null && item != null) {
+            collectionService.addItem(context, collection, item);
+            collectionService.update(context, collection);
+            itemService.update(context, item);
+            context.commit();
+        }
 
     }
 }
