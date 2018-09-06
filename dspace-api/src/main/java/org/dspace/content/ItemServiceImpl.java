@@ -1364,7 +1364,7 @@ prevent the generation of resource policy entry values with null dspace_object a
                     resultString += metadataValueString;
                 }
             }
-            if(StringUtils.isNotBlank(resultString)) {
+            if (StringUtils.isNotBlank(resultString)) {
                 resultValues.add(resultString);
             }
         }
