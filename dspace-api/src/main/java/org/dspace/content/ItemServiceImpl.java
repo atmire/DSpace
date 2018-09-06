@@ -1356,12 +1356,17 @@ prevent the generation of resource policy entry values with null dspace_object a
 
             String resultString = "";
             for (int i = 0; i < resultList.size(); i++) {
-                resultString += resultList.get(i).getValue();
-                if (i < resultList.size() - 1) {
-                    resultString += ", ";
+                String metadataValueString = resultList.get(i).getValue();
+                if (StringUtils.isNotBlank(metadataValueString)) {
+                    if (StringUtils.isNotBlank(resultString)) {
+                        resultString += ", ";
+                    }
+                    resultString += metadataValueString;
                 }
             }
-            resultValues.add(resultString);
+            if(StringUtils.isNotBlank(resultString)) {
+                resultValues.add(resultString);
+            }
         }
 
         String result = StringUtils.join(resultValues, ", ");

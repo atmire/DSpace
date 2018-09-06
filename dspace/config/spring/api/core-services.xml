@@ -144,6 +144,7 @@
         <entry key="dc_contributor_author" value-ref="publicationAuthor_author"/>
     </util:map>
     <util:list id="publicationAuthor_author">
+        <value>orgunit.identifier.name</value>
         <value>person.identifier.lastname</value>
         <value>person.identifier.firstname</value>
     </util:list>
