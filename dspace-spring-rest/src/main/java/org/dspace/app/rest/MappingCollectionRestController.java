@@ -1,5 +1,6 @@
 package org.dspace.app.rest;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
@@ -86,6 +87,23 @@ public class MappingCollectionRestController {
         Item item = itemService.find(context, uuid);
         if (collection != null && item != null) {
             collectionService.addItem(context, collection, item);
+            collectionService.update(context, collection);
+            itemService.update(context, item);
+            context.commit();
+        }
+
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, value = "/{collectionUuid}")
+    public void deleteCollectionToItemRelation(@PathVariable UUID uuid, @PathVariable UUID collectionUuid,
+                                               HttpServletResponse response, HttpServletRequest request)
+        throws SQLException, AuthorizeException, IOException {
+
+        Context context = ContextUtil.obtainContext(request);
+        Collection collection = collectionService.find(context, collectionUuid);
+        Item item = itemService.find(context, uuid);
+        if (collection != null && item != null) {
+            collectionService.removeItem(context, collection, item);
             collectionService.update(context, collection);
             itemService.update(context, item);
             context.commit();
