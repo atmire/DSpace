@@ -83,4 +83,9 @@ public class ExportToZipServiceImpl implements ExportToZipService {
         throws SQLException {
         return exportToZipDAO.findAllByStatusAndDso(context, ExportToZip.class, dSpaceObject, status);
     }
+
+    public List<ExportToZip> findAllByDso(Context context, DSpaceObject dSpaceObject)
+        throws SQLException {
+        return exportToZipDAO.findAllByDso(context, ExportToZip.class, dSpaceObject);
+    }
 }

@@ -4,7 +4,6 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
-import org.dspace.content.Collection;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.ExportToZip;
 import org.dspace.core.Context;
@@ -18,6 +17,10 @@ public interface ExportToZipDAO extends GenericDAO<ExportToZip> {
         throws SQLException;
 
     List<ExportToZip> findAllByStatusAndDso(Context context, Class<ExportToZip> clazz, DSpaceObject dSpaceObject, String status)
+
+        throws SQLException;
+
+    List<ExportToZip> findAllByDso(Context context, Class<ExportToZip> clazz, DSpaceObject dSpaceObject)
 
         throws SQLException;
 }
