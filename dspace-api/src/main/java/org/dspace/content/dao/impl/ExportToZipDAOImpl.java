@@ -57,6 +57,16 @@ public class ExportToZipDAOImpl extends AbstractHibernateDAO<ExportToZip> implem
             criteriaBuilder.equal(exportToZipRoot.get(ExportToZip_.dso), dSpaceObject)));
         return list(context, criteriaQuery, false, ExportToZip.class, -1, -1);
 
+    }
 
+    public List<ExportToZip> findAllByDso(Context context, Class<ExportToZip> clazz,
+                                                   DSpaceObject dSpaceObject) throws SQLException {
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, ExportToZip.class);
+        Root<ExportToZip> exportToZipRoot = criteriaQuery.from(ExportToZip.class);
+        criteriaQuery.select(exportToZipRoot);
+        criteriaQuery.where(
+            criteriaBuilder.equal(exportToZipRoot.get(ExportToZip_.dso), dSpaceObject));
+        return list(context, criteriaQuery, false, ExportToZip.class, -1, -1);
     }
 }

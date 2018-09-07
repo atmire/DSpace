@@ -104,7 +104,7 @@ public class ExportToZipRestController {
         }
 
 
-        List<ExportToZip> list = exportToZipService.findAllByStatusAndDso(context, dSpaceObject, "completed");
+        List<ExportToZip> list = exportToZipService.findAllByDso(context, dSpaceObject);
         List<ExportToZipRest> exportToZipRests = new LinkedList<>();
         for (ExportToZip exportToZip : list) {
             ExportToZipRest exportToZipRest = exportToZipConverter.fromModel(exportToZip, model, apiCategory);

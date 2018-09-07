@@ -22,4 +22,8 @@ public interface ExportToZipService extends DSpaceCRUDService<ExportToZip> {
 
     List<ExportToZip> findAllByStatusAndDso(Context context, DSpaceObject dSpaceObject, String status)
         throws SQLException;
+
+    List<ExportToZip> findAllByDso(Context context, DSpaceObject dSpaceObject)
+        throws SQLException;
+
 }
