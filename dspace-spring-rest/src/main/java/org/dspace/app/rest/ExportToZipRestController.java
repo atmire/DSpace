@@ -113,6 +113,8 @@ public class ExportToZipRestController {
 
         ExportToZipRestWrapper exportToZipRestWrapper = new ExportToZipRestWrapper();
         exportToZipRestWrapper.setExportToZipRestList(exportToZipRests);
+        exportToZipRestWrapper.setItemToBeExported(dSpaceObject);
+
         ExportToZipResourceWrapper exportToZipResourceWrapper = new ExportToZipResourceWrapper(exportToZipRestWrapper,
                                                                                                utils);
 
