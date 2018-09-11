@@ -173,9 +173,9 @@ public class RelationshipServiceImpl implements RelationshipService {
                 return relationshipType;
             } else {
                 if (o1.getLeftItem() == item) {
-                    return o2.getLeftPlace() - o1.getLeftPlace();
+                    return o1.getLeftPlace() - o2.getLeftPlace();
                 } else {
-                    return o2.getRightPlace() - o1.getRightPlace();
+                    return o1.getRightPlace() - o2.getRightPlace();
                 }
             }
         });
