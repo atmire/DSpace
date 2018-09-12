@@ -23,15 +23,23 @@ public class ExportToZipResourceWrapperHalLinkFactory
         if (exportToZipRestWrapper != null) {
 
             DSpaceObject itemToBeExported = exportToZipRestWrapper.getItemToBeExported();
-            if(itemToBeExported != null) {
+            if (itemToBeExported != null) {
                 UriComponentsBuilder uriBuilderCreateLink = uriBuilder(getMethodOn()
-                                                                         .create(
-                                                                             itemToBeExported
-                                                                                                   .getID(), null, null,
-                                                                             exportToZipRestWrapper.getType(),
-                                                                             exportToZipRestWrapper.getCategory()));
+                                                                           .create(
+                                                                               itemToBeExported
+                                                                                   .getID(), null, null,
+                                                                               exportToZipRestWrapper.getType(),
+                                                                               exportToZipRestWrapper.getCategory()));
 
                 list.add(buildLink("create", uriBuilderCreateLink.build().toString()));
+
+                UriComponentsBuilder uriBuilderSelfLink = uriBuilder(getMethodOn()
+                                                                         .retrieve(itemToBeExported.getID(),
+                                                                                   null, null,
+                                                                                   exportToZipRestWrapper.getType(),
+                                                                                   exportToZipRestWrapper
+                                                                                       .getCategory()));
+                list.add(buildLink(Link.REL_SELF, uriBuilderSelfLink.build().toString()));
             }
         }
     }
