@@ -104,119 +104,111 @@ public class AdditionalRelationshipScript {
         RelationshipType isPublicationOfJournalIssue = relationshipTypeService.find(context, 9);
 
         RelationshipType isAuthorOfPublicationNew = relationshipTypeService.find(context, 10);
-//        constructRelationshipAndStore(context, article1, orgUnit1, isAuthorOfPublicationNew, 1);
-//        constructRelationshipAndStore(context, article1, orgUnit2, isAuthorOfPublicationNew, 1);
-//        constructRelationshipAndStore(context, article1, orgUnit3, isAuthorOfPublicationNew, 1);
-
-//        constructRelationshipAndStore(context, article1, author1, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article1, author2, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article1, author3, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article2, author1, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article2, author3, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article3, author3, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article4, author3, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article4, author2, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article4, author1, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article5, author1, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article6, author2, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article6, author3, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article7, author3, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article7, author2, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article7, author1, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article8, author2, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article9, author3, isAuthorOfPublication, 1);
-//        constructRelationshipAndStore(context, article9, author1, isAuthorOfPublication, 1);
-//
-//        constructRelationshipAndStore(context, article1, project1, isProjectOfPublication, 1);
-//        constructRelationshipAndStore(context, article6, project1, isProjectOfPublication, 1);
-//        constructRelationshipAndStore(context, article7, project1, isProjectOfPublication, 1);
-//        constructRelationshipAndStore(context, article1, project2, isProjectOfPublication, 1);
-//        constructRelationshipAndStore(context, article9, project3, isProjectOfPublication, 1);
-//        constructRelationshipAndStore(context, article8, project3, isProjectOfPublication, 1);
-//        constructRelationshipAndStore(context, article4, project3, isProjectOfPublication, 1);
-//        constructRelationshipAndStore(context, article5, project3, isProjectOfPublication, 1);
-//        constructRelationshipAndStore(context, article2, project3, isProjectOfPublication, 1);
-//
-//        constructRelationshipAndStore(context, article1, orgUnit1, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article1, orgUnit2, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article1, orgUnit3, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article2, orgUnit1, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article2, orgUnit3, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article3, orgUnit3, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article4, orgUnit3, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article4, orgUnit2, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article4, orgUnit1, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article5, orgUnit1, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article6, orgUnit2, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article6, orgUnit3, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article7, orgUnit3, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article7, orgUnit2, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article7, orgUnit1, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article8, orgUnit2, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article9, orgUnit3, isOrgUnitOfPublication, 1);
-//        constructRelationshipAndStore(context, article9, orgUnit1, isOrgUnitOfPublication, 1);
-//
-//        constructRelationshipAndStore(context, project1, orgUnit1, isOrgUnitOfProject, 1);
-//        constructRelationshipAndStore(context, project2, orgUnit2, isOrgUnitOfProject, 1);
-//        constructRelationshipAndStore(context, project3, orgUnit2, isOrgUnitOfProject, 1);
-//        constructRelationshipAndStore(context, project2, orgUnit3, isOrgUnitOfProject, 1);
-//        constructRelationshipAndStore(context, project1, orgUnit3, isOrgUnitOfProject, 1);
-//        constructRelationshipAndStore(context, project3, orgUnit3, isOrgUnitOfProject, 1);
-//
-//
-//        constructRelationshipAndStore(context, author1, project1, isProjectOfPerson, 1);
-//        constructRelationshipAndStore(context, author2, project2, isProjectOfPerson, 1);
-//        constructRelationshipAndStore(context, author2, project3, isProjectOfPerson, 1);
-//        constructRelationshipAndStore(context, author3, project1, isProjectOfPerson, 1);
-//        constructRelationshipAndStore(context, author3, project2, isProjectOfPerson, 1);
-//        constructRelationshipAndStore(context, author3, project3, isProjectOfPerson, 1);
-//
-//        constructRelationshipAndStore(context, author1,orgUnit1 ,isOrgUnitOfPerson, 1);
-//        constructRelationshipAndStore(context, author2,orgUnit2 ,isOrgUnitOfPerson, 1);
-//        constructRelationshipAndStore(context, author2,orgUnit3 ,isOrgUnitOfPerson, 1);
-//        constructRelationshipAndStore(context, author3,orgUnit1 ,isOrgUnitOfPerson, 1);
-//        constructRelationshipAndStore(context, author3,orgUnit2 ,isOrgUnitOfPerson, 1);
-//        constructRelationshipAndStore(context, author3,orgUnit3 ,isOrgUnitOfPerson, 1);
-//
-//        constructRelationshipAndStore(context, journal1, journalVolume1OfJournal1, isVolumeOfJournal, 1);
-//        constructRelationshipAndStore(context, journal1, journalVolume2OfJournal1, isVolumeOfJournal, 1);
-//
-//        constructRelationshipAndStore(context, journal2, journalVolume1OfJournal2, isVolumeOfJournal, 1);
-//        constructRelationshipAndStore(context, journal2, journalVolume2OfJournal2, isVolumeOfJournal, 1);
-//
-//
-//        constructRelationshipAndStore(context, journalVolume1OfJournal1,
-//                                      journalIssue1OfJournalVolume1OfJournal1, isIssueOfJournalVolume, 1);
-//        constructRelationshipAndStore(context, journalVolume1OfJournal1,
-//                                      journalIssue2OfJournalVolume1OfJournal1, isIssueOfJournalVolume, 1);
-//
-//        constructRelationshipAndStore(context, journalVolume2OfJournal1,
-//                                      journalIssue1OfJournalVolume2OfJournal1, isIssueOfJournalVolume, 1);
-//
-//        constructRelationshipAndStore(context, journalVolume1OfJournal2,
-//                                      journalIssue1OfJournalVolume1OfJournal2,isIssueOfJournalVolume, 1);
-//        constructRelationshipAndStore(context, journalVolume1OfJournal2,
-//                                      journalIssue2OfJournalVolume1OfJournal2,isIssueOfJournalVolume, 1);
-//
-//        constructRelationshipAndStore(context, journalVolume2OfJournal2,
-//                                      journalIssue1OfJournalVolume2OfJournal2,isIssueOfJournalVolume, 1);
-//        constructRelationshipAndStore(context, journalVolume2OfJournal2,
-//                                      journalIssue2OfJournalVolume2OfJournal2,isIssueOfJournalVolume, 1);
-//
-//        constructRelationshipAndStore(context, journalIssue1OfJournalVolume1OfJournal1,
-//                                      article1 ,isPublicationOfJournalIssue, 1);
-//        constructRelationshipAndStore(context, journalIssue2OfJournalVolume1OfJournal1,
-//                                      article2 ,isPublicationOfJournalIssue, 1);
-//        constructRelationshipAndStore(context, journalIssue1OfJournalVolume2OfJournal1,
-//                                      article3 ,isPublicationOfJournalIssue, 1);
-
-        relationshipService.delete(context, relationshipService.find(context, 609));
-        relationshipService.delete(context, relationshipService.find(context, 610));
-//        relationshipService.delete(context, relationshipService.find(context, 611));
-
         constructRelationshipAndStore(context, article1, orgUnit1, isAuthorOfPublicationNew, 1);
         constructRelationshipAndStore(context, article1, orgUnit2, isAuthorOfPublicationNew, 1);
+        constructRelationshipAndStore(context, article1, orgUnit3, isAuthorOfPublicationNew, 1);
 
+        constructRelationshipAndStore(context, article1, author1, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article1, author2, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article1, author3, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article2, author1, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article2, author3, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article3, author3, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article4, author3, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article4, author2, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article4, author1, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article5, author1, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article6, author2, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article6, author3, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article7, author3, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article7, author2, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article7, author1, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article8, author2, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article9, author3, isAuthorOfPublication, 1);
+        constructRelationshipAndStore(context, article9, author1, isAuthorOfPublication, 1);
+
+        constructRelationshipAndStore(context, article1, project1, isProjectOfPublication, 1);
+        constructRelationshipAndStore(context, article6, project1, isProjectOfPublication, 1);
+        constructRelationshipAndStore(context, article7, project1, isProjectOfPublication, 1);
+        constructRelationshipAndStore(context, article1, project2, isProjectOfPublication, 1);
+        constructRelationshipAndStore(context, article9, project3, isProjectOfPublication, 1);
+        constructRelationshipAndStore(context, article8, project3, isProjectOfPublication, 1);
+        constructRelationshipAndStore(context, article4, project3, isProjectOfPublication, 1);
+        constructRelationshipAndStore(context, article5, project3, isProjectOfPublication, 1);
+        constructRelationshipAndStore(context, article2, project3, isProjectOfPublication, 1);
+
+        constructRelationshipAndStore(context, article1, orgUnit1, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article1, orgUnit2, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article1, orgUnit3, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article2, orgUnit1, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article2, orgUnit3, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article3, orgUnit3, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article4, orgUnit3, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article4, orgUnit2, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article4, orgUnit1, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article5, orgUnit1, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article6, orgUnit2, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article6, orgUnit3, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article7, orgUnit3, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article7, orgUnit2, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article7, orgUnit1, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article8, orgUnit2, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article9, orgUnit3, isOrgUnitOfPublication, 1);
+        constructRelationshipAndStore(context, article9, orgUnit1, isOrgUnitOfPublication, 1);
+
+        constructRelationshipAndStore(context, project1, orgUnit1, isOrgUnitOfProject, 1);
+        constructRelationshipAndStore(context, project2, orgUnit2, isOrgUnitOfProject, 1);
+        constructRelationshipAndStore(context, project3, orgUnit2, isOrgUnitOfProject, 1);
+        constructRelationshipAndStore(context, project2, orgUnit3, isOrgUnitOfProject, 1);
+        constructRelationshipAndStore(context, project1, orgUnit3, isOrgUnitOfProject, 1);
+        constructRelationshipAndStore(context, project3, orgUnit3, isOrgUnitOfProject, 1);
+
+
+        constructRelationshipAndStore(context, author1, project1, isProjectOfPerson, 1);
+        constructRelationshipAndStore(context, author2, project2, isProjectOfPerson, 1);
+        constructRelationshipAndStore(context, author2, project3, isProjectOfPerson, 1);
+        constructRelationshipAndStore(context, author3, project1, isProjectOfPerson, 1);
+        constructRelationshipAndStore(context, author3, project2, isProjectOfPerson, 1);
+        constructRelationshipAndStore(context, author3, project3, isProjectOfPerson, 1);
+
+        constructRelationshipAndStore(context, author1,orgUnit1 ,isOrgUnitOfPerson, 1);
+        constructRelationshipAndStore(context, author2,orgUnit2 ,isOrgUnitOfPerson, 1);
+        constructRelationshipAndStore(context, author2,orgUnit3 ,isOrgUnitOfPerson, 1);
+        constructRelationshipAndStore(context, author3,orgUnit1 ,isOrgUnitOfPerson, 1);
+        constructRelationshipAndStore(context, author3,orgUnit2 ,isOrgUnitOfPerson, 1);
+        constructRelationshipAndStore(context, author3,orgUnit3 ,isOrgUnitOfPerson, 1);
+
+        constructRelationshipAndStore(context, journal1, journalVolume1OfJournal1, isVolumeOfJournal, 1);
+        constructRelationshipAndStore(context, journal1, journalVolume2OfJournal1, isVolumeOfJournal, 1);
+
+        constructRelationshipAndStore(context, journal2, journalVolume1OfJournal2, isVolumeOfJournal, 1);
+        constructRelationshipAndStore(context, journal2, journalVolume2OfJournal2, isVolumeOfJournal, 1);
+
+
+        constructRelationshipAndStore(context, journalVolume1OfJournal1,
+                                      journalIssue1OfJournalVolume1OfJournal1, isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume1OfJournal1,
+                                      journalIssue2OfJournalVolume1OfJournal1, isIssueOfJournalVolume, 1);
+
+        constructRelationshipAndStore(context, journalVolume2OfJournal1,
+                                      journalIssue1OfJournalVolume2OfJournal1, isIssueOfJournalVolume, 1);
+
+        constructRelationshipAndStore(context, journalVolume1OfJournal2,
+                                      journalIssue1OfJournalVolume1OfJournal2,isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume1OfJournal2,
+                                      journalIssue2OfJournalVolume1OfJournal2,isIssueOfJournalVolume, 1);
+
+        constructRelationshipAndStore(context, journalVolume2OfJournal2,
+                                      journalIssue1OfJournalVolume2OfJournal2,isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume2OfJournal2,
+                                      journalIssue2OfJournalVolume2OfJournal2,isIssueOfJournalVolume, 1);
+
+        constructRelationshipAndStore(context, journalIssue1OfJournalVolume1OfJournal1,
+                                      article1 ,isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context, journalIssue2OfJournalVolume1OfJournal1,
+                                      article2 ,isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context, journalIssue1OfJournalVolume2OfJournal1,
+                                      article3 ,isPublicationOfJournalIssue, 1);
 
 
         constructRelationshipAndStore(context, article8, author1, isAuthorOfPublication, 1);
