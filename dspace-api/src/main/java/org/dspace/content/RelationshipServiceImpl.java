@@ -170,7 +170,8 @@ public class RelationshipServiceImpl implements RelationshipService {
         List<Relationship> list = relationshipDAO.findByItem(context, item);
 
         list.sort((o1, o2) -> {
-            int relationshipType = o1.getRelationshipType().getId().compareTo(o2.getRelationshipType().getId());
+            int relationshipType = o1.getRelationshipType().getLeftLabel()
+                                     .compareTo(o2.getRelationshipType().getLeftLabel());
             if (relationshipType != 0) {
                 return relationshipType;
             } else {
