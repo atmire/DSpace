@@ -65,10 +65,11 @@ public class RelationshipServiceImpl implements RelationshipService {
     private void updatePlaceInRelationship(Context context, Relationship relationship) throws SQLException {
         List<Relationship> leftRelationships = findByItemAndRelationshipType(context,
                                                                              relationship.getLeftItem(),
-                                                                             relationship.getRelationshipType());
+                                                                             relationship.getRelationshipType(), true);
         List<Relationship> rightRelationships = findByItemAndRelationshipType(context,
                                                                               relationship.getRightItem(),
-                                                                              relationship.getRelationshipType());
+                                                                              relationship.getRelationshipType(),
+                                                                              false);
 
         if (!leftRelationships.isEmpty()) {
             leftRelationships.sort((o1, o2) -> o2.getLeftPlace() - o1.getLeftPlace());
@@ -139,7 +140,8 @@ public class RelationshipServiceImpl implements RelationshipService {
 
     private boolean verifyMaxCardinality(Context context, Item itemToProcess,
                                          int maxCardinality, RelationshipType relationshipType) throws SQLException {
-        List<Relationship> rightRelationships = findByItemAndRelationshipType(context, itemToProcess, relationshipType);
+        List<Relationship> rightRelationships = findByItemAndRelationshipType(context, itemToProcess, relationshipType,
+                                                                              false);
         if (rightRelationships.size() >= maxCardinality && maxCardinality != 0) {
             return false;
         }
@@ -158,7 +160,7 @@ public class RelationshipServiceImpl implements RelationshipService {
         return true;
     }
 
-    public Relationship find(Context context,int id) throws SQLException {
+    public Relationship find(Context context, int id) throws SQLException {
         Relationship relationship = relationshipDAO.findByID(context, Relationship.class, id);
         return relationship;
     }
@@ -186,12 +188,12 @@ public class RelationshipServiceImpl implements RelationshipService {
         return relationshipDAO.findAll(context, Relationship.class);
     }
 
-    public void update(Context context,Relationship relationship) throws SQLException, AuthorizeException {
-        update(context,Collections.singletonList(relationship));
+    public void update(Context context, Relationship relationship) throws SQLException, AuthorizeException {
+        update(context, Collections.singletonList(relationship));
 
     }
 
-    public void update(Context context,List<Relationship> relationships) throws SQLException, AuthorizeException {
+    public void update(Context context, List<Relationship> relationships) throws SQLException, AuthorizeException {
         if (CollectionUtils.isNotEmpty(relationships)) {
             // Check authorisation - only administrators can change formats
             if (!authorizeService.isAdmin(context)) {
@@ -205,7 +207,7 @@ public class RelationshipServiceImpl implements RelationshipService {
         }
     }
 
-    public void delete(Context context,Relationship relationship) throws SQLException, AuthorizeException {
+    public void delete(Context context, Relationship relationship) throws SQLException, AuthorizeException {
         if (isRelationshipValidToDelete(context, relationship)) {
             if (!authorizeService.isAdmin(context)) {
                 throw new AuthorizeException(
@@ -234,17 +236,17 @@ public class RelationshipServiceImpl implements RelationshipService {
             return false;
         }
         if (!checkMinCardinality(context, relationship.getLeftItem(),
-                                relationship, relationship.getRelationshipType().getLeftMinCardinality())) {
+                                 relationship, relationship.getRelationshipType().getLeftMinCardinality(), true)) {
             log.warn("The relationship has been deemed invalid since the leftMinCardinality" +
-                         " constraint would not violated upon deletion");
+                         " constraint would be violated upon deletion");
             logRelationshipTypeDetails(relationship.getRelationshipType());
             return false;
         }
 
         if (!checkMinCardinality(context, relationship.getRightItem(),
-                                relationship, relationship.getRelationshipType().getRightMinCardinality())) {
+                                 relationship, relationship.getRelationshipType().getRightMinCardinality(), false)) {
             log.warn("The relationship has been deemed invalid since the rightMinCardinality" +
-                         " constraint would not violated upon deletion");
+                         " constraint would be violated upon deletion");
             logRelationshipTypeDetails(relationship.getRelationshipType());
             return false;
         }
@@ -253,8 +255,9 @@ public class RelationshipServiceImpl implements RelationshipService {
 
     private boolean checkMinCardinality(Context context, Item item,
                                         Relationship relationship,
-                                        int minCardinality) throws SQLException {
-        List<Relationship> list = this.findByItemAndRelationshipType(context, item, relationship.getRelationshipType());
+                                        int minCardinality, boolean isLeft) throws SQLException {
+        List<Relationship> list = this
+            .findByItemAndRelationshipType(context, item, relationship.getRelationshipType(), isLeft);
         if (!(list.size() > minCardinality)) {
             return false;
         }
@@ -262,14 +265,22 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     public List<Relationship> findByItemAndRelationshipType(Context context, Item item,
-                                                            RelationshipType relationshipType)
+                                                            RelationshipType relationshipType, boolean isLeft)
 
         throws SQLException {
         List<Relationship> list = this.findByItem(context, item);
         List<Relationship> listToReturn = new LinkedList<>();
         for (Relationship relationship : list) {
-            if (relationship.getRelationshipType() == relationshipType) {
-                listToReturn.add(relationship);
+            if (isLeft) {
+                if (StringUtils
+                    .equals(relationship.getRelationshipType().getLeftLabel(), relationshipType.getLeftLabel())) {
+                    listToReturn.add(relationship);
+                }
+            } else {
+                if (StringUtils
+                    .equals(relationship.getRelationshipType().getRightLabel(), relationshipType.getRightLabel())) {
+                    listToReturn.add(relationship);
+                }
             }
         }
         return listToReturn;
