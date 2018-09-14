@@ -215,6 +215,9 @@ public class AdditionalRelationshipScript {
         constructRelationshipAndStore(context, article8, orgUnit1, isAuthorOfPublicationNew, 1);
         constructRelationshipAndStore(context, article8, author3, isAuthorOfPublication, 1);
         constructRelationshipAndStore(context, article8, orgUnit2, isAuthorOfPublicationNew, 1);
+
+
+
         context.complete();
     }
 

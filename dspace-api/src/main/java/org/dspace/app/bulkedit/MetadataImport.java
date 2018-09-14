@@ -353,16 +353,30 @@ public class MetadataImport {
                         item = wsItem.getItem();
 
                         // Add the metadata to the item
+                        List<BulkEditMetadataValue> relationships = new LinkedList<>();
                         for (BulkEditMetadataValue dcv : whatHasChanged.getAdds()) {
-                            itemService.addMetadata(c, item, dcv.getSchema(),
-                                                    dcv.getElement(),
-                                                    dcv.getQualifier(),
-                                                    dcv.getLanguage(),
-                                                    dcv.getValue(),
-                                                    dcv.getAuthority(),
-                                                    dcv.getConfidence());
+                            if (StringUtils.equals(dcv.getSchema(), "relationship")) {
+
+                                if (!StringUtils.equals(dcv.getElement(), "type")) {
+                                    relationships.add(dcv);
+                                } else {
+                                    handleRelationshipMetadataValueFromBulkEditMetadataValue(item, dcv);
+                                }
+
+                            } else {
+                                itemService.addMetadata(c, item, dcv.getSchema(),
+                                                        dcv.getElement(),
+                                                        dcv.getQualifier(),
+                                                        dcv.getLanguage(),
+                                                        dcv.getValue(),
+                                                        dcv.getAuthority(),
+                                                        dcv.getConfidence());
+                            }
                         }
 
+                        for (BulkEditMetadataValue relationship : relationships) {
+                            handleRelationshipMetadataValueFromBulkEditMetadataValue(item, relationship);
+                        }
                         // Should the workflow be used?
                         if (useWorkflow) {
                             WorkflowService workflowService = WorkflowServiceFactory.getInstance().getWorkflowService();
@@ -411,6 +425,19 @@ public class MetadataImport {
 
         // Return the changes
         return changes;
+    }
+
+    private void handleRelationshipMetadataValueFromBulkEditMetadataValue(Item item, BulkEditMetadataValue dcv)
+        throws SQLException, AuthorizeException {
+        LinkedList<String> values = new LinkedList<>();
+        values.add(dcv.getValue());
+        LinkedList<String> authorities = new LinkedList<>();
+        authorities.add(dcv.getAuthority());
+        LinkedList<Integer> confidences = new LinkedList<>();
+        confidences.add(dcv.getConfidence());
+        handleRelationMetadata(c, item, dcv.getSchema(), dcv.getElement(),
+                               dcv.getQualifier(),
+                               dcv.getLanguage(), values, authorities, confidences);
     }
 
     /**
@@ -612,22 +639,22 @@ public class MetadataImport {
         }
     }
 
-    private void handleRelationMetadata(Context c,Item item,String schema,String element,String qualifier,
-                                        String language,List<String> values,List<String> authorities,
+    private void handleRelationMetadata(Context c, Item item, String schema, String element, String qualifier,
+                                        String language, List<String> values, List<String> authorities,
                                         List<Integer> confidences) throws SQLException, AuthorizeException {
 
         if (StringUtils.equals(element, "type") && StringUtils.isBlank(qualifier)) {
-            handleRelationTypeMetadata(c,item,schema,element,qualifier,language,values,authorities,confidences);
+            handleRelationTypeMetadata(c, item, schema, element, qualifier, language, values, authorities, confidences);
 
         } else {
-            handleRelationOtherMetadata(c,item,element,values);
+            handleRelationOtherMetadata(c, item, element, values);
         }
 
     }
 
-    private void handleRelationOtherMetadata(Context c,Item item,String element,List<String> values)
+    private void handleRelationOtherMetadata(Context c, Item item, String element, List<String> values)
         throws SQLException, AuthorizeException {
-        Entity entity = entityService.findByItemId(c,item.getID());
+        Entity entity = entityService.findByItemId(c, item.getID());
         boolean left = false;
         List<RelationshipType> acceptableRelationshipTypes = new LinkedList<>();
         String[] components = values.get(0).split("-");
@@ -636,16 +663,21 @@ public class MetadataImport {
             return;
         }
 
+        Entity relationEntity = entityService.findByItemId(c, UUID.fromString(values.get(0)));
+
+
         List<RelationshipType> leftRelationshipTypesForEntity = entityService.getLeftRelationshipTypes(c, entity);
         List<RelationshipType> rightRelationshipTypesForEntity = entityService.getRightRelationshipTypes(c, entity);
 
         for (RelationshipType relationshipType : entityService.getAllRelationshipTypes(c, entity)) {
             if (StringUtils.equalsIgnoreCase(relationshipType.getLeftLabel(), element)) {
-                left = handleLeftLabelEqualityRelationshipTypeElement(c,entity,left,acceptableRelationshipTypes,
+                left = handleLeftLabelEqualityRelationshipTypeElement(c, entity, relationEntity, left,
+                                                                      acceptableRelationshipTypes,
                                                                       leftRelationshipTypesForEntity,
                                                                       relationshipType);
             } else if (StringUtils.equalsIgnoreCase(relationshipType.getRightLabel(), element)) {
-                left = handleRightLabelEqualityRelationshipTypeElement(c,entity,left,acceptableRelationshipTypes,
+                left = handleRightLabelEqualityRelationshipTypeElement(c, entity, relationEntity, left,
+                                                                       acceptableRelationshipTypes,
                                                                        rightRelationshipTypesForEntity,
                                                                        relationshipType);
             }
@@ -662,10 +694,10 @@ public class MetadataImport {
             return;
         }
 
-        buildRelationObject(c,item,values,left,acceptableRelationshipTypes);
+        buildRelationObject(c, item, values, left, acceptableRelationshipTypes);
     }
 
-    private void buildRelationObject(Context c,Item item,List<String> values,boolean left,
+    private void buildRelationObject(Context c, Item item, List<String> values, boolean left,
                                      List<RelationshipType> acceptableRelationshipTypes)
         throws SQLException, AuthorizeException {
         Relationship relationship = new Relationship();
@@ -684,16 +716,19 @@ public class MetadataImport {
         relationshipService.update(c, persistedRelationship);
     }
 
-    private boolean handleRightLabelEqualityRelationshipTypeElement(Context c,Entity entity,boolean left,
+    private boolean handleRightLabelEqualityRelationshipTypeElement(Context c, Entity entity, Entity relationEntity,
+                                                                    boolean left,
                                                                     List<RelationshipType> acceptableRelationshipTypes,
                                                                     List<RelationshipType>
                                                                         rightRelationshipTypesForEntity,
                                                                     RelationshipType relationshipType)
         throws SQLException {
-        if (StringUtils.equalsIgnoreCase(entityService.getType(c,entity).getLabel(),
-                                         relationshipType.getRightType().getLabel())) {
+        if (StringUtils.equalsIgnoreCase(entityService.getType(c, entity).getLabel(),
+                                         relationshipType.getRightType().getLabel()) &&
+            StringUtils.equalsIgnoreCase(entityService.getType(c, relationEntity).getLabel(),
+                                         relationshipType.getLeftType().getLabel())) {
 
-            for (RelationshipType rightRelationshipType: rightRelationshipTypesForEntity) {
+            for (RelationshipType rightRelationshipType : rightRelationshipTypesForEntity) {
                 if (StringUtils.equalsIgnoreCase(rightRelationshipType.getLeftType().getLabel(),
                                                  relationshipType.getLeftType().getLabel()) ||
                     StringUtils.equalsIgnoreCase(rightRelationshipType.getRightType().getLabel(),
@@ -706,15 +741,18 @@ public class MetadataImport {
         return left;
     }
 
-    private boolean handleLeftLabelEqualityRelationshipTypeElement(Context c,Entity entity,boolean left,
+    private boolean handleLeftLabelEqualityRelationshipTypeElement(Context c, Entity entity, Entity relationEntity,
+                                                                   boolean left,
                                                                    List<RelationshipType> acceptableRelationshipTypes,
                                                                    List<RelationshipType>
                                                                        leftRelationshipTypesForEntity,
                                                                    RelationshipType relationshipType)
         throws SQLException {
-        if (StringUtils.equalsIgnoreCase(entityService.getType(c,entity).getLabel(),
-                                         relationshipType.getLeftType().getLabel())) {
-            for (RelationshipType leftRelationshipType: leftRelationshipTypesForEntity) {
+        if (StringUtils.equalsIgnoreCase(entityService.getType(c, entity).getLabel(),
+                                         relationshipType.getLeftType().getLabel()) &&
+            StringUtils.equalsIgnoreCase(entityService.getType(c, relationEntity).getLabel(),
+                                         relationshipType.getRightType().getLabel())) {
+            for (RelationshipType leftRelationshipType : leftRelationshipTypesForEntity) {
                 if (StringUtils.equalsIgnoreCase(leftRelationshipType.getRightType().getLabel(),
                                                  relationshipType.getRightType().getLabel()) ||
                     StringUtils.equalsIgnoreCase(leftRelationshipType.getLeftType().getLabel(),
@@ -727,11 +765,11 @@ public class MetadataImport {
         return left;
     }
 
-    private void handleRelationTypeMetadata(Context c,Item item,String schema,String element,String qualifier,
-                                            String language,List<String> values,List<String> authorities,
+    private void handleRelationTypeMetadata(Context c, Item item, String schema, String element, String qualifier,
+                                            String language, List<String> values, List<String> authorities,
                                             List<Integer> confidences)
         throws SQLException, AuthorizeException {
-        EntityType entityType = entityTypeService.findByEntityType(c,values.get(0));
+        EntityType entityType = entityTypeService.findByEntityType(c, values.get(0));
         if (entityType != null) {
             authorities.add(String.valueOf(entityType.getId()));
             itemService.clearMetadata(c, item, schema, element, qualifier, language);
