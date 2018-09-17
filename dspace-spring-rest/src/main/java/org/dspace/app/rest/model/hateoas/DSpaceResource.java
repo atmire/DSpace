@@ -22,7 +22,6 @@ import org.dspace.app.rest.model.BaseObjectRest;
 import org.dspace.app.rest.model.LinkRest;
 import org.dspace.app.rest.model.LinksRest;
 import org.dspace.app.rest.model.RestAddressableModel;
-import org.dspace.app.rest.model.RestModel;
 import org.dspace.app.rest.repository.DSpaceRestRepository;
 import org.dspace.app.rest.repository.LinkRestRepository;
 import org.dspace.app.rest.utils.Utils;
@@ -119,11 +118,13 @@ public abstract class DSpaceResource<T extends RestAddressableModel> extends HAL
                                                                        linkedRMList.get(0).getType());
                                             // TODO should we force pagination also of embedded resource?
                                             // This will force pagination with size 10 for embedded collections as well
-                                          int pageSize = 20;
-                                          PageImpl<RestAddressableModel> page = new PageImpl(
-                                              linkedRMList.subList(0,
-                                                  linkedRMList.size() > pageSize ? pageSize : linkedRMList.size()),
-                                              new PageRequest(0, pageSize), linkedRMList.size());
+                                            int pageSize = 20;
+                                            PageImpl<RestAddressableModel> page = new PageImpl(
+                                                linkedRMList.subList(0,
+                                                                     linkedRMList
+                                                                         .size() > pageSize ? pageSize : linkedRMList
+                                                                         .size()),
+                                                new PageRequest(0, pageSize), linkedRMList.size());
 //                                            PageImpl<RestAddressableModel> page = new PageImpl(linkedRMList);
                                             wrapObject = new EmbeddedPage(linkToSubResource.getHref(),
                                                                           page.map(resourceRepository::wrapResource),
