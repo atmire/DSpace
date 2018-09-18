@@ -1,3 +1,10 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.app.rest;
 
 import java.io.IOException;
@@ -23,6 +30,7 @@ import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -53,7 +61,8 @@ public class MappingCollectionRestController {
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})
     public MappingCollectionResourceWrapper retrieve(@PathVariable UUID uuid, HttpServletResponse response,
-                                                     HttpServletRequest request) throws SQLException {
+                                                     HttpServletRequest request, Pageable pageable)
+        throws SQLException {
         Context context = ContextUtil.obtainContext(request);
         Item item = itemService.find(context, uuid);
         List<Collection> collections = item.getCollections();
@@ -67,8 +76,9 @@ public class MappingCollectionRestController {
 
         MappingCollectionRestWrapper mappingCollectionRestWrapper = new MappingCollectionRestWrapper();
         mappingCollectionRestWrapper.setMappingCollectionRestList(mappingCollectionRest);
+        mappingCollectionRestWrapper.setItem(item);
         MappingCollectionResourceWrapper mappingCollectionResourceWrapper = new MappingCollectionResourceWrapper(
-            mappingCollectionRestWrapper, utils);
+            mappingCollectionRestWrapper, utils, pageable);
 
 
         halLinkService.addLinks(mappingCollectionResourceWrapper);
