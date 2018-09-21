@@ -50,7 +50,11 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
             sendErrorResponse(request, response, ex, ex.getMessage(), HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
-
+    @ExceptionHandler(IllegalArgumentException.class)
+    protected void handleIllegalArgumentException(HttpServletRequest request, HttpServletResponse response,
+                                                  Exception ex) throws IOException {
+        sendErrorResponse(request, response, ex, ex.getMessage(), HttpServletResponse.SC_BAD_REQUEST);
+    }
     @ExceptionHandler(SQLException.class)
     protected void handleSQLException(HttpServletRequest request, HttpServletResponse response, Exception ex)
         throws IOException {
