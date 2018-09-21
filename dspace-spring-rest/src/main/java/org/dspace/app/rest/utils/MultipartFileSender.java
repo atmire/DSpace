@@ -135,6 +135,16 @@ public class MultipartFileSender {
         return this;
     }
 
+    public MultipartFileSender withDisposition(String disposition) {
+        if (StringUtils.isNotBlank(disposition) && (StringUtils
+            .equals(disposition, CONTENT_DISPOSITION_ATTACHMENT) || StringUtils
+            .equals(disposition, CONTENT_DISPOSITION_INLINE))) {
+
+            this.disposition = disposition;
+        }
+        return this;
+    }
+
     public void serveResource() throws IOException {
 
         // Validate and process range -------------------------------------------------------------
@@ -174,6 +184,9 @@ public class MultipartFileSender {
 
             response.setHeader(CONTENT_DISPOSITION, String.format(CONTENT_DISPOSITION_FORMAT, disposition, fileName));
             log.debug("Content-Disposition : {}", disposition);
+        } else {
+            response.setHeader(CONTENT_DISPOSITION, String.format(CONTENT_DISPOSITION_FORMAT, disposition, fileName));
+            log.debug("Content-Disposition : {}", disposition);
         }
 
         // Content phase
@@ -193,6 +206,9 @@ public class MultipartFileSender {
                 log.debug("Return full file");
                 response.setContentType(contentType);
                 response.setHeader(CONTENT_LENGTH, String.valueOf(length));
+                if (length > 10000) {
+                    response.setHeader(CONTENT_DISPOSITION, String.format(CONTENT_DISPOSITION_FORMAT, CONTENT_DISPOSITION_ATTACHMENT, fileName));
+                }
                 Range.copy(inputStream, output, length, 0, length, bufferSize);
 
             } else if (ranges.size() == 1) {
