@@ -105,6 +105,7 @@ public class EPersonRest extends DSpaceObjectRest {
         this.password = password;
     }
 
+    @LinkRest(linkClass = GroupRest.class)
     public List<GroupRest> getGroups() {
         return groups;
     }
