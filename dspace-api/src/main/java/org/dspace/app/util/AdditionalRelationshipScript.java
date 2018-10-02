@@ -340,6 +340,22 @@ public class AdditionalRelationshipScript {
         constructRelationshipAndStore(context, article8, author3, isAuthorOfPublication, 1);
         constructRelationshipAndStore(context, article8, orgUnit2, isAuthorOfPublicationNew, 1);
 
+        constructRelationshipAndStore(context,
+                                      itemService.findByIdOrLegacyId(context, "77877343-3f75-4c33-9492-6ed7c98ed84e"),
+                                      itemService.findByIdOrLegacyId(context, "32513cea-6b89-4bce-87c0-214ad118af3e"),
+                                      isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context,
+                                      itemService.findByIdOrLegacyId(context, "77877343-3f75-4c33-9492-6ed7c98ed84e"),
+                                      itemService.findByIdOrLegacyId(context, "d10c32e6-2b14-41f7-be3e-46a41bbe1cb4"),
+                                      isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context,
+                                      itemService.findByIdOrLegacyId(context, "f4dcd8a6-4cc4-4806-8bb9-a7e8202e05b0"),
+                                      itemService.findByIdOrLegacyId(context, "6a85aea7-a78b-43be-a2b6-c7948f4e12b7"),
+                                      isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context,
+                                      itemService.findByIdOrLegacyId(context, "f4dcd8a6-4cc4-4806-8bb9-a7e8202e05b0"),
+                                      itemService.findByIdOrLegacyId(context, "56f39a97-2f57-48cc-867d-8fa58804793a"),
+                                      isPublicationOfJournalIssue, 1);
 
         context.complete();
     }
