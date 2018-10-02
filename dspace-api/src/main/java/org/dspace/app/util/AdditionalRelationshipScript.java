@@ -203,6 +203,130 @@ public class AdditionalRelationshipScript {
         constructRelationshipAndStore(context, journalVolume2OfJournal2,
                                       journalIssue2OfJournalVolume2OfJournal2,isIssueOfJournalVolume, 1);
 
+
+        Item journalIssue3 = itemService.findByIdOrLegacyId(context, "522eea91-096f-4a30-bd00-731b2dde33f3");
+
+        constructRelationshipAndStore(context, journalIssue3,
+                                      itemService.findByIdOrLegacyId(context, "434d9911-fc4e-4d8f-98a1-0343a84b637a"),
+                                      isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context, journalIssue3,
+                                      itemService.findByIdOrLegacyId(context, "e9aaa1de-5927-4ced-af36-bc6750ff33af"),
+                                      isPublicationOfJournalIssue, 1);
+
+        Item journalIssue4 = itemService.findByIdOrLegacyId(context, "df376455-2790-434a-9957-5e1ba740fff9");
+
+        constructRelationshipAndStore(context, journalIssue4,
+                                      itemService.findByIdOrLegacyId(context, "10bc6f8b-0796-486f-94d8-4d2e1814586f"),
+                                      isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context, journalIssue4,
+                                      itemService.findByIdOrLegacyId(context, "75c0f7f5-5a69-40e8-aa1f-8f35b1ce5a63"),
+                                      isPublicationOfJournalIssue, 1);
+
+        Item journalIssue5 = itemService.findByIdOrLegacyId(context, "9c75d673-412a-49ac-a58d-64df4fa1463a");
+
+        constructRelationshipAndStore(context, journalIssue5,
+                                      itemService.findByIdOrLegacyId(context, "5e945357-995a-424a-9ce8-bf3296120e30"),
+                                      isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context, journalIssue5,
+                                      itemService.findByIdOrLegacyId(context, "87123332-a615-427e-92bc-885f31f161a5"),
+                                      isPublicationOfJournalIssue, 1);
+
+        Item journalIssue6 = itemService.findByIdOrLegacyId(context, "d5944ff4-3dc1-407a-b49a-1a2681d75267");
+
+        constructRelationshipAndStore(context, journalIssue6,
+                                      itemService.findByIdOrLegacyId(context, "72ec3575-d9b5-46ab-8a1b-698dd6d73262"),
+                                      isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context, journalIssue6,
+                                      itemService.findByIdOrLegacyId(context, "5ee81de6-aaac-409d-986f-bf21a7fb543c"),
+                                      isPublicationOfJournalIssue, 1);
+
+        Item journalIssue7 = itemService.findByIdOrLegacyId(context, "4a45cacd-9653-437b-92cf-5824b0461f84");
+
+        constructRelationshipAndStore(context, journalIssue7,
+                                      itemService.findByIdOrLegacyId(context, "5f414d41-06ab-419a-b3c6-7e85f8480b31"),
+                                      isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context, journalIssue7,
+                                      itemService.findByIdOrLegacyId(context, "6e9d30d4-6b1c-4a45-aadc-c81d88444c1a"),
+                                      isPublicationOfJournalIssue, 1);
+
+        Item journalIssue8 = itemService.findByIdOrLegacyId(context, "7bba8606-37a1-4a78-b544-b3f1b7c79cb7");
+
+        constructRelationshipAndStore(context, journalIssue8,
+                                      itemService.findByIdOrLegacyId(context, "c5f0f7b6-7ba5-4d4f-94a3-c0d53b0cb62d"),
+                                      isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context, journalIssue8,
+                                      itemService.findByIdOrLegacyId(context, "2e241414-dfea-4452-b2c4-89f51d89e0b2"),
+                                      isPublicationOfJournalIssue, 1);
+
+        Item journalIssue9 = itemService.findByIdOrLegacyId(context, "c136663a-9925-453c-9aae-8cb8ed5e9e4b");
+
+        constructRelationshipAndStore(context, journalIssue9,
+                                      itemService.findByIdOrLegacyId(context, "d2dd2905-b178-45df-a5e1-8e2510bd33f8"),
+                                      isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context, journalIssue9,
+                                      itemService.findByIdOrLegacyId(context, "17101e66-686b-42d5-b3eb-17488f8e3a9c"),
+                                      isPublicationOfJournalIssue, 1);
+
+        Item journalIssue10 = itemService.findByIdOrLegacyId(context, "09f27238-8374-4da8-b442-295fd1c5fef7");
+
+        constructRelationshipAndStore(context, journalIssue10,
+                                      itemService.findByIdOrLegacyId(context, "249b1235-2793-4ad2-b40a-1745bcac7d52"),
+                                      isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context, journalIssue10,
+                                      itemService.findByIdOrLegacyId(context, "dc1e6daa-8aa5-4b10-b70d-517792ab9801"),
+                                      isPublicationOfJournalIssue, 1);
+
+        Item journalIssue11 = itemService.findByIdOrLegacyId(context, "f88bc89e-dcfa-4eca-8db6-1ef808c30564");
+
+        constructRelationshipAndStore(context, journalIssue11,
+                                      itemService.findByIdOrLegacyId(context, "786df549-c1c3-4818-8fee-10f07858b41f"),
+                                      isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context, journalIssue11,
+                                      itemService.findByIdOrLegacyId(context, "2a351411-1614-4bfa-af50-752af07acf1c"),
+                                      isPublicationOfJournalIssue, 1);
+
+        Item journalIssue12 = itemService.findByIdOrLegacyId(context, "961e137c-d815-4ade-aff1-0bb12f1fe965");
+
+        constructRelationshipAndStore(context, journalIssue12,
+                                      itemService.findByIdOrLegacyId(context, "19b25bea-59e6-4c3c-a461-19a2c18ec602"),
+                                      isPublicationOfJournalIssue, 1);
+        constructRelationshipAndStore(context, journalIssue12,
+                                      itemService.findByIdOrLegacyId(context, "dde41d4d-55cd-4107-9d91-4407cdb441c1"),
+                                      isPublicationOfJournalIssue, 1);
+
+
+        constructRelationshipAndStore(context, journalVolume1OfJournal2,
+                                      journalIssue3,
+                                      isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume1OfJournal2,
+                                      journalIssue4,
+                                      isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume1OfJournal2,
+                                      journalIssue5,
+                                      isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume1OfJournal2,
+                                      journalIssue6,
+                                      isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume1OfJournal2,
+                                      journalIssue7,
+                                      isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume1OfJournal2,
+                                      journalIssue8,
+                                      isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume1OfJournal2,
+                                      journalIssue9,
+                                      isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume1OfJournal2,
+                                      journalIssue10,
+                                      isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume1OfJournal2,
+                                      journalIssue11,
+                                      isIssueOfJournalVolume, 1);
+        constructRelationshipAndStore(context, journalVolume1OfJournal2,
+                                      journalIssue12,
+                                      isIssueOfJournalVolume, 1);
+
+
         constructRelationshipAndStore(context, journalIssue1OfJournalVolume1OfJournal1,
                                       article1 ,isPublicationOfJournalIssue, 1);
         constructRelationshipAndStore(context, journalIssue2OfJournalVolume1OfJournal1,
@@ -215,7 +339,6 @@ public class AdditionalRelationshipScript {
         constructRelationshipAndStore(context, article8, orgUnit1, isAuthorOfPublicationNew, 1);
         constructRelationshipAndStore(context, article8, author3, isAuthorOfPublication, 1);
         constructRelationshipAndStore(context, article8, orgUnit2, isAuthorOfPublicationNew, 1);
-
 
 
         context.complete();
