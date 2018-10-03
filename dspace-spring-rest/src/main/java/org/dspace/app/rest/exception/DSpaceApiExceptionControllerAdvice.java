@@ -141,7 +141,7 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
 
         if (StringUtils.equals(configurationService.getProperty("request.item.type"), "all") &&
             StringUtils.equals(requestEndPath, "content")) {
-            response.setHeader("redirect", request.getScheme() + "://" + request.getServerName() + "/" +
+            response.setHeader("redirect", request.getScheme() + "://" + request.getServerName() +
                 request.getContextPath() +
                 requestURI.substring(0, requestURI.lastIndexOf("/")) +
                 "/requestcopy");
