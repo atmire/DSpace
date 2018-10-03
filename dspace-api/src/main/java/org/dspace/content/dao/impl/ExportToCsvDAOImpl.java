@@ -3,7 +3,6 @@ package org.dspace.content.dao.impl;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -31,7 +30,6 @@ public class ExportToCsvDAOImpl extends AbstractHibernateDAO<ExportToCsv> implem
     public ExportToCsv findByDsoAndDate(Context context, Class clazz, DSpaceObject dSpaceObject,
                                         Date date)
         throws SQLException {
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
         CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, ExportToCsv.class);

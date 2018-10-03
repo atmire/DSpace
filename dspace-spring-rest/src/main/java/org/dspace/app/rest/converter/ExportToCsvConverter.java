@@ -10,6 +10,7 @@ import org.dspace.content.ExportToCsv;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.CollectionService;
 import org.dspace.core.Context;
+import org.dspace.export.ExportStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +32,7 @@ public class ExportToCsvConverter
         exportToCsvRest.setDsoUuid(obj.getDso().getID());
         exportToCsvRest.setDate(obj.getDate());
 
-        if (StringUtils.equals(obj.getStatus(), "completed")) {
+        if (StringUtils.equals(obj.getStatus(), ExportStatus.COMPLETED.getValue())) {
             Bitstream linkedBitstream = null;
 
             try {

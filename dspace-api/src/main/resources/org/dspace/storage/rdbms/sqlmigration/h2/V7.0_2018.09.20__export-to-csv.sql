@@ -21,10 +21,10 @@ CREATE SEQUENCE export_csv_file_id_seq;
 CREATE TABLE export_csv_file
 (
     dso                     uuid NOT NULL REFERENCES dspaceobject(uuid),
-    id                      INTEGER NOT NULL PRIMARY KEY,
     date                    TIMESTAMP NOT NULL,
     bitstream_id            uuid,
-    status                  varchar(32)
+    status                  varchar(32),
+    unique(dso, date)
 );
 CREATE INDEX export_csv_file_dso_idx ON export_csv_file(dso);
 CREATE INDEX export_csv_file_all_idx ON export_csv_file(dso, id, date, bitstream_id, status);

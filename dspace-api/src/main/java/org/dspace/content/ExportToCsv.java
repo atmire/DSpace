@@ -1,37 +1,29 @@
 package org.dspace.content;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.dspace.core.ReloadableEntity;
-
 @Entity
 @Table(name = "export_csv_file")
-public class ExportToCsv implements ReloadableEntity<Integer> {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "export_zip_file_id_seq")
-    @SequenceGenerator(name = "export_zip_file_id_seq", sequenceName = "export_zip_file_id_seq", allocationSize = 1)
-    @Column(name = "id")
-    private Integer id;
+public class ExportToCsv implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "dso", nullable = false)
+    @Id
     private DSpaceObject dso;
 
     @Column(name = "date")
+    @Id
     @Temporal(TemporalType.TIMESTAMP)
     private Date date;
 
@@ -40,14 +32,6 @@ public class ExportToCsv implements ReloadableEntity<Integer> {
 
     @Column(name = "status")
     private String status;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public DSpaceObject getDso() {
         return dso;
@@ -81,7 +65,4 @@ public class ExportToCsv implements ReloadableEntity<Integer> {
         this.status = status;
     }
 
-    public Integer getID() {
-        return id;
-    }
 }

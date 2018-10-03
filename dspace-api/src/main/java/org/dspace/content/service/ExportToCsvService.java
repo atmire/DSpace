@@ -1,6 +1,7 @@
 package org.dspace.content.service;
 
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 
@@ -8,11 +9,11 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.ExportToCsv;
 import org.dspace.core.Context;
-import org.dspace.service.DSpaceCRUDService;
 
-public interface ExportToCsvService extends DSpaceCRUDService<ExportToCsv> {
+public interface ExportToCsvService {
 
-    public ExportToCsv create(Context context, ExportToCsv exportToCsv) throws SQLException, AuthorizeException;
+    public ExportToCsv create(Context context, DSpaceObject dSpaceObject)
+        throws SQLException, AuthorizeException, ParseException;
 
     public List<ExportToCsv> findAll(Context context) throws SQLException;
 
@@ -26,4 +27,7 @@ public interface ExportToCsvService extends DSpaceCRUDService<ExportToCsv> {
     List<ExportToCsv> findAllByDso(Context context, DSpaceObject dSpaceObject)
         throws SQLException;
 
+    public void update(Context context, ExportToCsv exportToCsv) throws SQLException, AuthorizeException;
+
+    public void delete(Context context, ExportToCsv exportToCsv) throws SQLException, AuthorizeException;
 }

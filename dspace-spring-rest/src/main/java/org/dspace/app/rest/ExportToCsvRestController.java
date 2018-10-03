@@ -4,11 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,7 +17,6 @@ import org.dspace.app.rest.converter.ExportToCsvConverter;
 import org.dspace.app.rest.link.HalLinkService;
 import org.dspace.app.rest.model.ExportToCsvRest;
 import org.dspace.app.rest.model.ExportToCsvRestWrapper;
-import org.dspace.app.rest.model.hateoas.DSpaceResource;
 import org.dspace.app.rest.model.hateoas.ExportToCsvResource;
 import org.dspace.app.rest.model.hateoas.ExportToCsvResourceWrapper;
 import org.dspace.app.rest.utils.ContextUtil;
@@ -28,17 +25,17 @@ import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Bitstream;
 import org.dspace.content.BitstreamFormat;
-import org.dspace.content.DCDate;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.ExportToCsv;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.DSpaceObjectService;
 import org.dspace.content.service.ExportToCsvService;
 import org.dspace.core.Context;
+import org.dspace.export.ExportStatus;
 import org.dspace.export.ExportToCsvTask;
 import org.dspace.services.EventService;
 import org.dspace.usage.UsageEvent;
-import org.dspace.utils.DSpace;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -76,16 +73,16 @@ public class ExportToCsvRestController {
     @Autowired(required = true)
     private List<DSpaceObjectService<? extends DSpaceObject>> dSpaceObjectServices;
 
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor = loadThreadPool();
+    @Autowired
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/create")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ExportToCsvResource create(@PathVariable UUID uuid, HttpServletResponse response,
-                                 HttpServletRequest request, @PathVariable String model,
-                                 @PathVariable String apiCategory)
+                                      HttpServletRequest request, @PathVariable String model,
+                                      @PathVariable String apiCategory)
         throws IOException, SQLException, AuthorizeException, ParseException {
 
-        DCDate currentDate = DCDate.getCurrent();
         Context context = ContextUtil.obtainContext(request);
         DSpaceObject dSpaceObject = null;
 
@@ -95,8 +92,11 @@ public class ExportToCsvRestController {
                 break;
             }
         }
-        ExportToCsv exportToCsv = initializeExportToCsv(dSpaceObject, currentDate, context);
-        threadPoolTaskExecutor.submit(new ExportToCsvTask(context.getCurrentUser(), dSpaceObject, exportToCsv.getID()));
+        ExportToCsv exportToCsv = exportToCsvService.create(context, dSpaceObject);
+        exportToCsvService.update(context, exportToCsv);
+        context.commit();
+        threadPoolTaskExecutor
+            .submit(new ExportToCsvTask(context.getCurrentUser(), dSpaceObject, exportToCsv.getDate()));
         ExportToCsvRest exportToCsvRest = exportToCsvConverter.fromModel(exportToCsv, model, apiCategory);
         ExportToCsvResource exportToCsvResource = new ExportToCsvResource(exportToCsvRest, utils);
         halLinkService.addLinks(exportToCsvResource);
@@ -106,8 +106,8 @@ public class ExportToCsvRestController {
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})
     @PreAuthorize("hasAuthority('ADMIN')")
     public ExportToCsvResourceWrapper retrieve(@PathVariable UUID uuid, HttpServletResponse response,
-                                   HttpServletRequest request, @PathVariable String model,
-                                   @PathVariable String apiCategory) throws SQLException {
+                                               HttpServletRequest request, @PathVariable String model,
+                                               @PathVariable String apiCategory) throws SQLException {
 
         Context context = ContextUtil.obtainContext(request);
 
@@ -140,28 +140,6 @@ public class ExportToCsvRestController {
         return exportToCsvResourceWrapper;
     }
 
-    private ExportToCsv initializeExportToCsv(DSpaceObject dSpaceObject, DCDate currentDate, Context context)
-        throws SQLException, AuthorizeException, ParseException {
-        ExportToCsv exportToCsv = new ExportToCsv();
-        exportToCsv.setDso(dSpaceObject);
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String dateString = sf.format(currentDate.toDate());
-        Date date = sf.parse(dateString);
-        exportToCsv.setDate(date);
-        exportToCsv.setStatus("In Progress");
-        exportToCsvService.create(context, exportToCsv);
-        exportToCsvService.update(context, exportToCsv);
-        context.commit();
-        return exportToCsv;
-    }
-    private ThreadPoolTaskExecutor loadThreadPool() {
-        DSpace dspace = new DSpace();
-        org.dspace.kernel.ServiceManager manager = dspace.getServiceManager();
-        //TODO Look this up
-        return manager.getServiceByName("exportToCsvThreadPool", ThreadPoolTaskExecutor.class);
-    }
-
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/view/{dateString:.+}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ExportToCsvResource viewSpecific(@PathVariable UUID uuid,
@@ -171,8 +149,7 @@ public class ExportToCsvRestController {
                                             @PathVariable String apiCategory)
         throws IOException, SQLException, AuthorizeException, ParseException {
 
-        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date date = sf.parse(dateString.replace("T", " "));
+        Date date = new DateTime(dateString).toDate();
         if (date != null) {
             Context context = ContextUtil.obtainContext(request);
             context.turnOffAuthorisationSystem();
@@ -205,8 +182,7 @@ public class ExportToCsvRestController {
                                                 @PathVariable String apiCategory)
         throws IOException, SQLException, AuthorizeException, ParseException {
 
-        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date date = sf.parse(dateString.replace("T", " "));
+        Date date = new DateTime(dateString).toDate();
         if (date != null) {
             Context context = ContextUtil.obtainContext(request);
             DSpaceObject dSpaceObject = null;
@@ -218,7 +194,7 @@ public class ExportToCsvRestController {
                 }
             }
             ExportToCsv exportToCsv = exportToCsvService.findByDsoAndDate(context, dSpaceObject, date);
-            if (exportToCsv != null && StringUtils.equals(exportToCsv.getStatus(), "completed")) {
+            if (exportToCsv != null && StringUtils.equals(exportToCsv.getStatus(), ExportStatus.COMPLETED.getValue())) {
                 Bitstream bitstream = bitstreamService.find(context, exportToCsv.getBitstreamId());
 
                 BitstreamFormat format = bitstream.getFormat(context);
@@ -254,6 +230,7 @@ public class ExportToCsvRestController {
         }
         return null;
     }
+
     private String getBitstreamName(Bitstream bit, BitstreamFormat format) {
         String name = bit.getName();
         if (name == null) {
@@ -262,6 +239,7 @@ public class ExportToCsvRestController {
         }
         return name + ".csv";
     }
+
     private boolean isNotAnErrorResponse(HttpServletResponse response) {
         Response.Status.Family responseCode = Response.Status.Family.familyOf(response.getStatus());
         return responseCode.equals(Response.Status.Family.SUCCESSFUL)
