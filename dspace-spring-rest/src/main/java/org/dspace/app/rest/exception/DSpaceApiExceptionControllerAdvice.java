@@ -15,17 +15,22 @@ import java.sql.SQLException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.security.RestAuthenticationService;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.services.ConfigurationService;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.repository.support.QueryMethodParameterConversionException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -42,7 +47,10 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
     @Autowired
     private RestAuthenticationService restAuthenticationService;
 
-    @ExceptionHandler({AuthorizeException.class, RESTAuthorizationException.class})
+    @Autowired
+    private ConfigurationService configurationService;
+
+    @ExceptionHandler( {AuthorizeException.class, RESTAuthorizationException.class})
     protected void handleAuthorizeException(HttpServletRequest request, HttpServletResponse response, Exception ex)
         throws IOException {
         if (restAuthenticationService.hasAuthenticationData(request)) {
@@ -101,6 +109,40 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
         // https://stackoverflow.com/questions/3050518/what-http-status-response-code-should-i-use-if-the-request-is-missing-a-required
         return super.handleTypeMismatch(ex, headers, HttpStatus.UNPROCESSABLE_ENTITY, request);
     }
+
+    @ExceptionHandler(Exception.class)
+    protected void handleGenericException(HttpServletRequest request, HttpServletResponse response, Exception ex)
+        throws IOException {
+        ResponseStatus responseStatusAnnotation = AnnotationUtils.findAnnotation(ex.getClass(), ResponseStatus.class);
+
+        int returnCode = 0;
+        if (responseStatusAnnotation != null) {
+            returnCode = responseStatusAnnotation.code().value();
+        } else {
+            returnCode = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+        }
+        sendErrorResponse(request, response, ex, "An Exception has occured", returnCode);
+
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    protected void handleAccessDeniedException(HttpServletRequest request, HttpServletResponse response,
+                                               Exception ex)
+        throws IOException {
+        String requestURI = request.getRequestURI();
+        String requestEndPath = requestURI.substring(requestURI.lastIndexOf("/") + 1);
+
+        if (StringUtils.equals(configurationService.getProperty("request.item.type"), "all") &&
+            StringUtils.equals(requestEndPath, "content")) {
+            response.setHeader("redirect", request.getScheme() + "://" + request.getServerName() + "/" +
+                request.getContextPath() +
+                requestURI.substring(0, requestURI.lastIndexOf("/")) +
+                "/requestcopy");
+        }
+        sendErrorResponse(request, response, ex, "An AccessDenied Exception has occured",
+                          HttpServletResponse.SC_UNAUTHORIZED);
+    }
+
 
     private void sendErrorResponse(final HttpServletRequest request, final HttpServletResponse response,
                                    final Exception ex, final String message, final int statusCode) throws IOException {
