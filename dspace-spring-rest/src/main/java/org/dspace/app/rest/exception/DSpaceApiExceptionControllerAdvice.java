@@ -163,7 +163,10 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
             public Map<String, Object> getErrorAttributes(RequestAttributes requestAttributes, boolean includeStackTrace) {
                 Map<String, Object> errorAttributes = super.getErrorAttributes(requestAttributes, includeStackTrace);
                 // Customize the default entries in errorAttributes to suit your needs
-                errorAttributes.put("redirect", requestAttributes.getAttribute("redirectLink", 0));
+                Object redirectLink = requestAttributes.getAttribute("redirectLink", 0);
+                if (redirectLink != null ) {
+                    errorAttributes.put("redirect", redirectLink);
+                }
                 return errorAttributes;
             }
 
