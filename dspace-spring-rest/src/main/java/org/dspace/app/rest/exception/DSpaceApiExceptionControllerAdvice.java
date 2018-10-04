@@ -11,6 +11,7 @@ import static org.springframework.web.servlet.DispatcherServlet.EXCEPTION_ATTRIB
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,6 +22,9 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.services.ConfigurationService;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.DefaultErrorAttributes;
+import org.springframework.boot.autoconfigure.web.ErrorAttributes;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.repository.support.QueryMethodParameterConversionException;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
@@ -32,6 +36,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -128,7 +133,7 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
         } else {
             returnCode = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
         }
-        sendErrorResponse(request, response, ex, "An Exception has occured", returnCode);
+        sendErrorResponse(request, response, ex, "An Exception has occurred", returnCode);
 
     }
 
@@ -141,11 +146,11 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
 
         if (StringUtils.equals(configurationService.getProperty("request.item.type"), "all") &&
             StringUtils.equals(requestEndPath, "content")) {
-            response.setHeader("redirect", request.getScheme() + "://" + request.getServerName() +
+            request.setAttribute("redirectLink", request.getScheme() + "://" + request.getServerName() +
                 requestURI.substring(0, requestURI.lastIndexOf("/")) +
                 "/requestcopy");
         }
-        sendErrorResponse(request, response, ex, "An AccessDenied Exception has occured",
+        sendErrorResponse(request, response, ex, "An AccessDenied Exception has occurred",
                           HttpServletResponse.SC_UNAUTHORIZED);
     }
 
@@ -158,5 +163,17 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
         //Exception properties will be set by org.springframework.boot.web.support.ErrorPageFilter
         response.sendError(statusCode, message);
     }
+    @Bean
+    public ErrorAttributes errorAttributes() {
+        return new DefaultErrorAttributes() {
+            @Override
+            public Map<String, Object> getErrorAttributes(RequestAttributes requestAttributes, boolean includeStackTrace) {
+                Map<String, Object> errorAttributes = super.getErrorAttributes(requestAttributes, includeStackTrace);
+                // Customize the default entries in errorAttributes to suit your needs
+                errorAttributes.put("redirect", requestAttributes.getAttribute("redirectLink", 0));
+                return errorAttributes;
+            }
 
+        };
+    }
 }
