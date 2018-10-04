@@ -1,7 +1,7 @@
 package org.dspace.app.rest.link;
 
+import java.sql.SQLException;
 import java.util.LinkedList;
-import java.util.UUID;
 
 import org.dspace.app.rest.model.MappingItemRestWrapper;
 import org.dspace.app.rest.model.hateoas.MappingItemResourceWrapper;
@@ -19,13 +19,19 @@ public class MappingItemResourceWrapperHalLinkFactory
         MappingItemRestWrapper mappingItemRestWrapper = halResource.getContent();
         if (mappingItemRestWrapper != null) {
 
+            list.add(buildLink(Link.REL_SELF, getSelfLink(mappingItemRestWrapper, pageable)));
+        }
+
+    }
+    public String getSelfLink(MappingItemRestWrapper mappingItemRestWrapper, Pageable pageable) throws SQLException {
+        if (mappingItemRestWrapper != null) {
             UriComponentsBuilder uriBuilderSelfLink = uriBuilder(getMethodOn()
                                                                      .retrieve(
-                                                                         UUID.fromString(
-                                                                             "c4779449-1772-4624-b216-674fa8f1518e"),
-                                                                         null, null));
-            list.add(buildLink(Link.REL_SELF, uriBuilderSelfLink.build().toString()));
+                                                                         mappingItemRestWrapper.getCollectionUuid(),
+                                                                         null, null, pageable));
+            return uriBuilderSelfLink.build().toString();
         }
+        return null;
 
     }
 

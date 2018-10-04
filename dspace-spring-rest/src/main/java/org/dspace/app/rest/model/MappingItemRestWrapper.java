@@ -1,6 +1,7 @@
 package org.dspace.app.rest.model;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.dspace.app.rest.MappingItemRestController;
@@ -9,6 +10,16 @@ public class MappingItemRestWrapper implements RestAddressableModel {
 
     @JsonIgnore
     private List<ItemRest> mappingItemRestList;
+
+    private UUID collectionUuid;
+
+    public UUID getCollectionUuid() {
+        return collectionUuid;
+    }
+
+    public void setCollectionUuid(UUID collectionUuid) {
+        this.collectionUuid = collectionUuid;
+    }
 
     public List<ItemRest> getMappingItemRestList() {
         return mappingItemRestList;
