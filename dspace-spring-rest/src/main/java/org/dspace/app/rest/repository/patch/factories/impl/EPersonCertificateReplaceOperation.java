@@ -48,11 +48,11 @@ public class EPersonCertificateReplaceOperation extends ReplacePatchOperation<EP
 
     @Override
     protected Class<String[]> getArrayClassForEvaluation() {
-        return null;
+        return String[].class;
     }
 
     @Override
     protected Class<String> getClassForEvaluation() {
-        return null;
+        return String.class;
     }
 }
