@@ -7,9 +7,16 @@
  */
 package org.dspace.app.rest.converter;
 
+import java.sql.SQLException;
+
+import org.apache.log4j.Logger;
 import org.dspace.app.rest.model.ResourcePolicyRest;
+import org.dspace.app.rest.utils.ScopeResolver;
 import org.dspace.authorize.ResourcePolicy;
 import org.dspace.authorize.service.ResourcePolicyService;
+import org.dspace.core.Context;
+import org.dspace.eperson.service.EPersonService;
+import org.dspace.eperson.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,8 +29,25 @@ import org.springframework.stereotype.Component;
 @Component
 public class ResourcePolicyConverter extends DSpaceConverter<ResourcePolicy, ResourcePolicyRest> {
 
+    private static final Logger log = Logger.getLogger(ResourcePolicyConverter.class);
+
     @Autowired
     ResourcePolicyService resourcePolicyService;
+
+    @Autowired
+    GroupService groupService;
+
+    @Autowired
+    EPersonService ePersonService;
+
+    @Autowired
+    GroupConverter groupConverter;
+
+    @Autowired
+    EPersonConverter ePersonConverter;
+
+    @Autowired
+    GenericDSpaceObjectConverter genericDSpaceObjectConverter;
 
     @Override
     public ResourcePolicyRest fromModel(ResourcePolicy obj) {
@@ -35,18 +59,26 @@ public class ResourcePolicyConverter extends DSpaceConverter<ResourcePolicy, Res
         model.setName(obj.getRpName());
         model.setDescription(obj.getRpDescription());
         model.setRpType(obj.getRpType());
-
+        model.setResource(genericDSpaceObjectConverter.fromModel(obj.getdSpaceObject()));
         model.setAction(resourcePolicyService.getActionText(obj));
 
         model.setStartDate(obj.getStartDate());
         model.setEndDate(obj.getEndDate());
 
         if (obj.getGroup() != null) {
-            model.setGroupUUID(obj.getGroup().getID());
+            try {
+                model.setGroup(groupConverter.fromModel(groupService.find(new Context(), obj.getGroup().getID())));
+            } catch (SQLException e) {
+                log.error(e.getMessage(), e);
+            }
         }
 
         if (obj.getEPerson() != null) {
-            model.setEpersonUUID(obj.getEPerson().getID());
+            try {
+                model.setEperson(ePersonConverter.fromModel(ePersonService.find(new Context(), obj.getEPerson().getID())));
+            } catch (SQLException e) {
+                log.error(e.getMessage(), e);
+            }
         }
         return model;
     }

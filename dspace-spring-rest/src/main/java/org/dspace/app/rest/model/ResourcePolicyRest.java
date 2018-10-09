@@ -8,10 +8,9 @@
 package org.dspace.app.rest.model;
 
 import java.util.Date;
-import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.dspace.app.rest.RestResourceController;
 
 /**
@@ -27,32 +26,32 @@ public class ResourcePolicyRest extends BaseObjectRest<Integer> {
 
     private String name;
 
-    @JsonInclude(Include.NON_NULL)
+    @JsonProperty("policyType")
     private String rpType;
 
-    @JsonInclude(Include.NON_NULL)
     private String description;
 
-    @JsonInclude(Include.NON_NULL)
-    private UUID groupUUID;
+    @JsonIgnore
+    private GroupRest group;
 
-    @JsonInclude(Include.NON_NULL)
-    private UUID epersonUUID;
+    @JsonIgnore
+    private EPersonRest eperson;
+
+    @JsonIgnore
+    private DSpaceObjectRest resource;
 
     private String action;
 
-    @JsonInclude(Include.NON_NULL)
     private Date startDate;
 
-    @JsonInclude(Include.NON_NULL)
     private Date endDate;
 
-    public UUID getGroupUUID() {
-        return groupUUID;
+    public GroupRest getGroup() {
+        return group;
     }
 
-    public void setGroupUUID(UUID groupUuid) {
-        this.groupUUID = groupUuid;
+    public void setGroup(GroupRest groupUuid) {
+        this.group = groupUuid;
     }
 
     public Date getEndDate() {
@@ -103,12 +102,12 @@ public class ResourcePolicyRest extends BaseObjectRest<Integer> {
         this.description = description;
     }
 
-    public UUID getEpersonUUID() {
-        return epersonUUID;
+    public EPersonRest getEperson() {
+        return eperson;
     }
 
-    public void setEpersonUUID(UUID epersonUUID) {
-        this.epersonUUID = epersonUUID;
+    public void setEperson(EPersonRest eperson) {
+        this.eperson = eperson;
     }
 
     public String getAction() {
@@ -127,5 +126,11 @@ public class ResourcePolicyRest extends BaseObjectRest<Integer> {
         this.startDate = startDate;
     }
 
+    public DSpaceObjectRest getResource() {
+        return resource;
+    }
 
+    public void setResource(DSpaceObjectRest resource) {
+        this.resource = resource;
+    }
 }
