@@ -7,22 +7,15 @@
  */
 package org.dspace.app.rest.repository;
 
-import java.io.IOException;
 import java.sql.SQLException;
-import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.dspace.app.rest.converter.ResourcePolicyConverter;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
-import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.ResourcePolicyRest;
 import org.dspace.app.rest.model.hateoas.ResourcePolicyResource;
-import org.dspace.app.rest.utils.ScopeResolver;
 import org.dspace.app.rest.utils.Utils;
-import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.ResourcePolicy;
 import org.dspace.authorize.service.ResourcePolicyService;
-import org.dspace.content.Item;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -37,8 +30,6 @@ import org.springframework.stereotype.Component;
  */
 @Component(ResourcePolicyRest.CATEGORY + "." + ResourcePolicyRest.NAME)
 public class ResourcePolicyRestRepository extends DSpaceRestRepository<ResourcePolicyRest, Integer> {
-
-    private static final Logger log = Logger.getLogger(ResourcePolicyRestRepository.class);
 
     @Autowired
     ResourcePolicyService resourcePolicyService;
@@ -82,16 +73,4 @@ public class ResourcePolicyRestRepository extends DSpaceRestRepository<ResourceP
         return new ResourcePolicyResource(model, utils, rels);
     }
 
-    @PreAuthorize("hasAuthority('AUTHENTICATED')")
-    @Override
-    protected void delete(Context context, Integer id) throws AuthorizeException {
-        ResourcePolicy resourcePolicy = null;
-        try {
-            resourcePolicy = resourcePolicyService.find(context, id);
-            resourcePolicyService.delete(context, resourcePolicy);
-        } catch (SQLException e) {
-            log.error(e.getMessage(), e);
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
 }

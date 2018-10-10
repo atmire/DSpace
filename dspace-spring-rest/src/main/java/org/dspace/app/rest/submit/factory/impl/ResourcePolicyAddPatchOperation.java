@@ -48,7 +48,6 @@ public class ResourcePolicyAddPatchOperation extends AddPatchOperation<ResourceP
 
     @Autowired
     GroupService groupService;
-
     @Autowired
     EPersonService epersonService;
 
@@ -81,7 +80,13 @@ public class ResourcePolicyAddPatchOperation extends AddPatchOperation<ResourceP
 
                         //TODO manage error on select group and eperson
                         Group group = null;
+                        if (newAccessCondition.getGroupUUID() != null) {
+                            group = groupService.find(context, newAccessCondition.getGroupUUID());
+                        }
                         EPerson eperson = null;
+                        if (newAccessCondition.getEpersonUUID() != null) {
+                            eperson = epersonService.find(context, newAccessCondition.getEpersonUUID());
+                        }
 
                         Date startDate = newAccessCondition.getStartDate();
                         Date endDate = newAccessCondition.getEndDate();
