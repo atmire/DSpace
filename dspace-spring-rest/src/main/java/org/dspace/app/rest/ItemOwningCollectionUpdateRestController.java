@@ -13,14 +13,19 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.dspace.app.rest.converter.CollectionConverter;
+import org.dspace.app.rest.model.CollectionRest;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.Collection;
 import org.dspace.content.Item;
 import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.ItemService;
+import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,29 +44,51 @@ public class ItemOwningCollectionUpdateRestController {
     @Autowired
     CollectionService collectionService;
 
+    @Autowired
+    AuthorizeService authorizeService;
+
+    @Autowired
+    CollectionConverter converter;
+
     @RequestMapping(method = RequestMethod.POST, value = "/{targetUuid}")
-    public void move(@PathVariable UUID itemUuid, HttpServletResponse response,
-                     HttpServletRequest request, @PathVariable UUID targetUuid)
+    @PreAuthorize("hasPermission(#itemUuid, 'ITEM','WRITE') && hasPermission(#targetUuid,'COLLECTION','ADD')")
+    @PostAuthorize("returnObject != null")
+    public CollectionRest move(@PathVariable UUID itemUuid, HttpServletResponse response,
+                               HttpServletRequest request, @PathVariable UUID targetUuid)
             throws SQLException, IOException, AuthorizeException {
         Context context = ContextUtil.obtainContext(request);
 
-        setOwningCollection(context, itemUuid, targetUuid);
+        Collection targetCollection = performItemMove(context, itemUuid, targetUuid);
 
-        context.commit();
-        context.complete();
+        if (targetCollection == null) {
+            return null;
+        }
+        return converter.fromModel(targetCollection);
+
     }
 
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'WRITE')")
-    public void setOwningCollection(Context context, UUID id, UUID collection)
+    private Collection moveItem(final Context context, final Item item, final Collection currentCollection,
+                                final Collection targetCollection)
             throws SQLException, IOException, AuthorizeException {
-        Item item = itemService.find(context, id);
+        itemService.move(context, item, currentCollection, targetCollection);
+        context.commit();
+
+        return context.reloadEntity(targetCollection);
+    }
+
+    private Collection performItemMove(final Context context, final UUID itemUuid, final UUID targetUuid)
+            throws SQLException, IOException, AuthorizeException {
+
+        Item item = itemService.find(context, itemUuid);
 
         Collection currentCollection = item.getOwningCollection();
-        Collection targetCollection = collectionService.find(context, collection);
 
-        itemService.move(context, item, currentCollection, targetCollection);
+        if (authorizeService.authorizeActionBoolean(context, currentCollection, Constants.ADMIN)) {
+            Collection targetCollection = collectionService.find(context, targetUuid);
+            return moveItem(context, item, currentCollection, targetCollection);
+        }
+
+        return null;
     }
-
-
 
 }
