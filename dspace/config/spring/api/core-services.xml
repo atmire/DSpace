@@ -126,6 +126,7 @@
                 <entry key="isOrgUnitOfPerson" value-ref="isOrgUnitOfPersonMap"/>
                 <entry key="isJournalVolumeOfIssue" value-ref="isJournalVolumeOfIssueMap"/>
                 <entry key="isJournalOfVolume" value-ref="isJournalOfVolumeMap"/>
+		<entry key="isVolumeOfJournal" value-ref="isVolumeOfJournalMap"/>
                 <entry key="isIssueOfJournalVolume" value-ref="isIssueOfJournalVolumeMap"/>
             </map>
         </property>
@@ -196,7 +197,10 @@
     <util:list id="volumeJournal_title">
         <value>journal.identifier.name</value>
     </util:list>
-
+	
+    <util:map id="isVolumeOfJournalMap">
+    </util:map>
+	
     <util:map id="isIssueOfJournalVolumeMap">
         <entry key="journalissue_identifier_number" value-ref="journalIssue_number"/>
     </util:map>
