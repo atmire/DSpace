@@ -27,7 +27,7 @@ CREATE TABLE export_csv_file
     unique(dso, date)
 );
 CREATE INDEX export_csv_file_dso_idx ON export_csv_file(dso);
-CREATE INDEX export_csv_file_all_idx ON export_csv_file(dso, id, date, bitstream_id, status);
+CREATE INDEX export_csv_file_all_idx ON export_csv_file(dso, date, bitstream_id, status);
 CREATE INDEX export_csv_file_bitstream_id_idx ON export_csv_file(bitstream_id);
 CREATE INDEX export_csv_file_status_idx ON export_csv_file(status);
 CREATE INDEX export_csv_file_date_idx ON export_csv_file(date);
