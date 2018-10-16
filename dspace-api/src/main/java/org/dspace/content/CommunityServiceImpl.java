@@ -28,6 +28,7 @@ import org.dspace.content.dao.CommunityDAO;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.CommunityService;
+import org.dspace.content.service.ExportToCsvService;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.SiteService;
 import org.dspace.core.Constants;
@@ -69,6 +70,8 @@ public class CommunityServiceImpl extends DSpaceObjectServiceImpl<Community> imp
     protected BitstreamService bitstreamService;
     @Autowired(required = true)
     protected SiteService siteService;
+    @Autowired(required = true)
+    protected ExportToCsvService exportToCsvService;
 
     protected CommunityServiceImpl() {
         super();
@@ -477,6 +480,7 @@ public class CommunityServiceImpl extends DSpaceObjectServiceImpl<Community> imp
         String removedHandle = community.getHandle();
         UUID removedId = community.getID();
 
+        exportToCsvService.deleteAttachedExportToCsv(context, community);
 
         // If not a top-level community, have parent remove me; this
         // will call rawDelete() before removing the linkage

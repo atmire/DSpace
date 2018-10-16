@@ -62,7 +62,7 @@ public class MultipartFileSender {
     private static final String CONTENT_DISPOSITION = "Content-Disposition";
     private static final String CONTENT_LENGTH = "Content-Length";
     private static final String BYTES_RANGE_FORMAT = "bytes %d-%d/%d";
-    private static final String CONTENT_DISPOSITION_FORMAT = "%s; filename=\"%s\"";
+    private static final String CONTENT_DISPOSITION_FORMAT = "%s;filename=\"%s\"";
     private static final String BYTES_DINVALID_BYTE_RANGE_FORMAT = "bytes */%d";
     private static final String CACHE_CONTROL = "Cache-Control";
 
@@ -204,7 +204,8 @@ public class MultipartFileSender {
                 response.setContentType(contentType);
                 response.setHeader(CONTENT_LENGTH, String.valueOf(length));
                 if (length > 10000) {
-                    response.setHeader(CONTENT_DISPOSITION, String.format(CONTENT_DISPOSITION_FORMAT, CONTENT_DISPOSITION_ATTACHMENT, fileName));
+                    response.setHeader(CONTENT_DISPOSITION, String
+                        .format(CONTENT_DISPOSITION_FORMAT, CONTENT_DISPOSITION_ATTACHMENT, fileName));
                 }
                 Range.copy(inputStream, output, length, 0, length, bufferSize);
 

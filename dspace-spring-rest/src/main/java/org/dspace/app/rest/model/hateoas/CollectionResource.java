@@ -25,5 +25,6 @@ public class CollectionResource extends DSpaceResource<CollectionRest> {
         add(utils.linkToSubResource(collection, "exportToZip"));
 
         add(utils.linkToSubResource(collection, "mappingItems"));
+        add(utils.linkToSubResource(collection, "exportToCsv"));
     }
 }

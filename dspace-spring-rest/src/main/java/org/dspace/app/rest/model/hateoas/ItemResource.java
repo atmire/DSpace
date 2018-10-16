@@ -23,5 +23,6 @@ public class ItemResource extends DSpaceResource<ItemRest> {
         super(item, utils, rels);
         add(utils.linkToSubResource(item, "mappingCollections"));
         add(utils.linkToSubResource(item, "exportToZip"));
+        add(utils.linkToSubResource(item, "exportToCsv"));
     }
 }
