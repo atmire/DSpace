@@ -32,6 +32,7 @@ import org.dspace.content.dao.CollectionDAO;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.CommunityService;
+import org.dspace.content.service.ExportToCsvService;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.WorkspaceItemService;
 import org.dspace.core.ConfigurationManager;
@@ -87,6 +88,8 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
     protected WorkspaceItemService workspaceItemService;
     @Autowired(required = true)
     protected HarvestedCollectionService harvestedCollectionService;
+    @Autowired(required = true)
+    protected ExportToCsvService exportToCsvService;
 
 
     protected CollectionServiceImpl() {
@@ -692,6 +695,7 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
         context.addEvent(new Event(Event.DELETE, Constants.COLLECTION,
                                    collection.getID(), collection.getHandle(), getIdentifiers(context, collection)));
 
+        exportToCsvService.deleteAttachedExportToCsv(context, collection);
         // remove subscriptions - hmm, should this be in Subscription.java?
         subscribeService.deleteByCollection(context, collection);
 

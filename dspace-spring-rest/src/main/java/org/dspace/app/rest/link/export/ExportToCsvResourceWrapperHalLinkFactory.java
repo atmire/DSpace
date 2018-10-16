@@ -24,14 +24,6 @@ public class ExportToCsvResourceWrapperHalLinkFactory
 
             DSpaceObject itemToBeExported = exportToCsvRestWrapper.getItemToBeExported();
             if (itemToBeExported != null) {
-                UriComponentsBuilder uriBuilderCreateLink = uriBuilder(getMethodOn()
-                                                                           .create(
-                                                                               itemToBeExported
-                                                                                   .getID(), null, null,
-                                                                               exportToCsvRestWrapper.getType(),
-                                                                               exportToCsvRestWrapper.getCategory()));
-
-                list.add(buildLink("create", uriBuilderCreateLink.build().toString()));
 
                 UriComponentsBuilder uriBuilderSelfLink = uriBuilder(getMethodOn()
                                                                          .retrieve(itemToBeExported.getID(),

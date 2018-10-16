@@ -37,6 +37,7 @@ import org.dspace.services.EventService;
 import org.dspace.usage.UsageEvent;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -74,10 +75,11 @@ public class ExportToCsvRestController {
     private List<DSpaceObjectService<? extends DSpaceObject>> dSpaceObjectServices;
 
     @Autowired
+    @Qualifier("threadPoolTaskExecutor")
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/create")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "/create")
+    @PreAuthorize("hasPermission(#id, 'EPERSON', 'ADMIN')")
     public ExportToCsvResource create(@PathVariable UUID uuid, HttpServletResponse response,
                                       HttpServletRequest request, @PathVariable String model,
                                       @PathVariable String apiCategory)
@@ -96,7 +98,7 @@ public class ExportToCsvRestController {
         exportToCsvService.update(context, exportToCsv);
         context.commit();
         threadPoolTaskExecutor
-            .submit(new ExportToCsvTask(context.getCurrentUser(), dSpaceObject, exportToCsv.getDate()));
+            .submit(new ExportToCsvTask(dSpaceObject.getID(), exportToCsv.getDate()));
         ExportToCsvRest exportToCsvRest = exportToCsvConverter.fromModel(exportToCsv, model, apiCategory);
         ExportToCsvResource exportToCsvResource = new ExportToCsvResource(exportToCsvRest, utils);
         halLinkService.addLinks(exportToCsvResource);
@@ -194,7 +196,7 @@ public class ExportToCsvRestController {
                 }
             }
             ExportToCsv exportToCsv = exportToCsvService.findByDsoAndDate(context, dSpaceObject, date);
-            if (exportToCsv != null && StringUtils.equals(exportToCsv.getStatus(), ExportStatus.COMPLETED.getValue())) {
+            if (exportToCsv != null && exportToCsv.getStatus().equals(ExportStatus.COMPLETED)) {
                 Bitstream bitstream = bitstreamService.find(context, exportToCsv.getBitstreamId());
 
                 BitstreamFormat format = bitstream.getFormat(context);

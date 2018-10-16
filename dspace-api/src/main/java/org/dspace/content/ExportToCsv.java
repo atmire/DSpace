@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -12,6 +14,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+
+import org.dspace.export.ExportStatus;
 
 @Entity
 @Table(name = "export_csv_file")
@@ -31,7 +35,8 @@ public class ExportToCsv implements Serializable {
     private UUID bitstreamId;
 
     @Column(name = "status")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private ExportStatus status;
 
     public DSpaceObject getDso() {
         return dso;
@@ -57,11 +62,11 @@ public class ExportToCsv implements Serializable {
         this.bitstreamId = bitstreamId;
     }
 
-    public String getStatus() {
+    public ExportStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(ExportStatus status) {
         this.status = status;
     }
 

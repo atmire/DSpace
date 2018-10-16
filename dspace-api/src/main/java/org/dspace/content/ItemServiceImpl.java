@@ -32,6 +32,7 @@ import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.BundleService;
 import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.CommunityService;
+import org.dspace.content.service.ExportToCsvService;
 import org.dspace.content.service.InstallItemService;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.MetadataSchemaService;
@@ -94,7 +95,8 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
     protected HarvestedItemService harvestedItemService;
     @Autowired(required = true)
     protected ConfigurationService configurationService;
-
+    @Autowired
+    protected ExportToCsvService exportToCsvService;
     @Autowired(required = true)
     protected WorkspaceItemService workspaceItemService;
     @Autowired(required = true)
@@ -634,6 +636,7 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
     @Override
     public void delete(Context context, Item item) throws SQLException, AuthorizeException, IOException {
         authorizeService.authorizeAction(context, item, Constants.DELETE);
+        exportToCsvService.deleteAttachedExportToCsv(context, item);
         rawDelete(context, item);
     }
 

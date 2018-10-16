@@ -32,7 +32,7 @@ public class ExportToCsvConverter
         exportToCsvRest.setDsoUuid(obj.getDso().getID());
         exportToCsvRest.setDate(obj.getDate());
 
-        if (StringUtils.equals(obj.getStatus(), ExportStatus.COMPLETED.getValue())) {
+        if (obj.getStatus().equals(ExportStatus.COMPLETED)) {
             Bitstream linkedBitstream = null;
 
             try {

@@ -1,9 +1,11 @@
 package org.dspace.content.service;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.DSpaceObject;
@@ -30,4 +32,10 @@ public interface ExportToCsvService {
     public void update(Context context, ExportToCsv exportToCsv) throws SQLException, AuthorizeException;
 
     public void delete(Context context, ExportToCsv exportToCsv) throws SQLException, AuthorizeException;
+
+    public void create(Context context, UUID uuid, Date exportToCsvDate);
+
+    public void deleteAttachedExportToCsv(Context context, DSpaceObject dSpaceObject)
+        throws SQLException, AuthorizeException,
+        IOException;
 }
