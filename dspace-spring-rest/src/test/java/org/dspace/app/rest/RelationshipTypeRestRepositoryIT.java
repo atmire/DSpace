@@ -58,23 +58,6 @@ public class RelationshipTypeRestRepositoryIT extends AbstractControllerIntegrat
         runDSpaceScript("initialize-entities", "-f", pathToFile);
     }
 
-    @After
-    public void destroy() throws SQLException, AuthorizeException {
-
-        //Clean up the database for the next test
-        context.turnOffAuthorisationSystem();
-        List<RelationshipType> relationshipTypeList = relationshipTypeService.findAll(context);
-        List<EntityType> entityTypeList = entityTypeService.findAll(context);
-
-        for (RelationshipType relationshipType : relationshipTypeList) {
-            relationshipTypeService.delete(context, relationshipType);
-        }
-
-        for (EntityType entityType : entityTypeList) {
-            entityTypeService.delete(context, entityType);
-        }
-        context.restoreAuthSystemState();
-    }
     @Test
     public void findAllRelationshipTypesTest() throws SQLException {
         assertEquals(8, relationshipTypeService.findAll(context).size());
