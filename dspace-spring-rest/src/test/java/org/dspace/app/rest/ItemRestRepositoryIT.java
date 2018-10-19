@@ -345,7 +345,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    public void deleteOneArchivedTest() throws Exception {
+    public void deleteOneArchivedTest2() throws Exception {
         context.turnOffAuthorisationSystem();
 
         //** GIVEN **
@@ -425,8 +425,6 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                                .withAuthor("Smith, Donald").withAuthor("Doe, John")
                                .withSubject("ExtraEntry")
                                .build();
-
-        makeUserAdmin();
 
         // A token must be provided for withdraw operation. The person
         // is used in the provenance note.
@@ -591,7 +589,6 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                                .withdrawn()
                                .build();
 
-        makeUserAdmin();
 
         String token = getAuthToken(eperson.getEmail(), password);
 
@@ -652,7 +649,6 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                                .withdrawn()
                                .build();
 
-        makeUserAdmin();
 
         // A token must be provided for reinstate operation. The person
         // is used in the provenance note.
@@ -805,7 +801,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                                .withIssueDate("2017-10-17")
                                .withAuthor("Smith, Donald").withAuthor("Doe, John")
                                .withSubject("ExtraEntry")
-                               .makeUnDiscoverable()
+                               .makePrivate()
                                .build();
 
         String token = getAuthToken(admin.getEmail(), password);
@@ -858,7 +854,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                                .withIssueDate("2017-10-17")
                                .withAuthor("Smith, Donald").withAuthor("Doe, John")
                                .withSubject("ExtraEntry")
-                               .makeUnDiscoverable()
+                               .makePrivate()
                                .build();
 
         String token = getAuthToken(admin.getEmail(), password);
@@ -901,7 +897,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                                .withIssueDate("2017-10-17")
                                .withAuthor("Smith, Donald").withAuthor("Doe, John")
                                .withSubject("ExtraEntry")
-                               .makeUnDiscoverable()
+                               .makePrivate()
                                .build();
 
         String token = getAuthToken(eperson.getEmail(), password);
@@ -1086,7 +1082,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                                .withIssueDate("2017-10-17")
                                .withAuthor("Smith, Donald").withAuthor("Doe, John")
                                .withSubject("ExtraEntry")
-                               .makeUnDiscoverable()
+                               .makePrivate()
                                .build();
 
         String token = getAuthToken(admin.getEmail(), password);
@@ -1135,7 +1131,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                                           .withName("Parent Community")
                                           .build();
         Collection col1 = CollectionBuilder
-                .createCollection(context, parentCommunity).withName("Collection 1").build();
+            .createCollection(context, parentCommunity).withName("Collection 1").build();
 
         //2. One public item, one workspace item and one template item.
         Item publicItem = ItemBuilder.createItem(context, col1)
@@ -1150,10 +1146,10 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         Bitstream bitstream = null;
         try (InputStream is = IOUtils.toInputStream(bitstreamContent, CharEncoding.UTF_8)) {
             bitstream = BitstreamBuilder.
-                                             createBitstream(context, publicItem, is)
-                                         .withName("Bitstream1")
-                                         .withMimeType("text/plain")
-                                         .build();
+                                            createBitstream(context, publicItem, is)
+                                        .withName("Bitstream1")
+                                        .withMimeType("text/plain")
+                                        .build();
         }
 
         // Check publicItem creation
@@ -1165,15 +1161,15 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._links.self.href", Matchers
-                           .containsString("/api/core/items/" + publicItem.getID() + "/bitstreams")));
+                       .containsString("/api/core/items/" + publicItem.getID() + "/bitstreams")));
 
         String token = getAuthToken(admin.getEmail(), password);
 
         //Delete public item
         getClient(token).perform(delete("/api/core/items/" + publicItem.getID()))
-                   .andExpect(status().is(204));
+                        .andExpect(status().is(204));
 
-
+    }
     @Test
     public void deleteOneTemplateTest() throws Exception {
         context.turnOffAuthorisationSystem();
@@ -1312,7 +1308,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                 .withIssueDate("2017-10-17")
                 .withAuthor("Smith, Donald").withAuthor("Doe, John")
                 .withSubject("ExtraEntry")
-                .makeUnDiscoverable()
+                .makePrivate()
                 .build();
 
         context.restoreAuthSystemState();

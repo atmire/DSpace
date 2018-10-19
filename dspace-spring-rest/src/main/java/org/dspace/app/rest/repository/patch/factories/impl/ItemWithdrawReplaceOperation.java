@@ -30,20 +30,10 @@ public class ItemWithdrawReplaceOperation extends ReplacePatchOperation<ItemRest
 
     private static final Logger log = Logger.getLogger(ItemWithdrawReplaceOperation.class);
 
-    @Override
-    public ItemRest perform(ItemRest item, Operation operation)
-            throws UnprocessableEntityException, PatchBadRequestException {
-
-        return replace(item, operation);
-
-    }
 
     @Override
-    public ItemRest replace(ItemRest item, Operation operation)
-            throws PatchBadRequestException, UnprocessableEntityException {
+    public ItemRest replace(ItemRest item, Operation operation) {
 
-        checkOperationValue(operation.getValue());
-        checkModelForExistingValue(item.getWithdrawn());
         Boolean withdraw = getBooleanOperationValue(operation.getValue());
 
         // This is a request to withdraw the item.

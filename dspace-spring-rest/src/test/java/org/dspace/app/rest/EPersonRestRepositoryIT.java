@@ -979,10 +979,10 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         // This will fail.
         ReplaceOperation replaceOperation3 = new ReplaceOperation("/cert", "false");
         // This will fail. The path does not exist.
-        ReplaceOperation replaceOperation3 = new ReplaceOperation("/nonexistentPath", "somevalue");
-        ops.add(replaceOperation3);
-        ReplaceOperation replaceOperation4 = new ReplaceOperation("/certificate", "false");
+        ReplaceOperation replaceOperation4 = new ReplaceOperation("/nonexistentPath", "somevalue");
         ops.add(replaceOperation4);
+        ReplaceOperation replaceOperation5 = new ReplaceOperation("/certificate", "false");
+        ops.add(replaceOperation5);
         patchBody = getPatchContent(ops);
 
         // The 3rd operations should result in bad request

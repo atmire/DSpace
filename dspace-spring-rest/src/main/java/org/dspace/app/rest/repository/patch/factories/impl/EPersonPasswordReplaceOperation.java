@@ -33,18 +33,6 @@ public class EPersonPasswordReplaceOperation extends ReplacePatchOperation<EPers
     }
 
     @Override
-    EPersonRest replace(EPersonRest eperson, Operation operation) throws PatchBadRequestException {
-
-        // The value must not be null.
-        checkOperationValue(operation.getValue());
-        /*
-         * TODO: the password field in eperson rest model is always null (initially) since
-         * the password value is not set by eperson converter.fromModel() method. So for now,
-         * not calling checkModelForExistingValue() or throwing error when replacing what
-         * appears to be a non-existent value.
-         */
-        eperson.setPassword((String) operation.getValue());
-        return eperson;
     void checkModelForExistingValue(EPersonRest resource) {
         /*
          * FIXME: the password field in eperson rest model is always null because

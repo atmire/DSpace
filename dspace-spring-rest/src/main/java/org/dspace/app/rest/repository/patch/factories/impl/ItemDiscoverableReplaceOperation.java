@@ -1,3 +1,4 @@
+
 /**
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
@@ -33,8 +34,6 @@ public class ItemDiscoverableReplaceOperation extends ReplacePatchOperation<Item
     @Override
     public ItemRest replace(ItemRest item, Operation operation) {
 
-        checkOperationValue(operation.getValue());
-        checkModelForExistingValue(item.getDiscoverable());
         Boolean discoverable = getBooleanOperationValue(operation.getValue());
         item.setDiscoverable(discoverable);
         return item;

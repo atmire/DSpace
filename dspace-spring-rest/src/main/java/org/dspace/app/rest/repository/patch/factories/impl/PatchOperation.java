@@ -22,7 +22,7 @@ import org.springframework.data.rest.webmvc.json.patch.LateObjectEvaluator;
  * @author Michael Spalti
  */
 public abstract class PatchOperation<R extends RestModel, T>
-        implements ResourcePatchOperation<R> {
+    implements ResourcePatchOperation<R> {
 
     /**
      * Updates the rest model by applying the patch operation.

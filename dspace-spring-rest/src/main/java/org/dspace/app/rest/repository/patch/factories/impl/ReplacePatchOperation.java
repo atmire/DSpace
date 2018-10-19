@@ -20,10 +20,6 @@ import org.dspace.app.rest.model.patch.Operation;
 public abstract class ReplacePatchOperation<R extends RestModel, T extends Object>
         extends PatchOperation<R, T> {
 
-    @Override
-    public abstract R perform(R resource, Operation operation)
-            throws PatchBadRequestException;
-
     /**
      * Implements the patch operation for replace operations.
      * Before performing the replace operation this method checks

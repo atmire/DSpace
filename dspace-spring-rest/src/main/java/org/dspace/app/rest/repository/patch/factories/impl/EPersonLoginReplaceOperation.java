@@ -25,15 +25,11 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class EPersonLoginReplaceOperation extends ReplacePatchOperation<EPersonRest, Boolean>
-        implements ResourcePatchOperation<EPersonRest> {
-
+    implements ResourcePatchOperation<EPersonRest> {
 
     @Override
-    public EPersonRest replace(EPersonRest eperson, Operation operation)
-            throws PatchBadRequestException {
+    public EPersonRest replace(EPersonRest eperson, Operation operation) {
 
-        checkOperationValue(operation.getValue());
-        checkModelForExistingValue(eperson.isCanLogIn());
         Boolean canLogin = getBooleanOperationValue(operation.getValue());
         eperson.setCanLogIn(canLogin);
         return eperson;

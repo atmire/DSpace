@@ -25,21 +25,11 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class EPersonCertificateReplaceOperation extends ReplacePatchOperation<EPersonRest, Boolean>
-        implements ResourcePatchOperation<EPersonRest> {
+    implements ResourcePatchOperation<EPersonRest> {
 
     @Override
-    public EPersonRest perform(EPersonRest resource, Operation operation)
-            throws PatchBadRequestException {
+    public EPersonRest replace(EPersonRest eperson, Operation operation) {
 
-        return replace(resource, operation);
-    }
-
-    @Override
-    public EPersonRest replace(EPersonRest eperson, Operation operation)
-            throws PatchBadRequestException {
-
-        checkOperationValue(operation.getValue());
-        checkModelForExistingValue(eperson.isRequireCertificate());
         Boolean requireCert = getBooleanOperationValue(operation.getValue());
         eperson.setRequireCertificate(requireCert);
         return eperson;

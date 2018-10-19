@@ -54,15 +54,13 @@ public class WorkspaceItemDAOImpl extends AbstractHibernateDAO<WorkspaceItem> im
     @Override
     public List<WorkspaceItem> findByEPerson(Context context, EPerson ep, Integer limit, Integer offset)
         throws SQLException {
-        Criteria criteria = createCriteria(context, WorkspaceItem.class, "wi");
-        criteria.addOrder(Order.asc("workspaceItemId"));
-        criteria.createAlias("wi.item", "item");
-        criteria.createAlias("item.submitter", "submitter");
-
-        criteria.add(Restrictions.eq("submitter.id", ep.getID()));
-        criteria.setFirstResult(offset);
-        criteria.setMaxResults(limit);
-        return list(criteria);
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, WorkspaceItem.class);
+        Root<WorkspaceItem> workspaceItemRoot = criteriaQuery.from(WorkspaceItem.class);
+        criteriaQuery.select(workspaceItemRoot);
+        criteriaQuery.where(criteriaBuilder.equal(workspaceItemRoot.get(WorkspaceItem_.item).get("submitter"), ep));
+        criteriaQuery.orderBy(criteriaBuilder.asc(workspaceItemRoot.get(WorkspaceItem_.workspaceItemId)));
+        return list(context, criteriaQuery, false, WorkspaceItem.class, limit, offset);
     }
 
     @Override

@@ -322,7 +322,7 @@ public class BrowsesResourceControllerIT extends AbstractControllerIntegrationTe
                                       .withIssueDate("2015-03-12")
                                       .withAuthor("Duck, Donald")
                                       .withSubject("Cartoons").withSubject("Ducks")
-                                      .makeUnDiscoverable()
+                                      .makePrivate()
                                       .build();
 
         //4. An item with an item-level embargo
