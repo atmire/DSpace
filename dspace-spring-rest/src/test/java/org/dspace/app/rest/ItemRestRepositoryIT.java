@@ -428,7 +428,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // A token must be provided for withdraw operation. The person
         // is used in the provenance note.
-        String token = getAuthToken(eperson.getEmail(), password);
+        String token = getAuthToken(admin.getEmail(), password);
 
         List<Operation> ops = new ArrayList<Operation>();
         ReplaceOperation replaceOperation = new ReplaceOperation("/withdrawn", "true");
@@ -590,7 +590,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                                .build();
 
 
-        String token = getAuthToken(eperson.getEmail(), password);
+        String token = getAuthToken(admin.getEmail(), password);
 
         List<Operation> ops = new ArrayList<Operation>();
         ReplaceOperation replaceOperation = new ReplaceOperation("/withdrawn", null);
@@ -652,7 +652,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // A token must be provided for reinstate operation. The person
         // is used in the provenance note.
-        String token = getAuthToken(eperson.getEmail(), password);
+        String token = getAuthToken(admin.getEmail(), password);
 
         List<Operation> ops = new ArrayList<Operation>();
         ReplaceOperation replaceOperation = new ReplaceOperation("/withdrawn", "false");

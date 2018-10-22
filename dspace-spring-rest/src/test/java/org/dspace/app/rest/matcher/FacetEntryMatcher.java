@@ -94,4 +94,12 @@ public class FacetEntryMatcher {
                            not(hasJsonPath("$.next.href", containsString(path))));
     }
 
+    public static Matcher<? super Object> entityTypeFacet(boolean hasNext) {
+        return allOf(
+            hasJsonPath("$.name", is("entityType")),
+            hasJsonPath("$.facetLimit", any(Integer.class)),
+            hasJsonPath("$._links.self.href", containsString("api/discover/facets/entityType")),
+            hasJsonPath("$._links", matchNextLink(hasNext, "api/discover/facets/entityType"))
+        );
+    }
 }

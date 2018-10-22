@@ -129,4 +129,9 @@ public class ItemBuilder extends AbstractDSpaceObjectBuilder<Item> {
         return itemService;
     }
 
+    @Override
+    protected int getPriority() {
+        return Integer.MAX_VALUE;
+    }
+
 }

@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -27,8 +28,10 @@ import org.dspace.app.rest.matcher.RelationshipTypeMatcher;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.EntityType;
+import org.dspace.content.Relationship;
 import org.dspace.content.RelationshipType;
 import org.dspace.content.service.EntityTypeService;
+import org.dspace.content.service.RelationshipService;
 import org.dspace.content.service.RelationshipTypeService;
 import org.dspace.services.ConfigurationService;
 import org.h2.util.StringUtils;
@@ -49,6 +52,9 @@ public class RelationshipTypeRestRepositoryIT extends AbstractControllerIntegrat
     @Autowired
     private ConfigurationService configurationService;
 
+    @Autowired
+    private RelationshipService relationshipService;
+
     @Before
     public void setup() throws Exception {
 
@@ -58,9 +64,41 @@ public class RelationshipTypeRestRepositoryIT extends AbstractControllerIntegrat
         runDSpaceScript("initialize-entities", "-f", pathToFile);
     }
 
+    @After
+    public void destroy() throws Exception {
+        //Clean up the database for the next test
+        context.turnOffAuthorisationSystem();
+        List<RelationshipType> relationshipTypeList = relationshipTypeService.findAll(context);
+        List<EntityType> entityTypeList = entityTypeService.findAll(context);
+        List<Relationship> relationships = relationshipService.findAll(context);
+
+        Iterator<Relationship> relationshipIterator = relationships.iterator();
+        while(relationshipIterator.hasNext()) {
+            Relationship relationship = relationshipIterator.next();
+            relationshipIterator.remove();
+            relationshipService.delete(context, relationship);
+        }
+
+        Iterator<RelationshipType> relationshipTypeIterator = relationshipTypeList.iterator();
+        while(relationshipTypeIterator.hasNext()) {
+            RelationshipType relationshipType = relationshipTypeIterator.next();
+            relationshipTypeIterator.remove();
+            relationshipTypeService.delete(context, relationshipType);
+        }
+
+        Iterator<EntityType> entityTypeIterator = entityTypeList.iterator();
+        while(entityTypeIterator.hasNext()) {
+            EntityType entityType = entityTypeIterator.next();
+            entityTypeIterator.remove();
+            entityTypeService.delete(context, entityType);
+        }
+
+        super.destroy();
+    }
+
     @Test
     public void findAllRelationshipTypesTest() throws SQLException {
-        assertEquals(8, relationshipTypeService.findAll(context).size());
+        assertEquals(9, relationshipTypeService.findAll(context).size());
     }
 
     @Test
@@ -151,7 +189,7 @@ public class RelationshipTypeRestRepositoryIT extends AbstractControllerIntegrat
                    //We expect a 200 OK status
                    .andExpect(status().isOk())
                    //The type has to be 'discover'
-                   .andExpect(jsonPath("$.page.totalElements", is(8)))
+                   .andExpect(jsonPath("$.page.totalElements", is(9)))
                    //There needs to be a self link to this endpoint
                    .andExpect(jsonPath("$._links.self.href", containsString("api/core/relationshiptypes")))
                    //We have 4 facets in the default configuration, they need to all be present in the embedded section
@@ -163,7 +201,8 @@ public class RelationshipTypeRestRepositoryIT extends AbstractControllerIntegrat
                        RelationshipTypeMatcher.matchRelationshipTypeEntry(relationshipTypes.get(4)),
                        RelationshipTypeMatcher.matchRelationshipTypeEntry(relationshipTypes.get(5)),
                        RelationshipTypeMatcher.matchRelationshipTypeEntry(relationshipTypes.get(6)),
-                       RelationshipTypeMatcher.matchRelationshipTypeEntry(relationshipTypes.get(7)))
+                       RelationshipTypeMatcher.matchRelationshipTypeEntry(relationshipTypes.get(7)),
+                       RelationshipTypeMatcher.matchRelationshipTypeEntry(relationshipTypes.get(8)))
                    ));
     }
 
