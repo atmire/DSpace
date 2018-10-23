@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.dspace.app.rest.matcher.EntityTypeMatcher;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
-import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.EntityType;
 import org.dspace.content.Relationship;
 import org.dspace.content.RelationshipType;
@@ -68,21 +67,21 @@ public class EntityTypeRestRepositoryIT extends AbstractControllerIntegrationTes
         List<Relationship> relationships = relationshipService.findAll(context);
 
         Iterator<Relationship> relationshipIterator = relationships.iterator();
-        while(relationshipIterator.hasNext()) {
+        while (relationshipIterator.hasNext()) {
             Relationship relationship = relationshipIterator.next();
             relationshipIterator.remove();
             relationshipService.delete(context, relationship);
         }
 
         Iterator<RelationshipType> relationshipTypeIterator = relationshipTypeList.iterator();
-        while(relationshipTypeIterator.hasNext()) {
+        while (relationshipTypeIterator.hasNext()) {
             RelationshipType relationshipType = relationshipTypeIterator.next();
             relationshipTypeIterator.remove();
             relationshipTypeService.delete(context, relationshipType);
         }
 
         Iterator<EntityType> entityTypeIterator = entityTypeList.iterator();
-        while(entityTypeIterator.hasNext()) {
+        while (entityTypeIterator.hasNext()) {
             EntityType entityType = entityTypeIterator.next();
             entityTypeIterator.remove();
             entityTypeService.delete(context, entityType);
@@ -90,6 +89,7 @@ public class EntityTypeRestRepositoryIT extends AbstractControllerIntegrationTes
 
         super.destroy();
     }
+
     @Test
     public void findAllEntityTypesSizeTest() throws SQLException {
         assertEquals(7, entityTypeService.findAll(context).size());
@@ -136,6 +136,7 @@ public class EntityTypeRestRepositoryIT extends AbstractControllerIntegrationTes
         String type = "JournalIssue";
         checkEntityType(type);
     }
+
     private void checkEntityType(String type) throws SQLException {
         EntityType entityType = entityTypeService.findByEntityType(context, type);
         assertNotNull(entityType);
@@ -155,13 +156,16 @@ public class EntityTypeRestRepositoryIT extends AbstractControllerIntegrationTes
                    .andExpect(jsonPath("$._links.self.href", containsString("api/core/entitytypes")))
                    //We have 4 facets in the default configuration, they need to all be present in the embedded section
                    .andExpect(jsonPath("$._embedded.entitytypes", containsInAnyOrder(
-                       EntityTypeMatcher.matchEntityTypeEntry(entityTypeService.findByEntityType(context, "Publication")),
+                       EntityTypeMatcher
+                           .matchEntityTypeEntry(entityTypeService.findByEntityType(context, "Publication")),
                        EntityTypeMatcher.matchEntityTypeEntry(entityTypeService.findByEntityType(context, "Person")),
                        EntityTypeMatcher.matchEntityTypeEntry(entityTypeService.findByEntityType(context, "Project")),
                        EntityTypeMatcher.matchEntityTypeEntry(entityTypeService.findByEntityType(context, "OrgUnit")),
                        EntityTypeMatcher.matchEntityTypeEntry(entityTypeService.findByEntityType(context, "Journal")),
-                       EntityTypeMatcher.matchEntityTypeEntry(entityTypeService.findByEntityType(context, "JournalVolume")),
-                       EntityTypeMatcher.matchEntityTypeEntry(entityTypeService.findByEntityType(context, "JournalIssue"))
+                       EntityTypeMatcher
+                           .matchEntityTypeEntry(entityTypeService.findByEntityType(context, "JournalVolume")),
+                       EntityTypeMatcher
+                           .matchEntityTypeEntry(entityTypeService.findByEntityType(context, "JournalIssue"))
                    )));
     }
 }

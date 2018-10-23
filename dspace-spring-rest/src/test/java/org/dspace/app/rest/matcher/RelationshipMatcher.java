@@ -21,21 +21,28 @@ import org.hamcrest.Matcher;
 public class RelationshipMatcher {
 
     public static Matcher<? super Object> matchRelationship(Relationship relationship) {
-        return matchRelationshipExplicitValues(relationship.getLeftItem(), relationship.getRightItem(), relationship.getLeftPlace(), relationship.getRightPlace(), relationship.getRelationshipType());
+        return matchRelationshipExplicitValues(relationship.getLeftItem(), relationship.getRightItem(),
+                                               relationship.getLeftPlace(), relationship.getRightPlace(),
+                                               relationship.getRelationshipType());
     }
 
-    private static Matcher<? super Object> matchRelationshipExplicitValues(Item leftItem, Item rightItem, int leftPlace, int rightPlace, RelationshipType relationshipType) {
-        return matchRelationshipExplicitObjectValues(leftItem.getID(), rightItem.getID(), leftPlace, rightPlace, relationshipType);
+    private static Matcher<? super Object> matchRelationshipExplicitValues(Item leftItem, Item rightItem, int leftPlace,
+                                                                           int rightPlace,
+                                                                           RelationshipType relationshipType) {
+        return matchRelationshipExplicitObjectValues(leftItem.getID(), rightItem.getID(), leftPlace, rightPlace,
+                                                     relationshipType);
     }
 
-    private static Matcher<? super Object> matchRelationshipExplicitObjectValues(UUID leftId, UUID rightId, int leftPlace, int rightPlace,
-                                                              RelationshipType relationshipType) {
+    private static Matcher<? super Object> matchRelationshipExplicitObjectValues(UUID leftId, UUID rightId,
+                                                                                 int leftPlace, int rightPlace,
+                                                                                 RelationshipType relationshipType) {
         return allOf(
-            hasJsonPath("$.leftId",is(leftId.toString())),
+            hasJsonPath("$.leftId", is(leftId.toString())),
             hasJsonPath("$.rightId", is(rightId.toString())),
             hasJsonPath("$.leftPlace", is(leftPlace)),
             hasJsonPath("$.rightPlace", is(rightPlace)),
-            hasJsonPath("$._embedded.relationshipType", RelationshipTypeMatcher.matchRelationshipTypeEntry(relationshipType))
+            hasJsonPath("$._embedded.relationshipType",
+                        RelationshipTypeMatcher.matchRelationshipTypeEntry(relationshipType))
         );
     }
 }

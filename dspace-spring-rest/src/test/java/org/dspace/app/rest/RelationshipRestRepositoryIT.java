@@ -14,7 +14,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.File;
-import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -25,7 +24,6 @@ import org.dspace.app.rest.builder.RelationshipBuilder;
 import org.dspace.app.rest.matcher.PageMatcher;
 import org.dspace.app.rest.matcher.RelationshipMatcher;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
-import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.dspace.content.EntityType;
@@ -75,21 +73,21 @@ public class RelationshipRestRepositoryIT extends AbstractControllerIntegrationT
         List<Relationship> relationships = relationshipService.findAll(context);
 
         Iterator<Relationship> relationshipIterator = relationships.iterator();
-        while(relationshipIterator.hasNext()) {
+        while (relationshipIterator.hasNext()) {
             Relationship relationship = relationshipIterator.next();
             relationshipIterator.remove();
             relationshipService.delete(context, relationship);
         }
 
         Iterator<RelationshipType> relationshipTypeIterator = relationshipTypeList.iterator();
-        while(relationshipTypeIterator.hasNext()) {
+        while (relationshipTypeIterator.hasNext()) {
             RelationshipType relationshipType = relationshipTypeIterator.next();
             relationshipTypeIterator.remove();
             relationshipTypeService.delete(context, relationshipType);
         }
 
         Iterator<EntityType> entityTypeIterator = entityTypeList.iterator();
-        while(entityTypeIterator.hasNext()) {
+        while (entityTypeIterator.hasNext()) {
             EntityType entityType = entityTypeIterator.next();
             entityTypeIterator.remove();
             entityTypeService.delete(context, entityType);
@@ -158,30 +156,47 @@ public class RelationshipRestRepositoryIT extends AbstractControllerIntegrationT
 
         RelationshipType isOrgUnitOfPersonRelationshipType = relationshipTypeService.findbyTypesAndLabels(context,
                                                                                                           entityTypeService
-                                                                                                              .findByEntityType(context,
-                                                                                                                                "Person"),
+                                                                                                              .findByEntityType(
+                                                                                                                  context,
+                                                                                                                  "Person"),
                                                                                                           entityTypeService
-                                                                                                              .findByEntityType(context,
-                                                                                                                                "OrgUnit"),
+                                                                                                              .findByEntityType(
+                                                                                                                  context,
+                                                                                                                  "OrgUnit"),
                                                                                                           "isOrgUnitOfPerson",
                                                                                                           "isPersonOfOrgUnit");
 
         RelationshipType isOrgUnitOfProjectRelationshipType = relationshipTypeService.findbyTypesAndLabels(context,
-                                                                                                           entityTypeService.findByEntityType(context, "Project"),
-                                                                                                           entityTypeService.findByEntityType(context, "OrgUnit"),
+                                                                                                           entityTypeService
+                                                                                                               .findByEntityType(
+                                                                                                                   context,
+                                                                                                                   "Project"),
+                                                                                                           entityTypeService
+                                                                                                               .findByEntityType(
+                                                                                                                   context,
+                                                                                                                   "OrgUnit"),
                                                                                                            "isOrgUnitOfProject",
                                                                                                            "isProjectOfOrgUnit");
 
         RelationshipType isAuthorOfPublicationRelationshipType = relationshipTypeService.findbyTypesAndLabels(context,
-                                                                                                              entityTypeService.findByEntityType(context, "Publication"),
-                                                                                                              entityTypeService.findByEntityType(context, "Person"),
+                                                                                                              entityTypeService
+                                                                                                                  .findByEntityType(
+                                                                                                                      context,
+                                                                                                                      "Publication"),
+                                                                                                              entityTypeService
+                                                                                                                  .findByEntityType(
+                                                                                                                      context,
+                                                                                                                      "Person"),
                                                                                                               "isAuthorOfPublication",
                                                                                                               "isPublicationOfAuthor");
-        Relationship relationship1 = RelationshipBuilder.createRelationshipBuilder(context, auhor1, orgUnit1, isOrgUnitOfPersonRelationshipType).build();
+        Relationship relationship1 = RelationshipBuilder
+            .createRelationshipBuilder(context, auhor1, orgUnit1, isOrgUnitOfPersonRelationshipType).build();
 
-        Relationship relationship2 = RelationshipBuilder.createRelationshipBuilder(context, project1, orgUnit1, isOrgUnitOfProjectRelationshipType).build();
+        Relationship relationship2 = RelationshipBuilder
+            .createRelationshipBuilder(context, project1, orgUnit1, isOrgUnitOfProjectRelationshipType).build();
 
-        Relationship relationship3 = RelationshipBuilder.createRelationshipBuilder(context, publication, auhor1, isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship3 = RelationshipBuilder
+            .createRelationshipBuilder(context, publication, auhor1, isAuthorOfPublicationRelationshipType).build();
 
         getClient().perform(get("/api/core/relationships"))
 
@@ -193,5 +208,6 @@ public class RelationshipRestRepositoryIT extends AbstractControllerIntegrationT
                        RelationshipMatcher.matchRelationship(relationship2),
                        RelationshipMatcher.matchRelationship(relationship3)
                    )))
-        ;    }
+        ;
+    }
 }
