@@ -171,18 +171,15 @@ public class RelationshipTypeRestRepositoryIT extends AbstractControllerIntegrat
 
     private void checkRelationshipType(String leftType, String rightType, String leftLabel, String rightLabel)
         throws SQLException {
-        RelationshipType relationshipType = relationshipTypeService.findbyTypesAndLabels(context,
-                                                                                         entityTypeService
-                                                                                             .findByEntityType(context,
-                                                                                                               leftType),
-                                                                                         entityTypeService
-                                                                                             .findByEntityType(context,
-                                                                                                               rightType),
-                                                                                         leftLabel,
-                                                                                         rightLabel);
+        RelationshipType relationshipType = relationshipTypeService
+            .findbyTypesAndLabels(context, entityTypeService.findByEntityType(context, leftType),
+                                  entityTypeService.findByEntityType(context, rightType),
+                                  leftLabel, rightLabel);
         assertNotNull(relationshipType);
-        assertEquals(entityTypeService.findByEntityType(context, leftType), relationshipType.getLeftType());
-        assertEquals(entityTypeService.findByEntityType(context, rightType), relationshipType.getRightType());
+        assertEquals(entityTypeService.findByEntityType(context, leftType),
+                     relationshipType.getLeftType());
+        assertEquals(entityTypeService.findByEntityType(context, rightType),
+                     relationshipType.getRightType());
         assertEquals(leftLabel, relationshipType.getLeftLabel());
         assertEquals(rightLabel, relationshipType.getRightLabel());
     }

@@ -20,6 +20,8 @@ import org.hamcrest.Matcher;
 
 public class RelationshipMatcher {
 
+    private RelationshipMatcher() {}
+
     public static Matcher<? super Object> matchRelationship(Relationship relationship) {
         return matchRelationshipExplicitValues(relationship.getLeftItem(), relationship.getRightItem(),
                                                relationship.getLeftPlace(), relationship.getRightPlace(),

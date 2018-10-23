@@ -17,6 +17,9 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
 public class EntityTypeMatcher {
+
+    private EntityTypeMatcher() {}
+
     public static Matcher<? super Object> matchEntityTypeEntry(EntityType entityType) {
         return matchEntityTypeExplicitValuesEntry(entityType.getId(), entityType.getLabel());
     }

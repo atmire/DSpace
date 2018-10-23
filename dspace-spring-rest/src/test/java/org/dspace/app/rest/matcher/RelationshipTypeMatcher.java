@@ -18,6 +18,9 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
 public class RelationshipTypeMatcher {
+
+    private RelationshipTypeMatcher() {}
+
     public static Matcher<? super Object> matchRelationshipTypeEntry(RelationshipType relationshipType) {
         return matchRelationshipTypeExplicitEntityTypes(relationshipType, relationshipType.getLeftType(),
                                                         relationshipType.getRightType());
@@ -46,14 +49,9 @@ public class RelationshipTypeMatcher {
     }
 
     private static Matcher<? super Object> matchExplicitRelationshipTypeValuesAndExplicitEntityType(int id,
-                                                                                                    String leftLabel,
-                                                                                                    String rightLabel,
-                                                                                                    int leftMinCardinality,
-                                                                                                    int leftMaxCardinality,
-                                                                                                    int rightMinCardinality,
-                                                                                                    int rightMaxCardinality,
-                                                                                                    EntityType leftEntityType,
-                                                                                                    EntityType rightEntityType) {
+        String leftLabel, String rightLabel, int leftMinCardinality, int leftMaxCardinality,
+        int rightMinCardinality, int rightMaxCardinality, EntityType leftEntityType,
+        EntityType rightEntityType) {
         return matchExplicitRelationshipTypeValuesAndExplicitEntityTypeValues(id, leftLabel, rightLabel,
                                                                               leftMinCardinality, leftMaxCardinality,
                                                                               rightMinCardinality,
@@ -65,16 +63,9 @@ public class RelationshipTypeMatcher {
     }
 
     private static Matcher<? super Object> matchExplicitRelationshipTypeValuesAndExplicitEntityTypeValues(int id,
-                                                                                                          String leftLabel,
-                                                                                                          String rightLabel,
-                                                                                                          int leftMinCardinality,
-                                                                                                          int leftMaxCardinality,
-                                                                                                          int rightMinCardinality,
-                                                                                                          int rightMaxCardinality,
-                                                                                                          int leftEntityTypeId,
-                                                                                                          String leftEntityTypeLabel,
-                                                                                                          int rightEntityTypeId,
-                                                                                                          String rightEntityTypeLabel) {
+        String leftLabel, String rightLabel, int leftMinCardinality, int leftMaxCardinality,
+        int rightMinCardinality, int rightMaxCardinality, int leftEntityTypeId, String leftEntityTypeLabel,
+        int rightEntityTypeId, String rightEntityTypeLabel) {
         return allOf(
             hasJsonPath("$.id", is(id)),
             hasJsonPath("$.leftLabel", is(leftLabel)),
