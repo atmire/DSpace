@@ -131,7 +131,7 @@ public class ExportToCsvServiceImpl implements ExportToCsvService {
         return exportToCsvDAO.findAllByDso(context, ExportToCsv.class, dSpaceObject);
     }
 
-    public void create(Context context, UUID targetUuid, Date exportToCsvDate) {
+    public void performExport(Context context, UUID targetUuid, Date exportToCsvDate) {
         MetadataExport exporter = null;
         InputStream csvInputStream = null;
         DSpaceObject dSpaceObject = null;

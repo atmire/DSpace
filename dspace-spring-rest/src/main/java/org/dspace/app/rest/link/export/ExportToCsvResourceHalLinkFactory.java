@@ -4,6 +4,7 @@ import java.util.LinkedList;
 
 import org.dspace.app.rest.model.ExportToCsvRest;
 import org.dspace.app.rest.model.hateoas.ExportToCsvResource;
+import org.dspace.export.ExportStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,15 @@ public class ExportToCsvResourceHalLinkFactory extends ExportToCsvRestHalLinkFac
                                                                                    exportToCsvRest.getCategory()));
             list.add(buildLink(Link.REL_SELF, uriBuilderSelfLink.build().toString()));
 
+            if (exportToCsvRest.getState().equals(ExportStatus.COMPLETED)) {
+                UriComponentsBuilder uriBuilder = uriBuilder(getMethodOn()
+                                                                 .downloadSpecific(exportToCsvRest.getDsoUuid(),
+                                                                                   exportToCsvRest.getDate().toString()
+                                                                                                  .replace(" ", "T"),
+                                                                                   null,
+                                                                                   null, exportToCsvRest.getType(), exportToCsvRest.getCategory()));
+                list.add(buildLink("content", uriBuilder.build().toString()));
+            }
         }
     }
 
