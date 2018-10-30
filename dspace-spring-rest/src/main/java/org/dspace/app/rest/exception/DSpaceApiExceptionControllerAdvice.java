@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.security.RestAuthenticationService;
+import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.services.ConfigurationService;
 import org.springframework.beans.TypeMismatchException;
@@ -137,14 +138,33 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
         String requestURI = request.getRequestURI();
         String requestEndPath = requestURI.substring(requestURI.lastIndexOf("/") + 1);
 
-        if (StringUtils.equals(configurationService.getProperty("request.item.type"), "all") &&
-            StringUtils.equals(requestEndPath, "content")) {
-            request.setAttribute("redirectLink", request.getScheme() + "://" + request.getServerName() +
-                requestURI.substring(0, requestURI.lastIndexOf("/")) +
-                "/requestcopy");
+        if (StringUtils.equals(requestEndPath, "content")) {
+            String requestItemTypeProperty = configurationService.getProperty("request.item.type");
+            if (StringUtils.equals(requestItemTypeProperty, "all")) {
+                setRequestCopyAttribute(request, requestURI);
+            } else if (StringUtils.equals(requestItemTypeProperty, "logged")) {
+                if (ContextUtil.obtainContext(request).getCurrentUser() == null) {
+                    setLoginAttribute(request);
+                } else {
+                    setRequestCopyAttribute(request, requestURI);
+                }
+            } else if (StringUtils.equals(requestItemTypeProperty, "") || requestItemTypeProperty == null) {
+                setLoginAttribute(request);
+            }
         }
         sendErrorResponse(request, response, ex, "An AccessDenied Exception has occurred",
                           HttpServletResponse.SC_UNAUTHORIZED);
+    }
+
+    private void setLoginAttribute(HttpServletRequest request) {
+        request.setAttribute("redirectLink", request.getScheme() + "://" + request.getServerName() +
+            request.getContextPath() + "/api/authn/login");
+    }
+
+    private void setRequestCopyAttribute(HttpServletRequest request, String requestURI) {
+        request.setAttribute("redirectLink", request.getScheme() + "://" + request.getServerName() +
+            requestURI.substring(0, requestURI.lastIndexOf("/")) +
+            "/requestcopy");
     }
 
 
