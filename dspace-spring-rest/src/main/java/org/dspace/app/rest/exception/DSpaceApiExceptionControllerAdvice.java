@@ -148,6 +148,8 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
                 } else {
                     setRequestCopyAttribute(request, requestURI);
                 }
+            } else if (StringUtils.equals(requestItemTypeProperty, "deny")) {
+                request.setAttribute("noaccess", true);
             } else if (StringUtils.equals(requestItemTypeProperty, "") || requestItemTypeProperty == null) {
                 setLoginAttribute(request);
             }
@@ -157,12 +159,12 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
     }
 
     private void setLoginAttribute(HttpServletRequest request) {
-        request.setAttribute("redirectLink", request.getScheme() + "://" + request.getServerName() +
+        request.setAttribute("login", request.getScheme() + "://" + request.getServerName() +
             request.getContextPath() + "/api/authn/login");
     }
 
     private void setRequestCopyAttribute(HttpServletRequest request, String requestURI) {
-        request.setAttribute("redirectLink", request.getScheme() + "://" + request.getServerName() +
+        request.setAttribute("requestcopy", request.getScheme() + "://" + request.getServerName() +
             requestURI.substring(0, requestURI.lastIndexOf("/")) +
             "/requestcopy");
     }
@@ -183,9 +185,19 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
             public Map<String, Object> getErrorAttributes(RequestAttributes requestAttributes, boolean includeStackTrace) {
                 Map<String, Object> errorAttributes = super.getErrorAttributes(requestAttributes, includeStackTrace);
                 // Customize the default entries in errorAttributes to suit your needs
-                Object redirectLink = requestAttributes.getAttribute("redirectLink", 0);
-                if (redirectLink != null ) {
-                    errorAttributes.put("redirect", redirectLink);
+                Object requestcopy = requestAttributes.getAttribute("requestcopy", 0);
+                if (requestcopy != null ) {
+                    errorAttributes.put("requestcopy", requestcopy);
+                }
+
+                Object loginLink = requestAttributes.getAttribute("login", 0);
+                if (loginLink != null ) {
+                    errorAttributes.put("login", loginLink);
+                }
+
+                Object noaccess = requestAttributes.getAttribute("noaccess", 0);
+                if (noaccess != null ) {
+                    errorAttributes.put("noaccess", null);
                 }
                 return errorAttributes;
             }
