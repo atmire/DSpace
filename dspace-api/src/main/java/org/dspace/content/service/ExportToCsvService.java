@@ -33,7 +33,7 @@ public interface ExportToCsvService {
 
     public void delete(Context context, ExportToCsv exportToCsv) throws SQLException, AuthorizeException;
 
-    public void create(Context context, UUID uuid, Date exportToCsvDate);
+    public void performExport(Context context, UUID uuid, Date exportToCsvDate);
 
     public void deleteAttachedExportToCsv(Context context, DSpaceObject dSpaceObject)
         throws SQLException, AuthorizeException,

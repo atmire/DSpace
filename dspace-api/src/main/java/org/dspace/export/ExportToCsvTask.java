@@ -21,8 +21,13 @@ public class ExportToCsvTask implements Runnable {
     public void run() {
         Context context = new Context();
         context.turnOffAuthorisationSystem();
-        exportToCsvService.create(context, uuid, exportToCsvDate);
-
+        try {
+            exportToCsvService.performExport(context, uuid, exportToCsvDate);
+        } finally {
+            if (context.isValid()) {
+                context.close();
+            }
+        }
 
     }
 

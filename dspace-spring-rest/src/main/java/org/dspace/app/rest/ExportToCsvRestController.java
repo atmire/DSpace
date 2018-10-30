@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.codec.binary.StringUtils;
 import org.dspace.app.rest.converter.ExportToCsvConverter;
 import org.dspace.app.rest.link.HalLinkService;
 import org.dspace.app.rest.model.ExportToCsvRest;
@@ -38,6 +37,7 @@ import org.dspace.usage.UsageEvent;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -75,7 +75,7 @@ public class ExportToCsvRestController {
     private List<DSpaceObjectService<? extends DSpaceObject>> dSpaceObjectServices;
 
     @Autowired
-    @Qualifier("threadPoolTaskExecutor")
+    @Qualifier("exportThreadPoolTaskExecutor")
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "/create")
@@ -123,6 +123,9 @@ public class ExportToCsvRestController {
             }
         }
 
+        if (dSpaceObject == null) {
+            throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
+        }
 
         List<ExportToCsv> list = exportToCsvService.findAllByDso(context, dSpaceObject);
         List<ExportToCsvRest> exportToCsvRests = new LinkedList<>();
