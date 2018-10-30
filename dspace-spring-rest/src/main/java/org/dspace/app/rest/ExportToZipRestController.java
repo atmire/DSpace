@@ -35,12 +35,16 @@ import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.DSpaceObjectService;
 import org.dspace.content.service.ExportToZipService;
 import org.dspace.core.Context;
+import org.dspace.eperson.EPerson;
+import org.dspace.export.ExportStatus;
 import org.dspace.export.ExportToZipTask;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.EventService;
 import org.dspace.usage.UsageEvent;
 import org.dspace.utils.DSpace;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -83,7 +87,9 @@ public class ExportToZipRestController {
     @Autowired(required = true)
     private List<DSpaceObjectService<? extends DSpaceObject>> dSpaceObjectServices;
 
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor = loadThreadPool();
+    @Autowired
+    @Qualifier("threadPoolTaskExecutor")
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -122,14 +128,8 @@ public class ExportToZipRestController {
         return exportToZipResourceWrapper;
     }
 
-    private ThreadPoolTaskExecutor loadThreadPool() {
-        DSpace dspace = new DSpace();
-        org.dspace.kernel.ServiceManager manager = dspace.getServiceManager();
-        return manager.getServiceByName("exportToZipThreadPool", ThreadPoolTaskExecutor.class);
-    }
-
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/create")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "/create")
+    @PreAuthorize("hasPermission(#id, 'EPERSON', 'ADMIN')")
     public ExportToZipResource create(@PathVariable UUID uuid, HttpServletResponse response,
                                       HttpServletRequest request, @PathVariable String model,
                                       @PathVariable String apiCategory)
@@ -147,29 +147,17 @@ public class ExportToZipRestController {
                 break;
             }
         }
-        ExportToZip exportToZip = initializeExportToZip(dSpaceObject, currentDate, context);
-        threadPoolTaskExecutor.submit(new ExportToZipTask(context.getCurrentUser(), dSpaceObject, exportToZip.getID()));
+        ExportToZip exportToZip = exportToZipService.create(context, dSpaceObject);
+        exportToZipService.update(context, exportToZip);
+        context.commit();
+        EPerson currentUser = context.getCurrentUser();
+        threadPoolTaskExecutor.submit(new ExportToZipTask(dSpaceObject.getID(), exportToZip.getDate(), currentUser != null ? currentUser.getID() : null));
         ExportToZipRest exportToZipRest = exportToZipConverter.fromModel(exportToZip, model, apiCategory);
         ExportToZipResource exportToZipResource = new ExportToZipResource(exportToZipRest, utils);
         halLinkService.addLinks(exportToZipResource);
         return exportToZipResource;
     }
 
-    private ExportToZip initializeExportToZip(DSpaceObject dSpaceObject, DCDate currentDate, Context context)
-        throws SQLException, AuthorizeException, ParseException {
-        ExportToZip exportToZip = new ExportToZip();
-        exportToZip.setDso(dSpaceObject);
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String dateString = sf.format(currentDate.toDate());
-        Date date = sf.parse(dateString);
-        exportToZip.setDate(date);
-        exportToZip.setStatus("In Progress");
-        exportToZipService.create(context, exportToZip);
-        exportToZipService.update(context, exportToZip);
-        context.commit();
-        return exportToZip;
-    }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/view/{dateString:.+}")
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -180,8 +168,7 @@ public class ExportToZipRestController {
                                             @PathVariable String apiCategory)
         throws IOException, SQLException, AuthorizeException, ParseException {
 
-        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date date = sf.parse(dateString.replace("T", " "));
+        Date date = new DateTime(dateString).toDate();
         if (date != null) {
             Context context = ContextUtil.obtainContext(request);
             context.turnOffAuthorisationSystem();
@@ -214,8 +201,7 @@ public class ExportToZipRestController {
                                                 @PathVariable String apiCategory)
         throws IOException, SQLException, AuthorizeException, ParseException {
 
-        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date date = sf.parse(dateString.replace("T", " "));
+        Date date = new DateTime(dateString).toDate();
         if (date != null) {
             Context context = ContextUtil.obtainContext(request);
             context.turnOffAuthorisationSystem();
@@ -229,7 +215,7 @@ public class ExportToZipRestController {
                 }
             }
             ExportToZip exportToZip = exportToZipService.findByDsoAndDate(context, dSpaceObject, date);
-            if (exportToZip != null && StringUtils.equals(exportToZip.getStatus(), "completed")) {
+            if (exportToZip != null && exportToZip.getStatus().equals(ExportStatus.COMPLETED)) {
                 Bitstream bitstream = bitstreamService.find(context, exportToZip.getBitstreamId());
 
                 BitstreamFormat format = bitstream.getFormat(context);

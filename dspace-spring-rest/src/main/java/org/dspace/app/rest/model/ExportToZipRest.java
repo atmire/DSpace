@@ -6,13 +6,14 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.dspace.app.rest.ExportToZipRestController;
+import org.dspace.export.ExportStatus;
 
 public class ExportToZipRest implements RestAddressableModel {
 
     @JsonProperty("dso-id")
     private UUID dsoUuid;
     private Date date;
-    private String state;
+    private ExportStatus state;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long size = null;
 
@@ -35,11 +36,11 @@ public class ExportToZipRest implements RestAddressableModel {
         this.date = date;
     }
 
-    public String getState() {
+    public ExportStatus getState() {
         return state;
     }
 
-    public void setState(String state) {
+    public void setState(ExportStatus state) {
         this.state = state;
     }
 
