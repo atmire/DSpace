@@ -1,54 +1,48 @@
+
 package org.dspace.export;
 
+import java.sql.SQLException;
+import java.util.Date;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
-import org.dspace.app.itemexport.factory.ItemExportServiceFactory;
-import org.dspace.content.DSpaceObject;
-import org.dspace.content.ExportToZip;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.ExportToZipService;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
+import org.dspace.eperson.factory.EPersonServiceFactory;
+import org.dspace.eperson.service.EPersonService;
 
 public class ExportToZipTask implements Runnable {
 
-    private static Logger log = Logger.getLogger(ExportToZipTask.class);
+    private static final Logger log = Logger.getLogger(ExportToZipTask.class);
 
-    private DSpaceObject dSpaceObject;
-    private EPerson ePerson;
-    private Integer exportToZipId;
+    private UUID uuid;
+    private Date exportToZipDate;
+    private UUID epersonUuid;
     ExportToZipService exportToZipService = ContentServiceFactory.getInstance().getExportToZipService();
 
-    public ExportToZipTask(EPerson currentUser, DSpaceObject dSpaceObject, Integer exportToZipId) {
-        this.dSpaceObject = dSpaceObject;
-        this.ePerson = currentUser;
-        this.exportToZipId = exportToZipId;
+    public ExportToZipTask(UUID uuid, Date date, UUID epersonUuid) {
+        this.uuid = uuid;
+        this.exportToZipDate = date;
+        this.epersonUuid = epersonUuid;
     }
 
     public void run() {
         Context context = new Context();
+        EPersonService ePersonService = EPersonServiceFactory.getInstance().getEPersonService();
+        EPerson ePerson = null;
         try {
-            ePerson = context.reloadEntity(ePerson);
-            dSpaceObject = context.reloadEntity(dSpaceObject);
-            context.setCurrentUser(ePerson);
-            UUID bitstreamUuid = ItemExportServiceFactory.getInstance()
-                                                         .getItemExportService()
-                                                         .createDownloadableExport(dSpaceObject, context, false, true);
-            ExportToZip exportToZip = exportToZipService.find(context, exportToZipId);
-            if (bitstreamUuid == null) {
-                exportToZipService.delete(context, exportToZip);
-                log.info("Deleted ExportToZip entry with UUID: " + exportToZipId
-                             + ", This record was corrupt and had no bitstreamUUID");
-            } else {
-                exportToZip.setBitstreamId(bitstreamUuid);
-                exportToZip.setStatus("completed");
-            }
-            exportToZipService.update(context, exportToZip);
-            context.commit();
-            context.complete();
-        } catch (Exception e) {
+            ePerson = ePersonService.find(context, epersonUuid);
+        } catch (SQLException e) {
             log.error(e.getMessage(), e);
         }
+        if (ePerson != null) {
+            context.setCurrentUser(ePerson);
+        }
+
+        context.turnOffAuthorisationSystem();
+        exportToZipService.create(context, uuid, exportToZipDate);
     }
+
 }

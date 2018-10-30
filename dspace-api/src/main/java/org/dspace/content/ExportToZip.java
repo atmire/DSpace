@@ -1,53 +1,42 @@
 package org.dspace.content;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.dspace.core.ReloadableEntity;
+import org.dspace.export.ExportStatus;
 
 @Entity
 @Table(name = "export_zip_file")
-public class ExportToZip implements ReloadableEntity<Integer> {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "export_zip_file_id_seq")
-    @SequenceGenerator(name = "export_zip_file_id_seq", sequenceName = "export_zip_file_id_seq", allocationSize = 1)
-    @Column(name = "id")
-    private Integer id;
+public class ExportToZip implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "dso", nullable = false)
+    @Id
     private DSpaceObject dso;
 
     @Column(name = "date")
     @Temporal(TemporalType.TIMESTAMP)
+    @Id
     private Date date;
 
     @Column(name = "bitstream_id")
     private UUID bitstreamId;
 
     @Column(name = "status")
-    private String status;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    @Enumerated(EnumType.STRING)
+    private ExportStatus status;
 
     public DSpaceObject getDso() {
         return dso;
@@ -73,15 +62,11 @@ public class ExportToZip implements ReloadableEntity<Integer> {
         this.bitstreamId = bitstreamId;
     }
 
-    public String getStatus() {
+    public ExportStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(ExportStatus status) {
         this.status = status;
-    }
-
-    public Integer getID() {
-        return id;
     }
 }

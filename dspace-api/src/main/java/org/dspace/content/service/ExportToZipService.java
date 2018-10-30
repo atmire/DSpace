@@ -3,16 +3,16 @@ package org.dspace.content.service;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.ExportToZip;
 import org.dspace.core.Context;
-import org.dspace.service.DSpaceCRUDService;
 
-public interface ExportToZipService extends DSpaceCRUDService<ExportToZip> {
+public interface ExportToZipService {
 
-    public ExportToZip create(Context context, ExportToZip exportToZip) throws SQLException, AuthorizeException;
+    public ExportToZip create(Context context, DSpaceObject dSpaceObject) throws SQLException, AuthorizeException;
 
     public List<ExportToZip> findAll(Context context) throws SQLException;
 
@@ -25,5 +25,9 @@ public interface ExportToZipService extends DSpaceCRUDService<ExportToZip> {
 
     List<ExportToZip> findAllByDso(Context context, DSpaceObject dSpaceObject)
         throws SQLException;
+
+    public void create(Context context, UUID uuid, Date exportToZipDate);
+
+    public void update(Context context, ExportToZip exportToZip) throws SQLException, AuthorizeException;
 
 }

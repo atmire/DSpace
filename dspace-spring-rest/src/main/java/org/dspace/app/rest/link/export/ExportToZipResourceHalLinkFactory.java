@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import org.apache.commons.lang.StringUtils;
 import org.dspace.app.rest.model.ExportToZipRest;
 import org.dspace.app.rest.model.hateoas.ExportToZipResource;
+import org.dspace.export.ExportStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Component;
@@ -29,7 +30,7 @@ public class ExportToZipResourceHalLinkFactory extends ExportToZipRestHalLinkFac
                                                                                    null, exportToZipRest.getType(), exportToZipRest.getCategory()));
             list.add(buildLink(Link.REL_SELF, uriBuilderSelfLink.build().toString()));
 
-            if (StringUtils.equalsIgnoreCase(exportToZipRest.getState(), "completed")) {
+            if (exportToZipRest.getState().equals(ExportStatus.COMPLETED)) {
                 UriComponentsBuilder uriBuilder = uriBuilder(getMethodOn()
                                                                  .downloadSpecific(exportToZipRest.getDsoUuid(),
                                                                                    exportToZipRest.getDate().toString()

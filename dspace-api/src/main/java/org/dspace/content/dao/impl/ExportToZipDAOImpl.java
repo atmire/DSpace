@@ -3,7 +3,6 @@ package org.dspace.content.dao.impl;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.ExportToZip;
@@ -27,7 +26,6 @@ public class ExportToZipDAOImpl extends AbstractHibernateDAO<ExportToZip> implem
     public ExportToZip findByDsoAndDate(Context context, Class clazz, DSpaceObject dSpaceObject,
                                         Date date)
         throws SQLException {
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
         Criteria criteria = createCriteria(context, clazz);
         criteria.add(Restrictions.and(

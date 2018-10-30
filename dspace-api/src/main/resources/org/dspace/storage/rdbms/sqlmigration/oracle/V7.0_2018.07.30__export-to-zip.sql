@@ -20,9 +20,9 @@
 CREATE SEQUENCE export_zip_file_id_seq;
 CREATE TABLE export_zip_file
 (
-    dso                     uuid NOT NULL REFERENCES dspaceobject(uuid),
+    dso                     RAW(16) NOT NULL REFERENCES dspaceobject(uuid),
     date                    TIMESTAMP NOT NULL,
-    bitstream_id            uuid,
+    bitstream_id            RAW(16),
     status                  varchar(32),
     unique(dso, date)
 );
