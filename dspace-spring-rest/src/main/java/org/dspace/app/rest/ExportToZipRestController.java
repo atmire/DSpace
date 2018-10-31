@@ -88,7 +88,7 @@ public class ExportToZipRestController {
     private List<DSpaceObjectService<? extends DSpaceObject>> dSpaceObjectServices;
 
     @Autowired
-    @Qualifier("threadPoolTaskExecutor")
+    @Qualifier("exportThreadPoolTaskExecutor")
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})
