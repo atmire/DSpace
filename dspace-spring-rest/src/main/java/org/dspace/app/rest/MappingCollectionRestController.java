@@ -113,10 +113,13 @@ public class MappingCollectionRestController {
         Collection collection = collectionService.find(context, collectionUuid);
         Item item = itemService.find(context, uuid);
         if (collection != null && item != null) {
-            collectionService.removeItem(context, collection, item);
-            collectionService.update(context, collection);
-            itemService.update(context, item);
-            context.commit();
+            UUID owningCollectionUuid = item.getOwningCollection().getID();
+            if (collection.getID() != owningCollectionUuid && item.getCollections().contains(collection)) {
+                collectionService.removeItem(context, collection, item);
+                collectionService.update(context, collection);
+                itemService.update(context, item);
+                context.commit();
+            }
         }
 
     }
