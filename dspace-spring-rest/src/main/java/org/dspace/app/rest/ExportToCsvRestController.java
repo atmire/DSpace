@@ -35,6 +35,7 @@ import org.dspace.export.ExportToCsvTask;
 import org.dspace.services.EventService;
 import org.dspace.usage.UsageEvent;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
@@ -94,6 +95,10 @@ public class ExportToCsvRestController {
                 break;
             }
         }
+        if (dSpaceObject == null) {
+            throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
+        }
+
         ExportToCsv exportToCsv = exportToCsvService.create(context, dSpaceObject);
         exportToCsvService.update(context, exportToCsv);
         context.commit();
@@ -154,7 +159,7 @@ public class ExportToCsvRestController {
                                             @PathVariable String apiCategory)
         throws IOException, SQLException, AuthorizeException, ParseException {
 
-        Date date = new DateTime(dateString).toDate();
+        Date date = new DateTime(dateString, DateTimeZone.UTC).toDate();
         if (date != null) {
             Context context = ContextUtil.obtainContext(request);
             context.turnOffAuthorisationSystem();
@@ -187,7 +192,7 @@ public class ExportToCsvRestController {
                                                 @PathVariable String apiCategory)
         throws IOException, SQLException, AuthorizeException, ParseException {
 
-        Date date = new DateTime(dateString).toDate();
+        Date date = new DateTime(dateString, DateTimeZone.UTC).toDate();
         if (date != null) {
             Context context = ContextUtil.obtainContext(request);
             DSpaceObject dSpaceObject = null;

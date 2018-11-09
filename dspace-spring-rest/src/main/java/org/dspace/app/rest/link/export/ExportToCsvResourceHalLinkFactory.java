@@ -1,6 +1,8 @@
 package org.dspace.app.rest.link.export;
 
+import java.text.SimpleDateFormat;
 import java.util.LinkedList;
+import java.util.TimeZone;
 
 import org.dspace.app.rest.model.ExportToCsvRest;
 import org.dspace.app.rest.model.hateoas.ExportToCsvResource;
@@ -21,10 +23,12 @@ public class ExportToCsvResourceHalLinkFactory extends ExportToCsvRestHalLinkFac
 
         if (exportToCsvRest != null) {
 
+            final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));   // This line converts the given date into UTC time zone
+            String dateString = sdf.format(exportToCsvRest.getDate());
             UriComponentsBuilder uriBuilderSelfLink = uriBuilder(getMethodOn()
                                                                      .viewSpecific(exportToCsvRest.getDsoUuid(),
-                                                                                   exportToCsvRest.getDate().toString()
-                                                                                                  .replace(" ", "T"),
+                                                                                   dateString,
                                                                                    null,
                                                                                    null, exportToCsvRest.getType(),
                                                                                    exportToCsvRest.getCategory()));
@@ -33,8 +37,7 @@ public class ExportToCsvResourceHalLinkFactory extends ExportToCsvRestHalLinkFac
             if (exportToCsvRest.getState().equals(ExportStatus.COMPLETED)) {
                 UriComponentsBuilder uriBuilder = uriBuilder(getMethodOn()
                                                                  .downloadSpecific(exportToCsvRest.getDsoUuid(),
-                                                                                   exportToCsvRest.getDate().toString()
-                                                                                                  .replace(" ", "T"),
+                                                                                   dateString,
                                                                                    null,
                                                                                    null, exportToCsvRest.getType(), exportToCsvRest.getCategory()));
                 list.add(buildLink("content", uriBuilder.build().toString()));

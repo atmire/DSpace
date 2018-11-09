@@ -28,7 +28,6 @@ import org.dspace.content.service.ExportToCsvService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
-import org.dspace.eperson.Group;
 import org.dspace.eperson.service.GroupService;
 import org.dspace.export.ExportStatus;
 import org.joda.time.DateTime;
@@ -162,7 +161,7 @@ public class ExportToCsvServiceImpl implements ExportToCsvService {
             String csvString = csv.toString();
             csvInputStream = new ByteArrayInputStream(csvString.getBytes(StandardCharsets.UTF_8));
             Bitstream exportToCsvBitstream = bitstreamService.create(context, csvInputStream);
-            handleAdminOnlyReadRights(context, exportToCsvBitstream);
+            handleEPersonReadRights(context, exportToCsvBitstream);
             ExportToCsv exportToCsv = findByDsoAndDate(context, dSpaceObject, exportToCsvDate);
             if (exportToCsvBitstream == null) {
                 delete(context, exportToCsv);
@@ -192,13 +191,12 @@ public class ExportToCsvServiceImpl implements ExportToCsvService {
     }
 
 
-    private void handleAdminOnlyReadRights(Context context, Bitstream exportToCsvBitstream)
+    private void handleEPersonReadRights(Context context, Bitstream exportToCsvBitstream)
         throws SQLException, AuthorizeException {
-        resourcePolicyService.removeAllPolicies(context, exportToCsvBitstream);
         ResourcePolicy resourcePolicy = resourcePolicyService.create(context);
         resourcePolicy.setdSpaceObject(exportToCsvBitstream);
         resourcePolicy.setAction(Constants.READ);
-        resourcePolicy.setGroup(groupService.findByName(context, Group.ADMIN));
+        resourcePolicy.setEPerson(context.getCurrentUser());
         resourcePolicyService.update(context, resourcePolicy);
     }
 

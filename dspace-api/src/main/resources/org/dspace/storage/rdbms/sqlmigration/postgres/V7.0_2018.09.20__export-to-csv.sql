@@ -21,7 +21,7 @@ CREATE SEQUENCE export_csv_file_id_seq;
 CREATE TABLE export_csv_file
 (
     dso                     uuid NOT NULL REFERENCES dspaceobject(uuid),
-    date                    TIMESTAMP NOT NULL,
+    date                    TIMESTAMPTZ NOT NULL,
     bitstream_id            uuid,
     status                  varchar(32),
     unique(dso, date)
