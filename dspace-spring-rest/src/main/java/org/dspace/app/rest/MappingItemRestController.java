@@ -55,7 +55,7 @@ public class MappingItemRestController {
     private HalLinkService halLinkService;
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})
-    public EmbeddedPage retrieve(@PathVariable UUID uuid, HttpServletResponse response,
+    public MappingItemResourceWrapper retrieve(@PathVariable UUID uuid, HttpServletResponse response,
                                  HttpServletRequest request, Pageable pageable) throws SQLException {
         Context context = ContextUtil.obtainContext(request);
         Collection collection = collectionService.find(context, uuid);
@@ -72,22 +72,9 @@ public class MappingItemRestController {
         mappingItemRestWrapper.setMappingItemRestList(mappedItemRestList);
         mappingItemRestWrapper.setCollectionUuid(uuid);
         MappingItemResourceWrapper mappingItemResourceWrapper = new MappingItemResourceWrapper(mappingItemRestWrapper,
-                                                                                               utils, pageable);
-        PageImpl<RestAddressableModel> page = new PageImpl(mappedItemRestList, pageable, mappedItemRestList.size());
-        MappingItemResourceWrapperHalLinkFactory mappingItemResourceWrapperHalLinkFactory =
-            new MappingItemResourceWrapperHalLinkFactory();
+                                                                                               utils);
 
-        EmbeddedPage embeddedPage = null;
-        try {
-            embeddedPage = new EmbeddedPage(
-                mappingItemResourceWrapperHalLinkFactory.getSelfLink(mappingItemResourceWrapper.getContent(), pageable),
-                page, mappedItemRestList
-                , "mappingItems");
-        } catch (SQLException e) {
-            log.error(e.getMessage(), e);
-        }
-        return embeddedPage;
-
-
+        halLinkService.addLinks(mappingItemResourceWrapper);
+        return mappingItemResourceWrapper;
     }
 }
