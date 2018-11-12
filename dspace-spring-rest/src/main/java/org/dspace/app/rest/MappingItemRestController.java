@@ -16,6 +16,7 @@ import org.dspace.app.rest.model.ItemRest;
 import org.dspace.app.rest.model.MappingItemRestWrapper;
 import org.dspace.app.rest.model.RestAddressableModel;
 import org.dspace.app.rest.model.hateoas.EmbeddedPage;
+import org.dspace.app.rest.model.hateoas.ItemResource;
 import org.dspace.app.rest.model.hateoas.MappingItemResourceWrapper;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.Utils;
@@ -25,6 +26,7 @@ import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,7 +61,8 @@ public class MappingItemRestController {
                                  HttpServletRequest request, Pageable pageable) throws SQLException {
         Context context = ContextUtil.obtainContext(request);
         Collection collection = collectionService.find(context, uuid);
-        Iterator<Item> itemIterator = itemService.findByCollection(context, collection, pageable.getPageSize(), pageable.getOffset());
+        Iterator<Item> itemIterator = itemService.findByCollectionMapping(context, collection, pageable.getPageSize(), pageable.getOffset());
+        int totalElements = itemService.countByCollectionMapping(context, collection);
         List<ItemRest> mappedItemRestList = new LinkedList<>();
         while (itemIterator.hasNext()) {
             Item item = itemIterator.next();
@@ -71,23 +74,8 @@ public class MappingItemRestController {
         MappingItemRestWrapper mappingItemRestWrapper = new MappingItemRestWrapper();
         mappingItemRestWrapper.setMappingItemRestList(mappedItemRestList);
         mappingItemRestWrapper.setCollectionUuid(uuid);
-        MappingItemResourceWrapper mappingItemResourceWrapper = new MappingItemResourceWrapper(mappingItemRestWrapper,
-                                                                                               utils, pageable);
-        PageImpl<RestAddressableModel> page = new PageImpl(mappedItemRestList, pageable, mappedItemRestList.size());
-        MappingItemResourceWrapperHalLinkFactory mappingItemResourceWrapperHalLinkFactory =
-            new MappingItemResourceWrapperHalLinkFactory();
+        MappingItemResourceWrapper mappingItemResourceWrapper = new MappingItemResourceWrapper(mappingItemRestWrapper);
 
-        EmbeddedPage embeddedPage = null;
-        try {
-            embeddedPage = new EmbeddedPage(
-                mappingItemResourceWrapperHalLinkFactory.getSelfLink(mappingItemResourceWrapper.getContent(), pageable),
-                page, mappedItemRestList
-                , "mappingItems");
-        } catch (SQLException e) {
-            log.error(e.getMessage(), e);
-        }
-        return embeddedPage;
-
-
+        return mappingItemResourceWrapper.getEmbeddedPage(halLinkService, utils, pageable, totalElements);
     }
 }
