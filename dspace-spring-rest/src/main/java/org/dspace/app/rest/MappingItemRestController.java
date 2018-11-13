@@ -1,6 +1,5 @@
 package org.dspace.app.rest;
 
-import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,7 +12,6 @@ import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.link.HalLinkService;
 import org.dspace.app.rest.model.ItemRest;
 import org.dspace.app.rest.model.MappingItemRestWrapper;
-import org.dspace.app.rest.model.hateoas.EmbeddedPage;
 import org.dspace.app.rest.model.hateoas.MappingItemResourceWrapper;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.Utils;
@@ -70,7 +68,8 @@ public class MappingItemRestController {
         MappingItemRestWrapper mappingItemRestWrapper = new MappingItemRestWrapper();
         mappingItemRestWrapper.setMappingItemRestList(mappedItemRestList);
         mappingItemRestWrapper.setCollectionUuid(uuid);
-        MappingItemResourceWrapper mappingItemResourceWrapper = new MappingItemResourceWrapper(mappingItemRestWrapper, utils, totalElements);
+        MappingItemResourceWrapper mappingItemResourceWrapper =
+                new MappingItemResourceWrapper(mappingItemRestWrapper, utils, totalElements);
 
         halLinkService.addLinks(mappingItemResourceWrapper, pageable);
         return mappingItemResourceWrapper;

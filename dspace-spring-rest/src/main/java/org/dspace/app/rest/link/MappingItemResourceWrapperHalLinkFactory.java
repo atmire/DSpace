@@ -1,6 +1,5 @@
 package org.dspace.app.rest.link;
 
-import java.sql.SQLException;
 import java.util.LinkedList;
 
 import org.dspace.app.rest.model.MappingItemRestWrapper;
@@ -22,9 +21,11 @@ public class MappingItemResourceWrapperHalLinkFactory
         MappingItemRestWrapper mappingItemRestWrapper = halResource.getContent();
         if (mappingItemRestWrapper != null) {
 
-            PageImpl<ItemResource> page = new PageImpl<>(halResource.getItemResources(), pageable, halResource.getTotalElements());
+            PageImpl<ItemResource> page = new PageImpl<>(halResource.getItemResources(), pageable,
+                                                            halResource.getTotalElements());
 
-            halResource.setPageHeader(new EmbeddedPageHeader(getSelfLink(mappingItemRestWrapper, pageable), page, true));
+            halResource.setPageHeader(new EmbeddedPageHeader(getSelfLink(mappingItemRestWrapper, pageable),
+                                                                            page, true));
         }
 
     }
