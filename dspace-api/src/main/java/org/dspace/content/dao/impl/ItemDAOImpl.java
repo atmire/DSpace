@@ -20,9 +20,11 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.apache.log4j.Logger;
-import org.dspace.app.requestitem.RequestItem;
-import org.dspace.app.requestitem.RequestItem_;
-import org.dspace.content.*;
+import org.dspace.content.Collection;
+import org.dspace.content.Item;
+import org.dspace.content.Item_;
+import org.dspace.content.MetadataField;
+import org.dspace.content.MetadataValue;
 import org.dspace.content.dao.ItemDAO;
 import org.dspace.core.AbstractHibernateDSODAO;
 import org.dspace.core.Context;
