@@ -57,7 +57,7 @@ public class MappingItemRestController {
     private HalLinkService halLinkService;
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})
-    public EmbeddedPage retrieve(@PathVariable UUID uuid, HttpServletResponse response,
+    public MappingItemResourceWrapper retrieve(@PathVariable UUID uuid, HttpServletResponse response,
                                  HttpServletRequest request, Pageable pageable) throws SQLException {
         Context context = ContextUtil.obtainContext(request);
         Collection collection = collectionService.find(context, uuid);
@@ -74,8 +74,9 @@ public class MappingItemRestController {
         MappingItemRestWrapper mappingItemRestWrapper = new MappingItemRestWrapper();
         mappingItemRestWrapper.setMappingItemRestList(mappedItemRestList);
         mappingItemRestWrapper.setCollectionUuid(uuid);
-        MappingItemResourceWrapper mappingItemResourceWrapper = new MappingItemResourceWrapper(mappingItemRestWrapper);
+        MappingItemResourceWrapper mappingItemResourceWrapper = new MappingItemResourceWrapper(mappingItemRestWrapper, utils, pageable, totalElements);
 
-        return mappingItemResourceWrapper.getEmbeddedPage(halLinkService, utils, pageable, totalElements);
+        halLinkService.addLinks(mappingItemResourceWrapper);
+        return mappingItemResourceWrapper;
     }
 }

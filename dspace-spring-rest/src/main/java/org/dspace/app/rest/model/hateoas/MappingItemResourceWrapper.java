@@ -18,23 +18,17 @@ import java.util.List;
 public class MappingItemResourceWrapper extends HALResource<MappingItemRestWrapper> {
     private static final Logger log = LoggerFactory.getLogger(MappingItemResourceWrapper.class);
 
-    public MappingItemResourceWrapper(MappingItemRestWrapper content, String... rels) {
+    public MappingItemResourceWrapper(MappingItemRestWrapper content, Utils utils, Pageable pageable, Integer totalElements, String... rels) {
         super(content);
-    }
 
-    public EmbeddedPage getEmbeddedPage(HalLinkService halLinkService, Utils utils, Pageable pageable, int totalElements)
-            throws SQLException{
-        List<ItemResource> list = new LinkedList<>();
-        for (ItemRest itemRest : getContent().getMappingItemRestList()) {
-            ItemResource itemResource = new ItemResource(itemRest, utils);
-            halLinkService.addLinks(itemResource);
-            list.add(itemResource);
+        List<ItemResource> itemResources = new LinkedList<>();
+        for (ItemRest itemRest : content.getMappingItemRestList()) {
+            itemResources.add(new ItemResource(itemRest, utils));
         }
+        embedResource("mappingItems", itemResources);
+        PageImpl<ItemResource> page = new PageImpl<>(itemResources, pageable, totalElements);
 
-        Page page = new PageImpl<>(list, pageable, totalElements);
+        this.setPageHeader(new EmbeddedPageHeader("testing", page, true));
 
-        MappingItemResourceWrapperHalLinkFactory linkFactory = new MappingItemResourceWrapperHalLinkFactory();
-        return new EmbeddedPage(linkFactory.getSelfLink(getContent(), pageable), page, list, "mappingItems");
     }
-
 }
