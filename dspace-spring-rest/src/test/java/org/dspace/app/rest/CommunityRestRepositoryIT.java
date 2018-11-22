@@ -10,6 +10,7 @@ package org.dspace.app.rest;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -82,6 +83,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
                                hasJsonPath("$.uuid", not(empty())),
                                hasJsonPath("$.name", is("Title Text")),
                                hasJsonPath("$.handle", not(empty())),
+                               hasJsonPath("$.owningCommunity", isEmptyOrNullString()),
                                hasJsonPath("$.type", is("community")),
                                hasJsonPath("$._links.collections.href", not(empty())),
                                hasJsonPath("$._links.logo.href", not(empty())),
@@ -101,6 +103,84 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
                                )))));
 
     }
+    @Test
+    public void createWithParentTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+        //We turn off the authorization system in order to create the structure as defined below
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        //1. A community-collection structure with one parent community with sub-community and one collection.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+
+        ObjectMapper mapper = new ObjectMapper();
+        CommunityRest comm = new CommunityRest();
+        // We send a name but the created community should set this to the title
+        comm.setName("Test Sub-Level Community");
+        comm.setOwningCommunity(parentCommunity.getID().toString());
+        MetadataEntryRest description = new MetadataEntryRest();
+        description.setKey("dc.description");
+        description.setValue("<p>Some cool HTML code here</p>");
+
+        MetadataEntryRest abs = new MetadataEntryRest();
+        abs.setKey("dc.description.abstract");
+        abs.setValue("Sample top-level community created via the REST API");
+
+        MetadataEntryRest contents = new MetadataEntryRest();
+        contents.setKey("dc.description.tableofcontents");
+        contents.setValue("<p>HTML News</p>");
+
+        MetadataEntryRest copyright = new MetadataEntryRest();
+        copyright.setKey("dc.rights");
+        copyright.setValue("Custom Copyright Text");
+
+        MetadataEntryRest title = new MetadataEntryRest();
+        title.setKey("dc.title");
+        title.setValue("Title Text");
+
+        comm.setMetadata(Arrays.asList(description,
+                                       abs,
+                                       contents,
+                                       copyright,
+                                       title));
+
+        String authToken = getAuthToken(admin.getEmail(), password);
+        getClient(authToken).perform(post("/api/core/communities")
+                                         .content(mapper.writeValueAsBytes(comm))
+                                         .contentType(contentType))
+                            .andExpect(status().isCreated())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$", Matchers.allOf(
+                                hasJsonPath("$.id", not(empty())),
+                                hasJsonPath("$.uuid", not(empty())),
+                                hasJsonPath("$.name", is("Title Text")),
+                                hasJsonPath("$.handle", not(empty())),
+                                hasJsonPath("$.owningCommunity", is(parentCommunity.getID().toString())),
+                                hasJsonPath("$.type", is("community")),
+                                hasJsonPath("$._links.collections.href", not(empty())),
+                                hasJsonPath("$._links.logo.href", not(empty())),
+                                hasJsonPath("$._links.subcommunities.href", not(empty())),
+                                hasJsonPath("$._links.self.href", not(empty())),
+                                hasJsonPath("$.metadata", Matchers.containsInAnyOrder(
+                                    CommunityMetadataMatcher.matchMetadata("dc.description",
+                                                                           "<p>Some cool HTML code here</p>"),
+                                    CommunityMetadataMatcher.matchMetadata("dc.description.abstract",
+                                                                           "Sample top-level community " +
+                                                                               "created via the REST API"),
+                                    CommunityMetadataMatcher.matchMetadata("dc.description.tableofcontents",
+                                                                           "<p>HTML News</p>"),
+                                    CommunityMetadataMatcher.matchMetadata("dc.rights",
+                                                                           "Custom Copyright Text"),
+                                    CommunityMetadataMatcher.matchMetadata("dc.title",
+                                                                           "Title Text")
+                                )))));
+
+
+
+    }
+
 
     @Test
     public void createUnauthorizedTest() throws Exception {
