@@ -17,15 +17,19 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BadRequestException;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.CommunityConverter;
+import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.CommunityRest;
 import org.dspace.app.rest.model.MetadataEntryRest;
 import org.dspace.app.rest.model.hateoas.CommunityResource;
+import org.dspace.app.rest.utils.DSpaceObjectUtils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Community;
 import org.dspace.content.service.CommunityService;
@@ -53,6 +57,9 @@ public class CommunityRestRepository extends DSpaceRestRepository<CommunityRest,
 
     @Autowired
     CommunityConverter converter;
+
+    @Autowired
+    DSpaceObjectUtils dspaceObjectUtils;
 
     public CommunityRestRepository() {
         System.out.println("Repository initialized by Spring");
@@ -181,6 +188,26 @@ public class CommunityRestRepository extends DSpaceRestRepository<CommunityRest,
     @Override
     public CommunityResource wrapResource(CommunityRest community, String... rels) {
         return new CommunityResource(community, utils, rels);
+    }
+
+    @Override
+    protected CommunityRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
+                       JsonNode jsonNode)
+        throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException {
+        CommunityRest communityRest = new Gson().fromJson(jsonNode.toString(), CommunityRest.class);
+        Community community = cs.find(context, id);
+        if (community == null) {
+            throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");
+        }
+        if (StringUtils.equals(id.toString(), communityRest.getId())) {
+            List<MetadataEntryRest> metadataEntryRestList = communityRest.getMetadata();
+            community = (Community) dspaceObjectUtils.replaceMetadataValues(context, community, metadataEntryRestList);
+        } else {
+            throw new IllegalArgumentException("The UUID in the Json and the UUID in the url do not match: "
+                                                   + id + ", "
+                                                   + communityRest.getId());
+        }
+        return converter.fromModel(community);
     }
 
 }

@@ -14,6 +14,7 @@ import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -34,6 +35,7 @@ import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.hamcrest.Matchers;
 import org.junit.Test;
+import org.springframework.http.MediaType;
 
 public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest {
 
@@ -591,4 +593,61 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
 
         getClient().perform(get("/api/core/communities/" + UUID.randomUUID())).andExpect(status().isNotFound());
     }
+
+    @Test
+    public void updateTest() throws Exception {
+        //We turn off the authorization system in order to create the structure as defined below
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        //1. A community-collection structure with one parent community with sub-community and one collection.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+        Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
+                                           .withName("Sub Community")
+                                           .build();
+        Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
+
+        getClient().perform(get("/api/core/communities/" + parentCommunity.getID().toString()))
+                   .andExpect(status().isOk())
+                   .andExpect(content().contentType(contentType))
+                   .andExpect(jsonPath("$", Matchers.is(
+                       CommunityMatcher.matchCommunityEntry(parentCommunity.getName(), parentCommunity.getID(),
+                                                            parentCommunity.getHandle())
+                   )))
+                   .andExpect(jsonPath("$", Matchers.not(
+                       Matchers.is(
+                           CommunityMatcher.matchCommunityEntry(child1.getName(), child1.getID(), child1.getHandle())
+                       )
+                   )))
+                   .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/communities")))
+        ;
+
+        String token = getAuthToken(admin.getEmail(), password);
+
+        getClient(token).perform(put("/api/core/communities/" + parentCommunity.getID().toString())
+                                .contentType(MediaType.APPLICATION_JSON).content(
+                                    "{\"id\": \"" + parentCommunity.getID() + "\",\"uuid\": " +
+                                        "\"" + parentCommunity.getID() + "\",\"name\": \"Electronic theses and " +
+                                        "dissertations (ETD)\",\"handle\": \"123456789/5286\",\"metadata\": " +
+                                        "[{\"key\": \"dc.description.abstract\",\"value\": \"\",\"language\": null}," +
+                                        "{\"key\": \"dc.title\",\"value\": \"Electronic theses and dissertations " +
+                                        "(ETD)\",\"language\": null}],\"type\": \"community\"}"
+            ))
+                   .andExpect(status().isOk())
+        ;
+
+        getClient().perform(get("/api/core/communities/" + parentCommunity.getID().toString()))
+                   .andExpect(status().isOk())
+                   .andExpect(content().contentType(contentType))
+                   .andExpect(jsonPath("$", Matchers.is(
+                       CommunityMatcher.matchCommunityEntry("Electronic theses and dissertations (ETD)",
+                                                            parentCommunity.getID(),
+                                                            parentCommunity.getHandle())
+                   )))
+                   .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/communities")))
+        ;
+    }
+
 }

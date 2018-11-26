@@ -1,3 +1,10 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.app.rest.utils;
 
 import java.sql.SQLException;
@@ -19,7 +26,9 @@ public class DSpaceObjectUtils {
     @Autowired
     ContentServiceFactory contentServiceFactory;
 
-    public DSpaceObject replaceMetadataValues(Context context, DSpaceObject dSpaceObject, List<MetadataEntryRest> metadataEntryRestList)
+    public DSpaceObject replaceMetadataValues(Context context,
+                                              DSpaceObject dSpaceObject,
+                                              List<MetadataEntryRest> metadataEntryRestList)
         throws SQLException, AuthorizeException {
         DSpaceObjectService dSpaceObjectService = contentServiceFactory.getDSpaceObjectService(dSpaceObject);
         dSpaceObjectService.clearMetadata(context, dSpaceObject, Item.ANY, Item.ANY, Item.ANY, Item.ANY);
