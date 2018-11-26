@@ -985,17 +985,18 @@ public class RestResourceController implements InitializingBean {
 
 
     @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID)
-    public DSpaceResource<RestAddressableModel> put(@PathVariable String apiCategory, @PathVariable String model,
+    public DSpaceResource<RestAddressableModel> put(HttpServletRequest request,
+                                                    @PathVariable String apiCategory, @PathVariable String model,
                                                     @PathVariable UUID uuid,
                                                     @RequestBody(required = true) JsonNode jsonNode) {
-        return putOneInternal(apiCategory, model, uuid, jsonNode);
+        return putOneInternal(request, apiCategory, model, uuid, jsonNode);
     }
 
-    private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneInternal(String apiCategory, String model, ID uuid, JsonNode jsonNode) {
+    private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneInternal(HttpServletRequest request, String apiCategory, String model, ID uuid, JsonNode jsonNode) {
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
         RestAddressableModel modelObject = null;
-        modelObject = repository.put(uuid, jsonNode);
+        modelObject = repository.put(request, apiCategory, model, uuid, jsonNode);
         if (modelObject == null) {
             throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
         }
