@@ -19,7 +19,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.dspace.content.Collection;
 import org.dspace.content.Item;
 import org.dspace.content.Item_;
@@ -46,7 +46,7 @@ import org.hibernate.type.StandardBasicTypes;
  * @author kevinvandevelde at atmire.com
  */
 public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDAO {
-    private static final Logger log = Logger.getLogger(ItemDAOImpl.class);
+    private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(ItemDAOImpl.class);
 
     protected ItemDAOImpl() {
         super();

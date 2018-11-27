@@ -2,7 +2,6 @@ package org.dspace.app.rest.link.export;
 
 import java.util.LinkedList;
 
-import org.apache.commons.lang.StringUtils;
 import org.dspace.app.rest.model.ExportToZipRest;
 import org.dspace.app.rest.model.hateoas.ExportToZipResource;
 import org.dspace.export.ExportStatus;

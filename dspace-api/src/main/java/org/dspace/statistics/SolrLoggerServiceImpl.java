@@ -39,9 +39,9 @@ import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CityResponse;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -89,8 +89,6 @@ import org.dspace.statistics.util.DnsLookup;
 import org.dspace.statistics.util.LocationUtils;
 import org.dspace.statistics.util.SpiderDetector;
 import org.dspace.usage.UsageWorkflowEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -104,8 +102,9 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author mdiggory at atmire.com
  */
 public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBean {
-    private static final Logger log
-        = LoggerFactory.getLogger(SolrLoggerServiceImpl.class);
+
+    private static final org.apache.logging.log4j.Logger log =
+            org.apache.logging.log4j.LogManager.getLogger(SolrLoggerServiceImpl.class);
 
     private static final String MULTIPLE_VALUES_SPLITTER = "|";
     protected SolrServer solr;
@@ -152,7 +151,6 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        log.info("solr-statistics.spidersfile:" + configurationService.getProperty("solr-statistics.spidersfile"));
         log.info("solr-statistics.server:" + configurationService.getProperty("solr-statistics.server"));
         log.info("usage-statistics.dbfile:" + configurationService.getProperty("usage-statistics.dbfile"));
 
@@ -396,7 +394,8 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
                 if (!(
                         "--".equals(countryCode)
                                 && latitude == -180
-                                && longitude == -180)) {
+                                && longitude == -180)
+                ) {
                     try {
                         doc1.addField("continent", LocationUtils
                                 .getContinentCode(countryCode));

@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.repository;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,17 +15,30 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BadRequestException;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.CommunityConverter;
+import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
+import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.CommunityRest;
+import org.dspace.app.rest.model.MetadataEntryRest;
 import org.dspace.app.rest.model.hateoas.CommunityResource;
+import org.dspace.app.rest.utils.DSpaceObjectUtils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Community;
 import org.dspace.content.Item;
 import org.dspace.content.MetadataSchema;
 import org.dspace.content.service.CommunityService;
 import org.dspace.core.Context;
+import org.dspace.util.UUIDUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -34,7 +48,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 /**
- * This is the repository responsible to manage Item Rest object
+ * This is the repository responsible to manage Community Rest object
  *
  * @author Andrea Bollini (andrea.bollini at 4science.it)
  */
@@ -48,8 +62,58 @@ public class CommunityRestRepository extends DSpaceRestRepository<CommunityRest,
     @Autowired
     CommunityConverter converter;
 
+    @Autowired
+    DSpaceObjectUtils dspaceObjectUtils;
+
     public CommunityRestRepository() {
         System.out.println("Repository initialized by Spring");
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    protected CommunityRest createAndReturn(Context context) throws AuthorizeException {
+        HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
+        ObjectMapper mapper = new ObjectMapper();
+        CommunityRest communityRest = null;
+        try {
+            ServletInputStream input = req.getInputStream();
+            communityRest = mapper.readValue(input, CommunityRest.class);
+        } catch (IOException e1) {
+            throw new UnprocessableEntityException("Error parsing request body: " + e1.toString());
+        }
+
+        Community community = null;
+
+
+        try {
+            Community parent = null;
+            if (StringUtils.isNotBlank(communityRest.getOwningCommunity())) {
+                UUID owningCommunityUuid = UUIDUtils.fromString(communityRest.getOwningCommunity());
+                if (owningCommunityUuid != null) {
+                    parent = cs.find(context, owningCommunityUuid);
+                    if (parent == null) {
+                        throw new ResourceNotFoundException("Parent community for id: "
+                                                                + owningCommunityUuid + " not found");
+                    }
+                } else {
+                    throw new BadRequestException("The given owningCommunityUuid was invalid: "
+                                                      + communityRest.getOwningCommunity());
+                }
+            }
+            community = cs.create(parent, context);
+            cs.update(context, community);
+            if (communityRest.getMetadata() != null) {
+                for (MetadataEntryRest mer : communityRest.getMetadata()) {
+                    String[] metadatakey = mer.getKey().split("\\.");
+                    cs.addMetadata(context, community, metadatakey[0], metadatakey[1],
+                            metadatakey.length == 3 ? metadatakey[2] : null, mer.getLanguage(), mer.getValue());
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+
+        return converter.convert(community);
     }
 
     @Override
@@ -139,31 +203,6 @@ public class CommunityRestRepository extends DSpaceRestRepository<CommunityRest,
     }
 
     @Override
-    protected CommunityRest createAndReturn(Context context) throws AuthorizeException {
-        String name = requireRequestParameter("name");
-        String parent = getRequestParameter("parent");
-        try {
-            Community parentCommunity = null;
-            if (parent != null) {
-                parentCommunity = cs.find(context, UUID.fromString(parent));
-                if (parentCommunity == null) {
-                    throw new ResourceNotFoundException("No such community: " + parent);
-                }
-            }
-
-            Community community = cs.create(parentCommunity, context);
-
-            cs.setMetadataSingleValue(context, community, MetadataSchema.DC_SCHEMA, "title", null, Item.ANY, name);
-            cs.update(context, community);
-            context.commit();
-
-            return converter.convert(community);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
     public Class<CommunityRest> getDomainClass() {
         return CommunityRest.class;
     }
@@ -171,6 +210,27 @@ public class CommunityRestRepository extends DSpaceRestRepository<CommunityRest,
     @Override
     public CommunityResource wrapResource(CommunityRest community, String... rels) {
         return new CommunityResource(community, utils, rels);
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    protected CommunityRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
+                       JsonNode jsonNode)
+        throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException {
+        CommunityRest communityRest = new Gson().fromJson(jsonNode.toString(), CommunityRest.class);
+        Community community = cs.find(context, id);
+        if (community == null) {
+            throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");
+        }
+        if (StringUtils.equals(id.toString(), communityRest.getId())) {
+            List<MetadataEntryRest> metadataEntryRestList = communityRest.getMetadata();
+            community = (Community) dspaceObjectUtils.replaceMetadataValues(context, community, metadataEntryRestList);
+        } else {
+            throw new IllegalArgumentException("The UUID in the Json and the UUID in the url do not match: "
+                                                   + id + ", "
+                                                   + communityRest.getId());
+        }
+        return converter.fromModel(community);
     }
 
 }

@@ -10,21 +10,25 @@ package org.dspace.app.rest;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.atteo.evo.inflector.English;
 import org.dspace.app.rest.converter.JsonPatchConverter;
 import org.dspace.app.rest.exception.PaginationException;
@@ -61,6 +65,7 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.ResourceSupport;
+import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.UriTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -106,7 +111,7 @@ public class RestResourceController implements InitializingBean {
      */
     private static final String REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT = "/{id:\\d+}";
 
-    private static final Logger log = Logger.getLogger(RestResourceController.class);
+    private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(RestResourceController.class);
 
     @Autowired
     DiscoverableEndpointsService discoverableEndpointsService;
@@ -471,17 +476,21 @@ public class RestResourceController implements InitializingBean {
 
 
     /**
-     * Called in POST, multipart, upload a resource passed into "file" request parameter
+     *  Called in POST, multipart, upload to a specific rest resource the file passed as "file" request parameter
      *
      * Note that the regular expression in the request mapping accept a number as identifier;
      *
      * @param request
+     *            the http request
      * @param apiCategory
+     *            the api category
      * @param model
+     *            the rest model that identify the REST resource collection
      * @param id
-     * @param extraField
+     *            the id of the specific rest resource
      * @param uploadfile
-     * @return
+     *            the file to upload
+     * @return the created resource
      * @throws HttpRequestMethodNotSupportedException
      */
     @RequestMapping(method = RequestMethod.POST, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT, headers =
@@ -490,26 +499,28 @@ public class RestResourceController implements InitializingBean {
                                                                             @PathVariable String apiCategory,
                                                                             @PathVariable String model,
                                                                             @PathVariable Integer id,
-                                                                            @RequestParam(required = false, value =
-                                                                                "extraField") String extraField,
                                                                             @RequestParam("file") MultipartFile
                                                                                 uploadfile)
         throws HttpRequestMethodNotSupportedException {
-        return uploadInternal(request, apiCategory, model, id, extraField, uploadfile);
+        return uploadInternal(request, apiCategory, model, id, uploadfile);
     }
 
     /**
-     * Called in POST, multipart, upload a resource passed into "file" request parameter
+     * Called in POST, multipart, upload to a specific rest resource the file passed as "file" request parameter
      *
      * Note that the regular expression in the request mapping accept a UUID as identifier;
      *
      * @param request
+     *            the http request
      * @param apiCategory
+     *            the api category
      * @param model
+     *            the rest model that identify the REST resource collection
      * @param id
-     * @param extraField
+     *            the id of the specific rest resource
      * @param uploadfile
-     * @return
+     *            the file to upload
+     * @return the created resource
      * @throws HttpRequestMethodNotSupportedException
      */
     @RequestMapping(method = RequestMethod.POST, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID, headers =
@@ -518,12 +529,10 @@ public class RestResourceController implements InitializingBean {
                                                                             @PathVariable String apiCategory,
                                                                             @PathVariable String model,
                                                                             @PathVariable UUID id,
-                                                                            @RequestParam(required = false, value =
-                                                                                "extraField") String extraField,
                                                                             @RequestParam("file") MultipartFile
                                                                                 uploadfile)
         throws HttpRequestMethodNotSupportedException {
-        return uploadInternal(request, apiCategory, model, id, extraField, uploadfile);
+        return uploadInternal(request, apiCategory, model, id, uploadfile);
     }
 
     /**
@@ -533,21 +542,19 @@ public class RestResourceController implements InitializingBean {
      * @param apiCategory
      * @param model
      * @param id
-     * @param extraField
      * @param uploadfile
      * @return
      */
     private <ID extends Serializable> ResponseEntity<ResourceSupport> uploadInternal(HttpServletRequest request,
                                                                                      String apiCategory, String model,
                                                                                      ID id,
-                                                                                     String extraField,
                                                                                      MultipartFile uploadfile) {
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
 
         RestAddressableModel modelObject = null;
         try {
-            modelObject = repository.upload(request, apiCategory, model, id, extraField, uploadfile);
+            modelObject = repository.upload(request, apiCategory, model, id, uploadfile);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return ControllerUtils.toEmptyResponse(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -555,6 +562,46 @@ public class RestResourceController implements InitializingBean {
         DSpaceResource result = repository.wrapResource(modelObject);
         linkService.addLinks(result);
         return ControllerUtils.toResponseEntity(HttpStatus.CREATED, null, result);
+    }
+
+    /**
+     * Upload a file against the collection resource endpoint. This is typically used for bulk creation of resources
+     * such for instance multiple workspaceitems from a CSV or bibliographic file
+     *
+     * @param request
+     *            the http request
+     * @param apiCategory
+     *            the api category
+     * @param model
+     *            the rest model that identify the REST resource collection
+     * @param uploadfile
+     *            the bulk file
+     * @return the list of generated resources
+     * @throws SQLException
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws AuthorizeException
+     */
+    @RequestMapping(method = { RequestMethod.POST }, headers = "content-type=multipart/form-data")
+    public <T extends RestAddressableModel> ResponseEntity<ResourceSupport> upload(HttpServletRequest request,
+                                                                                   @PathVariable String apiCategory,
+                                                                                   @PathVariable String model,
+                                                                                   @RequestParam("file") MultipartFile
+                                                                                       uploadfile)
+        throws SQLException, FileNotFoundException, IOException, AuthorizeException {
+
+        checkModelPluralForm(apiCategory, model);
+        DSpaceRestRepository repository = utils.getResourceRepository(apiCategory, model);
+
+        Iterable<T> content = repository.upload(request, uploadfile);
+
+        List<DSpaceResource> resources = new ArrayList<>();
+        for (T modelObject : content) {
+            DSpaceResource result = repository.wrapResource(modelObject);
+            linkService.addLinks(result);
+            resources.add(result);
+        }
+        return ControllerUtils.toResponseEntity(HttpStatus.OK, null, Resources.wrap(resources));
     }
 
     /**
@@ -618,7 +665,6 @@ public class RestResourceController implements InitializingBean {
                                                                                    String model, ID id,
                                                                                    JsonNode jsonNode)
         throws HttpRequestMethodNotSupportedException {
-
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
         RestAddressableModel modelObject = null;
@@ -781,8 +827,9 @@ public class RestResourceController implements InitializingBean {
             EmbeddedPage ep = (EmbeddedPage) resource.getEmbeddedResources().get(rel);
             List<? extends RestAddressableModel> fullList = ep.getFullList();
             if (fullList == null || fullList.size() == 0) {
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-                return null;
+                PageImpl<RestAddressableModel> pageResult = new PageImpl(fullList, page, 0);
+                result = assembler.toResource(pageResult);
+                return result;
             }
             int start = page.getOffset();
             int end = (start + page.getPageSize()) > fullList.size() ? fullList.size() : (start + page.getPageSize());
@@ -804,7 +851,6 @@ public class RestResourceController implements InitializingBean {
             if (resource.getEmbeddedResources().get(rel) == null) {
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             }
-
             return (ResourceSupport) resource.getEmbeddedResources().get(rel);
         }
 
@@ -978,5 +1024,31 @@ public class RestResourceController implements InitializingBean {
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
         repository.delete(id);
         return ControllerUtils.toEmptyResponse(HttpStatus.NO_CONTENT);
+    }
+
+
+
+    @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID)
+    public DSpaceResource<RestAddressableModel> put(HttpServletRequest request,
+                                                    @PathVariable String apiCategory, @PathVariable String model,
+                                                    @PathVariable UUID uuid,
+                                                    @RequestBody(required = true) JsonNode jsonNode) {
+        return putOneInternal(request, apiCategory, model, uuid, jsonNode);
+    }
+
+    private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneInternal(HttpServletRequest request,
+                                                                                          String apiCategory,
+                                                                                          String model, ID uuid,
+                                                                                          JsonNode jsonNode) {
+        checkModelPluralForm(apiCategory, model);
+        DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
+        RestAddressableModel modelObject = null;
+        modelObject = repository.put(request, apiCategory, model, uuid, jsonNode);
+        if (modelObject == null) {
+            throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
+        }
+        DSpaceResource result = repository.wrapResource(modelObject);
+        linkService.addLinks(result);
+        return result;
     }
 }

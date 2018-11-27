@@ -2,7 +2,6 @@ package org.dspace.app.rest.converter;
 
 import java.sql.SQLException;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.dspace.app.rest.model.ExportToCsvRest;
 import org.dspace.content.Bitstream;
