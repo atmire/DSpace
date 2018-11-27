@@ -423,23 +423,4 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
         throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException {
         throw new RepositoryMethodNotImplementedException(apiCategory, model);
     }
-    public T put(ID id)
-            throws HttpRequestMethodNotSupportedException, UnprocessableEntityException, PatchBadRequestException {
-        Context context = obtainContext();
-        try {
-            put(context, id);
-            context.commit();
-        } catch (AuthorizeException ae) {
-            throw new RESTAuthorizationException(ae);
-        } catch (SQLException | DCInputsReaderException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-        return findOne(id);
-    }
-
-    protected T put(Context context, ID id)
-            throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException, DCInputsReaderException {
-        throw new RepositoryMethodNotImplementedException("No implementation found; Method not allowed!", "");
-    }
-
 }

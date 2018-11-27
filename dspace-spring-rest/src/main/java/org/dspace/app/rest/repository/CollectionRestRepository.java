@@ -182,34 +182,6 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
         }
     }
 
-    @Override
-    @PreAuthorize("hasPermission(#id, 'COLLECTION', 'WRITE')")
-    protected CollectionRest put(Context context, UUID id) throws AuthorizeException {
-        String name = getRequestParameter("name");
-
-        try {
-            Collection collection = cs.find(context, id);
-            cs.setMetadataSingleValue(context, collection, MetadataSchema.DC_SCHEMA, "title", null, Item.ANY, name);
-            cs.processRequest(context, collection, requestService.getCurrentRequest().getHttpServletRequest(), true);
-            cs.update(context, collection);
-
-            return converter.convert(collection);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    @PreAuthorize("hasPermission(#id, 'COLLECTION', 'DELETE')")
-    protected void delete(Context context, UUID id) throws AuthorizeException {
-        try {
-            Collection collection = cs.find(context,id);
-            cs.delete(context, collection);
-            context.commit();
-        } catch (SQLException | IOException e) {
-            log.error(e.getMessage(), e);
-        }
-    }
 
     @Override
     public Class<CollectionRest> getDomainClass() {
