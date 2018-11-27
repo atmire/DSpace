@@ -1,3 +1,10 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.app.rest;
 
 import java.sql.SQLException;
@@ -11,12 +18,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.link.HalLinkService;
-import org.dspace.app.rest.link.MappingItemResourceWrapperHalLinkFactory;
 import org.dspace.app.rest.model.ItemRest;
 import org.dspace.app.rest.model.MappingItemRestWrapper;
-import org.dspace.app.rest.model.RestAddressableModel;
-import org.dspace.app.rest.model.hateoas.EmbeddedPage;
-import org.dspace.app.rest.model.hateoas.ItemResource;
 import org.dspace.app.rest.model.hateoas.MappingItemResourceWrapper;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.Utils;
@@ -26,8 +29,6 @@ import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
