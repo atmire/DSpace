@@ -610,9 +610,7 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
         } else {
             //Remove the item from the collection if we have multiple collections
             item.removeCollection(collection);
-            if (item.getOwningCollection().equals(collection)) {
-                item.setOwningCollection(item.getCollections().get(0));
-            }
+
 
         }
 
