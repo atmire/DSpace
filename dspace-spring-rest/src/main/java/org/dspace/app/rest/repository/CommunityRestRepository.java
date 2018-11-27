@@ -191,6 +191,7 @@ public class CommunityRestRepository extends DSpaceRestRepository<CommunityRest,
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
     protected CommunityRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
                        JsonNode jsonNode)
         throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException {
