@@ -210,5 +210,20 @@ public class CommunityRestRepository extends DSpaceRestRepository<CommunityRest,
         }
         return converter.fromModel(community);
     }
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    protected void delete(Context context, UUID id) throws AuthorizeException {
+        Community community = null;
+        try {
+            community = cs.find(context, id);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        try {
+            cs.delete(context, community);
+        } catch (SQLException | IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
 
 }
