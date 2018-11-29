@@ -706,6 +706,10 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
         getClient(token).perform(get("/api/core/communities/" + parentCommunity.getID().toString()))
                         .andExpect(status().isNotFound())
         ;
+
+        getClient(token).perform(get("/api/core/communities/" + parentCommunityChild1.getID().toString()))
+                        .andExpect(status().isNotFound())
+        ;
     }
 
     @Test
