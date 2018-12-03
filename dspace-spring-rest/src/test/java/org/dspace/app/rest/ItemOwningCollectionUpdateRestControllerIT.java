@@ -92,8 +92,9 @@ public class ItemOwningCollectionUpdateRestControllerIT extends AbstractControll
                 .andExpect(status().isOk());
         getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/owningCollection"))
                    .andExpect(jsonPath("$",
-                           is(CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
-                )));
+                                       is(CollectionMatcher
+                                                  .matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
+                                       )));
     }
 
     /**
@@ -121,12 +122,15 @@ public class ItemOwningCollectionUpdateRestControllerIT extends AbstractControll
         EPerson itemMoveEperson = EPersonBuilder.createEPerson(context).withEmail("item@move.org").withPassword("test")
                                                 .withNameInMetadata("Item", "Move").build();
 
-        ResourcePolicy rp1 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.ADMIN)
-                                                                          .withDspaceObject(col1).build();
-        ResourcePolicy rp2 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.WRITE)
-                             .withDspaceObject(publicItem1).build();
-        ResourcePolicy rp3 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.ADD)
-                             .withDspaceObject(col2).build();
+        ResourcePolicy rp1 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson)
+                                                  .withAction(Constants.ADMIN)
+                                                  .withDspaceObject(col1).build();
+        ResourcePolicy rp2 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson)
+                                                  .withAction(Constants.WRITE)
+                                                  .withDspaceObject(publicItem1).build();
+        ResourcePolicy rp3 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson)
+                                                  .withAction(Constants.ADD)
+                                                  .withDspaceObject(col2).build();
 
         String token = getAuthToken(itemMoveEperson.getEmail(), "test");
 
@@ -164,19 +168,21 @@ public class ItemOwningCollectionUpdateRestControllerIT extends AbstractControll
         EPerson itemMoveEperson = EPersonBuilder.createEPerson(context).withEmail("item@move.org").withPassword("test")
                                                 .withNameInMetadata("Item", "Move").build();
 
-        ResourcePolicy rp1 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.ADMIN)
+        ResourcePolicy rp1 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson)
+                                                  .withAction(Constants.ADMIN)
                                                   .withDspaceObject(col1).build();
-        ResourcePolicy rp2 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.WRITE)
+        ResourcePolicy rp2 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson)
+                                                  .withAction(Constants.WRITE)
                                                   .withDspaceObject(publicItem1).build();
 
 
         String token = getAuthToken(itemMoveEperson.getEmail(), "test");
 
         getClient(token).perform(post("/api/core/items/" + publicItem1.getID() + "/owningCollection/move/"
-                                         + col2.getID()))
+                                              + col2.getID()))
 
-                   //We expect a 401 Unauthorized status when performed by anonymous
-                   .andExpect(status().isForbidden());
+                        //We expect a 401 Unauthorized status when performed by anonymous
+                        .andExpect(status().isForbidden());
 
 
     }
@@ -200,20 +206,21 @@ public class ItemOwningCollectionUpdateRestControllerIT extends AbstractControll
         EPerson itemMoveEperson = EPersonBuilder.createEPerson(context).withEmail("item@move.org").withPassword("test")
                                                 .withNameInMetadata("Item", "Move").build();
 
-        ResourcePolicy rp2 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.WRITE)
+        ResourcePolicy rp2 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson)
+                                                  .withAction(Constants.WRITE)
                                                   .withDspaceObject(publicItem1).build();
-        ResourcePolicy rp3 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.ADD)
+        ResourcePolicy rp3 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson)
+                                                  .withAction(Constants.ADD)
                                                   .withDspaceObject(col2).build();
-
 
 
         String token = getAuthToken(itemMoveEperson.getEmail(), "test");
 
         getClient(token).perform(post("/api/core/items/" + publicItem1.getID() + "/owningCollection/move/"
-                                         + col2.getID()))
+                                              + col2.getID()))
 
-                   //We expect a 401 Unauthorized status when performed by anonymous
-                   .andExpect(status().isForbidden());
+                        //We expect a 401 Unauthorized status when performed by anonymous
+                        .andExpect(status().isForbidden());
 
 
     }
@@ -237,9 +244,11 @@ public class ItemOwningCollectionUpdateRestControllerIT extends AbstractControll
         EPerson itemMoveEperson = EPersonBuilder.createEPerson(context).withEmail("item@move.org").withPassword("test")
                                                 .withNameInMetadata("Item", "Move").build();
 
-        ResourcePolicy rp1 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.ADMIN)
+        ResourcePolicy rp1 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson)
+                                                  .withAction(Constants.ADMIN)
                                                   .withDspaceObject(col1).build();
-        ResourcePolicy rp3 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.ADD)
+        ResourcePolicy rp3 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson)
+                                                  .withAction(Constants.ADD)
                                                   .withDspaceObject(col2).build();
 
 
