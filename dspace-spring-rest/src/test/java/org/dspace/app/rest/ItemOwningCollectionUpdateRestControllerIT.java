@@ -15,11 +15,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.dspace.app.rest.builder.CollectionBuilder;
 import org.dspace.app.rest.builder.CommunityBuilder;
+import org.dspace.app.rest.builder.EPersonBuilder;
 import org.dspace.app.rest.builder.ItemBuilder;
+import org.dspace.app.rest.builder.ResourcePolicyBuilder;
 import org.dspace.app.rest.matcher.CollectionMatcher;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
+import org.dspace.authorize.ResourcePolicy;
 import org.dspace.content.Collection;
 import org.dspace.content.Item;
+import org.dspace.core.Constants;
+import org.dspace.eperson.EPerson;
 import org.junit.Test;
 
 public class ItemOwningCollectionUpdateRestControllerIT extends AbstractControllerIntegrationTest {
@@ -89,5 +94,163 @@ public class ItemOwningCollectionUpdateRestControllerIT extends AbstractControll
                    .andExpect(jsonPath("$",
                            is(CollectionMatcher.matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
                 )));
+    }
+
+    /**
+     * The user minimally needs ADD for the new collection, ADMIN for the old collection and WRITE for the item to move.
+     * This test will verify that these rights are sufficient
+     *
+     * @throws Exception
+     */
+    @Test
+    public void moveItemTestByMinimallyAuthorizedUser() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 1").build();
+        Collection col2 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 2").build();
+
+        Item publicItem1 = ItemBuilder.createItem(context, col1)
+                                      .withTitle("Public item 1")
+                                      .withIssueDate("2017-10-17")
+                                      .withAuthor("Smith, Donald")
+                                      .build();
+
+        EPerson itemMoveEperson = EPersonBuilder.createEPerson(context).withEmail("item@move.org").withPassword("test")
+                                                .withNameInMetadata("Item", "Move").build();
+
+        ResourcePolicy rp1 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.ADMIN)
+                                                                          .withDspaceObject(col1).build();
+        ResourcePolicy rp2 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.WRITE)
+                             .withDspaceObject(publicItem1).build();
+        ResourcePolicy rp3 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.ADD)
+                             .withDspaceObject(col2).build();
+
+        String token = getAuthToken(itemMoveEperson.getEmail(), "test");
+
+        getClient(token)
+                .perform(post("/api/core/items/" + publicItem1.getID() + "/owningCollection/move/"
+                                      + col2.getID()))
+
+                //We expect a 401 Unauthorized status when performed by anonymous
+                .andExpect(status().isOk());
+        getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/owningCollection"))
+                   .andExpect(jsonPath("$",
+                                       is(CollectionMatcher
+                                                  .matchCollectionEntry(col2.getName(), col2.getID(), col2.getHandle())
+                                       )));
+
+
+    }
+
+    @Test
+    public void moveItemTestByAuthorizedUserWithoutAdd() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 1").build();
+        Collection col2 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 2").build();
+
+        Item publicItem1 = ItemBuilder.createItem(context, col1)
+                                      .withTitle("Public item 1")
+                                      .withIssueDate("2017-10-17")
+                                      .withAuthor("Smith, Donald")
+                                      .build();
+
+        EPerson itemMoveEperson = EPersonBuilder.createEPerson(context).withEmail("item@move.org").withPassword("test")
+                                                .withNameInMetadata("Item", "Move").build();
+
+        ResourcePolicy rp1 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.ADMIN)
+                                                  .withDspaceObject(col1).build();
+        ResourcePolicy rp2 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.WRITE)
+                                                  .withDspaceObject(publicItem1).build();
+
+
+        String token = getAuthToken(itemMoveEperson.getEmail(), "test");
+
+        getClient(token).perform(post("/api/core/items/" + publicItem1.getID() + "/owningCollection/move/"
+                                         + col2.getID()))
+
+                   //We expect a 401 Unauthorized status when performed by anonymous
+                   .andExpect(status().isForbidden());
+
+
+    }
+
+    @Test
+    public void moveItemTestByAuthorizedUserWithoutAdmin() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 1").build();
+        Collection col2 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 2").build();
+
+        Item publicItem1 = ItemBuilder.createItem(context, col1)
+                                      .withTitle("Public item 1")
+                                      .withIssueDate("2017-10-17")
+                                      .withAuthor("Smith, Donald")
+                                      .build();
+
+        EPerson itemMoveEperson = EPersonBuilder.createEPerson(context).withEmail("item@move.org").withPassword("test")
+                                                .withNameInMetadata("Item", "Move").build();
+
+        ResourcePolicy rp2 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.WRITE)
+                                                  .withDspaceObject(publicItem1).build();
+        ResourcePolicy rp3 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.ADD)
+                                                  .withDspaceObject(col2).build();
+
+
+
+        String token = getAuthToken(itemMoveEperson.getEmail(), "test");
+
+        getClient(token).perform(post("/api/core/items/" + publicItem1.getID() + "/owningCollection/move/"
+                                         + col2.getID()))
+
+                   //We expect a 401 Unauthorized status when performed by anonymous
+                   .andExpect(status().isForbidden());
+
+
+    }
+
+    @Test
+    public void moveItemTestByAuthorizedUserWithoutWrite() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 1").build();
+        Collection col2 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 2").build();
+
+        Item publicItem1 = ItemBuilder.createItem(context, col1)
+                                      .withTitle("Public item 1")
+                                      .withIssueDate("2017-10-17")
+                                      .withAuthor("Smith, Donald")
+                                      .build();
+
+        EPerson itemMoveEperson = EPersonBuilder.createEPerson(context).withEmail("item@move.org").withPassword("test")
+                                                .withNameInMetadata("Item", "Move").build();
+
+        ResourcePolicy rp1 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.ADMIN)
+                                                  .withDspaceObject(col1).build();
+        ResourcePolicy rp3 = ResourcePolicyBuilder.createResourcePolicy(context).withUser(itemMoveEperson).withAction(Constants.ADD)
+                                                  .withDspaceObject(col2).build();
+
+
+        String token = getAuthToken(itemMoveEperson.getEmail(), "test");
+
+        getClient(token).perform(post("/api/core/items/" + publicItem1.getID() + "/owningCollection/move/"
+                                              + col2.getID()))
+
+                        //We expect a 401 Unauthorized status when performed by anonymous
+                        .andExpect(status().isForbidden());
+
+
     }
 }
