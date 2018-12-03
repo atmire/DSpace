@@ -216,6 +216,10 @@ public class CommunityRestRepository extends DSpaceRestRepository<CommunityRest,
         Community community = null;
         try {
             community = cs.find(context, id);
+            if (community == null) {
+                throw new ResourceNotFoundException(
+                    CommunityRest.CATEGORY + "." + CommunityRest.NAME + " with id: " + id + " not found");
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }

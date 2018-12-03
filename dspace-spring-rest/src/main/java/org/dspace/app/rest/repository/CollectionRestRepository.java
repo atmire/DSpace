@@ -240,6 +240,10 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
         Collection collection = null;
         try {
             collection = cs.find(context, id);
+            if (collection == null) {
+                throw new ResourceNotFoundException(
+                    CollectionRest.CATEGORY + "." + CollectionRest.NAME + " with id: " + id + " not found");
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
