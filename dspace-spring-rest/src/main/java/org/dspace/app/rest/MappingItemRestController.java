@@ -51,11 +51,11 @@ public class MappingItemRestController {
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})
     public MappingItemResourceWrapper retrieve(@PathVariable UUID uuid, HttpServletResponse response,
-                                 HttpServletRequest request, Pageable pageable) throws Exception {
+                                               HttpServletRequest request, Pageable pageable) throws Exception {
         Context context = ContextUtil.obtainContext(request);
         Collection collection = collectionService.find(context, uuid);
         Iterator<Item> itemIterator = itemService.findByCollectionMapping(context, collection, pageable.getPageSize(),
-                                                                            pageable.getOffset());
+                                                                          pageable.getOffset());
         int totalElements = itemService.countByCollectionMapping(context, collection);
         List<ItemRest> mappedItemRestList = new LinkedList<>();
         while (itemIterator.hasNext()) {
@@ -69,7 +69,7 @@ public class MappingItemRestController {
         mappingItemRestWrapper.setMappingItemRestList(mappedItemRestList);
         mappingItemRestWrapper.setCollectionUuid(uuid);
         MappingItemResourceWrapper mappingItemResourceWrapper =
-                new MappingItemResourceWrapper(mappingItemRestWrapper, utils, totalElements);
+            new MappingItemResourceWrapper(mappingItemRestWrapper, utils, totalElements);
 
         halLinkService.addLinks(mappingItemResourceWrapper, pageable);
         return mappingItemResourceWrapper;

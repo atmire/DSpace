@@ -22,10 +22,10 @@ public class MappingItemResourceWrapperHalLinkFactory
         if (mappingItemRestWrapper != null) {
 
             PageImpl<ItemResource> page = new PageImpl<>(halResource.getItemResources(), pageable,
-                                                            halResource.getTotalElements());
+                                                         halResource.getTotalElements());
 
             halResource.setPageHeader(new EmbeddedPageHeader(getSelfLink(mappingItemRestWrapper, pageable),
-                                                                            page, true));
+                                                             page, true));
         }
 
     }
