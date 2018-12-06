@@ -237,7 +237,8 @@ public class MappingCollectionRestRepositoryIT extends AbstractControllerIntegra
     }
 
     @Test
-    public void itemHasNoDuplicatesInMappingCollectionAndCollectionHasNoDuplicatesInMappingItemsTest() throws Exception {
+    public void itemHasNoDuplicatesInMappingCollectionAndCollectionHasNoDuplicatesInMappingItemsTest()
+        throws Exception {
         context.turnOffAuthorisationSystem();
 
         //** GIVEN **
@@ -302,7 +303,8 @@ public class MappingCollectionRestRepositoryIT extends AbstractControllerIntegra
     }
 
     @Test
-    public void itemHasNoOriginalCollectionInMappingCollectionAndCollectionHasNoOriginalItemInMappingItemsTest() throws Exception {
+    public void itemHasNoOriginalCollectionInMappingCollectionAndCollectionHasNoOriginalItemInMappingItemsTest()
+        throws Exception {
         context.turnOffAuthorisationSystem();
 
         //** GIVEN **
@@ -633,8 +635,10 @@ public class MappingCollectionRestRepositoryIT extends AbstractControllerIntegra
 
         String adminToken = getAuthToken(admin.getEmail(), password);
 
-        getClient(adminToken).perform(post("/api/core/items/" + publicItem1.getID() + "/mappingCollections/" + col2.getID()));
-        getClient().perform(delete("/api/core/items/" + publicItem1.getID() + "/mappingCollections/" + col2.getID()))
+        getClient(adminToken).perform(post("/api/core/items/" + publicItem1.getID() + "/mappingCollections/"
+                                               + col2.getID()));
+        getClient().perform(delete("/api/core/items/" + publicItem1.getID() + "/mappingCollections/"
+                                       + col2.getID()))
             .andExpect(status().is(401));
 
 
