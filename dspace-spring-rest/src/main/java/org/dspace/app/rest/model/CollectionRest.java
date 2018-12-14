@@ -29,6 +29,7 @@ public class CollectionRest extends DSpaceObjectRest {
     @JsonIgnore
     private BitstreamRest logo;
 
+    @JsonIgnore
     private CommunityRest owningCommunity;
 
     @JsonIgnore
