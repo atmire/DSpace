@@ -25,6 +25,7 @@ import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dspace.app.rest.builder.CollectionBuilder;
 import org.dspace.app.rest.builder.CommunityBuilder;
+import org.dspace.app.rest.converter.CommunityConverter;
 import org.dspace.app.rest.matcher.CollectionMatcher;
 import org.dspace.app.rest.matcher.CommunityMetadataMatcher;
 import org.dspace.app.rest.model.CollectionRest;
@@ -34,10 +35,14 @@ import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.hamcrest.Matchers;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 
 public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTest {
 
+
+    @Autowired(required = true)
+    private CommunityConverter communityConverter;
 
     @Test
     public void findAllTest() throws Exception {
@@ -483,7 +488,7 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         CollectionRest collectionRest = new CollectionRest();
         // We send a name but the created collection should set this to the title
         collectionRest.setName("Collection");
-        collectionRest.setOwningCommunity(parentCommunity.getID().toString());
+        collectionRest.setOwningCommunity(communityConverter.fromModel(parentCommunity));
         MetadataEntryRest description = new MetadataEntryRest();
         description.setKey("dc.description");
         description.setValue("<p>Some cool HTML code here</p>");

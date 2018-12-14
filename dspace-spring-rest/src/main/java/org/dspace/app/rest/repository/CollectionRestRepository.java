@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.CollectionConverter;
+import org.dspace.app.rest.converter.CommunityConverter;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.CollectionRest;
@@ -69,6 +70,9 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
 
     @Autowired
     DSpaceObjectUtils dspaceObjectUtils;
+
+    @Autowired(required = true)
+    private CommunityConverter communityConverter;
 
 
     public CollectionRestRepository() {
@@ -177,17 +181,11 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
 
         try {
             Community parent = null;
-            if (StringUtils.isNotBlank(collectionRest.getOwningCommunity())) {
-                UUID owningCommunityUuid = UUIDUtils.fromString(collectionRest.getOwningCommunity());
-                if (owningCommunityUuid != null) {
-                    parent = communityService.find(context, owningCommunityUuid);
-                    if (parent == null) {
-                        throw new ResourceNotFoundException("Parent community for id: "
-                                                                + owningCommunityUuid + " not found");
-                    }
-                } else {
-                    throw new BadRequestException("The given owningCommunityUuid was invalid: "
-                                                      + collectionRest.getOwningCommunity());
+            if (collectionRest.getOwningCommunity() != null) {
+                parent = communityConverter.toModel(collectionRest.getOwningCommunity());
+                if (parent == null) {
+                    throw new ResourceNotFoundException("Parent community for id: "
+                                                            + collectionRest.getOwningCommunity().getId() + " not found");
                 }
             }
             collection = cs.create(context, parent);

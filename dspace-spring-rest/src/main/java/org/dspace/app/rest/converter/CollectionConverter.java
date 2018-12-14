@@ -50,6 +50,8 @@ public class CollectionConverter
     private AuthorizeService authorizeService;
     @Autowired
     private ResourcePolicyConverter resourcePolicyConverter;
+    @Autowired(required = true)
+    private CommunityConverter communityConverter;
 
     @Override
     public org.dspace.content.Collection toModel(org.dspace.app.rest.model.CollectionRest obj) {
@@ -67,7 +69,7 @@ public class CollectionConverter
         col.setDefaultAccessConditions(getDefaultBitstreamPoliciesForCollection(obj.getID()));
 
         try {
-            col.setOwningCommunity(obj.getCommunities().get(0).getID().toString());
+            col.setOwningCommunity(communityConverter.fromModel(obj.getCommunities().get(0)));
         } catch (SQLException e) {
             log.error(e.getMessage(), e);
         }
