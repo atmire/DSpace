@@ -64,6 +64,8 @@ public class CollectionRest extends DSpaceObjectRest {
         this.defaultAccessConditions = defaultAccessConditions;
     }
 
+    @LinkRest(linkClass = CommunityRest.class)
+    @JsonIgnore
     public CommunityRest getOwningCommunity() {
         return owningCommunity;
     }
