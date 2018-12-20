@@ -10,8 +10,8 @@ package org.dspace.app.rest;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -85,7 +85,6 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
                                hasJsonPath("$.uuid", not(empty())),
                                hasJsonPath("$.name", is("Title Text")),
                                hasJsonPath("$.handle", not(empty())),
-                               hasJsonPath("$.owningCommunity", isEmptyOrNullString()),
                                hasJsonPath("$.type", is("community")),
                                hasJsonPath("$._links.collections.href", not(empty())),
                                hasJsonPath("$._links.logo.href", not(empty())),
@@ -121,7 +120,6 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
         CommunityRest comm = new CommunityRest();
         // We send a name but the created community should set this to the title
         comm.setName("Test Sub-Level Community");
-        comm.setOwningCommunity(parentCommunity.getID().toString());
         MetadataEntryRest description = new MetadataEntryRest();
         description.setKey("dc.description");
         description.setValue("<p>Some cool HTML code here</p>");
@@ -151,6 +149,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(post("/api/core/communities")
                                          .content(mapper.writeValueAsBytes(comm))
+                                         .param("parentCommunity", parentCommunity.getID().toString())
                                          .contentType(contentType))
                             .andExpect(status().isCreated())
                             .andExpect(content().contentType(contentType))
@@ -159,7 +158,6 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
                                 hasJsonPath("$.uuid", not(empty())),
                                 hasJsonPath("$.name", is("Title Text")),
                                 hasJsonPath("$.handle", not(empty())),
-                                hasJsonPath("$.owningCommunity", is(parentCommunity.getID().toString())),
                                 hasJsonPath("$.type", is("community")),
                                 hasJsonPath("$._links.collections.href", not(empty())),
                                 hasJsonPath("$._links.logo.href", not(empty())),
@@ -650,4 +648,117 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
         ;
     }
 
+    @Test
+    public void deleteTest() throws Exception {
+        //We turn off the authorization system in order to create the structure as defined below
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        //1. A community-collection structure with one parent community with sub-community and one collection.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .withLogo("ThisIsSomeDummyText")
+                                          .build();
+
+        Community parentCommunity2 = CommunityBuilder.createCommunity(context)
+                                                     .withName("Parent Community 2")
+                                                     .withLogo("SomeTest")
+                                                     .build();
+
+        Community parentCommunityChild1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
+                                                          .withName("Sub Community")
+                                                          .build();
+
+        Community parentCommunityChild2 = CommunityBuilder.createSubCommunity(context, parentCommunity)
+                                                          .withName("Sub Community2")
+                                                          .build();
+
+        Community parentCommunityChild2Child1 = CommunityBuilder.createSubCommunity(context, parentCommunityChild2)
+                                                                .withName("Sub Sub Community")
+                                                                .build();
+
+
+        Community parentCommunity2Child1 = CommunityBuilder.createSubCommunity(context, parentCommunity2)
+                                                           .withName("Sub2 Community")
+                                                           .build();
+
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunityChild1)
+                                           .withName("Collection 1")
+                                           .build();
+
+        String token = getAuthToken(admin.getEmail(), password);
+
+        getClient(token).perform(get("/api/core/communities/" + parentCommunity.getID().toString()))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(contentType))
+                        .andExpect(jsonPath("$", Matchers.is(
+                            CommunityMatcher.matchCommunityEntry(parentCommunity.getName(), parentCommunity.getID(),
+                                                                 parentCommunity.getHandle())
+                        )))
+                        .andExpect(jsonPath("$._links.self.href",
+                                            Matchers.containsString("/api/core/communities")))        ;
+        getClient(token).perform(delete("/api/core/communities/" + parentCommunity.getID().toString()))
+                        .andExpect(status().isNoContent())
+        ;
+        getClient(token).perform(get("/api/core/communities/" + parentCommunity.getID().toString()))
+                        .andExpect(status().isNotFound())
+        ;
+
+        getClient(token).perform(get("/api/core/communities/" + parentCommunityChild1.getID().toString()))
+                        .andExpect(status().isNotFound())
+        ;
+    }
+
+    @Test
+    public void deleteTestUnAuthorized() throws Exception {
+        //We turn off the authorization system in order to create the structure as defined below
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        //1. A community-collection structure with one parent community with sub-community and one collection.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .withLogo("ThisIsSomeDummyText")
+                                          .build();
+
+        Community parentCommunity2 = CommunityBuilder.createCommunity(context)
+                                                     .withName("Parent Community 2")
+                                                     .withLogo("SomeTest")
+                                                     .build();
+
+        Community parentCommunityChild1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
+                                                          .withName("Sub Community")
+                                                          .build();
+
+        Community parentCommunityChild2 = CommunityBuilder.createSubCommunity(context, parentCommunity)
+                                                          .withName("Sub Community2")
+                                                          .build();
+
+        Community parentCommunityChild2Child1 = CommunityBuilder.createSubCommunity(context, parentCommunityChild2)
+                                                                .withName("Sub Sub Community")
+                                                                .build();
+
+
+        Community parentCommunity2Child1 = CommunityBuilder.createSubCommunity(context, parentCommunity2)
+                                                           .withName("Sub2 Community")
+                                                           .build();
+
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunityChild1)
+                                           .withName("Collection 1")
+                                           .build();
+
+
+        getClient().perform(get("/api/core/communities/" + parentCommunity.getID().toString()))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(contentType))
+                        .andExpect(jsonPath("$", Matchers.is(
+                            CommunityMatcher.matchCommunityEntry(parentCommunity.getName(), parentCommunity.getID(),
+                                                                 parentCommunity.getHandle())
+                        )))
+                        .andExpect(jsonPath("$._links.self.href",
+                                            Matchers.containsString("/api/core/communities")))        ;
+        getClient().perform(delete("/api/core/communities/" + parentCommunity.getID().toString()))
+                        .andExpect(status().isUnauthorized())
+        ;
+    }
 }
