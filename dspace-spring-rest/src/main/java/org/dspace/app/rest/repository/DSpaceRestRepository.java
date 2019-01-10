@@ -424,7 +424,9 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
             thisRepository.put(context, request, apiCategory, model, uuid, jsonNode);
             context.commit();
         } catch (SQLException | AuthorizeException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new RuntimeException(
+                    "error while executing a PUT request for " + apiCategory + "/" + model + " with id: " + uuid, e
+            );
         }
         return findOne(uuid);
     }
