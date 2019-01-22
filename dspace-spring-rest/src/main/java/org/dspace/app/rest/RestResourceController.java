@@ -725,8 +725,16 @@ public class RestResourceController implements InitializingBean {
                     if (Page.class.isAssignableFrom(linkMethod.getReturnType())) {
                         Page<? extends RestModel> pageResult = (Page<? extends RestAddressableModel>) linkMethod
                                 .invoke(linkRepository, request, uuid, page, projection);
-                        Link link = linkTo(this.getClass(), apiCategory, model).slash(uuid).slash(subpath)
-                                .withSelfRel();
+
+                        Link link = null;
+                        String querystring = request.getQueryString();
+                        if (querystring != null && querystring.length() > 0) {
+                            link = linkTo(this.getClass(), apiCategory, model).slash(uuid)
+                                .slash(subpath + '?' + querystring).withSelfRel();
+                        } else {
+                            link = linkTo(this.getClass(), apiCategory, model).slash(uuid).withSelfRel();
+                        }
+
                         Page<HALResource> halResources = pageResult.map(linkRepository::wrapResource);
                         halResources.forEach(linkService::addLinks);
 
@@ -924,11 +932,7 @@ public class RestResourceController implements InitializingBean {
             result = assembler.toResource(resources, link);
         } else {
             if (searchResult == null) {
-                try {
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                } catch (IOException e) {
-                    throw new RuntimeException(e.getMessage(), e);
-                }
+                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
                 return null;
             }
             DSpaceResource<T> dsResource = repository.wrapResource((T) searchResult);
@@ -984,14 +988,70 @@ public class RestResourceController implements InitializingBean {
 
 
 
+    /**
+     * Execute a PUT request for an entity with id of type Integer;
+     *
+     * curl -X PUT http://<dspace.url>/dspace-spring-rest/api/{apiCategory}/{model}
+     *
+     * Example:
+     * <pre>
+     * {@code
+     *      curl -X PUT http://<dspace.url>/dspace-spring-rest/api/metadatafield
+     * }
+     * </pre>
+     *
+     * @param request     the http request
+     * @param apiCategory the API category e.g. "api"
+     * @param model       the DSpace model e.g. "metadatafield"
+     * @param id          the ID of the target REST object
+     * @param jsonNode    the part of the request body representing the updated rest object
+     * @return the relevant REST resource
+     */
+    @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT)
+    public DSpaceResource<RestAddressableModel> put(HttpServletRequest request,
+                                                    @PathVariable String apiCategory, @PathVariable String model,
+                                                    @PathVariable Integer id,
+                                                    @RequestBody JsonNode jsonNode) {
+        return putOneInternal(request, apiCategory, model, id, jsonNode);
+    }
+
+    /**
+     * Execute a PUT request for an entity with id of type UUID;
+     *
+     * curl -X PUT http://<dspace.url>/dspace-spring-rest/api/{apiCategory}/{model}
+     *
+     * Example:
+     * <pre>
+     * {@code
+     *      curl -X PUT http://<dspace.url>/dspace-spring-rest/api/collection
+     * }
+     * </pre>
+     *
+     * @param request     the http request
+     * @param apiCategory the API category e.g. "api"
+     * @param model       the DSpace model e.g. "metadatafield"
+     * @param uuid        the ID of the target REST object
+     * @param jsonNode    the part of the request body representing the updated rest object
+     * @return the relevant REST resource
+     */
     @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID)
     public DSpaceResource<RestAddressableModel> put(HttpServletRequest request,
                                                     @PathVariable String apiCategory, @PathVariable String model,
                                                     @PathVariable UUID uuid,
-                                                    @RequestBody(required = true) JsonNode jsonNode) {
+                                                    @RequestBody JsonNode jsonNode) {
         return putOneInternal(request, apiCategory, model, uuid, jsonNode);
     }
 
+    /**
+     * Internal method to update a single entity
+     *
+     * @param request     the http request
+     * @param apiCategory the API category e.g. "api"
+     * @param model       the DSpace model e.g. "metadatafield"
+     * @param uuid        the ID of the target REST object
+     * @param jsonNode    the part of the request body representing the updated rest object
+     * @return the relevant REST resource
+     */
     private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneInternal(HttpServletRequest request,
                                                                                           String apiCategory,
                                                                                           String model, ID uuid,
