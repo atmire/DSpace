@@ -441,6 +441,15 @@ public class BrowsesResourceControllerIT extends AbstractControllerIntegrationTe
                                 .withIssueDate("2016-01-12")
                                 .build();
 
+
+        System.out.println("TRAVIS TEST BROWSE OUTPUT");
+        System.out.println(
+                getClient().perform(get("/api/discover/browses/dateissued/items")
+                        .param("sort", "title,asc")
+                        .param("size", "50"))
+                        .andReturn().getResponse().getContentAsString()
+        );
+
         //** WHEN **
         //An anonymous user browses the items in the Browse by date issued endpoint
         //sorted ascending by tile with a page size of 5
