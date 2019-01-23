@@ -103,7 +103,6 @@ public class CsvImportIT extends AbstractControllerIntegrationTest {
 
         while (itemIterator.hasNext()) {
             Item item = itemIterator.next();
-            itemIterator.remove();
             itemService.delete(context, item);
         }
 

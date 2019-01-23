@@ -100,7 +100,6 @@ public class RelationshipRestRepositoryIT extends AbstractControllerIntegrationT
 
         while (itemIterator.hasNext()) {
             Item item = itemIterator.next();
-            itemIterator.remove();
             itemService.delete(context, item);
         }
 
