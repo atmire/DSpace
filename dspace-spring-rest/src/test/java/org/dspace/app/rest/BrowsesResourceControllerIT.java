@@ -442,12 +442,12 @@ public class BrowsesResourceControllerIT extends AbstractControllerIntegrationTe
                                 .withIssueDate("2016-01-12")
                                 .build();
 
-//        assertEquals("TRAVIS TEST BROWSE OUTPUT",
-//                getClient().perform(get("/api/discover/browses/dateissued/items")
-//                        .param("sort", "title,asc")
-//                        .param("size", "50"))
-//                        .andReturn().getResponse().getContentAsString()
-//        );
+        assertEquals("TRAVIS TEST BROWSE OUTPUT",
+                getClient().perform(get("/api/discover/browses/dateissued/items")
+                        .param("sort", "title,asc")
+                        .param("size", "50"))
+                        .andReturn().getResponse().getContentAsString()
+        );
 
 
         //** WHEN **
