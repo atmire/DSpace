@@ -31,6 +31,7 @@ import org.dspace.content.Item;
 import org.dspace.content.Relationship;
 import org.dspace.content.RelationshipType;
 import org.dspace.content.service.EntityTypeService;
+import org.dspace.content.service.ItemService;
 import org.dspace.content.service.RelationshipService;
 import org.dspace.content.service.RelationshipTypeService;
 import org.dspace.services.ConfigurationService;
@@ -53,6 +54,9 @@ public class RelationshipRestRepositoryIT extends AbstractControllerIntegrationT
     @Autowired
     private ConfigurationService configurationService;
 
+    @Autowired
+    private ItemService itemService;
+
     @Before
     public void setup() throws Exception {
 
@@ -71,6 +75,7 @@ public class RelationshipRestRepositoryIT extends AbstractControllerIntegrationT
         List<RelationshipType> relationshipTypeList = relationshipTypeService.findAll(context);
         List<EntityType> entityTypeList = entityTypeService.findAll(context);
         List<Relationship> relationships = relationshipService.findAll(context);
+        Iterator<Item> itemIterator = itemService.findAll(context);
 
         Iterator<Relationship> relationshipIterator = relationships.iterator();
         while (relationshipIterator.hasNext()) {
@@ -91,6 +96,12 @@ public class RelationshipRestRepositoryIT extends AbstractControllerIntegrationT
             EntityType entityType = entityTypeIterator.next();
             entityTypeIterator.remove();
             entityTypeService.delete(context, entityType);
+        }
+
+        while (itemIterator.hasNext()) {
+            Item item = itemIterator.next();
+            itemIterator.remove();
+            itemService.delete(context, item);
         }
 
         super.destroy();
