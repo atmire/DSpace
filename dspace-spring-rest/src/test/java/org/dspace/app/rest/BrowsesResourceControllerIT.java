@@ -14,6 +14,8 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -449,6 +451,15 @@ public class BrowsesResourceControllerIT extends AbstractControllerIntegrationTe
                         .param("size", "50"))
                         .andReturn().getResponse().getContentAsString()
         );
+        assertNotEquals("TRAVIS TEST BROWSE OUTPUT", "TRAVIS TEST BROWSE OUTPUT");
+        assertEquals("",
+                getClient().perform(get("/api/discover/browses/dateissued/items")
+                        .param("sort", "title,asc")
+                        .param("size", "50"))
+                        .andReturn().getResponse().getContentAsString()
+        );
+//        assertEquals("TRAVIS TEST BROWSE OUTPUT", "TRAVIS TEST BROWSE OUTPUT");
+
 
         //** WHEN **
         //An anonymous user browses the items in the Browse by date issued endpoint
