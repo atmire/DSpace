@@ -442,21 +442,12 @@ public class BrowsesResourceControllerIT extends AbstractControllerIntegrationTe
                                 .withIssueDate("2016-01-12")
                                 .build();
 
-
-        System.out.println("TRAVIS TEST BROWSE OUTPUT");
-        System.out.println(
-                getClient().perform(get("/api/discover/browses/dateissued/items")
-                        .param("sort", "title,asc")
-                        .param("size", "50"))
-                        .andReturn().getResponse().getContentAsString()
-        );
-        assertEquals("TRAVIS TEST BROWSE OUTPUT",
-                getClient().perform(get("/api/discover/browses/dateissued/items")
-                        .param("sort", "title,asc")
-                        .param("size", "50"))
-                        .andReturn().getResponse().getContentAsString()
-        );
-//        assertEquals("TRAVIS TEST BROWSE OUTPUT", "TRAVIS TEST BROWSE OUTPUT");
+//        assertEquals("TRAVIS TEST BROWSE OUTPUT",
+//                getClient().perform(get("/api/discover/browses/dateissued/items")
+//                        .param("sort", "title,asc")
+//                        .param("size", "50"))
+//                        .andReturn().getResponse().getContentAsString()
+//        );
 
 
         //** WHEN **
@@ -750,6 +741,14 @@ public class BrowsesResourceControllerIT extends AbstractControllerIntegrationTe
                                                 ItemMatcher.matchItemWithTitleAndDateIssued(item4,
                                                                                             "Java", "1995-05-23")
                                        )));
+
+
+        assertEquals("TRAVIS TEST BROWSE OUTPUT",
+                getClient().perform(get("/api/discover/browses/title/items?startsWith=T")
+                        .param("sort", "title,asc")
+                        .param("size", "50"))
+                        .andReturn().getResponse().getContentAsString()
+        );
         //** WHEN **
         //An anonymous user browses the items in the Browse by Title endpoint
         //with startsWith set to T
