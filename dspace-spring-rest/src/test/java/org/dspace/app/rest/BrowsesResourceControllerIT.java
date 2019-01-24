@@ -444,7 +444,7 @@ public class BrowsesResourceControllerIT extends AbstractControllerIntegrationTe
                                 .build();
 
         assertThat(
-                getClient().perform(get("/api/discover/browses/title/items?startsWith=T")
+                getClient().perform(get("/api/discover/browses/dateissued/items")
                         .param("sort", "title,asc")
                         .param("size", "50"))
                         .andReturn().getResponse().getContentAsString(), CoreMatchers.containsString("\"totalElements\" : 7")
