@@ -14,7 +14,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -32,6 +32,7 @@ import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.dspace.content.Item;
 import org.dspace.eperson.Group;
+import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
@@ -442,11 +443,11 @@ public class BrowsesResourceControllerIT extends AbstractControllerIntegrationTe
                                 .withIssueDate("2016-01-12")
                                 .build();
 
-        assertEquals("TRAVIS TEST BROWSE OUTPUT",
-                getClient().perform(get("/api/discover/browses/dateissued/items")
+        assertThat(
+                getClient().perform(get("/api/discover/browses/title/items?startsWith=T")
                         .param("sort", "title,asc")
                         .param("size", "50"))
-                        .andReturn().getResponse().getContentAsString()
+                        .andReturn().getResponse().getContentAsString(), CoreMatchers.containsString("\"totalElements\" : 7")
         );
 
 
@@ -715,6 +716,13 @@ public class BrowsesResourceControllerIT extends AbstractControllerIntegrationTe
                                 .build();
         // ---- BROWSES BY ITEM ----
 
+        assertThat(
+                getClient().perform(get("/api/discover/browses/dateissued/items?startsWith=1990")
+                        .param("sort", "title,asc")
+                        .param("size", "50"))
+                        .andReturn().getResponse().getContentAsString(), CoreMatchers.containsString("\"totalElements\" : 7")
+        );
+
         //** WHEN **
         //An anonymous user browses the items in the Browse by date issued endpoint
         //with startsWith set to 1990
@@ -743,11 +751,11 @@ public class BrowsesResourceControllerIT extends AbstractControllerIntegrationTe
                                        )));
 
 
-        assertEquals("TRAVIS TEST BROWSE OUTPUT",
+        assertThat(
                 getClient().perform(get("/api/discover/browses/title/items?startsWith=T")
                         .param("sort", "title,asc")
                         .param("size", "50"))
-                        .andReturn().getResponse().getContentAsString()
+                        .andReturn().getResponse().getContentAsString(), CoreMatchers.containsString("\"totalElements\" : 7")
         );
         //** WHEN **
         //An anonymous user browses the items in the Browse by Title endpoint
@@ -871,6 +879,13 @@ public class BrowsesResourceControllerIT extends AbstractControllerIntegrationTe
                                 .build();
 
         // ---- BROWSES BY ITEM ----
+
+        assertThat(
+                getClient().perform(get("/api/discover/browses/dateissued/items?startsWith=1990")
+                        .param("sort", "title,asc")
+                        .param("size", "50"))
+                        .andReturn().getResponse().getContentAsString(), CoreMatchers.containsString("\"totalElements\" : 7")
+        );
 
         //** WHEN **
         //An anonymous user browses the items in the Browse by date issued endpoint
