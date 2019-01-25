@@ -146,10 +146,11 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     private boolean verifyMaxCardinality(Context context, Item itemToProcess,
-                                         int maxCardinality, RelationshipType relationshipType) throws SQLException {
+                                         Integer maxCardinality,
+                                         RelationshipType relationshipType) throws SQLException {
         List<Relationship> rightRelationships = findByItemAndRelationshipType(context, itemToProcess, relationshipType,
                                                                               false);
-        if (rightRelationships.size() >= maxCardinality && maxCardinality != 0) {
+        if (maxCardinality != null && rightRelationships.size() >= maxCardinality) {
             return false;
         }
         return true;
@@ -265,10 +266,10 @@ public class RelationshipServiceImpl implements RelationshipService {
 
     private boolean checkMinCardinality(Context context, Item item,
                                         Relationship relationship,
-                                        int minCardinality, boolean isLeft) throws SQLException {
+                                        Integer minCardinality, boolean isLeft) throws SQLException {
         List<Relationship> list = this
             .findByItemAndRelationshipType(context, item, relationship.getRelationshipType(), isLeft);
-        if (!(list.size() > minCardinality)) {
+        if (minCardinality != null && !(list.size() > minCardinality)) {
             return false;
         }
         return true;
