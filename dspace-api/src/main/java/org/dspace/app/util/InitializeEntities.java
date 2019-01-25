@@ -213,32 +213,10 @@ public class InitializeEntities {
         if (rightEntityType == null) {
             rightEntityType = entityTypeService.create(context, rightType);
         }
-        Integer leftCardinalityMinInteger = null;
-        Integer leftCardinalityMaxInteger = null;
-        Integer rightCardinalityMinInteger = null;
-        Integer rightCardinalityMaxInteger = null;
-        if (StringUtils.isNotBlank(leftCardinalityMin)) {
-            leftCardinalityMinInteger = Integer.parseInt(leftCardinalityMin);
-        } else {
-            leftCardinalityMinInteger = Integer.MIN_VALUE;
-        }
-        if (StringUtils.isNotBlank(leftCardinalityMax)) {
-            leftCardinalityMaxInteger = Integer.parseInt(leftCardinalityMax);
-        } else {
-            leftCardinalityMaxInteger = Integer.MAX_VALUE;
-        }
-        if (StringUtils.isNotBlank(rightCardinalityMin)) {
-            rightCardinalityMinInteger = Integer.parseInt(rightCardinalityMin);
-        } else {
-            rightCardinalityMinInteger = Integer.MIN_VALUE;
-        }
-        if (StringUtils.isNotBlank(rightCardinalityMax)) {
-            rightCardinalityMaxInteger = Integer.parseInt(rightCardinalityMax);
-        } else {
-            rightCardinalityMaxInteger = Integer.MAX_VALUE;
-        }
         return relationshipTypeService.create(context, leftEntityType, rightEntityType, leftLabel, rightLabel,
-                                              leftCardinalityMinInteger, leftCardinalityMaxInteger,
-                                              rightCardinalityMinInteger, rightCardinalityMaxInteger);
+                                              Integer.parseInt(leftCardinalityMin),
+                                              Integer.parseInt(leftCardinalityMax),
+                                              Integer.parseInt(rightCardinalityMin),
+                                              Integer.parseInt(rightCardinalityMax));
     }
 }

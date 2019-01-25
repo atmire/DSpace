@@ -81,26 +81,26 @@ public class RelationshipType implements ReloadableEntity<Integer> {
      * This is stored as an Integer
      */
     @Column(name = "left_min_cardinality")
-    private int leftMinCardinality;
+    private Integer leftMinCardinality;
 
     /**
      * The maximum amount of relations for the leftItem that can to be present at all times
      * This is stored as an Integer
      */
     @Column(name = "left_max_cardinality")
-    private int leftMaxCardinality;
+    private Integer leftMaxCardinality;
 
     /**
      * The minimum amount of relations for the rightItem that need to be present at all times
      */
     @Column(name = "right_min_cardinality")
-    private int rightMinCardinality;
+    private Integer rightMinCardinality;
 
     /**
      * Tha maximum amount of relations for the rightItem that can be present at all times
      */
     @Column(name = "right_max_cardinality")
-    private int rightMaxCardinality;
+    private Integer rightMaxCardinality;
 
     /**
      * Protected constructor, create object using:
@@ -184,7 +184,7 @@ public class RelationshipType implements ReloadableEntity<Integer> {
      * Standard getter for the leftMinCardinality Integer for this RelationshipType
      * @return  the leftMinCardinality Integer of this RelationshipType
      */
-    public int getLeftMinCardinality() {
+    public Integer getLeftMinCardinality() {
         return leftMinCardinality;
     }
 
@@ -192,7 +192,7 @@ public class RelationshipType implements ReloadableEntity<Integer> {
      * Standard setter for the leftMinCardinality Integer for this RelationshipType
      * @param leftMinCardinality    The leftMinCardinality Integer that this RelationshipType should recieve
      */
-    public void setLeftMinCardinality(int leftMinCardinality) {
+    public void setLeftMinCardinality(Integer leftMinCardinality) {
         this.leftMinCardinality = leftMinCardinality;
     }
 
@@ -200,7 +200,7 @@ public class RelationshipType implements ReloadableEntity<Integer> {
      * Standard getter for the leftMaxCardinality Integer for this RelationshipType
      * @return  the leftMaxCardinality Integer of this RelationshipType
      */
-    public int getLeftMaxCardinality() {
+    public Integer getLeftMaxCardinality() {
         return leftMaxCardinality;
     }
 
@@ -208,7 +208,7 @@ public class RelationshipType implements ReloadableEntity<Integer> {
      * Standard setter for the leftMaxCardinality Integer for this RelationshipType
      * @param leftMaxCardinality    The leftMaxCardinality Integer that this RelationshipType should recieve
      */
-    public void setLeftMaxCardinality(int leftMaxCardinality) {
+    public void setLeftMaxCardinality(Integer leftMaxCardinality) {
         this.leftMaxCardinality = leftMaxCardinality;
     }
 
@@ -216,7 +216,7 @@ public class RelationshipType implements ReloadableEntity<Integer> {
      * Standard getter for the rightMinCardinality Integer for this RelationshipType
      * @return  the rightMinCardinality Integer of this RelationshipType
      */
-    public int getRightMinCardinality() {
+    public Integer getRightMinCardinality() {
         return rightMinCardinality;
     }
 
@@ -224,7 +224,7 @@ public class RelationshipType implements ReloadableEntity<Integer> {
      * Standard setter for the rightMinCardinality Integer for this RelationshipType
      * @param rightMinCardinality    The rightMinCardinality Integer that this RelationshipType should recieve
      */
-    public void setRightMinCardinality(int rightMinCardinality) {
+    public void setRightMinCardinality(Integer rightMinCardinality) {
         this.rightMinCardinality = rightMinCardinality;
     }
 
@@ -232,7 +232,7 @@ public class RelationshipType implements ReloadableEntity<Integer> {
      * Standard getter for the rightMaxCardinality Integer for this RelationshipType
      * @return  the rightMaxCardinality Integer of this RelationshipType
      */
-    public int getRightMaxCardinality() {
+    public Integer getRightMaxCardinality() {
         return rightMaxCardinality;
     }
 
@@ -240,7 +240,7 @@ public class RelationshipType implements ReloadableEntity<Integer> {
      * Standard setter for the rightMaxCardinality Integer for this RelationshipType
      * @param rightMaxCardinality    The rightMaxCardinality Integer that this RelationshipType should recieve
      */
-    public void setRightMaxCardinality(int rightMaxCardinality) {
+    public void setRightMaxCardinality(Integer rightMaxCardinality) {
         this.rightMaxCardinality = rightMaxCardinality;
     }
 
