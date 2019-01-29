@@ -172,7 +172,7 @@ public class Related implements VirtualBean {
             }
         }
 
-        return null;
+        return new LinkedList<>();
     }
 
 }
