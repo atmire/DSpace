@@ -1418,14 +1418,19 @@ prevent the generation of resource policy entry values with null dspace_object a
             String key = entry.getKey();
             VirtualBean virtualBean = entry.getValue();
 
-            for (String value : virtualBean.getValues(context, otherItem)) {
-                RelationshipMetadataValue metadataValue = constructMetadataValue(context, key);
-                metadataValue = constructResultingMetadataValue(item, value, metadataValue, relationshipId);
-                metadataValue.setUseForPlace(virtualBean.getUseForPlace());
-                metadataValue.setPlace(place);
-                if (StringUtils.isNotBlank(metadataValue.getValue())) {
-                    resultingMetadataValueList.add(metadataValue);
+            if (virtualBean != null) {
+                for (String value : virtualBean.getValues(context, otherItem)) {
+                    RelationshipMetadataValue metadataValue = constructMetadataValue(context, key);
+                    metadataValue = constructResultingMetadataValue(item, value, metadataValue, relationshipId);
+                    metadataValue.setUseForPlace(virtualBean.getUseForPlace());
+                    metadataValue.setPlace(place);
+                    if (StringUtils.isNotBlank(metadataValue.getValue())) {
+                        resultingMetadataValueList.add(metadataValue);
+                    }
                 }
+            } else {
+                log.warn("Unable to process bean: {} for item: {}",
+                        key, item.getID());
             }
         }
         return resultingMetadataValueList;
