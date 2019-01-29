@@ -319,6 +319,7 @@
         <entry key="journal.title"  value-ref="issueVolumeJournal_title_related"/>
         <entry key="journalvolume.identifier.name" value-ref="issueVolume_title_related"/>
         <entry key="relation.isJournalOfPublication" value-ref="issueVolumeJournal_uuid_related"/>
+        <entry key="journalissue.identifier.number" value-ref="journalIssue_number"/>
     </util:map>
     <bean class="org.dspace.content.virtual.Concatenate" id="issueVolume_title">
         <property name="fields">
