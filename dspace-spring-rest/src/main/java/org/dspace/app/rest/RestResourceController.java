@@ -990,18 +990,18 @@ public class RestResourceController implements InitializingBean {
     /**
      * Execute a PUT request for an entity with id of type UUID;
      *
-     * curl -X PUT http://<dspace.url>/dspace-spring-rest/api/{apiCategory}/{model}/{uuid}
+     * curl -X PUT http://<dspace.url>/dspace-spring-rest/api/{apiCategory}/{model}
      *
      * Example:
      * <pre>
      * {@code
-     *      curl -X PUT http://<dspace.url>/dspace-spring-rest/api/collection/320c0492-de1d-4646-9e69-193d36b366e9
+     *      curl -X PUT http://<dspace.url>/dspace-spring-rest/api/collection
      * }
      * </pre>
      *
      * @param request     the http request
      * @param apiCategory the API category e.g. "api"
-     * @param model       the DSpace model e.g. "collection"
+     * @param model       the DSpace model e.g. "metadatafield"
      * @param uuid        the ID of the target REST object
      * @param jsonNode    the part of the request body representing the updated rest object
      * @return the relevant REST resource
@@ -1013,8 +1013,6 @@ public class RestResourceController implements InitializingBean {
                                                     @RequestBody(required = true) JsonNode jsonNode) {
         return putOneInternal(request, apiCategory, model, uuid, jsonNode);
     }
-
-
 
     /**
      * Execute a PUT request for an entity with id of type Integer;
@@ -1043,7 +1041,16 @@ public class RestResourceController implements InitializingBean {
         return putOneInternal(request, apiCategory, model, id, jsonNode);
     }
 
-
+    /**
+     * Internal method to update a single entity
+     *
+     * @param request     the http request
+     * @param apiCategory the API category e.g. "api"
+     * @param model       the DSpace model e.g. "metadatafield"
+     * @param uuid        the ID of the target REST object
+     * @param jsonNode    the part of the request body representing the updated rest object
+     * @return the relevant REST resource
+     */
     private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneInternal(HttpServletRequest request,
                                                                                           String apiCategory,
                                                                                           String model, ID uuid,

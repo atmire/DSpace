@@ -20,6 +20,10 @@ import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * This class will be used as a Utils class to implement certain useful methods that can be reused by
+ * multiple DSpaceObject instances
+ */
 @Component
 public class DSpaceObjectUtils {
 
@@ -41,7 +45,8 @@ public class DSpaceObjectUtils {
      * @throws SQLException         If something goes wrong
      * @throws AuthorizeException   If something goes wrong
      */
-    public DSpaceObject replaceMetadataValues(Context context, DSpaceObject dSpaceObject,
+    public DSpaceObject replaceMetadataValues(Context context,
+                                              DSpaceObject dSpaceObject,
                                               List<MetadataEntryRest> metadataEntryRestList)
         throws SQLException, AuthorizeException {
         DSpaceObjectService dSpaceObjectService = contentServiceFactory.getDSpaceObjectService(dSpaceObject);

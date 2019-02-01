@@ -20,7 +20,6 @@ import javax.ws.rs.BadRequestException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.CollectionConverter;
@@ -30,6 +29,7 @@ import org.dspace.app.rest.model.CollectionRest;
 import org.dspace.app.rest.model.CommunityRest;
 import org.dspace.app.rest.model.MetadataEntryRest;
 import org.dspace.app.rest.model.hateoas.CollectionResource;
+import org.dspace.app.rest.utils.CollectionRestEqualityUtils;
 import org.dspace.app.rest.utils.DSpaceObjectUtils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
@@ -56,8 +56,6 @@ import org.springframework.stereotype.Component;
 @Component(CollectionRest.CATEGORY + "." + CollectionRest.NAME)
 public class CollectionRestRepository extends DSpaceRestRepository<CollectionRest, UUID> {
 
-    private static final Logger log = Logger.getLogger(CollectionRestRepository.class);
-
     @Autowired
     CommunityService communityService;
 
@@ -69,6 +67,9 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
 
     @Autowired
     DSpaceObjectUtils dspaceObjectUtils;
+
+    @Autowired
+    CollectionRestEqualityUtils collectionRestEqualityUtils;
 
 
     public CollectionRestRepository() {
@@ -175,21 +176,25 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
         Collection collection;
 
 
+        String parentCommunityString = req.getParameter("parent");
         try {
             Community parent = null;
-            if (StringUtils.isNotBlank(req.getParameter("parentCommunity"))) {
+            if (StringUtils.isNotBlank(parentCommunityString)) {
 
-                UUID owningCommunityUuid = UUIDUtils.fromString(req.getParameter("parentCommunity"));
-                if (owningCommunityUuid == null) {
-                    throw new BadRequestException("The given owningCommunityUuid was invalid: "
-                            + req.getParameter("parentCommunity"));
+                UUID parentCommunityUuid = UUIDUtils.fromString(parentCommunityString);
+                if (parentCommunityUuid == null) {
+                    throw new BadRequestException("The given parent was invalid: "
+                            + parentCommunityString);
                 }
 
-                parent = communityService.find(context, owningCommunityUuid);
+                parent = communityService.find(context, parentCommunityUuid);
                 if (parent == null) {
-                    throw new ResourceNotFoundException("Parent community for id: "
-                            + owningCommunityUuid + " not found");
+                    throw new UnprocessableEntityException("Parent community for id: "
+                            + parentCommunityUuid + " not found");
                 }
+            } else {
+                throw new BadRequestException("The parent parameter cannot be left empty," +
+                                                  "collections require a parent community.");
             }
             collection = cs.create(context, parent);
             cs.update(context, collection);
@@ -201,9 +206,9 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new RuntimeException("Unable to create new Collection under parent Community " +
+                                           parentCommunityString, e);
         }
-
         return converter.convert(collection);
     }
 
@@ -217,13 +222,14 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
         try {
             collectionRest = new ObjectMapper().readValue(jsonNode.toString(), CollectionRest.class);
         } catch (IOException e) {
-            log.error(e.getMessage(), e);
+            throw new UnprocessableEntityException("error parsing the body ..." + e.getMessage());
         }
         Collection collection = cs.find(context, id);
         if (collection == null) {
             throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");
         }
-        if (StringUtils.equals(id.toString(), collectionRest.getId())) {
+        CollectionRest originalCollectionRest = converter.fromModel(collection);
+        if (collectionRestEqualityUtils.isCollectionRestEqualWithoutMetadata(originalCollectionRest, collectionRest)) {
             List<MetadataEntryRest> metadataEntryRestList = collectionRest.getMetadata();
             collection = (Collection) dspaceObjectUtils.replaceMetadataValues(context,
                                                                               collection,
@@ -246,12 +252,14 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
                     CollectionRest.CATEGORY + "." + CollectionRest.NAME + " with id: " + id + " not found");
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new RuntimeException("Unable to find Collection with id = " + id, e);
         }
         try {
             cs.delete(context, collection);
-        } catch (SQLException | IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
+        } catch (SQLException e) {
+            throw new RuntimeException("Unable to delete Collection with id = " + id, e);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to delete collection because the logo couldn't be deleted", e);
         }
     }
 
