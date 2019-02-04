@@ -7,8 +7,6 @@
  */
 package org.dspace.app.rest;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -29,7 +27,9 @@ import org.dspace.content.service.RelationshipService;
 import org.dspace.content.service.RelationshipTypeService;
 import org.dspace.services.ConfigurationService;
 import org.h2.util.StringUtils;
+import org.hamcrest.Matchers;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -93,7 +93,7 @@ public class RelationshipTypeRestRepositoryIT extends AbstractControllerIntegrat
 
     @Test
     public void findAllRelationshipTypesTest() throws SQLException {
-        assertEquals(10, relationshipTypeService.findAll(context).size());
+        Assert.assertEquals(10, relationshipTypeService.findAll(context).size());
     }
 
     @Test
@@ -174,13 +174,13 @@ public class RelationshipTypeRestRepositoryIT extends AbstractControllerIntegrat
             .findbyTypesAndLabels(context, entityTypeService.findByEntityType(context, leftType),
                                   entityTypeService.findByEntityType(context, rightType),
                                   leftLabel, rightLabel);
-        assertNotNull(relationshipType);
-        assertEquals(entityTypeService.findByEntityType(context, leftType),
+        Assert.assertNotNull(relationshipType);
+        Assert.assertEquals(entityTypeService.findByEntityType(context, leftType),
                      relationshipType.getLeftType());
-        assertEquals(entityTypeService.findByEntityType(context, rightType),
+        Assert.assertEquals(entityTypeService.findByEntityType(context, rightType),
                      relationshipType.getRightType());
-        assertEquals(leftLabel, relationshipType.getLeftLabel());
-        assertEquals(rightLabel, relationshipType.getRightLabel());
+        Assert.assertEquals(leftLabel, relationshipType.getLeftLabel());
+        Assert.assertEquals(rightLabel, relationshipType.getRightLabel());
     }
 
     @Test
@@ -193,11 +193,11 @@ public class RelationshipTypeRestRepositoryIT extends AbstractControllerIntegrat
                    //We expect a 200 OK status
                    .andExpect(status().isOk())
                    //The type has to be 'discover'
-                   .andExpect(jsonPath("$.page.totalElements", is(10)))
+                   .andExpect(jsonPath("$.page.totalElements", Matchers.is(10)))
                    //There needs to be a self link to this endpoint
-                   .andExpect(jsonPath("$._links.self.href", containsString("api/core/relationshiptypes")))
+                   .andExpect(jsonPath("$._links.self.href", Matchers.containsString("api/core/relationshiptypes")))
                    //We have 4 facets in the default configuration, they need to all be present in the embedded section
-                   .andExpect(jsonPath("$._embedded.relationshiptypes", containsInAnyOrder(
+                   .andExpect(jsonPath("$._embedded.relationshiptypes", Matchers.containsInAnyOrder(
                        RelationshipTypeMatcher.matchRelationshipTypeEntry(relationshipTypes.get(0)),
                        RelationshipTypeMatcher.matchRelationshipTypeEntry(relationshipTypes.get(1)),
                        RelationshipTypeMatcher.matchRelationshipTypeEntry(relationshipTypes.get(2)),
@@ -243,16 +243,16 @@ public class RelationshipTypeRestRepositoryIT extends AbstractControllerIntegrat
             .findbyTypesAndLabels(context, entityTypeService.findByEntityType(context, "Publication"),
                                   entityTypeService.findByEntityType(context, "Person"), "isAuthorOfPublication",
                                   "isPublicationOfAuthor");
-        assertEquals(((Integer) 0), relationshipType.getLeftMinCardinality());
-        assertEquals(((Integer) 0), relationshipType.getRightMinCardinality());
-        assertNull(relationshipType.getLeftMaxCardinality());
-        assertNull(null, relationshipType.getRightMaxCardinality());
+        Assert.assertEquals(((Integer) 0), relationshipType.getLeftMinCardinality());
+        Assert.assertEquals(((Integer) 0), relationshipType.getRightMinCardinality());
+        Assert.assertNull(relationshipType.getLeftMaxCardinality());
+        Assert.assertNull(null, relationshipType.getRightMaxCardinality());
 
         getClient().perform(get("/api/core/relationshiptypes/" + relationshipType.getID()))
-                   .andExpect(jsonPath("$.leftMinCardinality", is(0)))
-                   .andExpect(jsonPath("$.rightMinCardinality", is(0)))
-                   .andExpect(jsonPath("$.leftMaxCardinality", isEmptyOrNullString()))
-                   .andExpect(jsonPath("$.rightMaxCardinality", isEmptyOrNullString()));
+                   .andExpect(jsonPath("$.leftMinCardinality", Matchers.is(0)))
+                   .andExpect(jsonPath("$.rightMinCardinality", Matchers.is(0)))
+                   .andExpect(jsonPath("$.leftMaxCardinality", Matchers.isEmptyOrNullString()))
+                   .andExpect(jsonPath("$.rightMaxCardinality", Matchers.isEmptyOrNullString()));
 
     }
 
@@ -288,16 +288,16 @@ public class RelationshipTypeRestRepositoryIT extends AbstractControllerIntegrat
             .findbyTypesAndLabels(context, entityTypeService.findByEntityType(context, "JournalVolume"),
                                   entityTypeService.findByEntityType(context, "JournalIssue"), "isIssueOfJournalVolume",
                                   "isJournalVolumeOfIssue");
-        assertEquals(((Integer) 0), relationshipType.getLeftMinCardinality());
-        assertEquals(((Integer) 1), relationshipType.getRightMinCardinality());
-        assertNull(relationshipType.getLeftMaxCardinality());
-        assertEquals(((Integer) 1), relationshipType.getRightMaxCardinality());
+        Assert.assertEquals(((Integer) 0), relationshipType.getLeftMinCardinality());
+        Assert.assertEquals(((Integer) 1), relationshipType.getRightMinCardinality());
+        Assert.assertNull(relationshipType.getLeftMaxCardinality());
+        Assert.assertEquals(((Integer) 1), relationshipType.getRightMaxCardinality());
 
         getClient().perform(get("/api/core/relationshiptypes/" + relationshipType.getID()))
-                   .andExpect(jsonPath("$.leftMinCardinality", is(0)))
-                   .andExpect(jsonPath("$.rightMinCardinality", is(1)))
-                   .andExpect(jsonPath("$.leftMaxCardinality", isEmptyOrNullString()))
-                   .andExpect(jsonPath("$.rightMaxCardinality", is(1)));
+                   .andExpect(jsonPath("$.leftMinCardinality", Matchers.is(0)))
+                   .andExpect(jsonPath("$.rightMinCardinality", Matchers.is(1)))
+                   .andExpect(jsonPath("$.leftMaxCardinality", Matchers.isEmptyOrNullString()))
+                   .andExpect(jsonPath("$.rightMaxCardinality", Matchers.is(1)));
 
     }
 
