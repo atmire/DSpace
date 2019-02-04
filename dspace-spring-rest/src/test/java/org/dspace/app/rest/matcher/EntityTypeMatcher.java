@@ -41,10 +41,10 @@ public class EntityTypeMatcher {
     private static Matcher<? super Object> matchSelfLink(int id) {
         return id == 0 ?
             allOf(
-                hasJsonPath("$._links.self.href", containsString("/api/core/entitytypes/"))
+                hasJsonPath("$._links.self.href", containsString("/api/core/itemtypes/"))
             ) :
             allOf(
-                hasJsonPath("$._links.self.href", containsString("/api/core/entitytypes/" + id))
+                hasJsonPath("$._links.self.href", containsString("/api/core/itemtypes/" + id))
             );
     }
 
@@ -52,7 +52,7 @@ public class EntityTypeMatcher {
         return allOf(
             matchId(id),
             hasJsonPath("$.label", is(label)),
-            hasJsonPath("$.type", is("entitytype")),
+            hasJsonPath("$.type", is("itemtype")),
             matchSelfLink(id)
         );
     }
