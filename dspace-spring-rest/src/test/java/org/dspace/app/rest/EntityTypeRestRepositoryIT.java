@@ -148,16 +148,16 @@ public class EntityTypeRestRepositoryIT extends AbstractControllerIntegrationTes
     @Test
     public void getAllEntityTypeEndpoint() throws Exception {
         //When we call this facets endpoint
-        getClient().perform(get("/api/core/entitytypes"))
+        getClient().perform(get("/api/core/itemtypes"))
 
                    //We expect a 200 OK status
                    .andExpect(status().isOk())
                    //The type has to be 'discover'
                    .andExpect(jsonPath("$.page.totalElements", is(7)))
                    //There needs to be a self link to this endpoint
-                   .andExpect(jsonPath("$._links.self.href", containsString("api/core/entitytypes")))
+                   .andExpect(jsonPath("$._links.self.href", containsString("api/core/itemtypes")))
                    //We have 4 facets in the default configuration, they need to all be present in the embedded section
-                   .andExpect(jsonPath("$._embedded.entitytypes", containsInAnyOrder(
+                   .andExpect(jsonPath("$._embedded.itemtypes", containsInAnyOrder(
                        EntityTypeMatcher
                            .matchEntityTypeEntry(entityTypeService.findByEntityType(context, "Publication")),
                        EntityTypeMatcher.matchEntityTypeEntry(entityTypeService.findByEntityType(context, "Person")),

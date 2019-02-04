@@ -96,12 +96,12 @@ public class RelationshipTypeRestControllerIT extends AbstractControllerIntegrat
 
         context.turnOffAuthorisationSystem();
 
-        getClient().perform(get("/api/core/entitytypes"))
+        getClient().perform(get("/api/core/itemtypes"))
 
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$.page",
                                        is(PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 1, 7))))
-                   .andExpect(jsonPath("$._embedded.entitytypes", containsInAnyOrder(
+                   .andExpect(jsonPath("$._embedded.itemtypes", containsInAnyOrder(
                        EntityTypeMatcher.matchEntityTypeEntryForLabel("Publication"),
                        EntityTypeMatcher.matchEntityTypeEntryForLabel("Person"),
                        EntityTypeMatcher.matchEntityTypeEntryForLabel("Project"),
@@ -139,7 +139,7 @@ public class RelationshipTypeRestControllerIT extends AbstractControllerIntegrat
         RelationshipType relationshipType5 = relationshipTypeService
             .findbyTypesAndLabels(context, publicationEntityType, orgunitEntityType, "isAuthorOfPublication",
                                   "isPublicationOfAuthor");
-        getClient().perform(get("/api/core/entitytypes/" + publicationEntityType.getID() + "/relationshiptypes"))
+        getClient().perform(get("/api/core/itemtypes/" + publicationEntityType.getID() + "/relationshiptypes"))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$._embedded.relationshiptypes", containsInAnyOrder(
                        RelationshipTypeMatcher.matchRelationshipTypeEntry(relationshipType1),

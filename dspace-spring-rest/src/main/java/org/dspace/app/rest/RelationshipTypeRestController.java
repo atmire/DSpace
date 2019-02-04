@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
  * for the given EntityType
  */
 @RestController
-@RequestMapping("/api/core/entitytypes/{id}/relationshiptypes")
+@RequestMapping("/api/core/itemtypes/{id}/relationshiptypes")
 public class RelationshipTypeRestController {
 
 
