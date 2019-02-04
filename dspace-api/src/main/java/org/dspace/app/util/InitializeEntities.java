@@ -221,22 +221,22 @@ public class InitializeEntities {
         if (StringUtils.isNotBlank(leftCardinalityMin)) {
             relationshipType.setLeftMinCardinality(Integer.parseInt(leftCardinalityMin));
         } else {
-            relationshipType.setLeftMinCardinality(Integer.MIN_VALUE);
+            relationshipType.setLeftMinCardinality(null);
         }
         if (StringUtils.isNotBlank(leftCardinalityMax)) {
             relationshipType.setLeftMaxCardinality(Integer.parseInt(leftCardinalityMax));
         } else {
-            relationshipType.setLeftMaxCardinality(Integer.MAX_VALUE);
+            relationshipType.setLeftMaxCardinality(null);
         }
         if (StringUtils.isNotBlank(rightCardinalityMin)) {
             relationshipType.setRightMinCardinality(Integer.parseInt(rightCardinalityMin));
         } else {
-            relationshipType.setRightMinCardinality(Integer.MIN_VALUE);
+            relationshipType.setRightMinCardinality(null);
         }
         if (StringUtils.isNotBlank(rightCardinalityMax)) {
             relationshipType.setRightMaxCardinality(Integer.parseInt(rightCardinalityMax));
         } else {
-            relationshipType.setRightMaxCardinality(Integer.MAX_VALUE);
+            relationshipType.setRightMaxCardinality(null);
         }
         return relationshipType;
     }
