@@ -266,6 +266,9 @@ public class RelationshipRestRepositoryIT extends AbstractControllerIntegrationT
         Relationship relationship1 = RelationshipBuilder
             .createRelationshipBuilder(context, auhor1, orgUnit1, isOrgUnitOfPersonRelationshipType).build();
 
+        Relationship relationshipAuthorExtra = RelationshipBuilder
+            .createRelationshipBuilder(context, author2, orgUnit1, isOrgUnitOfPersonRelationshipType).build();
+
         Relationship relationship2 = RelationshipBuilder
             .createRelationshipBuilder(context, project1, orgUnit1, isOrgUnitOfProjectRelationshipType).build();
 
@@ -281,6 +284,18 @@ public class RelationshipRestRepositoryIT extends AbstractControllerIntegrationT
                                        is(PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 1, 1))))
                    .andExpect(jsonPath("$._embedded.relationships", hasItem(
                        RelationshipMatcher.matchRelationship(relationship1)
+                   )))
+        ;
+
+        getClient().perform(get("/api/core/relationships/search/byLabel")
+                                .param("label", "isOrgUnitOfPerson"))
+
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.page",
+                                       is(PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 1, 2))))
+                   .andExpect(jsonPath("$._embedded.relationships", containsInAnyOrder(
+                       RelationshipMatcher.matchRelationship(relationship1),
+                       RelationshipMatcher.matchRelationship(relationshipAuthorExtra)
                    )))
         ;
     }
