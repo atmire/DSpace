@@ -26,9 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.google.api.client.util.Charsets;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.atteo.evo.inflector.English;
@@ -50,7 +48,6 @@ import org.dspace.app.rest.model.hateoas.HALResource;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.rest.repository.DSpaceRestRepository;
 import org.dspace.app.rest.repository.LinkRestRepository;
-import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.RestRepositoryUtils;
 import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
@@ -421,7 +418,7 @@ public class RestResourceController implements InitializingBean {
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
         RestAddressableModel modelObject = null;
         try {
-            List<DSpaceObject> dSpaceObjectList = utils.getdSpaceObjectsFromRequest(request, "\\\\n");
+            List<DSpaceObject> dSpaceObjectList = utils.getdSpaceObjectsFromRequest(request);
             modelObject = repository.createAndReturn(dSpaceObjectList);
         } catch (ClassCastException | IOException e) {
             log.error(e.getMessage(), e);

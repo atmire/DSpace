@@ -19,13 +19,10 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.google.api.client.util.Charsets;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.dspace.app.rest.exception.PaginationException;
@@ -39,7 +36,6 @@ import org.dspace.app.rest.model.RestAddressableModel;
 import org.dspace.app.rest.model.hateoas.DSpaceResource;
 import org.dspace.app.rest.repository.DSpaceRestRepository;
 import org.dspace.app.rest.repository.LinkRestRepository;
-import org.dspace.app.rest.repository.RelationshipRestRepository;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.service.DSpaceObjectService;
 import org.dspace.core.ConfigurationManager;
@@ -241,9 +237,10 @@ public class Utils {
         }
     }
 
-    private List<DSpaceObject> constructDSpaceObjectList(Context context, String requestInputString,
-                                                        String delimiter) {
-        List<String> list = Lists.newArrayList(requestInputString.split(delimiter));
+    private List<DSpaceObject> constructDSpaceObjectList(Context context,
+                                                         HttpServletRequest request) throws IOException {
+        List<String> list = readFromRequest(request);
+
         List<DSpaceObject> dSpaceObjects = new LinkedList<>();
         for (String string : list) {
             String uuid = string.substring(string.lastIndexOf('/') + 1);
@@ -263,9 +260,28 @@ public class Utils {
         return dSpaceObjects;
     }
 
+    private List<String> readFromRequest(HttpServletRequest request) throws IOException {
+        List<String> list = new LinkedList<>();
+        Scanner scanner = new Scanner(request.getInputStream());
 
-    public List<DSpaceObject> getdSpaceObjectsFromRequest(HttpServletRequest request, String delimiter) throws IOException {
-        String requestBodyString = IOUtils.toString(request.getInputStream(), Charsets.UTF_8);
-        return constructDSpaceObjectList(ContextUtil.obtainContext(request), requestBodyString, delimiter);
+        try {
+
+            while (scanner.hasNextLine()) {
+
+                String line = scanner.nextLine();
+                if (org.springframework.util.StringUtils.hasText(line)) {
+                    list.add(line);
+                }
+            }
+
+        } finally {
+            scanner.close();
+        }
+        return list;
+    }
+
+
+    public List<DSpaceObject> getdSpaceObjectsFromRequest(HttpServletRequest request) throws IOException {
+        return constructDSpaceObjectList(ContextUtil.obtainContext(request), request);
     }
 }
