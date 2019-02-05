@@ -31,6 +31,7 @@ import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.rest.repository.patch.EPersonPatch;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
+import org.dspace.content.DSpaceObject;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.factory.EPersonServiceFactory;
@@ -64,7 +65,7 @@ public class EPersonRestRepository extends DSpaceRestRepository<EPersonRest, UUI
     EPersonPatch epersonPatch;
 
     @Override
-    protected EPersonRest createAndReturn(Context context)
+    protected EPersonRest createAndReturn(Context context, List<DSpaceObject> list)
             throws AuthorizeException {
         // this need to be revisited we should receive an EPersonRest as input
         HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();

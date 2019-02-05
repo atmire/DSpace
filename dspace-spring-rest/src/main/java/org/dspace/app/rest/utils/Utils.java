@@ -16,9 +16,18 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
+import com.google.api.client.util.Charsets;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.dspace.app.rest.exception.PaginationException;
 import org.dspace.app.rest.exception.RepositoryNotFoundException;
 import org.dspace.app.rest.model.AuthorityRest;
@@ -30,7 +39,12 @@ import org.dspace.app.rest.model.RestAddressableModel;
 import org.dspace.app.rest.model.hateoas.DSpaceResource;
 import org.dspace.app.rest.repository.DSpaceRestRepository;
 import org.dspace.app.rest.repository.LinkRestRepository;
+import org.dspace.app.rest.repository.RelationshipRestRepository;
+import org.dspace.content.DSpaceObject;
+import org.dspace.content.service.DSpaceObjectService;
 import org.dspace.core.ConfigurationManager;
+import org.dspace.core.Context;
+import org.dspace.util.UUIDUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -48,8 +62,15 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Component
 public class Utils {
+
+    private static final Logger log = Logger.getLogger(Utils.class);
+
     @Autowired
     ApplicationContext applicationContext;
+
+    @Autowired(required = true)
+    private List<DSpaceObjectService<? extends DSpaceObject>> dSpaceObjectServices;
+
 
     public <T> Page<T> getPage(List<T> fullContents, Pageable pageable) {
         int total = fullContents.size();
@@ -218,5 +239,33 @@ public class Utils {
         } else {
             return multipartFile.getName();
         }
+    }
+
+    private List<DSpaceObject> constructDSpaceObjectList(Context context, String requestInputString,
+                                                        String delimiter) {
+        List<String> list = Lists.newArrayList(requestInputString.split(delimiter));
+        List<DSpaceObject> dSpaceObjects = new LinkedList<>();
+        for (String string : list) {
+            String uuid = string.substring(string.lastIndexOf('/') + 1);
+            try {
+                for (DSpaceObjectService dSpaceObjectService : dSpaceObjectServices) {
+                    DSpaceObject dSpaceObject = dSpaceObjectService.find(context, UUIDUtils.fromString(uuid));
+                    if (dSpaceObject != null) {
+                        dSpaceObjects.add(dSpaceObject);
+                        break;
+                    }
+                }
+            } catch (SQLException e) {
+                log.error(e.getMessage(), e);
+            }
+
+        }
+        return dSpaceObjects;
+    }
+
+
+    public List<DSpaceObject> getdSpaceObjectsFromRequest(HttpServletRequest request, String delimiter) throws IOException {
+        String requestBodyString = IOUtils.toString(request.getInputStream(), Charsets.UTF_8);
+        return constructDSpaceObjectList(ContextUtil.obtainContext(request), requestBodyString, delimiter);
     }
 }

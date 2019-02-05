@@ -26,6 +26,7 @@ import org.dspace.app.rest.model.MetadataEntryRest;
 import org.dspace.app.rest.model.hateoas.CommunityResource;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Community;
+import org.dspace.content.DSpaceObject;
 import org.dspace.content.service.CommunityService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +58,7 @@ public class CommunityRestRepository extends DSpaceRestRepository<CommunityRest,
 
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
-    protected CommunityRest createAndReturn(Context context) throws AuthorizeException {
+    protected CommunityRest createAndReturn(Context context, List<DSpaceObject> list) throws AuthorizeException {
         HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
         ObjectMapper mapper = new ObjectMapper();
         CommunityRest communityRest = null;

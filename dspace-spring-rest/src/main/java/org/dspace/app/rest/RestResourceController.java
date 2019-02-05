@@ -26,7 +26,9 @@ import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.google.api.client.util.Charsets;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.atteo.evo.inflector.English;
@@ -48,9 +50,11 @@ import org.dspace.app.rest.model.hateoas.HALResource;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.rest.repository.DSpaceRestRepository;
 import org.dspace.app.rest.repository.LinkRestRepository;
+import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.RestRepositoryUtils;
 import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.DSpaceObject;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -417,8 +421,9 @@ public class RestResourceController implements InitializingBean {
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
         RestAddressableModel modelObject = null;
         try {
-            modelObject = repository.createAndReturn();
-        } catch (ClassCastException e) {
+            List<DSpaceObject> dSpaceObjectList = utils.getdSpaceObjectsFromRequest(request, "\\\\n");
+            modelObject = repository.createAndReturn(dSpaceObjectList);
+        } catch (ClassCastException | IOException e) {
             log.error(e.getMessage(), e);
             return ControllerUtils.toEmptyResponse(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -430,6 +435,7 @@ public class RestResourceController implements InitializingBean {
         //TODO manage HTTPHeader
         return ControllerUtils.toResponseEntity(HttpStatus.CREATED, null, result);
     }
+
 
     /**
      *  Called in POST, multipart, upload to a specific rest resource the file passed as "file" request parameter

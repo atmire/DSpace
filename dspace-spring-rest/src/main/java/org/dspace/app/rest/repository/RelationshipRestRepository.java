@@ -24,6 +24,7 @@ import org.dspace.app.rest.model.hateoas.DSpaceResource;
 import org.dspace.app.rest.model.hateoas.RelationshipResource;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
+import org.dspace.content.DSpaceObject;
 import org.dspace.content.Item;
 import org.dspace.content.Relationship;
 import org.dspace.content.RelationshipType;
@@ -95,35 +96,33 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
         return new RelationshipResource(model, utils, rels);
     }
 
-    protected RelationshipRest createAndReturn(Context context)
+    protected RelationshipRest createAndReturn(Context context, List<DSpaceObject> list)
         throws AuthorizeException, SQLException, RepositoryMethodNotImplementedException {
 
         HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
-        ObjectMapper mapper = new ObjectMapper();
-        RelationshipRest relationshipRest = null;
-        try {
-            relationshipRest = mapper.readValue(req.getInputStream(), RelationshipRest.class);
-        } catch (IOException e1) {
-            throw new UnprocessableEntityException("error parsing the body");
-        }
 
         Relationship relationship = new Relationship();
-        Item leftItem = itemService.find(context, UUIDUtils.fromString(req.getParameter("leftItem")));
-        Item rightItem = itemService.find(context, UUIDUtils.fromString(req.getParameter("rightItem")));
-        RelationshipType relationshipType = relationshipTypeService
-            .find(context, Integer.parseInt(req.getParameter("relationshipType")));
+        if (list.size() == 2 && list.get(0).getType() == Constants.ITEM && list.get(1).getType() == Constants.ITEM) {
+            Item leftItem = (Item) list.get(0);
+            Item rightItem = (Item) list.get(1);
+            RelationshipType relationshipType = relationshipTypeService
+                .find(context, Integer.parseInt(req.getParameter("relationshipType")));
 
-        EPerson ePerson = context.getCurrentUser();
-        if (authorizeService.authorizeActionBoolean(context, leftItem, Constants.WRITE) ||
-            authorizeService.authorizeActionBoolean(context, rightItem, Constants.WRITE)) {
-            relationship.setLeftItem(leftItem);
-            relationship.setRightItem(rightItem);
-            relationship.setRelationshipType(relationshipType);
-            relationship = relationshipService.create(context, relationship);
-            return relationshipConverter.fromModel(relationship);
+            EPerson ePerson = context.getCurrentUser();
+            if (authorizeService.authorizeActionBoolean(context, leftItem, Constants.WRITE) ||
+                authorizeService.authorizeActionBoolean(context, rightItem, Constants.WRITE)) {
+                relationship.setLeftItem(leftItem);
+                relationship.setRightItem(rightItem);
+                relationship.setRelationshipType(relationshipType);
+                relationship = relationshipService.create(context, relationship);
+                return relationshipConverter.fromModel(relationship);
+            } else {
+                throw new AccessDeniedException("You do not have write rights on this relationship's items");
+            }
         } else {
-            throw new AccessDeniedException("You do not have write rights on this relationship's items");
+            throw new UnprocessableEntityException("The given items in the request were not valid items");
         }
+
 
     }
 

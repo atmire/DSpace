@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -25,6 +26,7 @@ import org.dspace.app.rest.model.hateoas.DSpaceResource;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.DSpaceObject;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -259,11 +261,11 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
      * 
      * @return the created REST object
      */
-    public T createAndReturn() {
+    public T createAndReturn(List<DSpaceObject> list) {
         Context context = null;
         try {
             context = obtainContext();
-            T entity = thisRepository.createAndReturn(context);
+            T entity = thisRepository.createAndReturn(context, list);
             context.commit();
             return entity;
         } catch (AuthorizeException e) {
@@ -279,13 +281,14 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
      * 
      * @param context
      *            the dspace context
+     * @param list
      * @return the created REST object
      * @throws AuthorizeException
      * @throws SQLException
      * @throws RepositoryMethodNotImplementedException
      *             returned by the default implementation when the operation is not supported for the entity
      */
-    protected T createAndReturn(Context context)
+    protected T createAndReturn(Context context, List<DSpaceObject> list)
             throws AuthorizeException, SQLException, RepositoryMethodNotImplementedException {
         throw new RepositoryMethodNotImplementedException("No implementation found; Method not allowed!", "");
     }

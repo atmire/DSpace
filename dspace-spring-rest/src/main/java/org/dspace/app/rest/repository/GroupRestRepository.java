@@ -22,6 +22,7 @@ import org.dspace.app.rest.model.GroupRest;
 import org.dspace.app.rest.model.MetadataEntryRest;
 import org.dspace.app.rest.model.hateoas.GroupResource;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.DSpaceObject;
 import org.dspace.core.Context;
 import org.dspace.eperson.Group;
 import org.dspace.eperson.service.GroupService;
@@ -48,7 +49,7 @@ public class GroupRestRepository extends DSpaceRestRepository<GroupRest, UUID> {
 
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
-    protected GroupRest createAndReturn(Context context)
+    protected GroupRest createAndReturn(Context context, List<DSpaceObject> list)
             throws AuthorizeException, RepositoryMethodNotImplementedException {
         HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
         ObjectMapper mapper = new ObjectMapper();
