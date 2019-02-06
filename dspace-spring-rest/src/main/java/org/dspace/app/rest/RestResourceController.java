@@ -1055,10 +1055,8 @@ public class RestResourceController implements InitializingBean {
         return putOneUriListInternal(request, apiCategory, model, id);
     }
 
-    private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneJsonInternal(HttpServletRequest request,
-                                                                                          String apiCategory,
-                                                                                          String model, ID id,
-                                                                                          JsonNode jsonNode) {
+    private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneJsonInternal(
+        HttpServletRequest request, String apiCategory, String model, ID id, JsonNode jsonNode) {
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
         RestAddressableModel modelObject = null;
@@ -1072,10 +1070,8 @@ public class RestResourceController implements InitializingBean {
 
     }
 
-    private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneUriListInternal(HttpServletRequest request,
-                                                                                          String apiCategory,
-                                                                                          String model, ID id)
-        throws IOException {
+    private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneUriListInternal(
+        HttpServletRequest request, String apiCategory, String model, ID id) throws IOException {
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
         RestAddressableModel modelObject = null;

@@ -42,7 +42,6 @@ import org.dspace.app.util.SubmissionConfigReaderException;
 import org.dspace.app.util.SubmissionStepConfig;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
-import org.dspace.content.DSpaceObject;
 import org.dspace.content.WorkspaceItem;
 import org.dspace.content.service.BitstreamFormatService;
 import org.dspace.content.service.BitstreamService;
@@ -162,8 +161,7 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
     }
 
     @Override
-    protected WorkspaceItemRest createAndReturn(Context context,
-                                                List<DSpaceObject> list) throws SQLException, AuthorizeException {
+    protected WorkspaceItemRest createAndReturn(Context context) throws SQLException, AuthorizeException {
         WorkspaceItem source = submissionService.createWorkspaceItem(context, getRequestService().getCurrentRequest());
         return converter.convert(source);
     }
