@@ -70,7 +70,6 @@ import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.UriTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -403,8 +402,9 @@ public class RestResourceController implements InitializingBean {
     }
 
     @RequestMapping(method = RequestMethod.POST, headers = "content-type=text/uri-list")
-    public ResponseEntity<ResourceSupport> postWithUriListContentType(HttpServletRequest request, @PathVariable String apiCategory,
-                                                @PathVariable String model)
+    public ResponseEntity<ResourceSupport> postWithUriListContentType(HttpServletRequest request,
+                                                                      @PathVariable String apiCategory,
+                                                                      @PathVariable String model)
         throws HttpRequestMethodNotSupportedException {
         return postInternal(request, apiCategory, model, true);
     }

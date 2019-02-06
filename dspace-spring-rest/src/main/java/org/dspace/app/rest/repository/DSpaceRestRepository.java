@@ -450,7 +450,8 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
         return findOne(id);
     }
 
-    public T put(HttpServletRequest request, String apiCategory, String model, ID id, List<DSpaceObject> dSpaceObjects) {
+    public T put(HttpServletRequest request, String apiCategory, String model, ID id,
+                 List<DSpaceObject> dSpaceObjects) {
         Context context = obtainContext();
         try {
             thisRepository.put(context, request, apiCategory, model, id, dSpaceObjects);
