@@ -67,7 +67,7 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(post("/api/eperson/epersons")
                                         .content(mapper.writeValueAsBytes(data))
-                                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON))
+                                        .contentType(contentType))
                    .andExpect(status().isCreated())
                    .andExpect(jsonPath("$", Matchers.allOf(
                                hasJsonPath("$.uuid", not(empty())),

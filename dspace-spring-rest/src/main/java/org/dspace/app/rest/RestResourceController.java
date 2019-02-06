@@ -394,7 +394,7 @@ public class RestResourceController implements InitializingBean {
      * @return              The relevant ResponseEntity for this request
      * @throws HttpRequestMethodNotSupportedException   If something goes wrong
      */
-    @RequestMapping(method = RequestMethod.POST, headers = "content-type=application/json")
+    @RequestMapping(method = RequestMethod.POST, consumes = {"application/json", "application/hal+json"})
     public ResponseEntity<ResourceSupport> post(HttpServletRequest request, @PathVariable String apiCategory,
                                                 @PathVariable String model)
         throws HttpRequestMethodNotSupportedException {
@@ -419,7 +419,7 @@ public class RestResourceController implements InitializingBean {
      * @return              The relevant ResponseEntity for this request
      * @throws HttpRequestMethodNotSupportedException   If something goes wrong
      */
-    @RequestMapping(method = RequestMethod.POST, headers = "content-type=text/uri-list")
+    @RequestMapping(method = RequestMethod.POST, consumes = {"text/uri-list"})
     public ResponseEntity<ResourceSupport> postWithUriListContentType(HttpServletRequest request,
                                                                       @PathVariable String apiCategory,
                                                                       @PathVariable String model)
@@ -1066,7 +1066,7 @@ public class RestResourceController implements InitializingBean {
      * @return the relevant REST resource
      */
     @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT,
-        headers = {"content-type=application/json"})
+        consumes = {"application/json", "application/hal+json"})
     public DSpaceResource<RestAddressableModel> put(HttpServletRequest request,
                                                     @PathVariable String apiCategory, @PathVariable String model,
                                                     @PathVariable Integer id,
@@ -1093,7 +1093,7 @@ public class RestResourceController implements InitializingBean {
      * @return the relevant REST resource
      */
     @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT,
-        headers = {"content-type=text/uri-list"})
+        consumes = {"text/uri-list"})
     public DSpaceResource<RestAddressableModel> put(HttpServletRequest request,
                                                     @PathVariable String apiCategory, @PathVariable String model,
                                                     @PathVariable Integer id) throws IOException {
