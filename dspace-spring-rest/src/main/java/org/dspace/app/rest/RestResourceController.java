@@ -1008,12 +1008,21 @@ public class RestResourceController implements InitializingBean {
      * @param jsonNode    the part of the request body representing the updated rest object
      * @return the relevant REST resource
      */
-    @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT)
+    @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT,
+        headers = {"content-type=application/json"})
     public DSpaceResource<RestAddressableModel> put(HttpServletRequest request,
                                                     @PathVariable String apiCategory, @PathVariable String model,
                                                     @PathVariable Integer id,
                                                     @RequestBody(required = true) JsonNode jsonNode) {
         return putOneInternal(request, apiCategory, model, id, jsonNode);
+    }
+
+    @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT,
+        headers = {"content-type=text/uri-list"})
+    public DSpaceResource<RestAddressableModel> put(HttpServletRequest request,
+                                                    @PathVariable String apiCategory, @PathVariable String model,
+                                                    @PathVariable Integer id) throws IOException {
+        return putOneInternal(request, apiCategory, model, id);
     }
 
     private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneInternal(HttpServletRequest request,
@@ -1024,6 +1033,24 @@ public class RestResourceController implements InitializingBean {
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
         RestAddressableModel modelObject = null;
         modelObject = repository.put(request, apiCategory, model, id, jsonNode);
+        if (modelObject == null) {
+            throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");
+        }
+        DSpaceResource result = repository.wrapResource(modelObject);
+        linkService.addLinks(result);
+        return result;
+
+    }
+
+    private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneInternal(HttpServletRequest request,
+                                                                                          String apiCategory,
+                                                                                          String model, ID id)
+        throws IOException {
+        checkModelPluralForm(apiCategory, model);
+        DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
+        RestAddressableModel modelObject = null;
+        List<DSpaceObject> dSpaceObjectList = utils.getdSpaceObjectsFromRequest(request);
+        modelObject = repository.put(request, apiCategory, model, id, dSpaceObjectList);
         if (modelObject == null) {
             throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");
         }

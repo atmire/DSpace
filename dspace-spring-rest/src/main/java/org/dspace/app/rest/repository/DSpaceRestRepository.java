@@ -432,6 +432,17 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
         return findOne(id);
     }
 
+    public T put(HttpServletRequest request, String apiCategory, String model, ID id, List<DSpaceObject> dSpaceObjects) {
+        Context context = obtainContext();
+        try {
+            thisRepository.put(context, request, apiCategory, model, id, dSpaceObjects);
+            context.commit();
+        } catch (SQLException | AuthorizeException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        return findOne(id);
+    }
+
     /**
      * Implement this method in the subclass to support updating a DSpace instance.
      *
@@ -448,6 +459,12 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
      */
     protected T put(Context context, HttpServletRequest request, String apiCategory, String model, ID id,
                     JsonNode jsonNode)
+        throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException {
+        throw new RepositoryMethodNotImplementedException(apiCategory, model);
+    }
+
+    protected T put(Context context, HttpServletRequest request, String apiCategory, String model, ID id,
+                    List<DSpaceObject> dSpaceObjects)
         throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException {
         throw new RepositoryMethodNotImplementedException(apiCategory, model);
     }

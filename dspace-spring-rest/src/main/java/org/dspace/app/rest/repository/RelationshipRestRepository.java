@@ -128,48 +128,35 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
 
     @Override
     protected RelationshipRest put(Context context, HttpServletRequest request, String apiCategory, String model,
-                                   Integer id,
-                                   JsonNode jsonNode)
+                                   Integer id, List<DSpaceObject> dSpaceObjects)
         throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException {
-
-        HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
-        ObjectMapper mapper = new ObjectMapper();
-        RelationshipRest relationshipRest = null;
-        try {
-            relationshipRest = mapper.readValue(jsonNode.toString(), RelationshipRest.class);
-        } catch (IOException e) {
-            throw new UnprocessableEntityException("error parsing the body");
-        }
+        
         Relationship relationship = relationshipService.find(context, id);
         if (relationship == null) {
             throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");
         }
-        Item leftItem = itemService.find(context, UUIDUtils.fromString(req.getParameter("leftItem")));
-        Item rightItem = itemService.find(context, UUIDUtils.fromString(req.getParameter("rightItem")));
-        RelationshipType relationshipType = relationshipTypeService
-            .find(context, Integer.parseInt(req.getParameter("relationshipType")));
 
-        if (authorizeService.authorizeActionBoolean(context, leftItem, Constants.WRITE) ||
-            authorizeService.authorizeActionBoolean(context, rightItem, Constants.WRITE)) {
-            relationship.setId(relationshipRest.getId());
-            relationship.setLeftItem(leftItem);
-            relationship.setRightItem(rightItem);
+        if (dSpaceObjects.size() == 2 && dSpaceObjects.get(0).getType() == Constants.ITEM
+            && dSpaceObjects.get(1).getType() == Constants.ITEM) {
+            Item leftItem = (Item) dSpaceObjects.get(0);
+            Item rightItem = (Item) dSpaceObjects.get(1);
 
-            relationship.setRelationshipType(relationshipType);
-            if (relationshipRest.getLeftPlace() != -1) {
-                relationship.setLeftPlace(relationshipRest.getLeftPlace());
+            if (authorizeService.authorizeActionBoolean(context, leftItem, Constants.WRITE) ||
+                authorizeService.authorizeActionBoolean(context, rightItem, Constants.WRITE)) {
+                relationship.setLeftItem(leftItem);
+                relationship.setRightItem(rightItem);
+
+                relationshipService.updatePlaceInRelationship(context, relationship);
+                relationshipService.update(context, relationship);
+
+                return relationshipConverter.fromModel(relationship);
+            } else {
+                throw new AccessDeniedException("You do not have write rights on this relationship's items");
             }
-            if (relationshipRest.getRightPlace() != -1) {
-                relationship.setRightPlace(relationshipRest.getRightPlace());
-            }
-
-            relationshipService.updatePlaceInRelationship(context, relationship);
-            relationshipService.update(context, relationship);
-
-            return relationshipConverter.fromModel(relationship);
         } else {
-            throw new AccessDeniedException("You do not have write rights on this relationship's items");
+            throw new UnprocessableEntityException("The given items in the request were not valid");
         }
+
     }
 
     @Override
