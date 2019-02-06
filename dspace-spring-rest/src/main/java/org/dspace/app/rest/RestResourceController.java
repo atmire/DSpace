@@ -398,7 +398,7 @@ public class RestResourceController implements InitializingBean {
     public ResponseEntity<ResourceSupport> post(HttpServletRequest request, @PathVariable String apiCategory,
                                                 @PathVariable String model)
         throws HttpRequestMethodNotSupportedException {
-        return postInternal(request, apiCategory, model, false);
+        return postJsonInternal(request, apiCategory, model);
     }
 
     @RequestMapping(method = RequestMethod.POST, headers = "content-type=text/uri-list")
@@ -406,7 +406,7 @@ public class RestResourceController implements InitializingBean {
                                                                       @PathVariable String apiCategory,
                                                                       @PathVariable String model)
         throws HttpRequestMethodNotSupportedException {
-        return postInternal(request, apiCategory, model, true);
+        return postUriListInternal(request, apiCategory, model);
     }
 
     /**
@@ -418,21 +418,38 @@ public class RestResourceController implements InitializingBean {
      * @return
      * @throws HttpRequestMethodNotSupportedException
      */
-    public <ID extends Serializable> ResponseEntity<ResourceSupport> postInternal(HttpServletRequest request,
+    public <ID extends Serializable> ResponseEntity<ResourceSupport> postJsonInternal(HttpServletRequest request,
                                                                                   String apiCategory,
-                                                                                  String model,
-                                                                                  boolean isContentTypeUriList)
+                                                                                  String model)
         throws HttpRequestMethodNotSupportedException {
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
         RestAddressableModel modelObject = null;
         try {
-            if (isContentTypeUriList) {
-                List<DSpaceObject> dSpaceObjectList = utils.getdSpaceObjectsFromRequest(request);
-                modelObject = repository.createAndReturn(dSpaceObjectList);
-            } else {
-                modelObject = repository.createAndReturn();
-            }
+            modelObject = repository.createAndReturn();
+        } catch (ClassCastException e) {
+            log.error(e.getMessage(), e);
+            return ControllerUtils.toEmptyResponse(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        if (modelObject == null) {
+            throw new HttpRequestMethodNotSupportedException(RequestMethod.POST.toString());
+        }
+        DSpaceResource result = repository.wrapResource(modelObject);
+        linkService.addLinks(result);
+        //TODO manage HTTPHeader
+        return ControllerUtils.toResponseEntity(HttpStatus.CREATED, null, result);
+    }
+
+    public <ID extends Serializable> ResponseEntity<ResourceSupport> postUriListInternal(HttpServletRequest request,
+                                                                                  String apiCategory,
+                                                                                  String model)
+        throws HttpRequestMethodNotSupportedException {
+        checkModelPluralForm(apiCategory, model);
+        DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
+        RestAddressableModel modelObject = null;
+        try {
+            List<DSpaceObject> dSpaceObjectList = utils.getdSpaceObjectsFromRequest(request);
+            modelObject = repository.createAndReturn(dSpaceObjectList);
         } catch (ClassCastException | IOException e) {
             log.error(e.getMessage(), e);
             return ControllerUtils.toEmptyResponse(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -1027,7 +1044,7 @@ public class RestResourceController implements InitializingBean {
                                                     @PathVariable String apiCategory, @PathVariable String model,
                                                     @PathVariable Integer id,
                                                     @RequestBody(required = true) JsonNode jsonNode) {
-        return putOneInternal(request, apiCategory, model, id, jsonNode);
+        return putOneJsonInternal(request, apiCategory, model, id, jsonNode);
     }
 
     @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT,
@@ -1035,10 +1052,10 @@ public class RestResourceController implements InitializingBean {
     public DSpaceResource<RestAddressableModel> put(HttpServletRequest request,
                                                     @PathVariable String apiCategory, @PathVariable String model,
                                                     @PathVariable Integer id) throws IOException {
-        return putOneInternal(request, apiCategory, model, id);
+        return putOneUriListInternal(request, apiCategory, model, id);
     }
 
-    private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneInternal(HttpServletRequest request,
+    private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneJsonInternal(HttpServletRequest request,
                                                                                           String apiCategory,
                                                                                           String model, ID id,
                                                                                           JsonNode jsonNode) {
@@ -1055,7 +1072,7 @@ public class RestResourceController implements InitializingBean {
 
     }
 
-    private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneInternal(HttpServletRequest request,
+    private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneUriListInternal(HttpServletRequest request,
                                                                                           String apiCategory,
                                                                                           String model, ID id)
         throws IOException {
