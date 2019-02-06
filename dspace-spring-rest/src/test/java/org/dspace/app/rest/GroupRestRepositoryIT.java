@@ -44,7 +44,8 @@ public class GroupRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(post("/api/eperson/groups")
-                .content(mapper.writeValueAsBytes(groupRest)).contentType(contentType))
+                .content(mapper.writeValueAsBytes(groupRest))
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
         getClient(authToken).perform(get("/api/eperson/groups"))
@@ -70,7 +71,8 @@ public class GroupRestRepositoryIT extends AbstractControllerIntegrationTest {
         String authToken = getAuthToken(eperson.getEmail(), password);
 
         getClient().perform(post("/api/eperson/groups")
-                .content(mapper.writeValueAsBytes(groupRest)).contentType(contentType))
+                .content(mapper.writeValueAsBytes(groupRest))
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
 
     }
@@ -88,7 +90,8 @@ public class GroupRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         authToken = getAuthToken(eperson.getEmail(), password);
         getClient(authToken).perform(post("/api/eperson/groups")
-                .content(mapper.writeValueAsBytes(groupRest)).contentType(contentType))
+                .content(mapper.writeValueAsBytes(groupRest))
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
 

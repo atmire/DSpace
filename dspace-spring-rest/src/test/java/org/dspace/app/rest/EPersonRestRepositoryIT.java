@@ -67,9 +67,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(post("/api/eperson/epersons")
                                         .content(mapper.writeValueAsBytes(data))
-                                        .contentType(contentType))
+                                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON))
                    .andExpect(status().isCreated())
-                   .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$", Matchers.allOf(
                                hasJsonPath("$.uuid", not(empty())),
                                // is it what you expect? EPerson.getName() returns the email...
