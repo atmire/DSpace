@@ -281,6 +281,14 @@ public class Utils {
     }
 
 
+    /**
+     * This method will retrieve a list of DSpaceObjects from the Request by reading in the Request's InputStream
+     * with a Scanner and searching the InputStream for UUIDs which will then be resolved to a DSpaceObject.
+     * These will all be added to a list and returned by this method.
+     * @param request       The request of which the InputStream will be used
+     * @return              The list of DSpaceObjects that we could find in the InputStream
+     * @throws IOException  If something goes wrong
+     */
     public List<DSpaceObject> getdSpaceObjectsFromRequest(HttpServletRequest request) throws IOException {
         return constructDSpaceObjectList(ContextUtil.obtainContext(request), request);
     }

@@ -379,20 +379,20 @@ public class RestResourceController implements InitializingBean {
     /**
      * Execute a POST request;
      *
-     * curl -X POST http://<dspace.url>/dspace-spring-rest/api/{apiCategory}/{model}
+     * curl -X POST -H "Content-Type:application/json" http://<dspace.url>/dspace-spring-rest/api/{apiCategory}/{model}
      *
      * Example:
      * <pre>
      * {@code
-     *      curl -X POST http://<dspace.url>/dspace-spring-rest/api/submission/workspaceitems
+     *      curl -X POST -H "Content-Type:application/json" http://<dspace.url>/dspace-spring-rest/api/submission/workspaceitems
      * }
      * </pre>
      *
-     * @param request
-     * @param apiCategory
-     * @param model
-     * @return
-     * @throws HttpRequestMethodNotSupportedException
+     * @param request       The relevant request
+     * @param apiCategory   The apiCategory to be used
+     * @param model         The model to be used
+     * @return              The relevant ResponseEntity for this request
+     * @throws HttpRequestMethodNotSupportedException   If something goes wrong
      */
     @RequestMapping(method = RequestMethod.POST, headers = "content-type=application/json")
     public ResponseEntity<ResourceSupport> post(HttpServletRequest request, @PathVariable String apiCategory,
@@ -401,6 +401,24 @@ public class RestResourceController implements InitializingBean {
         return postJsonInternal(request, apiCategory, model);
     }
 
+    /**
+     * Execute a POST request;
+     *
+     * curl -X POST "Content-Type:text/uri-list" http://<dspace.url>/dspace-spring-rest/api/{apiCategory}/{model}
+     *
+     * Example:
+     * <pre>
+     * {@code
+     *      curl -X POST "Content-Type:text/uri-list" http://<dspace.url>/dspace-spring-rest/api/submission/workspaceitems
+     * }
+     * </pre>
+     *
+     * @param request       The relevant request
+     * @param apiCategory   The apiCategory to be used
+     * @param model         The model to be used
+     * @return              The relevant ResponseEntity for this request
+     * @throws HttpRequestMethodNotSupportedException   If something goes wrong
+     */
     @RequestMapping(method = RequestMethod.POST, headers = "content-type=text/uri-list")
     public ResponseEntity<ResourceSupport> postWithUriListContentType(HttpServletRequest request,
                                                                       @PathVariable String apiCategory,
@@ -410,13 +428,13 @@ public class RestResourceController implements InitializingBean {
     }
 
     /**
-     * Internal method to execute POST;
+     * Internal method to execute POST with application/json MediaType;
      *
-     * @param request
-     * @param apiCategory
-     * @param model
-     * @return
-     * @throws HttpRequestMethodNotSupportedException
+     * @param request       The relevant request
+     * @param apiCategory   The apiCategory to be used
+     * @param model         The model to be used
+     * @return              The relevant ResponseEntity for this request
+     * @throws HttpRequestMethodNotSupportedException   If something goes wrong
      */
     public <ID extends Serializable> ResponseEntity<ResourceSupport> postJsonInternal(HttpServletRequest request,
                                                                                   String apiCategory,
@@ -440,6 +458,15 @@ public class RestResourceController implements InitializingBean {
         return ControllerUtils.toResponseEntity(HttpStatus.CREATED, null, result);
     }
 
+    /**
+     * Internal method to execute POST with text/uri-list MediaType;
+     *
+     * @param request       The relevant request
+     * @param apiCategory   The apiCategory to be used
+     * @param model         The model to be used
+     * @return              The relevant ResponseEntity for this request
+     * @throws HttpRequestMethodNotSupportedException   If something goes wrong
+     */
     public <ID extends Serializable> ResponseEntity<ResourceSupport> postUriListInternal(HttpServletRequest request,
                                                                                   String apiCategory,
                                                                                   String model)
@@ -1022,12 +1049,12 @@ public class RestResourceController implements InitializingBean {
     /**
      * Execute a PUT request for an entity with id of type Integer;
      *
-     * curl -X PUT http://<dspace.url>/dspace-spring-rest/api/{apiCategory}/{model}/{id}
+     * curl -X PUT -H "Content-Type:application/json" http://<dspace.url>/dspace-spring-rest/api/{apiCategory}/{model}/{id}
      *
      * Example:
      * <pre>
      * {@code
-     *      curl -X PUT http://<dspace.url>/dspace-spring-rest/api/core/metadatafield/1
+     *      curl -X PUT -H "Content-Type:application/json" http://<dspace.url>/dspace-spring-rest/api/core/metadatafield/1
      * }
      * </pre>
      *
@@ -1047,6 +1074,24 @@ public class RestResourceController implements InitializingBean {
         return putOneJsonInternal(request, apiCategory, model, id, jsonNode);
     }
 
+    /**
+     * Execute a PUT request for an entity with id of type Integer;
+     *
+     * curl -X PUT -H "Content-Type:text/uri-list" http://<dspace.url>/dspace-spring-rest/api/{apiCategory}/{model}/{id}
+     *
+     * Example:
+     * <pre>
+     * {@code
+     *      curl -X PUT -H "Content-Type:text/uri-list" http://<dspace.url>/dspace-spring-rest/api/core/metadatafield/1
+     * }
+     * </pre>
+     *
+     * @param request     the http request
+     * @param apiCategory the API category e.g. "api"
+     * @param model       the DSpace model e.g. "collection"
+     * @param id        the ID of the target REST object
+     * @return the relevant REST resource
+     */
     @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT,
         headers = {"content-type=text/uri-list"})
     public DSpaceResource<RestAddressableModel> put(HttpServletRequest request,
@@ -1055,6 +1100,16 @@ public class RestResourceController implements InitializingBean {
         return putOneUriListInternal(request, apiCategory, model, id);
     }
 
+    /**
+     * Internal method to execute PUT with application/json MediaType;
+     *
+     * @param request       The relevant request
+     * @param apiCategory   The apiCategory to be used
+     * @param model         The model to be used
+     * @param id            The ID for the resource to be altered by the PUT
+     * @param jsonNode      The relevant JsonNode to be used by the PUT
+     * @return              The relevant DSpaceResource for this request
+     */
     private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneJsonInternal(
         HttpServletRequest request, String apiCategory, String model, ID id, JsonNode jsonNode) {
         checkModelPluralForm(apiCategory, model);
@@ -1069,7 +1124,16 @@ public class RestResourceController implements InitializingBean {
         return result;
 
     }
-
+    /**
+     * Internal method to execute PUT with text/uri-list MediaType;
+     *
+     * @param request       The relevant request
+     * @param apiCategory   The apiCategory to be used
+     * @param model         The model to be used
+     * @param id            The ID for the resource to be altered by the PUT
+     * @return              The relevant DSpaceResource for this request
+     * @throws IOException  If something goes wrong
+     */
     private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneUriListInternal(
         HttpServletRequest request, String apiCategory, String model, ID id) throws IOException {
         checkModelPluralForm(apiCategory, model);
