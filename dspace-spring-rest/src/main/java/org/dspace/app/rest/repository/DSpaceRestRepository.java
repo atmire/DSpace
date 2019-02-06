@@ -275,6 +275,19 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
         }
     }
 
+    public T createAndReturn() {
+        Context context = null;
+        try {
+            context = obtainContext();
+            T entity = thisRepository.createAndReturn(context);
+            context.commit();
+            return entity;
+        } catch (AuthorizeException e) {
+            throw new RESTAuthorizationException(e);
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex.getMessage(), ex);
+        }
+    }
     /**
      * Method to implement to support the creation of a new instance. Usually require to retrieve the http request from
      * the thread bound attribute
@@ -290,6 +303,11 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
      */
     protected T createAndReturn(Context context, List<DSpaceObject> list)
             throws AuthorizeException, SQLException, RepositoryMethodNotImplementedException {
+        throw new RepositoryMethodNotImplementedException("No implementation found; Method not allowed!", "");
+    }
+
+    protected T createAndReturn(Context context)
+        throws AuthorizeException, SQLException, RepositoryMethodNotImplementedException {
         throw new RepositoryMethodNotImplementedException("No implementation found; Method not allowed!", "");
     }
 

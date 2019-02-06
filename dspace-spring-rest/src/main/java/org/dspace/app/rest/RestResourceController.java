@@ -70,6 +70,7 @@ import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.UriTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -394,11 +395,18 @@ public class RestResourceController implements InitializingBean {
      * @return
      * @throws HttpRequestMethodNotSupportedException
      */
-    @RequestMapping(method = RequestMethod.POST)
+    @RequestMapping(method = RequestMethod.POST, headers = "content-type=application/json")
     public ResponseEntity<ResourceSupport> post(HttpServletRequest request, @PathVariable String apiCategory,
                                                 @PathVariable String model)
         throws HttpRequestMethodNotSupportedException {
-        return postInternal(request, apiCategory, model);
+        return postInternal(request, apiCategory, model, false);
+    }
+
+    @RequestMapping(method = RequestMethod.POST, headers = "content-type=text/uri-list")
+    public ResponseEntity<ResourceSupport> postWithUriListContentType(HttpServletRequest request, @PathVariable String apiCategory,
+                                                @PathVariable String model)
+        throws HttpRequestMethodNotSupportedException {
+        return postInternal(request, apiCategory, model, true);
     }
 
     /**
@@ -412,14 +420,19 @@ public class RestResourceController implements InitializingBean {
      */
     public <ID extends Serializable> ResponseEntity<ResourceSupport> postInternal(HttpServletRequest request,
                                                                                   String apiCategory,
-                                                                                  String model)
+                                                                                  String model,
+                                                                                  boolean isContentTypeUriList)
         throws HttpRequestMethodNotSupportedException {
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
         RestAddressableModel modelObject = null;
         try {
-            List<DSpaceObject> dSpaceObjectList = utils.getdSpaceObjectsFromRequest(request);
-            modelObject = repository.createAndReturn(dSpaceObjectList);
+            if (isContentTypeUriList) {
+                List<DSpaceObject> dSpaceObjectList = utils.getdSpaceObjectsFromRequest(request);
+                modelObject = repository.createAndReturn(dSpaceObjectList);
+            } else {
+                modelObject = repository.createAndReturn();
+            }
         } catch (ClassCastException | IOException e) {
             log.error(e.getMessage(), e);
             return ControllerUtils.toEmptyResponse(HttpStatus.INTERNAL_SERVER_ERROR);

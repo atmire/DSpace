@@ -130,7 +130,7 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
     protected RelationshipRest put(Context context, HttpServletRequest request, String apiCategory, String model,
                                    Integer id, List<DSpaceObject> dSpaceObjects)
         throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException {
-        
+
         Relationship relationship = relationshipService.find(context, id);
         if (relationship == null) {
             throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");
