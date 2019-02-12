@@ -45,6 +45,8 @@
 
     <bean class="org.dspace.identifier.dao.impl.DOIDAOImpl"/>
 
+    <bean class="org.dspace.pages.dao.impl.PageDaoImpl"/>
+
     <!-- declaration moved to bitstore.xml -->
     <!--<bean class="org.dspace.storage.bitstore.BitstreamStorageServiceImpl"/>-->
 
