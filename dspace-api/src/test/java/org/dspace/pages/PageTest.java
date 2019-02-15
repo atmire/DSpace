@@ -71,11 +71,7 @@ public class PageTest extends AbstractUnitTest {
 //            File f = new File(testProps.get("test.bitstream").toString());
             //TODO Change to test file
             Bitstream bitstream = bitstreamService.create(context, IOUtils.toInputStream("test"));
-            Page page = new Page();
-            page.setName("TestPage");
-            page.setLanguage("TestLanguage");
-            page.setBitstream(bitstream);
-            this.page = pageService.create(context, page);
+            this.page = pageService.create(context, "testName", "testLanguage", bitstream);
 
             context.restoreAuthSystemState();
         } catch (SQLException ex) {
@@ -131,7 +127,7 @@ public class PageTest extends AbstractUnitTest {
     }
 
     /**
-     * Tests the {@link PageService#create(Context, Page)} method
+     * Tests the {@link PageService#create(Context, String, String, Bitstream)} method
      * @throws Exception
      */
     @Test
@@ -139,10 +135,7 @@ public class PageTest extends AbstractUnitTest {
 
         Bitstream bitstream = bitstreamService.create(context, IOUtils.toInputStream("anotherTest"));
         Page page = new Page();
-        page.setName("anotherTestPage");
-        page.setLanguage("anotherTestLanguage");
-        page.setBitstream(bitstream);
-        page = pageService.create(context, page);
+        page = pageService.create(context, "anotherTestPage", "anotherTestLanguage", bitstream);
 
 
         UUID uuid = page.getID();
@@ -179,11 +172,7 @@ public class PageTest extends AbstractUnitTest {
     @Test
     public void testPagesDelete() throws Exception {
         Bitstream bitstream = bitstreamService.create(context, IOUtils.toInputStream("anotherTest"));
-        Page page = new Page();
-        page.setName("anotherPageTest");
-        page.setLanguage("anotherLanguageTest");
-        page.setBitstream(bitstream);
-        page = pageService.create(context, page);
+        Page page = pageService.create(context, "anotherPageTest", "anotherLanguageTest", bitstream);
 
 
         UUID uuid = page.getID();
@@ -209,18 +198,10 @@ public class PageTest extends AbstractUnitTest {
     public void testPagesFindByName() throws Exception {
 
         Bitstream bitstream = bitstreamService.create(context, IOUtils.toInputStream("anotherTest"));
-        Page page = new Page();
         String name = "anotherTestPage";
-        page.setName(name);
-        page.setLanguage("tla");
-        page.setBitstream(bitstream);
-        page = pageService.create(context, page);
+        Page page = pageService.create(context, name, "tla", bitstream);
 
-        Page secondPage = new Page();
-        secondPage.setName(name);
-        secondPage.setLanguage("atl");
-        secondPage.setBitstream(bitstream);
-        secondPage = pageService.create(context, secondPage);
+        Page secondPage = pageService.create(context, name, "atl", bitstream);
 
 
         List<Page> foundPages = pageService.findByName(context, name);
@@ -235,18 +216,10 @@ public class PageTest extends AbstractUnitTest {
     public void testPagesFindByNameAndLanguage() throws Exception {
 
         Bitstream bitstream = bitstreamService.create(context, IOUtils.toInputStream("anotherTest"));
-        Page page = new Page();
         String name = "anotherTestPage";
-        page.setName(name);
-        page.setLanguage("FirstLanguage");
-        page.setBitstream(bitstream);
-        page = pageService.create(context, page);
+        Page page = pageService.create(context, name, "FirstLanguage", bitstream);
 
-        Page secondPage = new Page();
-        secondPage.setName(name);
-        secondPage.setLanguage("SecondLanguage");
-        secondPage.setBitstream(bitstream);
-        secondPage = pageService.create(context, secondPage);
+        Page secondPage = pageService.create(context, name, "SecondLanguage", bitstream);
 
 
         Page foundPage = pageService.findByNameAndLanguage(context, name, "SecondLanguage");
@@ -264,11 +237,7 @@ public class PageTest extends AbstractUnitTest {
     public void testPagesAttachFile() throws Exception {
 
         Bitstream bitstream = bitstreamService.create(context, IOUtils.toInputStream("anotherTest"));
-        Page page = new Page();
-        page.setName("anotherPageTestName");
-        page.setLanguage("anotherPageTestLanguage");
-        page.setBitstream(bitstream);
-        page = pageService.create(context, page);
+        Page page = pageService.create(context, "anotherPageTestName", "anotherPageTestLanguage", bitstream);
 
 
         UUID uuid = page.getID();

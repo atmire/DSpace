@@ -35,6 +35,8 @@ import org.dspace.eperson.factory.EPersonServiceFactory;
 import org.dspace.eperson.service.EPersonService;
 import org.dspace.eperson.service.GroupService;
 import org.dspace.eperson.service.RegistrationDataService;
+import org.dspace.pages.factory.PagesServiceFactory;
+import org.dspace.pages.service.PageService;
 import org.dspace.services.factory.DSpaceServicesFactory;
 import org.dspace.versioning.factory.VersionServiceFactory;
 import org.dspace.versioning.service.VersionHistoryService;
@@ -72,6 +74,7 @@ public abstract class AbstractBuilder<T, S> {
     static MetadataFieldService metadataFieldService;
     static MetadataSchemaService metadataSchemaService;
     static SiteService siteService;
+    static PageService pageService;
 
     protected Context context;
 
@@ -107,6 +110,7 @@ public abstract class AbstractBuilder<T, S> {
         metadataFieldService = ContentServiceFactory.getInstance().getMetadataFieldService();
         metadataSchemaService = ContentServiceFactory.getInstance().getMetadataSchemaService();
         siteService = ContentServiceFactory.getInstance().getSiteService();
+        pageService = PagesServiceFactory.getInstance().getPageService();
 
         // Temporarily disabled
         // TODO find a way to be able to test the XML and "default" workflow at the same time
@@ -140,6 +144,7 @@ public abstract class AbstractBuilder<T, S> {
         metadataFieldService = null;
         metadataSchemaService = null;
         siteService = null;
+        pageService = null;
     }
 
     public static void cleanupObjects() throws Exception {

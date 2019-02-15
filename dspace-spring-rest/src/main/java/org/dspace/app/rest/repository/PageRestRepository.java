@@ -1,0 +1,120 @@
+package org.dspace.app.rest.repository;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.Logger;
+import org.dspace.app.rest.converter.PageConverter;
+import org.dspace.app.rest.exception.UnprocessableEntityException;
+import org.dspace.app.rest.model.PageRest;
+import org.dspace.app.rest.model.hateoas.DSpaceResource;
+import org.dspace.app.rest.model.hateoas.PageResource;
+import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.Bitstream;
+import org.dspace.content.service.BitstreamService;
+import org.dspace.core.Context;
+import org.dspace.pages.Page;
+import org.dspace.pages.service.PageService;
+import org.dspace.services.ConfigurationService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Component;
+
+/**
+ * This is the repository that is responsible for the Page REST objects.
+ */
+@Component(PageRest.CATEGORY + "." + PageRest.NAME)
+public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
+    private static final Logger log = org.apache.logging.log4j.LogManager.getLogger();
+
+    @Autowired
+    PageService pageService;
+
+    @Autowired
+    BitstreamService bitstreamService;
+
+    @Autowired
+    PageConverter pageConverter;
+
+    @Autowired
+    ConfigurationService configurationService;
+
+    //TODO Permission
+    @Override
+    public PageRest findOne(Context context, UUID uuid) {
+        Page page = null;
+        try {
+            page = pageService.findByUuid(context, uuid);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        if (page == null) {
+            return null;
+        }
+        return pageConverter.fromModel(page);
+    }
+
+    //TODO Permission
+    @Override
+    public org.springframework.data.domain.Page<PageRest> findAll(Context context, Pageable pageable) {
+        List<Page> pages = new ArrayList<Page>();
+        int total = 0;
+        try {
+            pages = pageService.findAll(context);
+            total = pages.size();
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        return new PageImpl<Page>(pages, pageable, total).map(pageConverter);
+
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    protected PageRest createAndReturn(Context context) throws AuthorizeException, SQLException {
+        HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
+        ObjectMapper objectMapper = new ObjectMapper();
+        PageRest pageRest;
+        try {
+            ServletInputStream input = req.getInputStream();
+            pageRest = objectMapper.readValue(input, PageRest.class);
+        } catch (IOException e1) {
+            throw new UnprocessableEntityException("Error parsing request body: " + e1.toString());
+        }
+        StringBuilder filePath = new StringBuilder();
+        filePath.append(configurationService.getProperty("dspace.dir")).append(File.separatorChar).append("config")
+                .append(File.separatorChar).append("news-top.html");
+
+        File newsTopFile = new File(filePath.toString());
+        Bitstream bitstream = null;
+        try {
+            bitstream = bitstreamService.create(context, new FileInputStream(newsTopFile));
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+        Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage(), bitstream);
+        page.setTitle(pageRest.getTitle());
+        pageService.update(context, page);
+        return pageConverter.fromModel(page);
+    }
+
+    @Override
+    public Class<PageRest> getDomainClass() {
+        return PageRest.class;
+    }
+
+    @Override
+    public DSpaceResource<PageRest> wrapResource(PageRest model, String... rels) {
+        return new PageResource(model, utils, rels);
+    }
+}

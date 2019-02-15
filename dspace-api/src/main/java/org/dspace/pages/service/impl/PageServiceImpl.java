@@ -38,6 +38,14 @@ public class PageServiceImpl implements PageService {
     @Autowired
     private BitstreamService bitstreamService;
 
+    public Page create(Context context, String name, String language, Bitstream bitstream) throws SQLException {
+        Page page = new Page();
+        page.setName(name);
+        page.setLanguage(language);
+        page.setBitstream(bitstream);
+        return pageDao.create(context, page);
+    }
+
     @Override
     public Page findByUuid(Context context, UUID uuid) throws SQLException {
         return pageDao.findByUuid(context, uuid);
@@ -62,13 +70,13 @@ public class PageServiceImpl implements PageService {
     }
 
     @Override
-    public Page create(Context context) throws SQLException, AuthorizeException {
-        Page page = new Page();
-        return pageDao.create(context, page);
+    public List<Page> findAll(Context context) throws SQLException {
+        return pageDao.findAll(context, Page.class);
     }
 
     @Override
-    public Page create(Context context, Page page) throws SQLException {
+    public Page create(Context context) throws SQLException, AuthorizeException {
+        Page page = new Page();
         return pageDao.create(context, page);
     }
 
