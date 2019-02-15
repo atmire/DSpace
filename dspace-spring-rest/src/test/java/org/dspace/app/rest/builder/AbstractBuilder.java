@@ -37,6 +37,8 @@ import org.dspace.eperson.factory.EPersonServiceFactory;
 import org.dspace.eperson.service.EPersonService;
 import org.dspace.eperson.service.GroupService;
 import org.dspace.eperson.service.RegistrationDataService;
+import org.dspace.pages.factory.PagesServiceFactory;
+import org.dspace.pages.service.PageService;
 import org.dspace.services.factory.DSpaceServicesFactory;
 import org.dspace.versioning.factory.VersionServiceFactory;
 import org.dspace.versioning.service.VersionHistoryService;
@@ -82,6 +84,7 @@ public abstract class AbstractBuilder<T, S> {
     static RelationshipService relationshipService;
     static RelationshipTypeService relationshipTypeService;
     static EntityTypeService entityTypeService;
+    static PageService pageService;
 
     protected Context context;
 
@@ -127,6 +130,7 @@ public abstract class AbstractBuilder<T, S> {
         relationshipService = ContentServiceFactory.getInstance().getRelationshipService();
         relationshipTypeService = ContentServiceFactory.getInstance().getRelationshipTypeService();
         entityTypeService = ContentServiceFactory.getInstance().getEntityTypeService();
+        pageService = PagesServiceFactory.getInstance().getPageService();
 
         // Temporarily disabled
         claimedTaskService = XmlWorkflowServiceFactory.getInstance().getClaimedTaskService();
@@ -162,6 +166,7 @@ public abstract class AbstractBuilder<T, S> {
         relationshipService = null;
         relationshipTypeService = null;
         entityTypeService = null;
+        pageService = null;
     }
 
     public static void cleanupObjects() throws Exception {

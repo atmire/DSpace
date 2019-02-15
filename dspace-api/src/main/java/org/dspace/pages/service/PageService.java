@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.Bitstream;
 import org.dspace.core.Context;
 import org.dspace.pages.Page;
 import org.dspace.service.DSpaceCRUDService;
@@ -25,12 +26,14 @@ public interface PageService extends DSpaceCRUDService<Page> {
 
     /**
      * This method will create a Page object in the database according to the given Page object in the parameters.
-     * @param context   The relevant DSpace context
-     * @param page      The Page object that will be created in the Database
+     * @param context       The relevant DSpace context
+     * @param name          The name that the newly created page object will have in the database
+     * @param language      The language that the newly created page object will have in the database
+     * @param bitstream     The bitstream that the newly created page object will have in the database
      * @return          The created Page object
      * @throws SQLException If something goes wrong
      */
-    public Page create(Context context, Page page) throws SQLException;
+    public Page create(Context context, String name, String language, Bitstream bitstream) throws SQLException;
 
     /**
      * This method will find a Page object by UUID and return it
@@ -75,4 +78,13 @@ public interface PageService extends DSpaceCRUDService<Page> {
      */
     public void attachFile(Context context, InputStream inputStream, Page page)
         throws IOException, SQLException, AuthorizeException;
+
+    /**
+     * This method will retrieve all the Page objects currently in the database. This will be redirected to the DAO
+     * classes for the Page object
+     * @param context   The relevant DSpace context
+     * @return          The list containing all Page objects currently in the database
+     * @throws SQLException If something goes wrong
+     */
+    public List<Page> findAll(Context context) throws SQLException;
 }
