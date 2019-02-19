@@ -1,6 +1,14 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.app.rest.builder;
 
-import org.dspace.content.Bitstream;
+import java.io.InputStream;
+
 import org.dspace.core.Context;
 import org.dspace.pages.Page;
 import org.dspace.pages.service.PageService;
@@ -42,16 +50,16 @@ public class PageResourceBuilder extends AbstractBuilder<Page, PageService> {
     }
 
     public static PageResourceBuilder createPageResource(final Context context, final String name,
-                                                         final String language, final Bitstream bitstream) {
+                                                         final String language, final InputStream inputStream) {
         PageResourceBuilder pageResourcebuilder = new PageResourceBuilder(context);
-        return pageResourcebuilder.create(context, name, language, bitstream);
+        return pageResourcebuilder.create(context, name, language, inputStream);
     }
 
     private PageResourceBuilder create(final Context context, final String name, final String language,
-                                       final Bitstream bitstream) {
+                                       final InputStream inputStream) {
         this.context = context;
         try {
-            page = pageService.create(context, name, language, bitstream);
+            page = pageService.create(context, name, language, inputStream);
         } catch (Exception e) {
             return handleException(e);
         }
