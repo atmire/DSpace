@@ -21,11 +21,11 @@
 
 CREATE TABLE ui_pages
 (
-    uuid            uuid NOT NULL  PRIMARY KEY,
+    uuid            RAW(16) NOT NULL  PRIMARY KEY,
     name            varchar(24) NOT NULL,
     title           varchar(256),
     language        varchar(24) NOT NULL,
-    bitstreamuuid   uuid NOT NULL REFERENCES bitstream(uuid)
+    bitstreamuuid   RAW(16) NOT NULL REFERENCES bitstream(uuid)
 );
 
 CREATE INDEX ui_pages_name_idx ON ui_pages(name);
