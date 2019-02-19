@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BadRequestException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.Logger;
@@ -18,7 +19,6 @@ import org.dspace.app.rest.model.PageRest;
 import org.dspace.app.rest.model.hateoas.DSpaceResource;
 import org.dspace.app.rest.model.hateoas.PageResource;
 import org.dspace.authorize.AuthorizeException;
-import org.dspace.content.Bitstream;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.core.Context;
 import org.dspace.pages.Page;
@@ -96,16 +96,26 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
                 .append(File.separatorChar).append("news-top.html");
 
         File newsTopFile = new File(filePath.toString());
-        Bitstream bitstream = null;
+        FileInputStream fileInputStream = null;
         try {
-            bitstream = bitstreamService.create(context, new FileInputStream(newsTopFile));
+            fileInputStream = new FileInputStream(newsTopFile);
+            Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage(), fileInputStream);
+            page.setTitle(pageRest.getTitle());
+            pageService.update(context, page);
+            return pageConverter.fromModel(page);
         } catch (IOException e) {
-            log.error(e.getMessage(), e);
+            log.error("Reading in the inputstream caused an exception for file with path: " + filePath, e);
+            throw new BadRequestException("A bad request has been formed for the inputstream with path: "
+                                              + filePath, e);
+        } finally {
+            if (fileInputStream != null) {
+                try {
+                    fileInputStream.close();
+                } catch (IOException e) {
+                    log.error("Unable to close inputstream from path: " + filePath , e);
+                }
+            }
         }
-        Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage(), bitstream);
-        page.setTitle(pageRest.getTitle());
-        pageService.update(context, page);
-        return pageConverter.fromModel(page);
     }
 
     @Override
