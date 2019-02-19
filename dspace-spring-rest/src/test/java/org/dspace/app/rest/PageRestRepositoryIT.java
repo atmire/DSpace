@@ -1,3 +1,10 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.app.rest;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -47,7 +54,7 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         Map<String,Object> map = mapper.readValue(content, Map.class);
         String id = String.valueOf(map.get("id"));
 
-        getClient(authToken).perform(get("/api/config/pages/"+id)
+        getClient(authToken).perform(get("/api/config/pages/" + id)
                                          .content(mapper.writeValueAsBytes(pageRest))
                                          .contentType(contentType))
                             .andExpect(status().isOk())
