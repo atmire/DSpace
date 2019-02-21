@@ -34,6 +34,7 @@ import org.dspace.services.ConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
@@ -125,6 +126,25 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         }
     }
 
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    protected void delete(Context context, UUID id) throws AuthorizeException {
+        Page page = null;
+        try {
+            page = pageService.findByUuid(context, id);
+            if (page == null) {
+                throw new ResourceNotFoundException(
+                    PageRest.CATEGORY + "." + PageRest.NAME + " with id: " + id + " not found");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Unable to find Page with id = " + id, e);
+        }
+        try {
+            pageService.delete(context, page);
+        } catch (SQLException e) {
+            throw new RuntimeException("Unable to delete Page with id = " + id, e);
+        }
+    }
     @Override
     public Class<PageRest> getDomainClass() {
         return PageRest.class;
