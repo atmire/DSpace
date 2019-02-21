@@ -24,7 +24,6 @@ public class PageResourceBuilder extends AbstractBuilder<Page, PageService> {
     }
 
     protected void cleanup() throws Exception {
-        page.getBitstream().setDeleted(true);
         delete(page);
     }
 
