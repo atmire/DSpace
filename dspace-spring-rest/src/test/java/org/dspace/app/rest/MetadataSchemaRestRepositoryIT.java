@@ -27,6 +27,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dspace.app.rest.builder.MetadataSchemaBuilder;
+import org.dspace.app.rest.converter.MetadataSchemaConverter;
+import org.dspace.app.rest.matcher.MetadataschemaMatcher;
 import org.dspace.app.rest.model.MetadataSchemaRest;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
 import org.dspace.authorize.AuthorizeException;
@@ -37,6 +39,11 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * Integration tests for the {@link org.dspace.app.rest.repository.MetadataSchemaRestRepository}
+ * This class will include all the tests for the logic with regards to the
+ * {@link org.dspace.app.rest.repository.MetadataSchemaRestRepository}
+ */
 public class MetadataSchemaRestRepositoryIT extends AbstractControllerIntegrationTest {
 
     private static final String TEST_NAME = "testSchemaName";
@@ -46,6 +53,9 @@ public class MetadataSchemaRestRepositoryIT extends AbstractControllerIntegratio
     private static final String TEST_NAMESPACE_UPDATED = "testSchemaNameSpaceUpdated";
 
     @Autowired
+    MetadataSchemaConverter metadataSchemaConverter;
+
+    @Autowired
     private MetadataSchemaService metadataSchemaService;
 
     @Test
@@ -53,16 +63,17 @@ public class MetadataSchemaRestRepositoryIT extends AbstractControllerIntegratio
 
         context.turnOffAuthorisationSystem();
         MetadataSchema metadataSchema = MetadataSchemaBuilder.createMetadataSchema(context, "ATest", "ANamespace")
-                .build();
+                                                             .build();
+        context.restoreAuthSystemState();
 
         getClient().perform(get("/api/core/metadataschemas"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$._embedded.metadataschemas", Matchers.hasItem(
-                        matchEntry()
-                )))
-                .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/metadataschemas")))
-                .andExpect(jsonPath("$.page.size", is(20)));
+                   .andExpect(status().isOk())
+                   .andExpect(content().contentType(contentType))
+                   .andExpect(jsonPath("$._embedded.metadataschemas", Matchers.hasItem(
+                       matchEntry()
+                   )))
+                   .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/metadataschemas")))
+                   .andExpect(jsonPath("$.page.size", is(20)));
     }
 
     @Test
@@ -70,14 +81,169 @@ public class MetadataSchemaRestRepositoryIT extends AbstractControllerIntegratio
 
         context.turnOffAuthorisationSystem();
         MetadataSchema metadataSchema = MetadataSchemaBuilder.createMetadataSchema(context, "ATest", "ANamespace")
-                .build();
+                                                             .build();
+        context.restoreAuthSystemState();
 
         getClient().perform(get("/api/core/metadataschemas/" + metadataSchema.getID()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", is(
-                        matchEntry(metadataSchema)
-                )));
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$", is(
+                       matchEntry(metadataSchema)
+                   )));
     }
+
+    @Test
+    public void createUnauthorizedTest()
+        throws Exception {
+        MetadataSchemaRest metadataSchemaRest = new MetadataSchemaRest();
+        metadataSchemaRest.setPrefix(TEST_NAME);
+        metadataSchemaRest.setNamespace(TEST_NAMESPACE);
+
+        getClient()
+            .perform(post("/api/core/metadataschemas")
+                         .content(new ObjectMapper().writeValueAsBytes(metadataSchemaRest))
+                         .contentType(contentType))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void deleteSuccess() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        MetadataSchema metadataSchema = MetadataSchemaBuilder.createMetadataSchema(context, "ATest", "A namespace")
+                                                             .build();
+
+        context.restoreAuthSystemState();
+
+        getClient().perform(get("/api/core/metadataschemas/" + metadataSchema.getID()))
+                   .andExpect(status().isOk());
+
+
+        getClient(getAuthToken(admin.getEmail(), password))
+            .perform(delete("/api/core/metadataschemas/" + metadataSchema.getID()))
+            .andExpect(status().isNoContent());
+
+        getClient().perform(get("/api/core/metadataschemas/" + metadataSchema.getID()))
+                   .andExpect(status().isNotFound());
+
+    }
+
+    @Test
+    public void deleteUnauthorized() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        MetadataSchema metadataSchema = MetadataSchemaBuilder.createMetadataSchema(context, TEST_NAME, TEST_NAMESPACE)
+                                                             .build();
+
+        context.restoreAuthSystemState();
+
+        getClient().perform(get("/api/core/metadataschemas/" + metadataSchema.getID())).andExpect(status().isOk());
+
+        getClient()
+            .perform(delete("/api/core/metadataschemas/" + metadataSchema.getID()))
+            .andExpect(status().isUnauthorized());
+
+        getClient().perform(get("/api/core/metadataschemas/" + metadataSchema.getID())).andExpect(status().isOk());
+
+    }
+
+    @Test
+    public void deleteNonExisting() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        MetadataSchema metadataSchema = MetadataSchemaBuilder.createMetadataSchema(context, "A name", "A namespace")
+                                                             .build();
+
+        context.restoreAuthSystemState();
+
+        Integer id = metadataSchema.getID();
+
+        getClient(getAuthToken(admin.getEmail(), password))
+            .perform(delete("/api/core/metadataschemas/" + id))
+            .andExpect(status().isNoContent());
+
+        getClient(getAuthToken(admin.getEmail(), password))
+            .perform(delete("/api/core/metadataschemas/" + id))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void update() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        MetadataSchema metadataSchema = MetadataSchemaBuilder.createMetadataSchema(context, TEST_NAME, TEST_NAMESPACE)
+                                                             .build();
+
+        context.restoreAuthSystemState();
+
+        MetadataSchemaRest metadataSchemaRest = new MetadataSchemaRest();
+        metadataSchemaRest.setId(metadataSchema.getID());
+        metadataSchemaRest.setPrefix(TEST_NAME_UPDATED);
+        metadataSchemaRest.setNamespace(TEST_NAMESPACE_UPDATED);
+
+        getClient(getAuthToken(admin.getEmail(), password))
+            .perform(put("/api/core/metadataschemas/" + metadataSchema.getID())
+                         .content(new ObjectMapper().writeValueAsBytes(metadataSchemaRest))
+                         .contentType(contentType))
+            .andExpect(status().isOk());
+
+        getClient().perform(get("/api/core/metadataschemas/" + metadataSchema.getID()))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$", MetadataschemaMatcher
+                       .matchEntry(TEST_NAME_UPDATED, TEST_NAMESPACE_UPDATED)));
+    }
+
+    @Test
+    public void updateUnauthorized() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        MetadataSchema metadataSchema = MetadataSchemaBuilder.createMetadataSchema(context, TEST_NAME, TEST_NAMESPACE)
+                                                             .build();
+
+        context.restoreAuthSystemState();
+
+        MetadataSchemaRest metadataSchemaRest = new MetadataSchemaRest();
+        metadataSchemaRest.setId(metadataSchema.getID());
+        metadataSchemaRest.setPrefix(TEST_NAME_UPDATED);
+        metadataSchemaRest.setNamespace(TEST_NAMESPACE_UPDATED);
+
+        getClient()
+            .perform(put("/api/core/metadataschemas/" + metadataSchema.getID())
+                         .content(new ObjectMapper().writeValueAsBytes(metadataSchemaRest))
+                         .contentType(contentType))
+            .andExpect(status().isUnauthorized());
+
+        getClient().perform(get("/api/core/metadataschemas/" + metadataSchema.getID()))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$", MetadataschemaMatcher
+                       .matchEntry(TEST_NAME, TEST_NAMESPACE)));
+    }
+
+    @Test
+    public void updateWrongRights() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        MetadataSchema metadataSchema = MetadataSchemaBuilder.createMetadataSchema(context, TEST_NAME, TEST_NAMESPACE)
+                                                             .build();
+
+        context.restoreAuthSystemState();
+
+        MetadataSchemaRest metadataSchemaRest = new MetadataSchemaRest();
+        metadataSchemaRest.setId(metadataSchema.getID());
+        metadataSchemaRest.setPrefix(TEST_NAME_UPDATED);
+        metadataSchemaRest.setNamespace(TEST_NAMESPACE_UPDATED);
+
+        getClient(getAuthToken(eperson.getEmail(), password))
+            .perform(put("/api/core/metadataschemas/" + metadataSchema.getID())
+                         .content(new ObjectMapper().writeValueAsBytes(metadataSchemaRest))
+                         .contentType(contentType))
+            .andExpect(status().isForbidden());
+
+        getClient().perform(get("/api/core/metadataschemas/" + metadataSchema.getID()))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$", MetadataschemaMatcher
+                       .matchEntry(TEST_NAME, TEST_NAMESPACE)));
+    }
+
 
     @Test
     public void createSuccess() throws Exception {
@@ -94,11 +260,11 @@ public class MetadataSchemaRestRepositoryIT extends AbstractControllerIntegratio
             assertThat(metadataSchemaService.find(context, TEST_NAME), nullValue());
 
             getClient(authToken)
-                    .perform(post("/api/core/metadataschemas")
-                            .content(new ObjectMapper().writeValueAsBytes(metadataSchemaRest))
-                            .contentType(contentType))
-                    .andExpect(status().isCreated())
-                    .andDo(result -> idRef.set(read(result.getResponse().getContentAsString(), "$.id")));
+                .perform(post("/api/core/metadataschemas")
+                             .content(new ObjectMapper().writeValueAsBytes(metadataSchemaRest))
+                             .contentType(contentType))
+                .andExpect(status().isCreated())
+                .andDo(result -> idRef.set(read(result.getResponse().getContentAsString(), "$.id")));
 
             MetadataSchema metadataSchema = metadataSchemaService.find(context, idRef.get());
             assertThat(metadataSchema, notNullValue());
@@ -114,7 +280,7 @@ public class MetadataSchemaRestRepositoryIT extends AbstractControllerIntegratio
 
     @Test
     public void createUnauthauthorizedTest()
-            throws Exception {
+        throws Exception {
 
         MetadataSchemaRest metadataSchemaRest = new MetadataSchemaRest();
         metadataSchemaRest.setPrefix(TEST_NAME);
@@ -122,119 +288,13 @@ public class MetadataSchemaRestRepositoryIT extends AbstractControllerIntegratio
 
         try {
             getClient()
-                    .perform(post("/api/core/metadataschemas")
-                            .content(new ObjectMapper().writeValueAsBytes(metadataSchemaRest))
-                            .contentType(contentType))
-                    .andExpect(status().isUnauthorized());
+                .perform(post("/api/core/metadataschemas")
+                             .content(new ObjectMapper().writeValueAsBytes(metadataSchemaRest))
+                             .contentType(contentType))
+                .andExpect(status().isUnauthorized());
 
         } finally {
             deleteMetadataSchemaIfExists(TEST_NAME);
-        }
-    }
-
-    @Test
-    public void deleteSuccess() throws Exception {
-
-        MetadataSchema metadataSchema = createMetadataSchema();
-
-        try {
-
-            assertThat(metadataSchemaService.find(context, metadataSchema.getID()), notNullValue());
-
-            getClient(getAuthToken(admin.getEmail(), password))
-                    .perform(delete("/api/core/metadataschemas/" + metadataSchema.getID()))
-                    .andExpect(status().isNoContent());
-
-            assertThat(metadataSchemaService.find(context, metadataSchema.getID()), nullValue());
-
-        } finally {
-            deleteMetadataSchemaIfExists(TEST_NAME);
-        }
-    }
-
-    @Test
-    public void deleteUnauthorized() throws Exception {
-
-        MetadataSchema metadataSchema = createMetadataSchema();
-
-        try {
-
-            assertThat(metadataSchemaService.find(context, metadataSchema.getID()), notNullValue());
-
-            getClient()
-                    .perform(delete("/api/core/metadataschemas/" + metadataSchema.getID()))
-                    .andExpect(status().isUnauthorized());
-
-            assertThat(metadataSchemaService.find(context, metadataSchema.getID()), notNullValue());
-
-        } finally {
-            deleteMetadataSchemaIfExists(TEST_NAME);
-        }
-    }
-
-    @Test
-    public void deleteNonExisting() throws Exception {
-
-        MetadataSchema metadataSchema = createMetadataSchema();
-        deleteMetadataSchemaIfExists(TEST_NAME);
-
-        Integer id = metadataSchema.getID();
-        assertThat(metadataSchemaService.find(context, id), nullValue());
-
-        getClient(getAuthToken(admin.getEmail(), password))
-                .perform(delete("/api/core/metadataschemas/" + id))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    public void update() throws Exception {
-
-        MetadataSchema metadataSchema = createMetadataSchema();
-
-        MetadataSchemaRest metadataSchemaRest = new MetadataSchemaRest();
-        metadataSchemaRest.setId(metadataSchema.getID());
-        metadataSchemaRest.setPrefix(TEST_NAME_UPDATED);
-        metadataSchemaRest.setNamespace(TEST_NAMESPACE_UPDATED);
-
-        try {
-            getClient(getAuthToken(admin.getEmail(), password))
-                    .perform(put("/api/core/metadataschemas/" + metadataSchema.getID())
-                            .content(new ObjectMapper().writeValueAsBytes(metadataSchemaRest))
-                            .contentType(contentType))
-                    .andExpect(status().isOk());
-
-            metadataSchema = metadataSchemaService.find(context, metadataSchema.getID());
-
-            assertEquals(TEST_NAME_UPDATED, metadataSchema.getName());
-            assertEquals(TEST_NAMESPACE_UPDATED, metadataSchema.getNamespace());
-        } finally {
-            deleteMetadataSchemaIfExists(metadataSchema);
-        }
-    }
-
-    @Test
-    public void updateUnauthorized() throws Exception {
-
-        MetadataSchema metadataSchema = createMetadataSchema();
-
-        MetadataSchemaRest metadataSchemaRest = new MetadataSchemaRest();
-        metadataSchemaRest.setId(metadataSchema.getID());
-        metadataSchemaRest.setPrefix(TEST_NAME_UPDATED);
-        metadataSchemaRest.setNamespace(TEST_NAMESPACE_UPDATED);
-
-        try {
-            getClient()
-                    .perform(put("/api/core/metadataschemas/" + metadataSchema.getID())
-                            .content(new ObjectMapper().writeValueAsBytes(metadataSchemaRest))
-                            .contentType(contentType))
-                    .andExpect(status().isUnauthorized());
-
-            metadataSchema = metadataSchemaService.find(context, metadataSchema.getID());
-
-            assertEquals(TEST_NAME, metadataSchema.getName());
-            assertEquals(TEST_NAMESPACE, metadataSchema.getNamespace());
-        } finally {
-            deleteMetadataSchemaIfExists(metadataSchema);
         }
     }
 

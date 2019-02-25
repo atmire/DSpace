@@ -25,6 +25,7 @@ import org.dspace.app.rest.model.hateoas.DSpaceResource;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.service.MetadataFieldService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -53,6 +54,9 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
     // https://docs.spring.io/spring/docs/4.3.18.RELEASE/spring-framework-reference/htmlsingle/#aop-understanding-aop-proxies
     @Autowired
     private DSpaceRestRepository<T, ID> thisRepository;
+
+    @Autowired
+    private MetadataFieldService metadataFieldService;
 
     @Override
     public <S extends T> S save(S entity) {
@@ -409,7 +413,8 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
     }
 
     /**
-     * Method to support updating a DSpace instance.
+     * This method will fully replace the REST object with the given UUID with the REST object that is described
+     * in the JsonNode parameter
      *
      * @param request     the http request
      * @param apiCategory the API category e.g. "api"
@@ -433,9 +438,12 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
     }
 
     /**
-     * Implement this method in the subclass to support updating a DSpace instance.
+     * Implement this method in the subclass to support the PUT functionality for a REST object.
+     * This PUT functionality will fully replace the REST object with the given UUID with the REST object that is
+     * described in the JsonNode parameter
      *
      * @param context     the dspace context
+     * @param request     the http request
      * @param apiCategory the API category e.g. "api"
      * @param model       the DSpace model e.g. "metadatafield"
      * @param id          the ID of the target REST object

@@ -133,16 +133,16 @@ public class MetadataFieldRestRepository extends DSpaceRestRepository<MetadataFi
         // validate fields
         String schemaId = getRequestService().getCurrentRequest().getHttpServletRequest().getParameter("schemaId");
         if (isBlank(schemaId)) {
-            throw new UnprocessableEntityException("metadata schema ID can be blank not");
+            throw new UnprocessableEntityException("metadata schema ID cannot be blank");
         }
 
         MetadataSchema schema = metadataSchemaService.find(context, parseInt(schemaId));
         if (schema == null) {
-            throw new UnprocessableEntityException("metadata schema is found not");
+            throw new UnprocessableEntityException("metadata schema with ID " + schemaId + " not found");
         }
 
         if (isBlank(metadataFieldRest.getElement())) {
-            throw new UnprocessableEntityException("metadata element can be blank not");
+            throw new UnprocessableEntityException("metadata element (in request body) cannot be blank");
         }
 
         // create
@@ -191,16 +191,16 @@ public class MetadataFieldRestRepository extends DSpaceRestRepository<MetadataFi
         MetadataFieldRest metadataFieldRest = new Gson().fromJson(jsonNode.toString(), MetadataFieldRest.class);
 
         if (isBlank(metadataFieldRest.getElement())) {
-            throw new UnprocessableEntityException("metadata element can be blank not");
+            throw new UnprocessableEntityException("metadata element (in request body) cannot be blank");
         }
 
         if (!Objects.equals(id, metadataFieldRest.getId())) {
-            throw new UnprocessableEntityException("body id matches path id... not");
+            throw new UnprocessableEntityException("ID in request body doesn't match path ID");
         }
 
         MetadataField metadataField = metadataFieldService.find(context, id);
         if (metadataField == null) {
-            throw new ResourceNotFoundException("metadata field with id: " + id + " is found not");
+            throw new ResourceNotFoundException("metadata field with id: " + id + " not found");
         }
 
         metadataField.setElement(metadataFieldRest.getElement());
