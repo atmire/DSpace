@@ -7,8 +7,6 @@
  */
 package org.dspace.app.rest.builder;
 
-import java.io.InputStream;
-
 import org.dspace.core.Context;
 import org.dspace.pages.Page;
 import org.dspace.pages.service.PageService;
@@ -49,16 +47,15 @@ public class PageResourceBuilder extends AbstractBuilder<Page, PageService> {
     }
 
     public static PageResourceBuilder createPageResource(final Context context, final String name,
-                                                         final String language, final InputStream inputStream) {
+                                                         final String language) {
         PageResourceBuilder pageResourcebuilder = new PageResourceBuilder(context);
-        return pageResourcebuilder.create(context, name, language, inputStream);
+        return pageResourcebuilder.create(context, name, language);
     }
 
-    private PageResourceBuilder create(final Context context, final String name, final String language,
-                                       final InputStream inputStream) {
+    private PageResourceBuilder create(final Context context, final String name, final String language) {
         this.context = context;
         try {
-            page = pageService.create(context, name, language, inputStream);
+            page = pageService.create(context, name, language);
         } catch (Exception e) {
             return handleException(e);
         }

@@ -25,7 +25,7 @@ CREATE TABLE ui_pages
     name            varchar(24) NOT NULL,
     title           varchar(256),
     language        varchar(24) NOT NULL,
-    bitstreamuuid   uuid NOT NULL REFERENCES bitstream(uuid)
+    bitstreamuuid   uuid REFERENCES bitstream(uuid)
 );
 
 CREATE INDEX ui_pages_name_idx ON ui_pages(name);

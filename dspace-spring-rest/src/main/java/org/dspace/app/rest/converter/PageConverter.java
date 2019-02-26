@@ -39,7 +39,9 @@ public class PageConverter extends DSpaceConverter<Page, PageRest> {
         pageRest.setName(obj.getName());
         pageRest.setTitle(obj.getTitle());
         pageRest.setId(obj.getID());
-        pageRest.setBitstreamRest(bitstreamConverter.fromModel(obj.getBitstream()));
+        if (obj.getBitstream() != null) {
+            pageRest.setBitstreamRest(bitstreamConverter.fromModel(obj.getBitstream()));
+        }
         return pageRest;
     }
     protected PageRest newInstance() {

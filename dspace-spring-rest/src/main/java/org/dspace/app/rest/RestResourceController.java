@@ -472,7 +472,7 @@ public class RestResourceController implements InitializingBean {
      *            the api category
      * @param model
      *            the rest model that identify the REST resource collection
-     * @param id
+     * @param uuid
      *            the id of the specific rest resource
      * @param uploadfile
      *            the file to upload
@@ -484,11 +484,11 @@ public class RestResourceController implements InitializingBean {
     public <ID extends Serializable> ResponseEntity<ResourceSupport> upload(HttpServletRequest request,
                                                                             @PathVariable String apiCategory,
                                                                             @PathVariable String model,
-                                                                            @PathVariable UUID id,
+                                                                            @PathVariable UUID uuid,
                                                                             @RequestParam("file") MultipartFile
                                                                                 uploadfile)
         throws HttpRequestMethodNotSupportedException {
-        return uploadInternal(request, apiCategory, model, id, uploadfile);
+        return uploadInternal(request, apiCategory, model, uuid, uploadfile);
     }
 
     /**
@@ -504,16 +504,20 @@ public class RestResourceController implements InitializingBean {
     private <ID extends Serializable> ResponseEntity<ResourceSupport> uploadInternal(HttpServletRequest request,
                                                                                      String apiCategory, String model,
                                                                                      ID id,
-                                                                                     MultipartFile uploadfile) {
+                                                                                     MultipartFile uploadfile)
+        throws HttpRequestMethodNotSupportedException {
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
 
         RestAddressableModel modelObject = null;
         try {
             modelObject = repository.upload(request, apiCategory, model, id, uploadfile);
-        } catch (Exception e) {
+        } catch (ClassCastException e) {
             log.error(e.getMessage(), e);
             return ControllerUtils.toEmptyResponse(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        if (modelObject == null) {
+            throw new HttpRequestMethodNotSupportedException(RequestMethod.POST.toString());
         }
         DSpaceResource result = repository.wrapResource(modelObject);
         linkService.addLinks(result);

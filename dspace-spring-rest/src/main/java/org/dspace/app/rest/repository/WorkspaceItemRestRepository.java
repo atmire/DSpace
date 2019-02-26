@@ -219,11 +219,16 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
     //TODO @PreAuthorize("hasPermission(#id, 'WORKSPACEITEM', 'WRITE')")
     @Override
     public WorkspaceItemRest upload(HttpServletRequest request, String apiCategory, String model, Integer id,
-                                    MultipartFile file) throws Exception {
+                                    MultipartFile file) {
 
         Context context = obtainContext();
         WorkspaceItemRest wsi = findOne(id);
-        WorkspaceItem source = wis.find(context, id);
+        WorkspaceItem source = null;
+        try {
+            source = wis.find(context, id);
+        } catch (SQLException e) {
+            log.error(e.getMessage(), e);
+        }
         List<ErrorRest> errors = new ArrayList<ErrorRest>();
         SubmissionConfig submissionConfig =
             submissionConfigReader.getSubmissionConfigByName(wsi.getSubmissionDefinition().getName());
@@ -265,7 +270,6 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
             wsi.getErrors().addAll(errors);
         }
 
-        context.commit();
         return wsi;
     }
 

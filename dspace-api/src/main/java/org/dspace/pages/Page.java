@@ -61,10 +61,10 @@ public class Page implements ReloadableEntity<UUID> {
 
     /**
      * This is the bitstream property of the Page class. It is stored as it's UUID in the bitstreamuuid column.
-     * This cannot be null and represents a one to one relationship between the Bitstream and the Page objects
+     * This can be null and represents a one to one relationship between the Bitstream and the Page objects
      */
     @OneToOne
-    @JoinColumn(name = "bitstreamuuid", nullable = false)
+    @JoinColumn(name = "bitstreamuuid", nullable = true)
     private Bitstream bitstream;
 
     /**

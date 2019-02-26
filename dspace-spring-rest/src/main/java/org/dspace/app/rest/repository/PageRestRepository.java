@@ -7,8 +7,6 @@
  */
 package org.dspace.app.rest.repository;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -16,7 +14,6 @@ import java.util.List;
 import java.util.UUID;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.BadRequestException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.Logger;
@@ -37,6 +34,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * This is the repository that is responsible for the Page REST objects.
@@ -58,6 +56,7 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
     ConfigurationService configurationService;
 
     //TODO Permission
+    //TODO If there is no file, show message to upload a file first
     @Override
     public PageRest findOne(Context context, UUID uuid) {
         Page page = null;
@@ -73,6 +72,7 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
     }
 
     //TODO Permission
+    //TODO Hide pages without bitstream
     @Override
     public org.springframework.data.domain.Page<PageRest> findAll(Context context, Pageable pageable) {
         List<Page> pages = new ArrayList<Page>();
@@ -99,31 +99,10 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         } catch (IOException e1) {
             throw new UnprocessableEntityException("Error parsing request body: " + e1.toString());
         }
-        StringBuilder filePath = new StringBuilder();
-        filePath.append(configurationService.getProperty("dspace.dir")).append(File.separatorChar).append("config")
-                .append(File.separatorChar).append("news-top.html");
-
-        File newsTopFile = new File(filePath.toString());
-        FileInputStream fileInputStream = null;
-        try {
-            fileInputStream = new FileInputStream(newsTopFile);
-            Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage(), fileInputStream);
-            page.setTitle(pageRest.getTitle());
-            pageService.update(context, page);
-            return pageConverter.fromModel(page);
-        } catch (IOException e) {
-            log.error("Reading in the inputstream caused an exception for file with path: " + filePath, e);
-            throw new BadRequestException("A bad request has been formed for the inputstream with path: "
-                                              + filePath, e);
-        } finally {
-            if (fileInputStream != null) {
-                try {
-                    fileInputStream.close();
-                } catch (IOException e) {
-                    log.error("Unable to close inputstream from path: " + filePath , e);
-                }
-            }
-        }
+        Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage());
+        page.setTitle(pageRest.getTitle());
+        pageService.update(context, page);
+        return pageConverter.fromModel(page);
     }
 
     @Override
@@ -145,6 +124,26 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
             throw new RuntimeException("Unable to delete Page with id = " + id, e);
         }
     }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public PageRest upload(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
+                           MultipartFile file) {
+
+        Page page = null;
+        try {
+            page = pageService.findByUuid(context, uuid);
+            pageService.attachFile(context, utils.getInputStreamFromMultipart(file), page);
+        } catch (IOException e) {
+            throw new RuntimeException("The bitstream could not be created from the given file in the request");
+        } catch (SQLException e) {
+            throw new RuntimeException("Unable to process page with id: " + uuid);
+        } catch (AuthorizeException e) {
+            throw new RuntimeException("The current user was not allowed to make changes to the page with id: " + uuid);
+        }
+        return pageConverter.fromModel(page);
+    }
+
     @Override
     public Class<PageRest> getDomainClass() {
         return PageRest.class;
