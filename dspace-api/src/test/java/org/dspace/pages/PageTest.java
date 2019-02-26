@@ -68,8 +68,7 @@ public class PageTest extends AbstractUnitTest {
             context.turnOffAuthorisationSystem();
 //            File f = new File(testProps.get("test.bitstream").toString());
             //TODO Change to test file
-            this.page = pageService.create(context, "testName", "testLanguage",
-                                           IOUtils.toInputStream("test"));
+            this.page = pageService.create(context, "testName", "testLanguage");
 
             context.restoreAuthSystemState();
         } catch (SQLException ex) {
@@ -119,15 +118,14 @@ public class PageTest extends AbstractUnitTest {
     }
 
     /**
-     * Tests the {@link PageService#create(Context, String, String, InputStream)} method
+     * Tests the {@link PageService#create(Context, String, String)} method
      * @throws Exception
      */
     @Test
     public void testPagesCreate() throws Exception {
 
         Page page = new Page();
-        page = pageService.create(context, "anotherTestPage", "anotherTestLanguage",
-                                  IOUtils.toInputStream("anotherTest"));
+        page = pageService.create(context, "anotherTestPage", "anotherTestLanguage");
 
 
         UUID uuid = page.getID();
@@ -136,7 +134,6 @@ public class PageTest extends AbstractUnitTest {
         assertThat("testPagesCreate 1", foundPage.getID(), equalTo(uuid));
         assertThat("testPagesCreate 2", foundPage.getName(), equalTo(page.getName()));
         assertThat("testPagesCreate 3", foundPage.getLanguage(), equalTo(page.getLanguage()));
-        assertThat("testPagesCreate 4", foundPage.getBitstream(), equalTo(page.getBitstream()));
     }
 
     /**
@@ -154,7 +151,6 @@ public class PageTest extends AbstractUnitTest {
         assertThat("testPageUpdate 1", foundPage.getID(), equalTo(uuid));
         assertThat("testPageUpdate 2", foundPage.getName(), equalTo(page.getName()));
         assertThat("testPageUpdate 3", foundPage.getLanguage(), equalTo("ThisIsAtest"));
-        assertThat("testPageUpdate 4", foundPage.getBitstream(), equalTo(page.getBitstream()));
     }
 
     /**
@@ -163,8 +159,7 @@ public class PageTest extends AbstractUnitTest {
      */
     @Test
     public void testPagesDelete() throws Exception {
-        Page page = pageService.create(context, "anotherPageTest", "anotherLanguageTest",
-                                       IOUtils.toInputStream("anotherTest"));
+        Page page = pageService.create(context, "anotherPageTest", "anotherLanguageTest");
 
 
         UUID uuid = page.getID();
@@ -173,7 +168,6 @@ public class PageTest extends AbstractUnitTest {
         assertThat("testPagesDelete 1", foundPage.getID(), equalTo(uuid));
         assertThat("testPagesDelete 2", foundPage.getName(), equalTo(page.getName()));
         assertThat("testPagesDelete 3", foundPage.getLanguage(), equalTo(page.getLanguage()));
-        assertThat("testPagesDelete 4", foundPage.getBitstream(), equalTo(page.getBitstream()));
 
         context.turnOffAuthorisationSystem();
         pageService.delete(context, foundPage);
@@ -190,9 +184,9 @@ public class PageTest extends AbstractUnitTest {
     public void testPagesFindByName() throws Exception {
 
         String name = "anotherTestPage";
-        Page page = pageService.create(context, name, "tla", IOUtils.toInputStream("anotherTest"));
+        Page page = pageService.create(context, name, "tla");
 
-        Page secondPage = pageService.create(context, name, "atl", IOUtils.toInputStream("anotherTest"));
+        Page secondPage = pageService.create(context, name, "atl");
 
 
         List<Page> foundPages = pageService.findByName(context, name);
@@ -207,10 +201,9 @@ public class PageTest extends AbstractUnitTest {
     public void testPagesFindByNameAndLanguage() throws Exception {
 
         String name = "anotherTestPage";
-        Page page = pageService.create(context, name, "FirstLanguage", IOUtils.toInputStream("anotherTest"));
+        Page page = pageService.create(context, name, "FirstLanguage");
 
-        Page secondPage = pageService.create(context, name, "SecondLanguage",
-                                             IOUtils.toInputStream("anotherTest"));
+        Page secondPage = pageService.create(context, name, "SecondLanguage");
 
 
         Page foundPage = pageService.findByNameAndLanguage(context, name, "SecondLanguage");
@@ -227,8 +220,7 @@ public class PageTest extends AbstractUnitTest {
     @Test
     public void testPagesAttachFile() throws Exception {
 
-        Page page = pageService.create(context, "anotherPageTestName", "anotherPageTestLanguage",
-                                       IOUtils.toInputStream("anotherTest"));
+        Page page = pageService.create(context, "anotherPageTestName", "anotherPageTestLanguage");
 
 
         UUID uuid = page.getID();

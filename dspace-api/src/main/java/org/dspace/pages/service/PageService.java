@@ -24,16 +24,14 @@ import org.dspace.service.DSpaceCRUDService;
 public interface PageService extends DSpaceCRUDService<Page> {
 
     /**
-     * This method will create a Page object in the database according to the given Page object in the parameters.
+     * This method will create a Page object in the database according to the given parameters.
      * @param context       The relevant DSpace context
      * @param name          The name that the newly created page object will have in the database
      * @param language      The language that the newly created page object will have in the database
-     * @param inputStream   The inputStream that will be used to create the bitstream that the newly created page
-     *                      object will have in the database
      * @return              The created Page object
      * @throws SQLException If something goes wrong
      */
-    public Page create(Context context, String name, String language, InputStream inputStream) throws SQLException;
+    public Page create(Context context, String name, String language) throws SQLException;
 
     /**
      * This method will find a Page object by UUID and return it

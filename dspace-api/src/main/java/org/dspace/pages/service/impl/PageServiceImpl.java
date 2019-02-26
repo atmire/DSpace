@@ -17,13 +17,9 @@ import java.util.UUID;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.dspace.authorize.AuthorizeException;
-import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.Bitstream;
 import org.dspace.content.service.BitstreamService;
-import org.dspace.core.Constants;
 import org.dspace.core.Context;
-import org.dspace.eperson.Group;
-import org.dspace.eperson.service.GroupService;
 import org.dspace.pages.Page;
 import org.dspace.pages.dao.PageDao;
 import org.dspace.pages.service.PageService;
@@ -42,27 +38,10 @@ public class PageServiceImpl implements PageService {
     @Autowired
     private BitstreamService bitstreamService;
 
-    @Autowired
-    private AuthorizeService authorizeService;
-
-    @Autowired
-    private GroupService groupService;
-
-    public Page create(Context context, String name, String language, InputStream inputStream) throws SQLException {
+    public Page create(Context context, String name, String language) throws SQLException {
         Page page = new Page();
         page.setName(name);
         page.setLanguage(language);
-        try {
-            Bitstream bitstream = bitstreamService.create(context, inputStream);
-            authorizeService.addPolicy(context, bitstream, Constants.READ,
-                                       groupService.findByName(context, Group.ANONYMOUS));
-            page.setBitstream(bitstream);
-        } catch (IOException e) {
-            log.error("The bitstream for the given inputstream could not be created", e);
-            throw new IllegalArgumentException("The bitstream for the given InputStream could not be created", e);
-        } catch (AuthorizeException e) {
-            log.error("Anonymous read rights could not be added to the bitstream created by the InputStream", e);
-        }
         return pageDao.create(context, page);
     }
 
@@ -123,7 +102,10 @@ public class PageServiceImpl implements PageService {
     @Override
     public void delete(Context context, Page page) throws SQLException, AuthorizeException {
         try {
-            bitstreamService.delete(context, page.getBitstream());
+            Bitstream bitstream = page.getBitstream();
+            if (bitstream != null) {
+                bitstreamService.delete(context, bitstream);
+            }
         } catch (IOException e) {
             log.error("The attached bitstream was unable to be deleted for Page with uuid: " + page.getID(), e);
         }
