@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -133,13 +134,21 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         Page page = null;
         try {
             page = pageService.findByUuid(context, uuid);
+            if (page == null) {
+                throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
+            }
+            if (page.getBitstream() != null) {
+                throw new UnprocessableEntityException("The request page for uuid: " + uuid
+                                                           + " already has a bitstreamattached to it");
+            }
             pageService.attachFile(context, utils.getInputStreamFromMultipart(file), page);
         } catch (IOException e) {
             throw new RuntimeException("The bitstream could not be created from the given file in the request");
         } catch (SQLException e) {
             throw new RuntimeException("Unable to process page with id: " + uuid);
         } catch (AuthorizeException e) {
-            throw new RuntimeException("The current user was not allowed to make changes to the page with id: " + uuid);
+            throw new AccessDeniedException("The current user was not allowed to make changes to the page with id: "
+                                                + uuid);
         }
         return pageConverter.fromModel(page);
     }

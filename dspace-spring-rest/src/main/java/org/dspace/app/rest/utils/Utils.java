@@ -229,12 +229,12 @@ public class Utils {
      * @param multipartFile The MultipartFile for which we'll retrieve the InputStream
      * @return              The relevant InputStream
      */
-    public InputStream getInputStreamFromMultipart(MultipartFile multipartFile) {
+    public InputStream getInputStreamFromMultipart(MultipartFile multipartFile) throws IOException {
         try {
             return multipartFile.getInputStream();
         } catch (IOException e) {
             log.error("Couldn't retrieve inputstream for the multipart file given", e);
+            throw e;
         }
-        return null;
     }
 }
