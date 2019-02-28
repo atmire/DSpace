@@ -16,13 +16,11 @@ import java.util.UUID;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.pages.Page;
-import org.dspace.service.DSpaceCRUDService;
 
 /**
  * This is the interface class that will deal with all functionality with regards to Page objects
  */
-public interface PageService extends DSpaceCRUDService<Page> {
-
+public interface PageService {
     /**
      * This method will create a Page object in the database according to the given parameters.
      * @param context       The relevant DSpace context
@@ -30,8 +28,9 @@ public interface PageService extends DSpaceCRUDService<Page> {
      * @param language      The language that the newly created page object will have in the database
      * @return              The created Page object
      * @throws SQLException If something goes wrong
+     * @throws AuthorizeException If something goes wrong
      */
-    public Page create(Context context, String name, String language) throws SQLException;
+    public Page create(Context context, String name, String language) throws SQLException, AuthorizeException;
 
     /**
      * This method will find a Page object by UUID and return it
@@ -85,4 +84,32 @@ public interface PageService extends DSpaceCRUDService<Page> {
      * @throws SQLException If something goes wrong
      */
     public List<Page> findAll(Context context) throws SQLException;
+
+    /**
+     * Updates the Page object in the DB.
+     * @param context               The relevant DSpace context
+     * @param page                  The Page object to be updated
+     * @throws SQLException         If something goes wrong
+     * @throws AuthorizeException   If something goes wrong
+     */
+    public void update(Context context, Page page) throws SQLException, AuthorizeException;
+
+    /**
+     * Updates the list of Page objects in the DB.
+     * @param context               The relevant DSpace context
+     * @param pages                 The Page objects to be updated
+     * @throws SQLException         If something goes wrong
+     * @throws AuthorizeException   If something goes wrong
+     */
+    public void update(Context context, List<Page> pages) throws SQLException, AuthorizeException;
+
+    /**
+     * Deletes the Page object from the Database
+     * @param context               The relevant DSpace context
+     * @param page                  The Page object to be deleted
+     * @throws SQLException         If something goes wrong
+     * @throws AuthorizeException   If something goes wrong
+     */
+    public void delete(Context context, Page page) throws SQLException, AuthorizeException;
+
 }

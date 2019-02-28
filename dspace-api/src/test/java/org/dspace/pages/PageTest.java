@@ -74,6 +74,9 @@ public class PageTest extends AbstractUnitTest {
         } catch (SQLException ex) {
             log.error("SQL Error in init", ex);
             fail("SQL Error in init: " + ex.getMessage());
+        } catch (AuthorizeException e) {
+            log.error("AuthorizeException Error in init", e);
+            fail("AuthorizeException Error in init: " + e.getMessage());
         }
     }
 
@@ -123,6 +126,7 @@ public class PageTest extends AbstractUnitTest {
      */
     @Test
     public void testPagesCreate() throws Exception {
+        context.turnOffAuthorisationSystem();
 
         Page page = new Page();
         page = pageService.create(context, "anotherTestPage", "anotherTestLanguage");
@@ -134,6 +138,8 @@ public class PageTest extends AbstractUnitTest {
         assertThat("testPagesCreate 1", foundPage.getID(), equalTo(uuid));
         assertThat("testPagesCreate 2", foundPage.getName(), equalTo(page.getName()));
         assertThat("testPagesCreate 3", foundPage.getLanguage(), equalTo(page.getLanguage()));
+
+        context.restoreAuthSystemState();
     }
 
     /**
@@ -142,6 +148,8 @@ public class PageTest extends AbstractUnitTest {
      */
     @Test
     public void testPageUpdate() throws Exception {
+        context.turnOffAuthorisationSystem();
+
         UUID uuid = page.getID();
         Page foundPage = pageService.findByUuid(context, uuid);
         foundPage.setLanguage("ThisIsAtest");
@@ -151,6 +159,8 @@ public class PageTest extends AbstractUnitTest {
         assertThat("testPageUpdate 1", foundPage.getID(), equalTo(uuid));
         assertThat("testPageUpdate 2", foundPage.getName(), equalTo(page.getName()));
         assertThat("testPageUpdate 3", foundPage.getLanguage(), equalTo("ThisIsAtest"));
+
+        context.restoreAuthSystemState();
     }
 
     /**
@@ -159,6 +169,8 @@ public class PageTest extends AbstractUnitTest {
      */
     @Test
     public void testPagesDelete() throws Exception {
+        context.turnOffAuthorisationSystem();
+
         Page page = pageService.create(context, "anotherPageTest", "anotherLanguageTest");
 
 
@@ -169,7 +181,6 @@ public class PageTest extends AbstractUnitTest {
         assertThat("testPagesDelete 2", foundPage.getName(), equalTo(page.getName()));
         assertThat("testPagesDelete 3", foundPage.getLanguage(), equalTo(page.getLanguage()));
 
-        context.turnOffAuthorisationSystem();
         pageService.delete(context, foundPage);
         foundPage = pageService.findByUuid(context, uuid);
         assertThat("testPagesDelete 5", foundPage, nullValue());
@@ -182,6 +193,7 @@ public class PageTest extends AbstractUnitTest {
      */
     @Test
     public void testPagesFindByName() throws Exception {
+        context.turnOffAuthorisationSystem();
 
         String name = "anotherTestPage";
         Page page = pageService.create(context, name, "tla");
@@ -191,6 +203,8 @@ public class PageTest extends AbstractUnitTest {
 
         List<Page> foundPages = pageService.findByName(context, name);
         assertThat("testPagesFindByName 0", foundPages.size(), equalTo(2));
+
+        context.restoreAuthSystemState();
     }
 
     /**
@@ -199,6 +213,7 @@ public class PageTest extends AbstractUnitTest {
      */
     @Test
     public void testPagesFindByNameAndLanguage() throws Exception {
+        context.turnOffAuthorisationSystem();
 
         String name = "anotherTestPage";
         Page page = pageService.create(context, name, "FirstLanguage");
@@ -211,6 +226,7 @@ public class PageTest extends AbstractUnitTest {
         assertThat("testPagesFindByNameAndLanguage 1", foundPage.getID(), equalTo(secondPage.getID()));
         assertThat("testPagesFindByNameAndLanguage 2", foundPage.getName(), equalTo(secondPage.getName()));
         assertThat("testPagesFindByNameAndLanguage 3", foundPage.getLanguage(), equalTo(secondPage.getLanguage()));
+        context.restoreAuthSystemState();
     }
 
     /**
@@ -219,6 +235,7 @@ public class PageTest extends AbstractUnitTest {
      */
     @Test
     public void testPagesAttachFile() throws Exception {
+        context.turnOffAuthorisationSystem();
 
         Page page = pageService.create(context, "anotherPageTestName", "anotherPageTestLanguage");
 
@@ -238,5 +255,7 @@ public class PageTest extends AbstractUnitTest {
 
         foundPage = pageService.findByUuid(context, uuid);
         assertNotEquals(bitstream, foundPage.getBitstream());
+
+        context.restoreAuthSystemState();
     }
 }

@@ -17,6 +17,7 @@ import java.util.UUID;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.Bitstream;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.core.Context;
@@ -38,7 +39,13 @@ public class PageServiceImpl implements PageService {
     @Autowired
     private BitstreamService bitstreamService;
 
-    public Page create(Context context, String name, String language) throws SQLException {
+    @Autowired
+    private AuthorizeService authorizeService;
+
+    public Page create(Context context, String name, String language) throws SQLException, AuthorizeException {
+        if (!authorizeService.isAdmin(context)) {
+            throw new AuthorizeException("You must be an admin to create a Page object");
+        }
         Page page = new Page();
         page.setName(name);
         page.setLanguage(language);
@@ -63,6 +70,9 @@ public class PageServiceImpl implements PageService {
     @Override
     public void attachFile(Context context, InputStream inputStream, Page page)
         throws IOException, SQLException, AuthorizeException {
+        if (!authorizeService.isAdmin(context)) {
+            throw new AuthorizeException("You must be an admin to attach a bitstream to a page object");
+        }
         Bitstream bitstream = bitstreamService.create(context, inputStream);
         page.setBitstream(bitstream);
         update(context, page);
@@ -71,18 +81,6 @@ public class PageServiceImpl implements PageService {
     @Override
     public List<Page> findAll(Context context) throws SQLException {
         return pageDao.findAll(context, Page.class);
-    }
-
-    @Override
-    public Page create(Context context) throws SQLException, AuthorizeException {
-        Page page = new Page();
-        return pageDao.create(context, page);
-    }
-
-    @Override
-    public Page find(Context context, int id) throws SQLException {
-        //TODO Why?
-        return null;
     }
 
     @Override
