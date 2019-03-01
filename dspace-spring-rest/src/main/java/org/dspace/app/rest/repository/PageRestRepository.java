@@ -143,12 +143,12 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
             }
             pageService.attachFile(context, utils.getInputStreamFromMultipart(file), page);
         } catch (IOException e) {
-            throw new RuntimeException("The bitstream could not be created from the given file in the request");
+            throw new RuntimeException("The bitstream could not be created from the given file in the request", e);
         } catch (SQLException e) {
-            throw new RuntimeException("Unable to process page with id: " + uuid);
+            throw new RuntimeException("Unable to process page with id: " + uuid, e);
         } catch (AuthorizeException e) {
             throw new AccessDeniedException("The current user was not allowed to make changes to the page with id: "
-                                                + uuid);
+                                                + uuid, e);
         }
         return pageConverter.fromModel(page);
     }
