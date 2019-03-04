@@ -7,7 +7,11 @@
  */
 package org.dspace.app.rest.converter;
 
+import java.sql.SQLException;
+
+import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.model.PageRest;
+import org.dspace.core.Context;
 import org.dspace.pages.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -19,8 +23,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class PageConverter extends DSpaceConverter<Page, PageRest> {
 
+    private static final Logger log = org.apache.logging.log4j.LogManager.getLogger();
+
     @Autowired
     private BitstreamConverter bitstreamConverter;
+
+    @Autowired
+    private BitstreamFormatConverter bitstreamFormatConverter;
 
     @Override
     public Page toModel(PageRest obj) {
@@ -40,7 +49,14 @@ public class PageConverter extends DSpaceConverter<Page, PageRest> {
         pageRest.setTitle(obj.getTitle());
         pageRest.setId(obj.getID());
         if (obj.getBitstream() != null) {
-            pageRest.setBitstreamRest(bitstreamConverter.fromModel(obj.getBitstream()));
+//            pageRest.setBitstreamRest(bitstreamConverter.fromModel(obj.getBitstream()));
+            pageRest.setSizeBytes(obj.getBitstream().getSizeBytes());
+            try {
+                pageRest.setBitstreamFormat(
+                    bitstreamFormatConverter.fromModel(obj.getBitstream().getFormat(new Context())));
+            } catch (SQLException e) {
+                log.error(e.getMessage(), e);
+            }
         }
         return pageRest;
     }

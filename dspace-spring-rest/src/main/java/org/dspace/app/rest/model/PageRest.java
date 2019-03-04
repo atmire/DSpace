@@ -39,30 +39,49 @@ public class PageRest extends BaseObjectRest<UUID> {
      */
     private String language;
 
+    private long sizeBytes;
+
     /**
      * The BitstreamRest object that is connected to this PageRest object
      */
-    private BitstreamRest content;
+//    private BitstreamRest content;
 
+    private BitstreamFormatRest bitstreamFormat;
     /**
      * Generic getter for the BitstreamRest property of this PageRest object.
      * This annotation will make sure that the Bitstream is added as an embed and link for the PageResource object.
      * @return  The bitstreamRest property for this PageRest object
      */
-    @LinkRest(linkClass = BitstreamRest.class, name = "content")
+//    @LinkRest(linkClass = BitstreamRest.class, name = "content")
+//    @JsonIgnore
+//    public BitstreamRest getBitstreamRest() {
+//        return content;
+//    }
+
+    @LinkRest(linkClass = BitstreamFormatRest.class, name = "format")
     @JsonIgnore
-    public BitstreamRest getBitstreamRest() {
-        return content;
+    public BitstreamFormatRest getBitstreamFormatRest() {
+        return bitstreamFormat;
     }
 
+    public void setBitstreamFormat(BitstreamFormatRest bitstreamFormat) {
+        this.bitstreamFormat = bitstreamFormat;
+    }
     /**
      * Generic setter for the bitstreamRest property
      * @param bitstreamRest The bitstreamRest object that the property should be set to
      */
-    public void setBitstreamRest(BitstreamRest bitstreamRest) {
-        this.content = bitstreamRest;
+//    public void setBitstreamRest(BitstreamRest bitstreamRest) {
+//        this.content = bitstreamRest;
+//    }
+
+    public long getSizeBytes() {
+        return sizeBytes;
     }
 
+    public void setSizeBytes(long sizeBytes) {
+        this.sizeBytes = sizeBytes;
+    }
     /**
      * Generic getter for the name property
      * @return  The name property of this PageRest object
