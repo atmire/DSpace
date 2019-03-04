@@ -11,7 +11,6 @@ import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 
 import java.util.UUID;
 
@@ -32,20 +31,11 @@ public class PageResourceMatcher {
             hasJsonPath("$.title", is(title)),
             hasJsonPath("$.language", is(language)),
             hasJsonPath("$.type", is("page")),
+            hasJsonPath("$._links.content.href", containsString("/api/config/pages/" + id.toString() + "/content")),
+            hasJsonPath("$._links.languages.href", containsString("/api/config/pages/" + id.toString() + "/languages")),
             hasJsonPath("$._links.self.href", containsString("/api/config/pages/" + id.toString()))
         );
     }
 
-    public static Matcher<? super Object> matchPageResourceHasBitstream(UUID id, String name,
-                                                                        String title, String language) {
-        return allOf(
-            hasJsonPath("$.id", is(id.toString())),
-            hasJsonPath("$.name", is(name)),
-            hasJsonPath("$.title", is(title)),
-            hasJsonPath("$.language", is(language)),
-            hasJsonPath("$.type", is("page")),
-            hasJsonPath("$._links.self.href", containsString("/api/config/pages/" + id.toString())),
-            hasJsonPath("$._embedded.content.id", notNullValue())
-        );
-    }
+
 }

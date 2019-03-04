@@ -231,7 +231,7 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
                                          .contentType(contentType))
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(contentType))
-                            .andExpect(jsonPath("$", PageResourceMatcher.matchPageResourceHasBitstream(
+                            .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
                                 UUID.fromString(id), pageRest.getName(), pageRest.getTitle(), pageRest.getLanguage()
                             )));
     }
