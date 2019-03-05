@@ -32,7 +32,7 @@ public class PageResourceMatcher {
             hasJsonPath("$.language", is(language)),
             hasJsonPath("$.type", is("page")),
             hasJsonPath("$._links.content.href", containsString("/api/config/pages/" + id.toString() + "/content")),
-            hasJsonPath("$._links.languages.href", containsString("/api/config/pages/" + id.toString() + "/languages")),
+            hasJsonPath("$._links.languages.href", containsString("/api/config/pages/" + name + "/languages")),
             hasJsonPath("$._links.self.href", containsString("/api/config/pages/" + id.toString()))
         );
     }
