@@ -30,8 +30,6 @@ import org.dspace.content.Item;
 import org.dspace.content.service.CollectionService;
 import org.dspace.core.Context;
 import org.dspace.core.LogManager;
-import org.dspace.core.factory.CoreServiceFactory;
-import org.dspace.core.service.PluginService;
 import org.dspace.curate.service.WorkflowCuratorService;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
@@ -58,10 +56,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class WorkflowCuratorServiceImpl implements WorkflowCuratorService {
 
     /**
-     * Logging category
+     * log4j logger
      */
-    private static final Logger log
-        = org.apache.logging.log4j.LogManager.getLogger();
+    private Logger log = org.apache.logging.log4j.LogManager.getLogger(WorkflowCuratorServiceImpl.class);
 
     protected Map<String, TaskSet> tsMap = new HashMap<String, TaskSet>();
 
@@ -121,7 +118,6 @@ public class WorkflowCuratorServiceImpl implements WorkflowCuratorService {
             Curator curator = new Curator();
             // are we going to perform, or just put on queue?
             if (step.queue != null) {
-                // The queue runner will call setReporter
                 for (Task task : step.tasks) {
                     curator.addTask(task.name);
                 }
@@ -129,18 +125,7 @@ public class WorkflowCuratorServiceImpl implements WorkflowCuratorService {
                 basicWorkflowItemService.update(c, wfi);
                 return false;
             } else {
-                PluginService plugins = CoreServiceFactory.getInstance()
-                        .getPluginService();
-                try (Reporter reporter
-                        = (Reporter) plugins
-                        .getSinglePlugin(Reporter.class);) {
-                    curator.setReporter(reporter);
-                    boolean status = curate(curator, c, wfi);
-                    reporter.close();
-                    return status;
-                } catch (Exception e) {
-                    log.error("Failed to close report", e);
-                }
+                return curate(curator, c, wfi);
             }
         }
         return true;

@@ -28,6 +28,7 @@ public class GroupRest extends DSpaceObjectRest {
 
     private boolean permanent;
 
+    @JsonIgnore
     private List<GroupRest> groups;
 
     @Override
@@ -56,7 +57,6 @@ public class GroupRest extends DSpaceObjectRest {
         this.permanent = permanent;
     }
 
-    @JsonIgnore
     @LinkRest(linkClass = GroupRest.class)
     public List<GroupRest> getGroups() {
         return groups;

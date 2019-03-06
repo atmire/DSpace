@@ -10,7 +10,6 @@ package org.dspace.app.rest.matcher;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
 
 import java.util.UUID;
@@ -26,18 +25,16 @@ public class GroupMatcher {
             hasJsonPath("$.uuid", is(uuid.toString())),
             hasJsonPath("$.name", is(name)),
             hasJsonPath("$.type", is("group")),
-            hasJsonPath("$._links.self.href", containsString("/api/eperson/groups/" + uuid.toString())),
-            hasJsonPath("$._links.groups.href", endsWith(uuid.toString() + "/groups"))
+            hasJsonPath("$._links.self.href", containsString("/api/eperson/groups/" + uuid.toString()))
         );
     }
 
     public static Matcher<? super Object> matchGroupWithName(String name) {
         return allOf(
             hasJsonPath("$.name", is(name)),
-            hasJsonPath("$.type", is("group")),
-            hasJsonPath("$._links.self.href", containsString("/api/eperson/groups/")),
-            hasJsonPath("$._links.groups.href", endsWith("/groups"))
+            hasJsonPath("$.type", is("group"))
         );
     }
+
 
 }
