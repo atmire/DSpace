@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.exception.PaginationException;
 import org.dspace.app.rest.exception.RepositoryNotFoundException;
 import org.dspace.app.rest.model.AuthorityRest;
@@ -48,6 +49,9 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Component
 public class Utils {
+
+    private static final Logger log = org.apache.logging.log4j.LogManager.getLogger();
+
     @Autowired
     ApplicationContext applicationContext;
 
@@ -217,6 +221,20 @@ public class Utils {
             return parts[parts.length - 1];
         } else {
             return multipartFile.getName();
+        }
+    }
+
+    /**
+     * This method will extract the InputStream from the given MultipartFile
+     * @param multipartFile The MultipartFile for which we'll retrieve the InputStream
+     * @return              The relevant InputStream
+     */
+    public InputStream getInputStreamFromMultipart(MultipartFile multipartFile) throws IOException {
+        try {
+            return multipartFile.getInputStream();
+        } catch (IOException e) {
+            log.error("Couldn't retrieve inputstream for the multipart file given", e);
+            throw e;
         }
     }
 }

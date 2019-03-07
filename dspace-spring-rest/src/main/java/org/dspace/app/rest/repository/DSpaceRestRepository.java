@@ -309,10 +309,34 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
      * @throws Exception
      */
     public T upload(HttpServletRequest request, String apiCategory, String model,
-                                                     ID id, MultipartFile file) throws Exception {
-        throw new RuntimeException("No implementation found; Method not allowed!");
+                                                     ID id, MultipartFile file) {
+        Context context = null;
+        try {
+            context = obtainContext();
+            T entity = thisRepository.upload(context, request, apiCategory, model, id, file);
+            context.commit();
+            return entity;
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex.getMessage(), ex);
+        }
     }
 
+    /**
+     * Method to implement to support the uploading of a new file.
+     *
+     * @param context
+     *            the dspace context
+     * @return the relevant REST object
+     * @throws AuthorizeException
+     * @throws SQLException
+     * @throws RepositoryMethodNotImplementedException
+     *             returned by the default implementation when the operation is not supported for the entity
+     */
+    protected T upload(Context context, HttpServletRequest request, String apiCategory, String model,
+                    ID id, MultipartFile file) {
+        throw new RepositoryMethodNotImplementedException(apiCategory, model);
+
+    }
     /**
      * Apply a partial update to the REST object via JSON Patch
      *

@@ -49,6 +49,7 @@
     <bean class="org.dspace.content.SiteServiceImpl"/>
     <bean class="org.dspace.content.SupervisedItemServiceImpl"/>
     <bean class="org.dspace.content.WorkspaceItemServiceImpl"/>
+    <bean class="org.dspace.pages.service.impl.PageServiceImpl"/>
 
     <bean class="org.dspace.content.authority.ChoiceAuthorityServiceImpl"/>
     <bean class="org.dspace.content.authority.MetadataAuthorityServiceImpl" lazy-init="true"/>
