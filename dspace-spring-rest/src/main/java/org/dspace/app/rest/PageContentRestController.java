@@ -55,9 +55,6 @@ public class PageContentRestController {
     @Autowired
     private ConfigurationService configurationService;
 
-    @Autowired
-    private EventService eventService;
-
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})
     public void retrieve(@PathVariable UUID uuid, HttpServletResponse response,
                          HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
@@ -92,17 +89,6 @@ public class PageContentRestController {
                     sender.withDisposition(MultipartFileSender.CONTENT_DISPOSITION_ATTACHMENT);
                 }
 
-                if (sender.isNoRangeRequest() && isNotAnErrorResponse(response)) {
-                    //We only log a download request when serving a request without Range header. This is because
-                    //a browser always sends a regular request first to check for Range support.
-                    eventService.fireEvent(
-                        new UsageEvent(
-                            UsageEvent.Action.VIEW,
-                            request,
-                            context,
-                            bitstream));
-                }
-
                 //We have all the data we need, close the connection to the database so that it doesn't stay open during
                 //download/streaming
                 context.complete();
@@ -119,11 +105,4 @@ public class PageContentRestController {
 
         }
     }
-
-    private boolean isNotAnErrorResponse(HttpServletResponse response) {
-        Response.Status.Family responseCode = Response.Status.Family.familyOf(response.getStatus());
-        return responseCode.equals(Response.Status.Family.SUCCESSFUL)
-            || responseCode.equals(Response.Status.Family.REDIRECTION);
-    }
-
 }
