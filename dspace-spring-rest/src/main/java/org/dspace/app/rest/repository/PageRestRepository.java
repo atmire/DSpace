@@ -17,6 +17,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.Logger;
+import org.dspace.app.rest.Parameter;
+import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.PageConverter;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.PageRest;
@@ -161,5 +163,16 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
     @Override
     public DSpaceResource<PageRest> wrapResource(PageRest model, String... rels) {
         return new PageResource(model, utils, rels);
+    }
+
+    @SearchRestMethod(name = "languages")
+    public org.springframework.data.domain.Page<PageRest> findByName(
+        @Parameter(value = "name", required = true) String pageName, Pageable pageable) throws SQLException {
+        Context context = obtainContext();
+        List<Page> pages = pageService.findByName(context, pageName);
+
+        org.springframework.data.domain.Page<PageRest> page = utils.getPage(pages, pageable).map(pageConverter);
+
+        return page;
     }
 }

@@ -21,6 +21,7 @@ public class PageRest extends BaseObjectRest<UUID> {
      * The NAME to be used for this REST object
      */
     public static final String NAME = "page";
+    public static final String PLURAL_NAME = "pages";
     /**
      * The CATEGORY to be used for this REST object
      */
