@@ -29,8 +29,5 @@ public class PageResource extends DSpaceResource<PageRest> {
         add(new Link(configurationService.getProperty("dspace.restUrl") + "/api/" +
                          data.getCategory() + "/" + data.getTypePlural() +
                          "/" + data.getId() + "/content", "content"));
-        add(new Link(configurationService.getProperty("dspace.restUrl") + "/api/" +
-                         data.getCategory() + "/" + data.getTypePlural() +
-                         "/" + data.getName() + "/languages", "languages"));
     }
 }

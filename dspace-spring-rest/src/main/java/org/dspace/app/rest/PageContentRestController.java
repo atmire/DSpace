@@ -13,7 +13,6 @@ import java.sql.SQLException;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Response;
 
 import org.apache.catalina.connector.ClientAbortException;
 import org.apache.logging.log4j.Logger;
@@ -27,8 +26,6 @@ import org.dspace.core.Context;
 import org.dspace.pages.Page;
 import org.dspace.pages.service.PageService;
 import org.dspace.services.ConfigurationService;
-import org.dspace.services.EventService;
-import org.dspace.usage.UsageEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
