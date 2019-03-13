@@ -272,5 +272,6 @@ public class CsvImportIT extends AbstractEntityIntegrationTest {
         out = null;
 
         runDSpaceScript("metadata-import", "-f", "test.csv", "-e", "admin@email.com", "-s");
+        setUp();
     }
 }
