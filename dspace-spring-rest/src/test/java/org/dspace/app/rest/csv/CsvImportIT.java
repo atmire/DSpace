@@ -273,9 +273,6 @@ public class CsvImportIT extends AbstractEntityIntegrationTest {
         out.close();
         out = null;
 
-        DSpaceCSV dspaceCsv = new DSpaceCSV(new File(filename), context);
-
-        MetadataImport importer = new MetadataImport(context, dspaceCsv);
-        importer.runImport(true, false, false, false);
+        runDSpaceScript("metadata-import", "-f", "test.csv", "-e", "admin@email.com", "-s");
     }
 }
