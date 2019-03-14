@@ -102,8 +102,11 @@ public class CsvImportIT extends AbstractEntityIntegrationTest {
                                   .withIssueDate("2017-10-17")
                                   .withRelationshipType("Publication")
                                   .build();
-        context.commit();
         context.restoreAuthSystemState();
+        context.commit();
+        if (!context.isValid()) {
+            setUp();
+        }
 
 
         Item itemB = validateSpecificItemRelationCreationCsvImport(col1, article, "TestItemB", "Person",
@@ -277,5 +280,8 @@ public class CsvImportIT extends AbstractEntityIntegrationTest {
 
         runDSpaceScript("metadata-import", "-f", "test.csv", "-e", "admin@email.com", "-s");
         context.commit();
+        if (!context.isValid()) {
+            setUp();
+        }
     }
 }
