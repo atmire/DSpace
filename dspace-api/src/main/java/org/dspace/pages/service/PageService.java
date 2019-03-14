@@ -65,7 +65,8 @@ public interface PageService {
     /**
      * This method will delete the current Bitstream from the given Page object and it'll create a new Bitstream
      * with the Inputstream given in the parameters to then attach this new Bitstream to the Page object that is passed
-     * along in the parameters
+     * along in the parameters.
+     * The file will get anonymous read rights through this method.
      * @param context       The relevant DSpace context
      * @param inputStream   The Inputstream that is to be used for the new Bitstream
      * @param page          The Page object that will have it's Bitstream altered
