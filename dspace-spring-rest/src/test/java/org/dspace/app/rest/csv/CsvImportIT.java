@@ -77,10 +77,10 @@ public class CsvImportIT extends AbstractEntityIntegrationTest {
             itemService.delete(context, item);
         }
 
+        context.restoreAuthSystemState();
         super.destroy();
 
         indexingService.cleanIndex(true);
-        context.restoreAuthSystemState();
     }
 
     @Test
