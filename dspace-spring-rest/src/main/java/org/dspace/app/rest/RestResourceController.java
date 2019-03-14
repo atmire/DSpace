@@ -592,6 +592,35 @@ public class RestResourceController implements InitializingBean {
     }
 
     /**
+     * Called in PUT, multipart, upload to a specific rest resource the file passed as "file" request parameter
+     *
+     * Note that the regular expression in the request mapping accept a UUID as identifier;
+     *
+     * @param request
+     *            the http request
+     * @param apiCategory
+     *            the api category
+     * @param model
+     *            the rest model that identify the REST resource collection
+     * @param uuid
+     *            the id of the specific rest resource
+     * @param uploadfile
+     *            the file to upload
+     * @return the created resource
+     * @throws HttpRequestMethodNotSupportedException
+     */
+    @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID, headers =
+        "content-type=multipart/form-data")
+    public <ID extends Serializable> ResponseEntity<ResourceSupport> put(HttpServletRequest request,
+                                                                            @PathVariable String apiCategory,
+                                                                            @PathVariable String model,
+                                                                            @PathVariable UUID uuid,
+                                                                            @RequestParam("file") MultipartFile
+                                                                                uploadfile)
+        throws HttpRequestMethodNotSupportedException {
+        return putInternal(request, apiCategory, model, uuid, uploadfile);
+    }
+    /**
      * Internal upload method.
      *
      * @param request
@@ -624,6 +653,38 @@ public class RestResourceController implements InitializingBean {
         return ControllerUtils.toResponseEntity(HttpStatus.CREATED, null, result);
     }
 
+    /**
+     * Internal put method.
+     *
+     * @param request
+     * @param apiCategory
+     * @param model
+     * @param id
+     * @param uploadfile
+     * @return
+     */
+    private <ID extends Serializable> ResponseEntity<ResourceSupport> putInternal(HttpServletRequest request,
+                                                                                     String apiCategory, String model,
+                                                                                     ID id,
+                                                                                     MultipartFile uploadfile)
+        throws HttpRequestMethodNotSupportedException {
+        checkModelPluralForm(apiCategory, model);
+        DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
+
+        RestAddressableModel modelObject = null;
+        try {
+            modelObject = repository.put(request, apiCategory, model, id, uploadfile);
+        } catch (ClassCastException e) {
+            log.error(e.getMessage(), e);
+            return ControllerUtils.toEmptyResponse(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        if (modelObject == null) {
+            throw new HttpRequestMethodNotSupportedException(RequestMethod.PUT.toString());
+        }
+        DSpaceResource result = repository.wrapResource(modelObject);
+        linkService.addLinks(result);
+        return ControllerUtils.toResponseEntity(HttpStatus.OK, null, result);
+    }
     /**
      * Upload a file against the collection resource endpoint. This is typically used for bulk creation of resources
      * such for instance multiple workspaceitems from a CSV or bibliographic file
