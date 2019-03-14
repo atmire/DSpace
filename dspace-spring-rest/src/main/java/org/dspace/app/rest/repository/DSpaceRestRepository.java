@@ -457,6 +457,47 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
     }
 
     /**
+     * Method to support updating a DSpace instance.
+     *
+     * @param request     the http request
+     * @param apiCategory the API category e.g. "api"
+     * @param model       the DSpace model e.g. "metadatafield"
+     * @param uuid        the ID of the target REST object
+     * @param file        the file to be used to update the rest object
+     * @return the updated REST object
+     */
+    public T put(HttpServletRequest request, String apiCategory, String model, ID uuid, MultipartFile file) {
+        Context context = obtainContext();
+        try {
+            thisRepository.put(context, request, apiCategory, model, uuid, file);
+            context.commit();
+        } catch (SQLException e) {
+            throw new RuntimeException("Unable to update DSpace object " + model + " with id=" + uuid, e);
+        }
+        return findOne(uuid);
+    }
+
+    /**
+     * Implement this method in the subclass to support updating a DSpace instance.
+     *
+     * @param context     the dspace context
+     * @param apiCategory the API category e.g. "api"
+     * @param model       the DSpace model e.g. "metadatafield"
+     * @param id          the ID of the target REST object
+     * @param file        the file to be used to update the rest object
+     * @return the updated REST object
+     * @throws AuthorizeException if the context user is not authorized to perform this operation
+     * @throws SQLException when the database returns an error
+     * @throws RepositoryMethodNotImplementedException
+     *             returned by the default implementation when the operation is not supported for the entity
+     */
+    protected T put(Context context, HttpServletRequest request, String apiCategory, String model,
+                       ID id, MultipartFile file) {
+        throw new RepositoryMethodNotImplementedException(apiCategory, model);
+
+    }
+
+    /**
      * Implement this method in the subclass to support updating a DSpace instance.
      *
      * @param context     the dspace context

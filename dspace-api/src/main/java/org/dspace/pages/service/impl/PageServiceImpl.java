@@ -73,7 +73,11 @@ public class PageServiceImpl implements PageService {
         if (!authorizeService.isAdmin(context)) {
             throw new AuthorizeException("You must be an admin to attach a bitstream to a page object");
         }
-        Bitstream bitstream = bitstreamService.create(context, inputStream);
+        Bitstream bitstream = page.getBitstream();
+        if (bitstream != null) {
+            bitstreamService.delete(context, bitstream);
+        }
+        bitstream = bitstreamService.create(context, inputStream);
         page.setBitstream(bitstream);
         update(context, page);
     }
