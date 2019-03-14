@@ -20,7 +20,10 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.Bitstream;
 import org.dspace.content.service.BitstreamService;
+import org.dspace.core.Constants;
 import org.dspace.core.Context;
+import org.dspace.eperson.Group;
+import org.dspace.eperson.service.GroupService;
 import org.dspace.pages.Page;
 import org.dspace.pages.dao.PageDao;
 import org.dspace.pages.service.PageService;
@@ -41,6 +44,9 @@ public class PageServiceImpl implements PageService {
 
     @Autowired
     private AuthorizeService authorizeService;
+
+    @Autowired
+    private GroupService groupService;
 
     public Page create(Context context, String name, String language) throws SQLException, AuthorizeException {
         if (!authorizeService.isAdmin(context)) {
@@ -78,6 +84,8 @@ public class PageServiceImpl implements PageService {
             bitstreamService.delete(context, bitstream);
         }
         bitstream = bitstreamService.create(context, inputStream);
+        Group anonymous = groupService.findByName(context, Group.ANONYMOUS);
+        authorizeService.addPolicy(context, bitstream, Constants.READ, anonymous);
         page.setBitstream(bitstream);
         update(context, page);
     }
