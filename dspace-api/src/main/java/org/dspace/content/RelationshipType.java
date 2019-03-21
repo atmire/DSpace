@@ -19,6 +19,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.dspace.core.Context;
 import org.dspace.core.ReloadableEntity;
 
 /**
@@ -100,6 +101,12 @@ public class RelationshipType implements ReloadableEntity<Integer> {
      */
     @Column(name = "right_max_cardinality")
     private int rightMaxCardinality;
+
+    /**
+     * Protected constructor, create object using:
+     * {@link org.dspace.content.service.RelationshipTypeService#create(Context)} }
+     */
+    protected RelationshipType() {}
 
     /**
      * Standard getter for the ID of this RelationshipType

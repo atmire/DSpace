@@ -204,7 +204,6 @@ public class InitializeEntities {
                                                       String leftCardinalityMax,String rightCardinalityMin,
                                                       String rightCardinalityMax)
         throws SQLException, AuthorizeException {
-        RelationshipType relationshipType = new RelationshipType();
 
         EntityType leftEntityType = entityTypeService.findByEntityType(context,leftType);
         if (leftEntityType == null) {
@@ -214,30 +213,32 @@ public class InitializeEntities {
         if (rightEntityType == null) {
             rightEntityType = entityTypeService.create(context, rightType);
         }
-        relationshipType.setLeftType(leftEntityType);
-        relationshipType.setRightType(rightEntityType);
-        relationshipType.setLeftLabel(leftLabel);
-        relationshipType.setRightLabel(rightLabel);
+        Integer leftCardinalityMinInteger = null;
+        Integer leftCardinalityMaxInteger = null;
+        Integer rightCardinalityMinInteger = null;
+        Integer rightCardinalityMaxInteger = null;
         if (StringUtils.isNotBlank(leftCardinalityMin)) {
-            relationshipType.setLeftMinCardinality(Integer.parseInt(leftCardinalityMin));
+            leftCardinalityMinInteger = Integer.parseInt(leftCardinalityMin);
         } else {
-            relationshipType.setLeftMinCardinality(Integer.MIN_VALUE);
+            leftCardinalityMinInteger = Integer.MIN_VALUE;
         }
         if (StringUtils.isNotBlank(leftCardinalityMax)) {
-            relationshipType.setLeftMaxCardinality(Integer.parseInt(leftCardinalityMax));
+            leftCardinalityMaxInteger = Integer.parseInt(leftCardinalityMax);
         } else {
-            relationshipType.setLeftMaxCardinality(Integer.MAX_VALUE);
+            leftCardinalityMaxInteger = Integer.MAX_VALUE;
         }
         if (StringUtils.isNotBlank(rightCardinalityMin)) {
-            relationshipType.setRightMinCardinality(Integer.parseInt(rightCardinalityMin));
+            rightCardinalityMinInteger = Integer.parseInt(rightCardinalityMin);
         } else {
-            relationshipType.setRightMinCardinality(Integer.MIN_VALUE);
+            rightCardinalityMinInteger = Integer.MIN_VALUE;
         }
         if (StringUtils.isNotBlank(rightCardinalityMax)) {
-            relationshipType.setRightMaxCardinality(Integer.parseInt(rightCardinalityMax));
+            rightCardinalityMaxInteger = Integer.parseInt(rightCardinalityMax);
         } else {
-            relationshipType.setRightMaxCardinality(Integer.MAX_VALUE);
+            rightCardinalityMaxInteger = Integer.MAX_VALUE;
         }
-        return relationshipType;
+        return relationshipTypeService.create(context, leftEntityType, rightEntityType, leftLabel, rightLabel,
+                                              leftCardinalityMinInteger, leftCardinalityMaxInteger,
+                                              rightCardinalityMinInteger, rightCardinalityMaxInteger);
     }
 }
