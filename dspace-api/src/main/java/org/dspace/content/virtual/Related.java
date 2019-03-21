@@ -62,6 +62,11 @@ public class Related implements VirtualBean {
     private VirtualBean virtualBean;
 
     /**
+     * The boolean value indicating whether this field should be used for place or not
+     */
+    private boolean useForPlace = false;
+
+    /**
      * Generic getter for the relationshipTypeString property of this class
      * @return  The relationshipTypeString property
      */
@@ -110,13 +115,29 @@ public class Related implements VirtualBean {
     }
 
     /**
+     * Generic setter for the useForPlace property
+     * @param useForPlace   The boolean value that the useForPlace property will be set to
+     */
+    public void setUseForPlace(boolean useForPlace) {
+        this.useForPlace = useForPlace;
+    }
+
+    /**
+     * Generic getter for the useForPlace property
+     * @return  The useForPlace to be used by this bean
+     */
+    public boolean getUseForPlace() {
+        return useForPlace;
+    }
+
+    /**
      * This method will find the correct Relationship from the given item to retrieve the other item from it
      * and pass this along to the next VirtualBean that's stored in this class.
      * @param context   The relevant DSpace context
      * @param item      The item that will be used to find the related item through its relationships
      * @return          The String value of the metadata fields concatened with a seperator as defined
      *                  in the deepest Concatened bean in the chain
-     *                  Will return null if no relationships are found
+     *                  Will return an empty list if no relationships are found
      * @throws SQLException If something goes wrong
      */
     public List<String> getValues(Context context, Item item) throws SQLException {
@@ -151,6 +172,8 @@ public class Related implements VirtualBean {
             }
         }
 
-        return null;
+        //Return an empty list if no relationships were found
+        return new LinkedList<>();
     }
+
 }

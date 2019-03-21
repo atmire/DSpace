@@ -105,16 +105,16 @@ public class CsvImportIT extends AbstractEntityIntegrationTest {
 
         Item itemB = validateSpecificItemRelationCreationCsvImport(col1, article, "TestItemB", "Person",
                                                                    "isPublicationOfAuthor",
-                                                                   "Relationship list size is 1", 1, 1, 1);
+                                                                   "Relationship list size is 1", 1, 0, 0);
         Item itemC = validateSpecificItemRelationCreationCsvImport(col1, article, "TestItemC", "Person",
                                                                    "isPublicationOfAuthor",
-                                                                   "Relationship list size is 1", 1, 2, 1);
+                                                                   "Relationship list size is 1", 1, 1, 0);
         Item itemD = validateSpecificItemRelationCreationCsvImport(col1, article, "TestItemD", "Project",
                                                                    "isPublicationOfProject",
-                                                                   "Relationship list size is 1", 1, 1, 1);
+                                                                   "Relationship list size is 1", 1, 0, 0);
         Item itemE = validateSpecificItemRelationCreationCsvImportMultiple(col1, "TestItemE", "Publication",
                                                                            "isAuthorOfPublication",
-                                                                           "Relationship list size is 2", 2, 1, 2,
+                                                                           "Relationship list size is 2", 2, 0, 1,
                                                                            itemC, itemB);
 
         List<Relationship> relationships = relationshipService.findByItem(context, itemE);
@@ -132,20 +132,20 @@ public class CsvImportIT extends AbstractEntityIntegrationTest {
         Assert.assertNotNull(relationC);
         getClient().perform(get("/api/core/relationships/" + relationC.getID()))
                    .andExpect(status().isOk())
-                   .andExpect(jsonPath("$.leftPlace", is(1)))
+                   .andExpect(jsonPath("$.leftPlace", is(0)))
                    .andExpect(jsonPath("$.rightId", is(itemC.getID().toString())))
-                   .andExpect(jsonPath("$.rightPlace", is(2)))
+                   .andExpect(jsonPath("$.rightPlace", is(1)))
                    .andExpect(jsonPath("$", Matchers.is(RelationshipMatcher.matchRelationship(relationC))));
         getClient().perform(get("/api/core/relationships/" + relationB.getID().toString()))
                    .andExpect(status().isOk())
-                   .andExpect(jsonPath("$.leftPlace", is(2)))
+                   .andExpect(jsonPath("$.leftPlace", is(1)))
                    .andExpect(jsonPath("$.rightId", is(itemB.getID().toString())))
-                   .andExpect(jsonPath("$.rightPlace", is(2)))
+                   .andExpect(jsonPath("$.rightPlace", is(1)))
                    .andExpect(jsonPath("$", Matchers.is(RelationshipMatcher.matchRelationship(relationB))));
 
         Item itemF = validateSpecificItemRelationCreationCsvImport(col1, itemE, "TestItemF", "Person",
                                                                    "isPublicationOfAuthor",
-                                                                   "Relationship list size is 1", 1, 3, 1);
+                                                                   "Relationship list size is 1", 1, 2, 0);
 
         UpdateItemEToDeleteRelationshipToC(itemE, itemB, itemF, col1, "TestItemE");
 
