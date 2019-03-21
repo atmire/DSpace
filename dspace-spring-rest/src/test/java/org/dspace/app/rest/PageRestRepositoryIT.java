@@ -11,6 +11,7 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -451,5 +452,108 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         getClient(authToken).perform(get("/api/config/pages/" + id + "/content"))
                             .andExpect(status().isOk())
                             .andExpect(content().bytes(newInput.getBytes()));
+    }
+
+    @Test
+    public void putLanguageAndTitleTest() throws Exception {
+
+
+        ObjectMapper mapper = new ObjectMapper();
+        PageRest pageRest = new PageRest();
+        pageRest.setTitle("testTitle");
+        pageRest.setName("testName");
+        pageRest.setLanguage("testLanguage");
+
+        String authToken = getAuthToken(admin.getEmail(), password);
+        MvcResult mvcResult = getClient(authToken).perform(post("/api/config/pages")
+                                                               .content(mapper.writeValueAsBytes(pageRest))
+                                                               .contentType(contentType))
+                                                  .andExpect(status().isCreated())
+                                                  .andExpect(content().contentType(contentType))
+                                                  .andReturn();
+
+
+        String content = mvcResult.getResponse().getContentAsString();
+        Map<String, Object> map = mapper.readValue(content, Map.class);
+        String id = String.valueOf(map.get("id"));
+
+        getClient(authToken).perform(get("/api/config/pages/" + id)
+                                         .content(mapper.writeValueAsBytes(pageRest))
+                                         .contentType(contentType))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
+                                UUID.fromString(id), pageRest.getName(), pageRest.getTitle(), pageRest.getLanguage()
+                            )));
+
+        pageRest.setLanguage("ThisIsANewLanguage");
+        pageRest.setTitle("ThisIsANewTitle");
+
+        getClient(authToken).perform(put("/api/config/pages/" + id)
+                                        .content(mapper.writeValueAsBytes(pageRest))
+                                        .contentType(contentType))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType));
+
+
+        getClient(authToken).perform(get("/api/config/pages/" + id)
+                                         .content(mapper.writeValueAsBytes(pageRest))
+                                         .contentType(contentType))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
+                                UUID.fromString(id), pageRest.getName(), "ThisIsANewTitle", "ThisIsANewLanguage"
+                            )));
+    }
+
+    @Test
+    public void putLanguageAndTitleTestNoAdminAccess() throws Exception {
+
+
+        ObjectMapper mapper = new ObjectMapper();
+        PageRest pageRest = new PageRest();
+        pageRest.setTitle("testTitle");
+        pageRest.setName("testName");
+        pageRest.setLanguage("testLanguage");
+
+        String authToken = getAuthToken(admin.getEmail(), password);
+        MvcResult mvcResult = getClient(authToken).perform(post("/api/config/pages")
+                                                               .content(mapper.writeValueAsBytes(pageRest))
+                                                               .contentType(contentType))
+                                                  .andExpect(status().isCreated())
+                                                  .andExpect(content().contentType(contentType))
+                                                  .andReturn();
+
+
+        String content = mvcResult.getResponse().getContentAsString();
+        Map<String, Object> map = mapper.readValue(content, Map.class);
+        String id = String.valueOf(map.get("id"));
+
+        getClient(authToken).perform(get("/api/config/pages/" + id)
+                                         .content(mapper.writeValueAsBytes(pageRest))
+                                         .contentType(contentType))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
+                                UUID.fromString(id), pageRest.getName(), pageRest.getTitle(), pageRest.getLanguage()
+                            )));
+
+        pageRest.setLanguage("ThisIsANewLanguage");
+        pageRest.setTitle("ThisIsANewTitle");
+
+        getClient().perform(put("/api/config/pages/" + id)
+                                         .content(mapper.writeValueAsBytes(pageRest))
+                                         .contentType(contentType))
+                            .andExpect(status().isUnauthorized());
+
+
+        getClient(authToken).perform(get("/api/config/pages/" + id)
+                                         .content(mapper.writeValueAsBytes(pageRest))
+                                         .contentType(contentType))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
+                                UUID.fromString(id), pageRest.getName(), "testTitle", "testLanguage"
+                            )));
     }
 }
