@@ -72,10 +72,6 @@ public class RelationshipTypeServiceImpl implements RelationshipTypeService {
                                    Integer leftCardinalityMaxInteger, Integer rightCardinalityMinInteger,
                                    Integer rightCardinalityMaxInteger)
         throws SQLException, AuthorizeException {
-        if (!authorizeService.isAdmin(context)) {
-            throw new AuthorizeException(
-                "Only administrators can modify relationshipType");
-        }
         RelationshipType relationshipType = new RelationshipType();
         relationshipType.setLeftType(leftEntityType);
         relationshipType.setRightType(rightEntityType);
