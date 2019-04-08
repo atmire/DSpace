@@ -9,6 +9,7 @@ package org.dspace.app.rest.csv;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -30,6 +31,7 @@ import org.dspace.app.rest.test.AbstractEntityIntegrationTest;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.dspace.content.Item;
+import org.dspace.content.MetadataValue;
 import org.dspace.content.Relationship;
 import org.dspace.content.service.EntityTypeService;
 import org.dspace.content.service.ItemService;
@@ -116,6 +118,23 @@ public class CsvImportIT extends AbstractEntityIntegrationTest {
         getClient().perform(get("/api/core/items/" + article.getID())).andExpect(status().isOk());
 
         assertArticleRelationships(article, itemB, itemC, itemF);
+
+
+        setUp();
+        article = itemService.find(context, article.getID());
+        List<MetadataValue> list = itemService.getMetadata(article, "dc", "contributor", "author", Item.ANY);
+
+        assertEquals(3, list.size());
+
+        exportImportSameCsv();
+        assertArticleRelationships(article, itemB, itemC, itemF);
+        assertEquals(3, list.size());
+
+    }
+
+    private void exportImportSameCsv() throws Exception {
+        runDSpaceScript("metadata-export", "-f", "test.csv", "-e", "admin@email.com", "-s");
+        runDSpaceScript("metadata-import", "-f", "test.csv", "-e", "admin@email.com", "-s");
 
     }
 
