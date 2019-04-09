@@ -195,9 +195,9 @@ public class CsvImportIT extends AbstractEntityIntegrationTest {
                                                                String reasonAssertCheck, Integer sizeToCheck,
                                                                Integer leftPlaceToCheck,
                                                                Integer rightPlaceToCheck) throws Exception {
-        String csvLineString = "+," + col1.getHandle() + "," + itemTitle + "," + relationshipType + "," + relatedItem
+        String csvLineString = "+," + col1.getHandle() + "," + itemTitle + "," + itemTitle + "," + relationshipType + "," + relatedItem
             .getID().toString();
-        String[] csv = {"id,collection,dc.title,relationship.type,relation." + relationshipTypeLabel, csvLineString};
+        String[] csv = {"id,collection,dc.title,person.identifier.lastname,relationship.type,relation." + relationshipTypeLabel, csvLineString};
         performImportScript(csv);
         Iterator<Item> itemIteratorItem = itemService.findByMetadataField(context, "dc", "title", null, itemTitle);
         Item item = itemIteratorItem.next();
