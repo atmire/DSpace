@@ -516,4 +516,21 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
         throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException {
         throw new RepositoryMethodNotImplementedException(apiCategory, model);
     }
+
+    public T createAndReturn(MultipartFile uploadfile, String properties) {
+        Context context = null;
+        try {
+            context = obtainContext();
+            T entity = thisRepository.createAndReturn(context, uploadfile, properties);
+            context.commit();
+            return entity;
+        } catch (SQLException | AuthorizeException ex) {
+            throw new RuntimeException(ex.getMessage(), ex);
+        }
+    }
+
+    protected T createAndReturn(Context context, MultipartFile uploadfile, String properties)
+        throws SQLException, AuthorizeException {
+        throw new RepositoryMethodNotImplementedException("No implementation found; Method not allowed!", "");
+    }
 }
