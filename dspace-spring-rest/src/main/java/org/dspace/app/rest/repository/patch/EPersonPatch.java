@@ -7,7 +7,7 @@
  */
 package org.dspace.app.rest.repository.patch;
 
-import org.dspace.app.rest.exception.PatchBadRequestException;
+import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.EPersonRest;
 import org.dspace.app.rest.model.patch.Operation;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
  * Provides patch operations for eperson updates.
  */
 @Component
-public class EPersonPatch extends AbstractResourcePatch<EPersonRest> {
+public class EPersonPatch extends DSpaceObjectPatch<EPersonRest> {
 
     @Autowired
     EPersonOperationFactory patchFactory;
@@ -30,7 +30,7 @@ public class EPersonPatch extends AbstractResourcePatch<EPersonRest> {
      * @param eperson the eperson rest representation
      * @param operation the replace operation
      * @throws UnprocessableEntityException
-     * @throws PatchBadRequestException
+     * @throws DSpaceBadRequestException
      */
     protected EPersonRest replace(EPersonRest eperson, Operation operation) {
 

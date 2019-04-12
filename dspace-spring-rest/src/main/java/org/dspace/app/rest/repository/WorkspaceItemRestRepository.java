@@ -26,7 +26,7 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.WorkspaceItemConverter;
-import org.dspace.app.rest.exception.PatchBadRequestException;
+import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.model.ErrorRest;
 import org.dspace.app.rest.model.WorkspaceItemRest;
 import org.dspace.app.rest.model.hateoas.WorkspaceItemResource;
@@ -263,10 +263,7 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
         }
         wsi = converter.convert(source);
 
-        if (errors.isEmpty()) {
-            wsi.setStatus(true);
-        } else {
-            wsi.setStatus(false);
+        if (!errors.isEmpty()) {
             wsi.getErrors().addAll(errors);
         }
 
@@ -287,7 +284,7 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
                 String section = path[1];
                 evaluatePatch(context, request, source, wsi, section, op);
             } else {
-                throw new PatchBadRequestException(
+                throw new DSpaceBadRequestException(
                     "Patch path operation need to starts with '" + OPERATION_PATH_SECTIONS + "'");
             }
         }
@@ -322,7 +319,7 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
                         stepProcessing.doPatchProcessing(context, getRequestService().getCurrentRequest(), source, op);
                         stepProcessing.doPostProcessing(context, source);
                     } else {
-                        throw new PatchBadRequestException(
+                        throw new DSpaceBadRequestException(
                             "The submission step class specified by '" + stepConfig.getProcessingClassName() +
                             "' does not extend the class org.dspace.submit.AbstractProcessingStep!" +
                             " Therefore it cannot be used by the Configurable Submission as the <processing-class>!");
@@ -484,10 +481,7 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
                     }
                     WorkspaceItemRest wsi = converter.convert(wi);
                     if (result.size() == 1) {
-                        if (errors.isEmpty()) {
-                            wsi.setStatus(true);
-                        } else {
-                            wsi.setStatus(false);
+                        if (!errors.isEmpty()) {
                             wsi.getErrors().addAll(errors);
                         }
                     }

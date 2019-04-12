@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.UUID;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.BadRequestException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.PageConverter;
+import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.PageRest;
 import org.dspace.app.rest.model.hateoas.DSpaceResource;
@@ -123,7 +123,7 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         }
         //TODO Fix duplicate key language-name handle better
         if (pageService.findByNameAndLanguage(context, pageRest.getName(), pageRest.getLanguage()) != null) {
-            throw new BadRequestException("The given name and language combination in the request already existed" +
+            throw new DSpaceBadRequestException("The given name and language combination in the request already existed" +
                                              " in the database. This is not allowed");
         }
         Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage());

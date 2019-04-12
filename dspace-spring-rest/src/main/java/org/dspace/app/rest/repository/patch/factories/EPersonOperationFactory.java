@@ -7,7 +7,7 @@
  */
 package org.dspace.app.rest.repository.patch.factories;
 
-import org.dspace.app.rest.exception.PatchBadRequestException;
+import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.model.EPersonRest;
 import org.dspace.app.rest.repository.patch.factories.impl.EPersonCertificateReplaceOperation;
 import org.dspace.app.rest.repository.patch.factories.impl.EPersonLoginReplaceOperation;
@@ -47,7 +47,7 @@ public class EPersonOperationFactory {
      *
      * @param path the operation path
      * @return the patch operation implementation
-     * @throws PatchBadRequestException
+     * @throws DSpaceBadRequestException
      */
     public ResourcePatchOperation<EPersonRest> getReplaceOperationForPath(String path) {
 
@@ -61,7 +61,7 @@ public class EPersonOperationFactory {
             case OPERATION_SET_NETID:
                 return netidReplaceOperation;
             default:
-                throw new PatchBadRequestException("Missing patch operation for: " + path);
+                throw new DSpaceBadRequestException("Missing patch operation for: " + path);
         }
     }
 

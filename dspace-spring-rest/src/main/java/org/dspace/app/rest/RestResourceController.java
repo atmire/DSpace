@@ -31,8 +31,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.atteo.evo.inflector.English;
 import org.dspace.app.rest.converter.JsonPatchConverter;
+import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.PaginationException;
-import org.dspace.app.rest.exception.PatchBadRequestException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.RepositoryNotFoundException;
 import org.dspace.app.rest.exception.RepositorySearchMethodNotFoundException;
@@ -432,6 +432,46 @@ public class RestResourceController implements InitializingBean {
     }
 
     /**
+     * Called in POST, with a x-www-form-urlencoded, execute an action on a resource
+     *
+     * Note that the regular expression in the request mapping accept a number as identifier;
+     *
+     * @param request
+     * @param apiCategory
+     * @param model
+     * @param id
+     * @return
+     * @throws HttpRequestMethodNotSupportedException
+     * @throws IOException
+     * @throws SQLException
+     */
+    @RequestMapping(method = RequestMethod.POST, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT, headers =
+        "content-type=application/x-www-form-urlencoded")
+    public ResponseEntity<ResourceSupport> action(HttpServletRequest request, @PathVariable String apiCategory,
+                                                  @PathVariable String model, @PathVariable Integer id)
+        throws HttpRequestMethodNotSupportedException, SQLException, IOException {
+        checkModelPluralForm(apiCategory, model);
+        DSpaceRestRepository<RestAddressableModel, Integer> repository =
+            utils.getResourceRepository(apiCategory, model);
+
+        RestAddressableModel modelObject = null;
+        try {
+            modelObject = repository.action(request, id);
+        } catch (UnprocessableEntityException e) {
+            log.error(e.getMessage(), e);
+            return ControllerUtils.toEmptyResponse(HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
+        if (modelObject != null) {
+            DSpaceResource result = repository.wrapResource(modelObject);
+            linkService.addLinks(result);
+            return ControllerUtils.toResponseEntity(HttpStatus.CREATED, null, result);
+        } else {
+            return ControllerUtils.toEmptyResponse(HttpStatus.NO_CONTENT);
+        }
+    }
+
+    /**
      *  Called in POST, multipart, upload to a specific rest resource the file passed as "file" request parameter
      *
      * Note that the regular expression in the request mapping accept a number as identifier;
@@ -457,7 +497,7 @@ public class RestResourceController implements InitializingBean {
                                                                             @PathVariable Integer id,
                                                                             @RequestParam("file") MultipartFile
                                                                                 uploadfile)
-        throws HttpRequestMethodNotSupportedException {
+        throws HttpRequestMethodNotSupportedException, SQLException {
         return uploadInternal(request, apiCategory, model, id, uploadfile);
     }
 
@@ -487,7 +527,7 @@ public class RestResourceController implements InitializingBean {
                                                                             @PathVariable UUID uuid,
                                                                             @RequestParam("file") MultipartFile
                                                                                 uploadfile)
-        throws HttpRequestMethodNotSupportedException {
+        throws HttpRequestMethodNotSupportedException, SQLException {
         return uploadInternal(request, apiCategory, model, uuid, uploadfile);
     }
 
@@ -534,7 +574,7 @@ public class RestResourceController implements InitializingBean {
                                                                                      String apiCategory, String model,
                                                                                      ID id,
                                                                                      MultipartFile uploadfile)
-        throws HttpRequestMethodNotSupportedException {
+        throws HttpRequestMethodNotSupportedException, SQLException {
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
 
@@ -722,7 +762,7 @@ public class RestResourceController implements InitializingBean {
             Patch patch = patchConverter.convert(jsonNode);
             modelObject = repository.patch(request, apiCategory, model, id, patch);
         } catch (RepositoryMethodNotImplementedException | UnprocessableEntityException |
-            PatchBadRequestException | ResourceNotFoundException e) {
+            DSpaceBadRequestException | ResourceNotFoundException e) {
             log.error(e.getMessage(), e);
             throw e;
         }
@@ -1080,20 +1120,48 @@ public class RestResourceController implements InitializingBean {
     }
 
 
+
     /**
-     * Execute a PUT request for an entity with id of type UUID;
+     * Execute a PUT request for an entity with id of type Integer;
      *
-     * curl -X PUT http://<dspace.url>/dspace-spring-rest/api/{apiCategory}/{model}/{uuid}
+     * curl -X PUT http://<dspace.restUrl>/api/{apiCategory}/{model}/{id}
      *
      * Example:
      * <pre>
      * {@code
-     *      curl -X PUT http://<dspace.url>/dspace-spring-rest/api/collection/320c0492-de1d-4646-9e69-193d36b366e9
+     *      curl -X PUT http://<dspace.restUrl>/api/core/metadatafield/1
      * }
      * </pre>
      *
      * @param request     the http request
-     * @param apiCategory the API category e.g. "api"
+     * @param apiCategory the API category e.g. "core"
+     * @param model       the DSpace model e.g. "metadatafield"
+     * @param id          the ID of the target REST object
+     * @param jsonNode    the part of the request body representing the updated rest object
+     * @return the relevant REST resource
+     */
+    @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT)
+    public DSpaceResource<RestAddressableModel> put(HttpServletRequest request,
+                                                    @PathVariable String apiCategory, @PathVariable String model,
+                                                    @PathVariable Integer id,
+                                                    @RequestBody JsonNode jsonNode) {
+        return putOneInternal(request, apiCategory, model, id, jsonNode);
+    }
+
+    /**
+     * Execute a PUT request for an entity with id of type UUID;
+     *
+     * curl -X PUT http://<dspace.restUrl>/api/{apiCategory}/{model}/{uuid}
+     *
+     * Example:
+     * <pre>
+     * {@code
+     *      curl -X PUT http://<dspace.restUrl>/api/core/collection/8b632938-77c2-487c-81f0-e804f63e68e6
+     * }
+     * </pre>
+     *
+     * @param request     the http request
+     * @param apiCategory the API category e.g. "core"
      * @param model       the DSpace model e.g. "collection"
      * @param uuid        the ID of the target REST object
      * @param jsonNode    the part of the request body representing the updated rest object
@@ -1103,7 +1171,7 @@ public class RestResourceController implements InitializingBean {
     public DSpaceResource<RestAddressableModel> put(HttpServletRequest request,
                                                     @PathVariable String apiCategory, @PathVariable String model,
                                                     @PathVariable UUID uuid,
-                                                    @RequestBody(required = true) JsonNode jsonNode) {
+                                                    @RequestBody JsonNode jsonNode) {
         return putOneInternal(request, apiCategory, model, uuid, jsonNode);
     }
 

@@ -15,23 +15,20 @@ import java.util.List;
 import java.util.UUID;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.BadRequestException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.dspace.app.rest.converter.ItemConverter;
-import org.dspace.app.rest.exception.PatchBadRequestException;
+import org.dspace.app.rest.converter.MetadataConverter;
+import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.ItemRest;
-import org.dspace.app.rest.model.MetadataEntryRest;
 import org.dspace.app.rest.model.hateoas.ItemResource;
-import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.rest.repository.patch.ItemPatch;
-import org.dspace.app.rest.utils.DSpaceObjectUtils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
 import org.dspace.content.Item;
@@ -57,15 +54,14 @@ import org.springframework.stereotype.Component;
  */
 
 @Component(ItemRest.CATEGORY + "." + ItemRest.NAME)
-public class ItemRestRepository extends DSpaceRestRepository<ItemRest, UUID> {
+public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRest> {
 
     private static final Logger log = Logger.getLogger(ItemRestRepository.class);
 
-    @Autowired
-    ItemService is;
+    private final ItemService is;
 
     @Autowired
-    ItemConverter converter;
+    MetadataConverter metadataConverter;
 
     @Autowired
     ItemPatch itemPatch;
@@ -80,13 +76,13 @@ public class ItemRestRepository extends DSpaceRestRepository<ItemRest, UUID> {
     CollectionService collectionService;
 
     @Autowired
-    DSpaceObjectUtils dspaceObjectUtils;
-
-    @Autowired
     InstallItemService installItemService;
 
-    public ItemRestRepository() {
-        System.out.println("Repository initialized by Spring");
+    public ItemRestRepository(ItemService dsoService,
+                              ItemConverter dsoConverter,
+                              ItemPatch dsoPatch) {
+        super(dsoService, dsoConverter, dsoPatch);
+        this.is = dsoService;
     }
 
     @Override
@@ -101,7 +97,7 @@ public class ItemRestRepository extends DSpaceRestRepository<ItemRest, UUID> {
         if (item == null) {
             return null;
         }
-        return converter.fromModel(item);
+        return dsoConverter.fromModel(item);
     }
 
     @Override
@@ -120,55 +116,33 @@ public class ItemRestRepository extends DSpaceRestRepository<ItemRest, UUID> {
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<ItemRest> page = new PageImpl<Item>(items, pageable, total).map(converter);
+        Page<ItemRest> page = new PageImpl<Item>(items, pageable, total).map(dsoConverter);
         return page;
     }
 
     @Override
-    public void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
-                      Patch patch)
-            throws UnprocessableEntityException, PatchBadRequestException, SQLException, AuthorizeException,
-            ResourceNotFoundException {
-
-        Item item = is.find(context, uuid);
-
-        if (item == null) {
-            throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
-        }
-
-        List<Operation> operations = patch.getOperations();
-        ItemRest itemRest = findOne(uuid);
-
-        ItemRest patchedModel = (ItemRest) itemPatch.patch(itemRest, operations);
-        updatePatchedValues(context, patchedModel, item);
+    @PreAuthorize("hasPermission(#id, 'ITEM', 'WRITE')")
+    protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
+                         Patch patch) throws AuthorizeException, SQLException {
+        patchDSpaceObject(apiCategory, model, id, patch);
     }
 
-    /**
-     * Persists changes to the rest model.
-     * @param context
-     * @param itemRest the updated item rest resource
-     * @param item the item content object
-     * @throws SQLException
-     * @throws AuthorizeException
-     */
-    private void updatePatchedValues(Context context, ItemRest itemRest, Item item)
-            throws SQLException, AuthorizeException {
+    @Override
+    protected void updateDSpaceObject(Item item, ItemRest itemRest)
+            throws AuthorizeException, SQLException  {
+        super.updateDSpaceObject(item, itemRest);
 
-        try {
-            if (itemRest.getWithdrawn() != item.isWithdrawn()) {
-                if (itemRest.getWithdrawn()) {
-                    is.withdraw(context, item);
-                } else {
-                    is.reinstate(context, item);
-                }
+        Context context = obtainContext();
+        if (itemRest.getWithdrawn() != item.isWithdrawn()) {
+            if (itemRest.getWithdrawn()) {
+                is.withdraw(context, item);
+            } else {
+                is.reinstate(context, item);
             }
-            if (itemRest.getDiscoverable() != item.isDiscoverable()) {
-                item.setDiscoverable(itemRest.getDiscoverable());
-                is.update(context, item);
-            }
-        } catch (SQLException | AuthorizeException e) {
-            e.printStackTrace();
-            throw e;
+        }
+        if (itemRest.getDiscoverable() != item.isDiscoverable()) {
+            item.setDiscoverable(itemRest.getDiscoverable());
+            is.update(context, item);
         }
     }
 
@@ -225,12 +199,12 @@ public class ItemRestRepository extends DSpaceRestRepository<ItemRest, UUID> {
         }
 
         if (itemRest.getInArchive() == false) {
-            throw new BadRequestException("InArchive attribute should not be set to false for the create");
+            throw new DSpaceBadRequestException("InArchive attribute should not be set to false for the create");
         }
         UUID owningCollectionUuid = UUIDUtils.fromString(owningCollectionUuidString);
         Collection collection = collectionService.find(context, owningCollectionUuid);
         if (collection == null) {
-            throw new BadRequestException("The given owningCollection parameter is invalid: "
+            throw new DSpaceBadRequestException("The given owningCollection parameter is invalid: "
                                               + owningCollectionUuid);
         }
         WorkspaceItem workspaceItem = workspaceItemService.create(context, collection, false);
@@ -239,11 +213,11 @@ public class ItemRestRepository extends DSpaceRestRepository<ItemRest, UUID> {
         item.setOwningCollection(collection);
         item.setDiscoverable(itemRest.getDiscoverable());
         item.setLastModified(itemRest.getLastModified());
-        dspaceObjectUtils.replaceMetadataValues(context, item, itemRest.getMetadata());
+        metadataConverter.setMetadata(context, item, itemRest.getMetadata());
 
         Item itemToReturn = installItemService.installItem(context, workspaceItem);
 
-        return converter.fromModel(itemToReturn);
+        return dsoConverter.fromModel(itemToReturn);
     }
 
     @Override
@@ -266,15 +240,12 @@ public class ItemRestRepository extends DSpaceRestRepository<ItemRest, UUID> {
         }
 
         if (StringUtils.equals(uuid.toString(), itemRest.getId())) {
-            List<MetadataEntryRest> metadataEntryRestList = itemRest.getMetadata();
-            item = (Item) dspaceObjectUtils.replaceMetadataValues(context,
-                                                                              item,
-                                                                              metadataEntryRestList);
+            metadataConverter.setMetadata(context, item, itemRest.getMetadata());
         } else {
             throw new IllegalArgumentException("The UUID in the Json and the UUID in the url do not match: "
                                                    + uuid + ", "
                                                    + itemRest.getId());
         }
-        return converter.fromModel(item);
+        return dsoConverter.fromModel(item);
     }
 }

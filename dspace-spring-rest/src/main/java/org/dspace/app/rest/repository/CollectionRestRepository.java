@@ -12,10 +12,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.BadRequestException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,14 +21,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.CollectionConverter;
+import org.dspace.app.rest.converter.MetadataConverter;
+import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.CollectionRest;
 import org.dspace.app.rest.model.CommunityRest;
-import org.dspace.app.rest.model.MetadataEntryRest;
 import org.dspace.app.rest.model.hateoas.CollectionResource;
+import org.dspace.app.rest.model.patch.Patch;
+import org.dspace.app.rest.repository.patch.DSpaceObjectPatch;
 import org.dspace.app.rest.utils.CollectionRestEqualityUtils;
-import org.dspace.app.rest.utils.DSpaceObjectUtils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
@@ -54,26 +54,27 @@ import org.springframework.stereotype.Component;
  */
 
 @Component(CollectionRest.CATEGORY + "." + CollectionRest.NAME)
-public class CollectionRestRepository extends DSpaceRestRepository<CollectionRest, UUID> {
+public class CollectionRestRepository extends DSpaceObjectRestRepository<Collection, CollectionRest> {
+
+    private final CollectionService cs;
 
     @Autowired
     CommunityService communityService;
 
     @Autowired
-    CollectionService cs;
-
-    @Autowired
     CollectionConverter converter;
 
     @Autowired
-    DSpaceObjectUtils dspaceObjectUtils;
+    MetadataConverter metadataConverter;
 
     @Autowired
     CollectionRestEqualityUtils collectionRestEqualityUtils;
 
 
-    public CollectionRestRepository() {
-        System.out.println("Repository initialized by Spring");
+    public CollectionRestRepository(CollectionService dsoService,
+                                    CollectionConverter dsoConverter) {
+        super(dsoService, dsoConverter, new DSpaceObjectPatch<CollectionRest>() {});
+        this.cs = dsoService;
     }
 
     @Override
@@ -88,7 +89,7 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
         if (collection == null) {
             return null;
         }
-        return converter.fromModel(collection);
+        return dsoConverter.fromModel(collection);
     }
 
     @Override
@@ -105,7 +106,7 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<CollectionRest> page = new PageImpl<Collection>(collections, pageable, total).map(converter);
+        Page<CollectionRest> page = new PageImpl<Collection>(collections, pageable, total).map(dsoConverter);
         return page;
     }
 
@@ -129,7 +130,7 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<CollectionRest> page = utils.getPage(collections, pageable).map(converter);
+        Page<CollectionRest> page = utils.getPage(collections, pageable).map(dsoConverter);
         return page;
     }
 
@@ -146,8 +147,15 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<CollectionRest> page = utils.getPage(collections, pageable).map(converter);
+        Page<CollectionRest> page = utils.getPage(collections, pageable).map(dsoConverter);
         return page;
+    }
+
+    @Override
+    @PreAuthorize("hasPermission(#id, 'COLLECTION', 'WRITE')")
+    protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
+                         Patch patch) throws AuthorizeException, SQLException {
+        patchDSpaceObject(apiCategory, model, id, patch);
     }
 
     @Override
@@ -183,7 +191,7 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
 
                 UUID parentCommunityUuid = UUIDUtils.fromString(parentCommunityString);
                 if (parentCommunityUuid == null) {
-                    throw new BadRequestException("The given parent was invalid: "
+                    throw new DSpaceBadRequestException("The given parent was invalid: "
                             + parentCommunityString);
                 }
 
@@ -193,18 +201,12 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
                             + parentCommunityUuid + " not found");
                 }
             } else {
-                throw new BadRequestException("The parent parameter cannot be left empty," +
+                throw new DSpaceBadRequestException("The parent parameter cannot be left empty," +
                                                   "collections require a parent community.");
             }
             collection = cs.create(context, parent);
             cs.update(context, collection);
-            if (collectionRest.getMetadata() != null) {
-                for (MetadataEntryRest mer : collectionRest.getMetadata()) {
-                    String[] metadatakey = mer.getKey().split("\\.");
-                    cs.addMetadata(context, collection, metadatakey[0], metadatakey[1],
-                                   metadatakey.length == 3 ? metadatakey[2] : null, mer.getLanguage(), mer.getValue());
-                }
-            }
+            metadataConverter.setMetadata(context, collection, collectionRest.getMetadata());
         } catch (SQLException e) {
             throw new RuntimeException("Unable to create new Collection under parent Community " +
                                            parentCommunityString, e);
@@ -218,11 +220,11 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
     protected CollectionRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
                                 JsonNode jsonNode)
         throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException {
-        CollectionRest collectionRest = null;
+        CollectionRest collectionRest;
         try {
             collectionRest = new ObjectMapper().readValue(jsonNode.toString(), CollectionRest.class);
         } catch (IOException e) {
-            throw new UnprocessableEntityException("error parsing the body ..." + e.getMessage());
+            throw new UnprocessableEntityException("Error parsing collection json: " + e.getMessage());
         }
         Collection collection = cs.find(context, id);
         if (collection == null) {
@@ -230,10 +232,7 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
         }
         CollectionRest originalCollectionRest = converter.fromModel(collection);
         if (collectionRestEqualityUtils.isCollectionRestEqualWithoutMetadata(originalCollectionRest, collectionRest)) {
-            List<MetadataEntryRest> metadataEntryRestList = collectionRest.getMetadata();
-            collection = (Collection) dspaceObjectUtils.replaceMetadataValues(context,
-                                                                              collection,
-                                                                              metadataEntryRestList);
+            metadataConverter.setMetadata(context, collection, collectionRest.getMetadata());
         } else {
             throw new IllegalArgumentException("The UUID in the Json and the UUID in the url do not match: "
                                                    + id + ", "
@@ -262,5 +261,4 @@ public class CollectionRestRepository extends DSpaceRestRepository<CollectionRes
             throw new RuntimeException("Unable to delete collection because the logo couldn't be deleted", e);
         }
     }
-
 }

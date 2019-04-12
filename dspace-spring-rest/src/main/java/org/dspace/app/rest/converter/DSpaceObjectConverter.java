@@ -7,12 +7,9 @@
  */
 package org.dspace.app.rest.converter;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.dspace.app.rest.model.MetadataEntryRest;
+import org.dspace.browse.BrowsableObject;
 import org.dspace.content.DSpaceObject;
-import org.dspace.content.MetadataValue;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * This is the base converter from/to objects in the DSpace API data model and
@@ -24,7 +21,10 @@ import org.dspace.content.MetadataValue;
  */
 public abstract class DSpaceObjectConverter<M extends DSpaceObject, R extends org.dspace.app.rest.model
     .DSpaceObjectRest>
-    extends DSpaceConverter<M, R> {
+    extends BrowsableDSpaceObjectConverter<M, R> {
+
+    @Autowired(required = true)
+    private MetadataConverter metadataConverter;
 
     @Override
     public R fromModel(M obj) {
@@ -34,15 +34,7 @@ public abstract class DSpaceObjectConverter<M extends DSpaceObject, R extends or
             resource.setUuid(obj.getID().toString());
         }
         resource.setName(obj.getName());
-        List<MetadataEntryRest> metadata = new ArrayList<MetadataEntryRest>();
-        for (MetadataValue mv : obj.getMetadata()) {
-            MetadataEntryRest me = new MetadataEntryRest();
-            me.setKey(mv.getMetadataField().toString('.'));
-            me.setValue(mv.getValue());
-            me.setLanguage(mv.getLanguage());
-            metadata.add(me);
-        }
-        resource.setMetadata(metadata);
+        resource.setMetadata(metadataConverter.convert(obj.getMetadata()));
         return resource;
     }
 
@@ -51,7 +43,7 @@ public abstract class DSpaceObjectConverter<M extends DSpaceObject, R extends or
         return null;
     }
 
-    public boolean supportsModel(DSpaceObject object) {
+    public boolean supportsModel(BrowsableObject object) {
         return object != null && object.getClass().equals(getModelClass());
     }
 
