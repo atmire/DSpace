@@ -52,6 +52,9 @@ public class PageServiceImpl implements PageService {
         if (!authorizeService.isAdmin(context)) {
             throw new AuthorizeException("You must be an admin to create a Page object");
         }
+        if (findByNameAndLanguage(context, name, language) != null) {
+            throw new IllegalArgumentException("The given name and language combination already exists for a page");
+        }
         Page page = new Page();
         page.setName(name);
         page.setLanguage(language);

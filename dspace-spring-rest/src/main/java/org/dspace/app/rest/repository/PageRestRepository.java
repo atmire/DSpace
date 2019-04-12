@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BadRequestException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -105,6 +106,33 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         }
         Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage());
         page.setTitle(pageRest.getTitle());
+        pageService.update(context, page);
+        return pageConverter.fromModel(page);
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    protected PageRest createAndReturn(Context context, MultipartFile uploadfile, String properties)
+        throws SQLException, AuthorizeException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        PageRest pageRest;
+        try {
+            pageRest = objectMapper.readValue(properties, PageRest.class);
+        } catch (IOException e1) {
+            throw new UnprocessableEntityException("Error parsing request body: " + e1.toString());
+        }
+        //TODO Fix duplicate key language-name handle better
+        if (pageService.findByNameAndLanguage(context, pageRest.getName(), pageRest.getLanguage()) != null) {
+            throw new BadRequestException("The given name and language combination in the request already existed" +
+                                             " in the database. This is not allowed");
+        }
+        Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage());
+        page.setTitle(pageRest.getTitle());
+        try {
+            pageService.attachFile(context, utils.getInputStreamFromMultipart(uploadfile), page);
+        } catch (IOException e) {
+            throw new RuntimeException("The bitstream could not be created from the given file in the request", e);
+        }
         pageService.update(context, page);
         return pageConverter.fromModel(page);
     }

@@ -725,6 +725,34 @@ public class RestResourceController implements InitializingBean {
         return ControllerUtils.toResponseEntity(HttpStatus.OK, null, Resources.wrap(resources));
     }
 
+    @RequestMapping(method = { RequestMethod.POST }, headers = "content-type=multipart/form-data", params = "properties")
+    public <T extends RestAddressableModel> ResponseEntity<ResourceSupport> upload(HttpServletRequest request,
+                                                                                   @PathVariable String apiCategory,
+                                                                                   @PathVariable String model,
+                                                                                   @RequestParam("properties") String properties,
+                                                                                   @RequestParam("file") MultipartFile
+                                                                                       uploadfile)
+        throws HttpRequestMethodNotSupportedException {
+
+        checkModelPluralForm(apiCategory, model);
+        DSpaceRestRepository repository = utils.getResourceRepository(apiCategory, model);
+        RestAddressableModel modelObject = null;
+        try {
+            modelObject = repository.createAndReturn(uploadfile, properties);
+        } catch (ClassCastException e) {
+            log.error(e.getMessage(), e);
+            return ControllerUtils.toEmptyResponse(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        if (modelObject == null) {
+            throw new HttpRequestMethodNotSupportedException(RequestMethod.POST.toString());
+        }
+        DSpaceResource result = repository.wrapResource(modelObject);
+        linkService.addLinks(result);
+        //TODO manage HTTPHeader
+        return ControllerUtils.toResponseEntity(HttpStatus.CREATED, null, result);
+    }
+
+
     /**
      * PATCH method, using operation on the resources following (JSON) Patch notation (https://tools.ietf
      * .org/html/rfc6902)
