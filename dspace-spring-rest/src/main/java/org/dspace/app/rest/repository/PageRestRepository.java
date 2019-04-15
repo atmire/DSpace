@@ -128,7 +128,7 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage());
         page.setTitle(pageRest.getTitle());
         try {
-            pageService.attachFile(context, utils.getInputStreamFromMultipart(uploadfile), uploadfile.getOriginalFilename(), page);
+            pageService.attachFile(context, utils.getInputStreamFromMultipart(uploadfile), uploadfile.getOriginalFilename(), uploadfile.getContentType(), page);
         } catch (IOException e) {
             throw new RuntimeException("The bitstream could not be created from the given file in the request", e);
         }
@@ -171,7 +171,8 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
                 throw new UnprocessableEntityException("The request page for uuid: " + uuid
                                                            + " already has a bitstreamattached to it");
             }
-            pageService.attachFile(context, utils.getInputStreamFromMultipart(file), file.getName(), page);
+            pageService.attachFile(context, utils.getInputStreamFromMultipart(file), file.getName(),
+                                   file.getContentType(), page);
         } catch (IOException e) {
             throw new RuntimeException("The bitstream could not be created from the given file in the request", e);
         } catch (SQLException e) {
@@ -194,7 +195,8 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
             if (page == null) {
                 throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
             }
-            pageService.attachFile(context, utils.getInputStreamFromMultipart(file), file.getName(), page);
+            pageService.attachFile(context, utils.getInputStreamFromMultipart(file), file.getName(),
+                                   file.getContentType(), page);
         } catch (IOException e) {
             throw new RuntimeException("The bitstream could not be created from the given file in the request", e);
         } catch (SQLException e) {
