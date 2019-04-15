@@ -230,7 +230,7 @@ public class PageTest extends AbstractUnitTest {
     }
 
     /**
-     * Tests the {@link PageService#attachFile(Context, InputStream, Page)} method
+     * Tests the {@link PageService#attachFile(Context, InputStream, String, Page)} method
      * @throws Exception
      */
     @Test
@@ -251,7 +251,7 @@ public class PageTest extends AbstractUnitTest {
         Bitstream bitstream = foundPage.getBitstream();
         InputStream newInputStream = IOUtils.toInputStream("secondbitstream");
 
-        pageService.attachFile(context, newInputStream, page);
+        pageService.attachFile(context, newInputStream, file.getName(), page);
 
         foundPage = pageService.findByUuid(context, uuid);
         assertNotEquals(bitstream, foundPage.getBitstream());

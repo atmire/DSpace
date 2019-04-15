@@ -77,7 +77,7 @@ public class PageServiceImpl implements PageService {
     }
 
     @Override
-    public void attachFile(Context context, InputStream inputStream, Page page)
+    public void attachFile(Context context, InputStream inputStream, String name, Page page)
         throws IOException, SQLException, AuthorizeException {
         if (!authorizeService.isAdmin(context)) {
             throw new AuthorizeException("You must be an admin to attach a bitstream to a page object");
@@ -87,9 +87,11 @@ public class PageServiceImpl implements PageService {
             bitstreamService.delete(context, bitstream);
         }
         bitstream = bitstreamService.create(context, inputStream);
+        bitstream.setName(context, name);
         Group anonymous = groupService.findByName(context, Group.ANONYMOUS);
         authorizeService.addPolicy(context, bitstream, Constants.READ, anonymous);
         page.setBitstream(bitstream);
+        bitstreamService.update(context, bitstream);
         update(context, page);
     }
 

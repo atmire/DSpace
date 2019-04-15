@@ -69,12 +69,13 @@ public interface PageService {
      * The file will get anonymous read rights through this method.
      * @param context       The relevant DSpace context
      * @param inputStream   The Inputstream that is to be used for the new Bitstream
+     * @param name          The name for the bitstream to be created for the page
      * @param page          The Page object that will have it's Bitstream altered
      * @throws IOException  If something goes wrong
      * @throws SQLException If something goes wrong
      * @throws AuthorizeException   If something goes wrong
      */
-    public void attachFile(Context context, InputStream inputStream, Page page)
+    public void attachFile(Context context, InputStream inputStream, String name, Page page)
         throws IOException, SQLException, AuthorizeException;
 
     /**

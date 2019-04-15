@@ -121,7 +121,6 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         } catch (IOException e1) {
             throw new UnprocessableEntityException("Error parsing request body: " + e1.toString());
         }
-        //TODO Fix duplicate key language-name handle better
         if (pageService.findByNameAndLanguage(context, pageRest.getName(), pageRest.getLanguage()) != null) {
             throw new DSpaceBadRequestException("The given name and language combination in the request already existed" +
                                              " in the database. This is not allowed");
@@ -129,7 +128,7 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage());
         page.setTitle(pageRest.getTitle());
         try {
-            pageService.attachFile(context, utils.getInputStreamFromMultipart(uploadfile), page);
+            pageService.attachFile(context, utils.getInputStreamFromMultipart(uploadfile), uploadfile.getOriginalFilename(), page);
         } catch (IOException e) {
             throw new RuntimeException("The bitstream could not be created from the given file in the request", e);
         }
@@ -172,7 +171,7 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
                 throw new UnprocessableEntityException("The request page for uuid: " + uuid
                                                            + " already has a bitstreamattached to it");
             }
-            pageService.attachFile(context, utils.getInputStreamFromMultipart(file), page);
+            pageService.attachFile(context, utils.getInputStreamFromMultipart(file), file.getName(), page);
         } catch (IOException e) {
             throw new RuntimeException("The bitstream could not be created from the given file in the request", e);
         } catch (SQLException e) {
@@ -195,7 +194,7 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
             if (page == null) {
                 throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
             }
-            pageService.attachFile(context, utils.getInputStreamFromMultipart(file), page);
+            pageService.attachFile(context, utils.getInputStreamFromMultipart(file), file.getName(), page);
         } catch (IOException e) {
             throw new RuntimeException("The bitstream could not be created from the given file in the request", e);
         } catch (SQLException e) {
