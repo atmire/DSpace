@@ -72,7 +72,7 @@ public class PageContentRestController {
                 MultipartFileSender sender = MultipartFileSender
                     .fromInputStream(is)
                     .withBufferSize(BUFFER_SIZE)
-                    .withFileName(page.getName())
+                    .withFileName(bitstream.getName())
                     .withLength(bitstream.getSizeBytes())
                     .withChecksum(bitstream.getChecksum())
                     .withMimetype("html")
