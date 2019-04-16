@@ -10,7 +10,6 @@ package org.dspace.app.rest;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -504,12 +503,15 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setLanguage("ThisIsANewLanguage");
         pageRest.setTitle("ThisIsANewTitle");
 
-        getClient(authToken).perform(put("/api/config/pages/" + id)
-                                         .content(mapper.writeValueAsBytes(pageRest))
-                                         .contentType(contentType))
-                            .andExpect(status().isOk())
-                            .andExpect(content().contentType(contentType));
+        MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.fileUpload("/api/config/pages/" + id);
 
+        builder.with(new RequestPostProcessor() {
+            public MockHttpServletRequest postProcessRequest(MockHttpServletRequest mockHttpServletRequest) {
+                mockHttpServletRequest.setMethod("PUT");
+                return mockHttpServletRequest;
+            }
+        });
+        getClient(authToken).perform(builder.file(file).param("properties", mapper.writeValueAsString(pageRest)));
 
         getClient(authToken).perform(get("/api/config/pages/" + id)
                                          .content(mapper.writeValueAsBytes(pageRest))
@@ -560,10 +562,15 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         pageRest.setLanguage("ThisIsANewLanguage");
         pageRest.setTitle("ThisIsANewTitle");
+        MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.fileUpload("/api/config/pages/" + id);
 
-        getClient().perform(put("/api/config/pages/" + id)
-                                .content(mapper.writeValueAsBytes(pageRest))
-                                .contentType(contentType))
+        builder.with(new RequestPostProcessor() {
+            public MockHttpServletRequest postProcessRequest(MockHttpServletRequest mockHttpServletRequest) {
+                mockHttpServletRequest.setMethod("PUT");
+                return mockHttpServletRequest;
+            }
+        });
+        getClient().perform(builder.file(file).param("properties", mapper.writeValueAsString(pageRest)))
                    .andExpect(status().isUnauthorized());
 
 

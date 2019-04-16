@@ -618,7 +618,17 @@ public class RestResourceController implements InitializingBean {
                                                                             @RequestParam("file") MultipartFile
                                                                                 uploadfile)
         throws HttpRequestMethodNotSupportedException {
-        return putInternal(request, apiCategory, model, uuid, uploadfile);
+        String properties = request.getParameter("properties");
+
+        // We need to differentiate between PUT request with the "properties" param and without.
+        // This couldn't be done on RequestMapping level because of Spring's limitations and differences
+        // between how these Params are handled in PUT and POST
+        if (StringUtils.isNotBlank(properties)) {
+            return putOneInternalMultipartProperties(request, apiCategory, model, uuid,
+                                                     properties, uploadfile);
+        } else {
+            return putInternal(request, apiCategory, model, uuid, uploadfile);
+        }
     }
     /**
      * Internal upload method.
@@ -1234,6 +1244,24 @@ public class RestResourceController implements InitializingBean {
                                                     @PathVariable Integer id,
                                                     @RequestBody(required = true) JsonNode jsonNode) {
         return putOneJsonInternal(request, apiCategory, model, id, jsonNode);
+    }
+
+    private <ID extends Serializable> ResponseEntity<ResourceSupport> putOneInternalMultipartProperties(
+        HttpServletRequest request, String apiCategory, String model, ID uuid, String properties,
+        MultipartFile uploadfile) {
+
+        checkModelPluralForm(apiCategory, model);
+        DSpaceRestRepository repository = utils.getResourceRepository(apiCategory, model);
+        RestAddressableModel modelObject = null;
+        modelObject = repository.put(request, apiCategory, model, uuid, properties, uploadfile);
+
+        if (modelObject == null) {
+            throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
+        }
+        DSpaceResource result = repository.wrapResource(modelObject);
+        linkService.addLinks(result);
+        return ControllerUtils.toResponseEntity(HttpStatus.OK, null, result);
+
     }
 
     /**
