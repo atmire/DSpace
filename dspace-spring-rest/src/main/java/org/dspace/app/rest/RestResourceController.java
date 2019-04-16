@@ -725,11 +725,13 @@ public class RestResourceController implements InitializingBean {
         return ControllerUtils.toResponseEntity(HttpStatus.OK, null, Resources.wrap(resources));
     }
 
-    @RequestMapping(method = { RequestMethod.POST }, headers = "content-type=multipart/form-data", params = "properties")
+    @RequestMapping(method = { RequestMethod.POST }, headers = "content-type=multipart/form-data",
+        params = "properties")
     public <T extends RestAddressableModel> ResponseEntity<ResourceSupport> upload(HttpServletRequest request,
                                                                                    @PathVariable String apiCategory,
                                                                                    @PathVariable String model,
-                                                                                   @RequestParam("properties") String properties,
+                                                                                   @RequestParam("properties") String
+                                                                                           properties,
                                                                                    @RequestParam("file") MultipartFile
                                                                                        uploadfile)
         throws HttpRequestMethodNotSupportedException {
