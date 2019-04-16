@@ -143,7 +143,7 @@ public class PageTest extends AbstractUnitTest {
     }
 
     /**
-     * Tests the {@link PageService#update(Context, Object)} method
+     * Tests the {@link PageService#update(Context, Page)} method
      * @throws Exception
      */
     @Test
@@ -164,7 +164,7 @@ public class PageTest extends AbstractUnitTest {
     }
 
     /**
-     * Tests the {@link PageService#delete(Context, Object)} method
+     * Tests the {@link PageService#delete(Context, Page)} method
      * @throws Exception
      */
     @Test
@@ -251,7 +251,7 @@ public class PageTest extends AbstractUnitTest {
         Bitstream bitstream = foundPage.getBitstream();
         InputStream newInputStream = IOUtils.toInputStream("secondbitstream");
 
-        pageService.attachFile(context, newInputStream, file.getName(), uploadfile.getContentType(), page);
+        pageService.attachFile(context, newInputStream, "testName", "application/pdf", page);
 
         foundPage = pageService.findByUuid(context, uuid);
         assertNotEquals(bitstream, foundPage.getBitstream());

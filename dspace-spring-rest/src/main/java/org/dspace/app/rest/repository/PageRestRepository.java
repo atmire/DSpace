@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -61,7 +60,6 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
     ConfigurationService configurationService;
 
     //TODO Permission
-    //TODO If there is no file, show message to upload a file first
     @Override
     public PageRest findOne(Context context, UUID uuid) {
         Page page = null;
@@ -77,7 +75,6 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
     }
 
     //TODO Permission
-    //TODO Hide pages without bitstream
     @Override
     public org.springframework.data.domain.Page<PageRest> findAll(Context context, Pageable pageable) {
         List<Page> pages = new ArrayList<Page>();
@@ -94,24 +91,6 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
 
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
-    protected PageRest createAndReturn(Context context) throws AuthorizeException, SQLException {
-        HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
-        ObjectMapper objectMapper = new ObjectMapper();
-        PageRest pageRest;
-        try {
-            ServletInputStream input = req.getInputStream();
-            pageRest = objectMapper.readValue(input, PageRest.class);
-        } catch (IOException e1) {
-            throw new UnprocessableEntityException("Error parsing request body: " + e1.toString());
-        }
-        Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage());
-        page.setTitle(pageRest.getTitle());
-        pageService.update(context, page);
-        return pageConverter.fromModel(page);
-    }
-
-    @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
     protected PageRest createAndReturn(Context context, MultipartFile uploadfile, String properties)
         throws SQLException, AuthorizeException {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -122,13 +101,14 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
             throw new UnprocessableEntityException("Error parsing request body: " + e1.toString());
         }
         if (pageService.findByNameAndLanguage(context, pageRest.getName(), pageRest.getLanguage()) != null) {
-            throw new DSpaceBadRequestException("The given name and language combination in the request already existed" +
-                                             " in the database. This is not allowed");
+            throw new DSpaceBadRequestException("The given name and language combination in the request " +
+                                                    "already existed in the database. This is not allowed");
         }
         Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage());
         page.setTitle(pageRest.getTitle());
         try {
-            pageService.attachFile(context, utils.getInputStreamFromMultipart(uploadfile), uploadfile.getOriginalFilename(), uploadfile.getContentType(), page);
+            pageService.attachFile(context, utils.getInputStreamFromMultipart(uploadfile),
+                                   uploadfile.getOriginalFilename(), uploadfile.getContentType(), page);
         } catch (IOException e) {
             throw new RuntimeException("The bitstream could not be created from the given file in the request", e);
         }
@@ -154,34 +134,6 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         } catch (SQLException e) {
             throw new RuntimeException("Unable to delete Page with id = " + id, e);
         }
-    }
-
-    @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public PageRest upload(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
-                           MultipartFile file) {
-
-        Page page = null;
-        try {
-            page = pageService.findByUuid(context, uuid);
-            if (page == null) {
-                throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
-            }
-            if (page.getBitstream() != null) {
-                throw new UnprocessableEntityException("The request page for uuid: " + uuid
-                                                           + " already has a bitstreamattached to it");
-            }
-            pageService.attachFile(context, utils.getInputStreamFromMultipart(file), file.getName(),
-                                   file.getContentType(), page);
-        } catch (IOException e) {
-            throw new RuntimeException("The bitstream could not be created from the given file in the request", e);
-        } catch (SQLException e) {
-            throw new RuntimeException("Unable to process page with id: " + uuid, e);
-        } catch (AuthorizeException e) {
-            throw new AccessDeniedException("The current user was not allowed to make changes to the page with id: "
-                                                + uuid, e);
-        }
-        return pageConverter.fromModel(page);
     }
 
     @Override

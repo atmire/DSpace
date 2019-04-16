@@ -10,7 +10,6 @@ package org.dspace.app.rest;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -75,9 +74,14 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setLanguage("testLanguage");
 
         String authToken = getAuthToken(admin.getEmail(), password);
-        MvcResult mvcResult = getClient(authToken).perform(post("/api/config/pages")
-                                                               .content(mapper.writeValueAsBytes(pageRest))
-                                                               .contentType(contentType))
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        MvcResult mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
                                                   .andExpect(status().isCreated())
                                                   .andExpect(content().contentType(contentType))
                                                   .andReturn();
@@ -105,11 +109,16 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setTitle("testTitle");
         pageRest.setName("testName");
         pageRest.setLanguage("testLanguage");
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
 
-        getClient().perform(post("/api/config/pages")
-                                .content(mapper.writeValueAsBytes(pageRest))
-                                .contentType(contentType))
-                   .andExpect(status().isUnauthorized());
+        MvcResult mvcResult = getClient().perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                        .file(file)
+                                                                        .param("properties",
+                                                                               mapper.writeValueAsString(pageRest)))
+                                         .andExpect(status().isUnauthorized())
+                                         .andReturn();
     }
 
     @Test
@@ -120,11 +129,17 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setName("testName");
         pageRest.setLanguage("testLanguage");
 
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
         String authToken = getAuthToken(eperson.getEmail(), password);
-        getClient(authToken).perform(post("/api/config/pages")
-                                         .content(mapper.writeValueAsBytes(pageRest))
-                                         .contentType(contentType))
-                            .andExpect(status().isForbidden());
+
+        MvcResult mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
+                                                  .andExpect(status().isForbidden())
+                                                  .andReturn();
     }
 
     @Test
@@ -146,9 +161,15 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setLanguage("testLanguage");
 
         String authToken = getAuthToken(admin.getEmail(), password);
-        MvcResult mvcResult = getClient(authToken).perform(post("/api/config/pages")
-                                                               .content(mapper.writeValueAsBytes(pageRest))
-                                                               .contentType(contentType))
+
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        MvcResult mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
                                                   .andExpect(status().isCreated())
                                                   .andExpect(content().contentType(contentType))
                                                   .andReturn();
@@ -173,9 +194,14 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setLanguage("testLanguage");
 
         String authToken = getAuthToken(admin.getEmail(), password);
-        MvcResult mvcResult = getClient(authToken).perform(post("/api/config/pages")
-                                                               .content(mapper.writeValueAsBytes(pageRest))
-                                                               .contentType(contentType))
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        MvcResult mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
                                                   .andExpect(status().isCreated())
                                                   .andExpect(content().contentType(contentType))
                                                   .andReturn();
@@ -206,9 +232,14 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setLanguage("testLanguage");
 
         String authToken = getAuthToken(admin.getEmail(), password);
-        MvcResult mvcResult = getClient(authToken).perform(post("/api/config/pages")
-                                                               .content(mapper.writeValueAsBytes(pageRest))
-                                                               .contentType(contentType))
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        MvcResult mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
                                                   .andExpect(status().isCreated())
                                                   .andExpect(content().contentType(contentType))
                                                   .andReturn();
@@ -218,22 +249,7 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         Map<String, Object> map = mapper.readValue(content, Map.class);
         String id = String.valueOf(map.get("id"));
 
-        getClient(authToken).perform(get("/api/config/pages/" + id)
-                                         .content(mapper.writeValueAsBytes(pageRest))
-                                         .contentType(contentType))
-                            .andExpect(status().isOk())
-                            .andExpect(content().contentType(contentType))
-                            .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
-                                UUID.fromString(id), pageRest.getName(), pageRest.getTitle(), pageRest.getLanguage()
-                            )));
-        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
-                                                       "Hello, World!".getBytes());
-        getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages/" + id)
-                                                           .file(file))
-                            .andExpect(status().isCreated());
-        getClient(authToken).perform(get("/api/config/pages/" + id)
-                                         .content(mapper.writeValueAsBytes(pageRest))
-                                         .contentType(contentType))
+        getClient(authToken).perform(get("/api/config/pages/" + id))
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(contentType))
                             .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
@@ -251,32 +267,16 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setName("testName");
         pageRest.setLanguage("testLanguage");
 
-        String authToken = getAuthToken(admin.getEmail(), password);
-        MvcResult mvcResult = getClient(authToken).perform(post("/api/config/pages")
-                                                               .content(mapper.writeValueAsBytes(pageRest))
-                                                               .contentType(contentType))
-                                                  .andExpect(status().isCreated())
-                                                  .andExpect(content().contentType(contentType))
-                                                  .andReturn();
-
-
-        String content = mvcResult.getResponse().getContentAsString();
-        Map<String, Object> map = mapper.readValue(content, Map.class);
-        String id = String.valueOf(map.get("id"));
-
-        getClient(authToken).perform(get("/api/config/pages/" + id)
-                                         .content(mapper.writeValueAsBytes(pageRest))
-                                         .contentType(contentType))
-                            .andExpect(status().isOk())
-                            .andExpect(content().contentType(contentType))
-                            .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
-                                UUID.fromString(id), pageRest.getName(), pageRest.getTitle(), pageRest.getLanguage()
-                            )));
+        String input = "Hello, World!";
         MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
-                                                       "Hello, World!".getBytes());
-        getClient().perform(MockMvcRequestBuilders.fileUpload("/api/config/pages/" + id)
-                                                  .file(file))
-                   .andExpect(status().isUnauthorized());
+                                                       input.getBytes());
+
+        MvcResult mvcResult = getClient().perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                        .file(file)
+                                                                        .param("properties",
+                                                                               mapper.writeValueAsString(pageRest)))
+                                         .andExpect(status().isUnauthorized())
+                                         .andReturn();
     }
 
     @Test
@@ -288,9 +288,14 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setLanguage("testLanguage");
 
         String authToken = getAuthToken(admin.getEmail(), password);
-        getClient(authToken).perform(post("/api/config/pages")
-                                                               .content(mapper.writeValueAsBytes(pageRest))
-                                                               .contentType(contentType))
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        MvcResult mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
                                                   .andExpect(status().isCreated())
                                                   .andExpect(content().contentType(contentType))
                                                   .andReturn();
@@ -300,37 +305,52 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setName("testName2");
         pageRest.setLanguage("testLanguage2");
 
-        getClient(authToken).perform(post("/api/config/pages")
-                                                               .content(mapper.writeValueAsBytes(pageRest))
-                                                               .contentType(contentType))
-                                                  .andExpect(status().isCreated())
-                                                  .andExpect(content().contentType(contentType))
-                                                  .andReturn();
+        input = "Hello, World!";
+        file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                     input.getBytes());
+
+        mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                       .file(file)
+                                                                       .param("properties",
+                                                                              mapper.writeValueAsString(pageRest)))
+                                        .andExpect(status().isCreated())
+                                        .andExpect(content().contentType(contentType))
+                                        .andReturn();
         pageRest = new PageRest();
         pageRest.setTitle("testTitle");
         pageRest.setName("testName");
         pageRest.setLanguage("testLanguage3");
 
-        getClient(authToken).perform(post("/api/config/pages")
-                                                               .content(mapper.writeValueAsBytes(pageRest))
-                                                               .contentType(contentType))
-                                                  .andExpect(status().isCreated())
-                                                  .andExpect(content().contentType(contentType))
-                                                  .andReturn();
+        input = "Hello, World!";
+        file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                     input.getBytes());
+
+        mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                       .file(file)
+                                                                       .param("properties",
+                                                                              mapper.writeValueAsString(pageRest)))
+                                        .andExpect(status().isCreated())
+                                        .andExpect(content().contentType(contentType))
+                                        .andReturn();
         pageRest = new PageRest();
         pageRest.setTitle("testTitle");
         pageRest.setName("testName");
         pageRest.setLanguage("testLanguage4");
 
-        getClient(authToken).perform(post("/api/config/pages")
-                                                               .content(mapper.writeValueAsBytes(pageRest))
-                                                               .contentType(contentType))
-                                                  .andExpect(status().isCreated())
-                                                  .andExpect(content().contentType(contentType))
-                                                  .andReturn();
+        input = "Hello, World!";
+        file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                     input.getBytes());
+
+        mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                       .file(file)
+                                                                       .param("properties",
+                                                                              mapper.writeValueAsString(pageRest)))
+                                        .andExpect(status().isCreated())
+                                        .andExpect(content().contentType(contentType))
+                                        .andReturn();
 
         getClient(authToken).perform(get("/api/config/pages/search/languages")
-                                        .param("name", "testName"))
+                                         .param("name", "testName"))
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$.page.totalElements", is(3)));
     }
@@ -346,9 +366,14 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setLanguage("testLanguage");
 
         String authToken = getAuthToken(admin.getEmail(), password);
-        MvcResult mvcResult = getClient(authToken).perform(post("/api/config/pages")
-                                                               .content(mapper.writeValueAsBytes(pageRest))
-                                                               .contentType(contentType))
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        MvcResult mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
                                                   .andExpect(status().isCreated())
                                                   .andExpect(content().contentType(contentType))
                                                   .andReturn();
@@ -366,12 +391,6 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
                             .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
                                 UUID.fromString(id), pageRest.getName(), pageRest.getTitle(), pageRest.getLanguage()
                             )));
-        String input = "Hello, World!";
-        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
-                                                       input.getBytes());
-        getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages/" + id)
-                                                           .file(file))
-                            .andExpect(status().isCreated());
         getClient(authToken).perform(get("/api/config/pages/" + id)
                                          .content(mapper.writeValueAsBytes(pageRest))
                                          .contentType(contentType))
@@ -397,9 +416,14 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setLanguage("testLanguage");
 
         String authToken = getAuthToken(admin.getEmail(), password);
-        MvcResult mvcResult = getClient(authToken).perform(post("/api/config/pages")
-                                                               .content(mapper.writeValueAsBytes(pageRest))
-                                                               .contentType(contentType))
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        MvcResult mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
                                                   .andExpect(status().isCreated())
                                                   .andExpect(content().contentType(contentType))
                                                   .andReturn();
@@ -417,20 +441,6 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
                             .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
                                 UUID.fromString(id), pageRest.getName(), pageRest.getTitle(), pageRest.getLanguage()
                             )));
-        String input = "Hello, World!";
-        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
-                                                       input.getBytes());
-        getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages/" + id)
-                                                           .file(file))
-                            .andExpect(status().isCreated());
-        getClient(authToken).perform(get("/api/config/pages/" + id)
-                                         .content(mapper.writeValueAsBytes(pageRest))
-                                         .contentType(contentType))
-                            .andExpect(status().isOk())
-                            .andExpect(content().contentType(contentType))
-                            .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
-                                UUID.fromString(id), pageRest.getName(), pageRest.getTitle(), pageRest.getLanguage()
-                            )));
 
         getClient(authToken).perform(get("/api/config/pages/" + id + "/content"))
                             .andExpect(status().isOk())
@@ -438,7 +448,7 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         String newInput = "Goodbye, World!";
         MockMultipartFile newFile = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
-                                                       newInput.getBytes());
+                                                          newInput.getBytes());
 
         MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.fileUpload("/api/config/pages/" + id);
         builder.with(new RequestPostProcessor() {
@@ -465,9 +475,14 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setLanguage("testLanguage");
 
         String authToken = getAuthToken(admin.getEmail(), password);
-        MvcResult mvcResult = getClient(authToken).perform(post("/api/config/pages")
-                                                               .content(mapper.writeValueAsBytes(pageRest))
-                                                               .contentType(contentType))
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        MvcResult mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
                                                   .andExpect(status().isCreated())
                                                   .andExpect(content().contentType(contentType))
                                                   .andReturn();
@@ -490,8 +505,8 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setTitle("ThisIsANewTitle");
 
         getClient(authToken).perform(put("/api/config/pages/" + id)
-                                        .content(mapper.writeValueAsBytes(pageRest))
-                                        .contentType(contentType))
+                                         .content(mapper.writeValueAsBytes(pageRest))
+                                         .contentType(contentType))
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(contentType));
 
@@ -517,9 +532,14 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setLanguage("testLanguage");
 
         String authToken = getAuthToken(admin.getEmail(), password);
-        MvcResult mvcResult = getClient(authToken).perform(post("/api/config/pages")
-                                                               .content(mapper.writeValueAsBytes(pageRest))
-                                                               .contentType(contentType))
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        MvcResult mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
                                                   .andExpect(status().isCreated())
                                                   .andExpect(content().contentType(contentType))
                                                   .andReturn();
@@ -542,9 +562,9 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
         pageRest.setTitle("ThisIsANewTitle");
 
         getClient().perform(put("/api/config/pages/" + id)
-                                         .content(mapper.writeValueAsBytes(pageRest))
-                                         .contentType(contentType))
-                            .andExpect(status().isUnauthorized());
+                                .content(mapper.writeValueAsBytes(pageRest))
+                                .contentType(contentType))
+                   .andExpect(status().isUnauthorized());
 
 
         getClient(authToken).perform(get("/api/config/pages/" + id)
