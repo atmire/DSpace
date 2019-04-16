@@ -553,4 +553,21 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
         throws SQLException, AuthorizeException {
         throw new RepositoryMethodNotImplementedException("No implementation found; Method not allowed!", "");
     }
+
+    public T put(HttpServletRequest request, String apiCategory, String model, ID uuid, String properties,
+                 MultipartFile uploadfile) {
+        Context context = obtainContext();
+        try {
+            thisRepository.put(context, request, apiCategory, model, uuid, properties, uploadfile);
+            context.commit();
+        } catch (SQLException e) {
+            throw new RuntimeException("Unable to update DSpace object " + model + " with id=" + uuid, e);
+        }
+        return findOne(uuid);
+    }
+
+    protected T put(Context context, HttpServletRequest request, String apiCategory, String model, ID uuid,
+                    String properties, MultipartFile uploadfile) {
+        throw new RepositoryMethodNotImplementedException(apiCategory, model);
+    }
 }
