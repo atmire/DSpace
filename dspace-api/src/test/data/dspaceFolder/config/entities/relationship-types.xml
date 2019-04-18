@@ -124,4 +124,14 @@
             <max>1</max>
         </rightCardinality>
     </type>
+    <type>
+        <leftType>OrgUnit</leftType>
+        <rightType>OrgUnit</rightType>
+        <leftLabel>isParentOrgUnitOf</leftLabel>
+        <rightLabel>isChildOrgUnitOf</rightLabel>
+        <leftCardinality>
+        </leftCardinality>
+        <rightCardinality>
+        </rightCardinality>
+    </type>
 </relationships>
