@@ -356,9 +356,11 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
     public T patch(HttpServletRequest request, String apiCategory, String model, ID id, Patch patch)
         throws HttpRequestMethodNotSupportedException, UnprocessableEntityException, PatchBadRequestException {
         Context context = obtainContext();
+
         try {
             thisRepository.patch(context, request, apiCategory, model, id, patch);
             context.commit();
+
         } catch (AuthorizeException ae) {
             throw new RESTAuthorizationException(ae);
         } catch (SQLException | DCInputsReaderException e) {
@@ -393,6 +395,18 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
                          Patch patch)
         throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException, DCInputsReaderException {
         throw new RepositoryMethodNotImplementedException(apiCategory, model);
+    }
+
+    public T action(HttpServletRequest request, ID id) throws SQLException, IOException {
+        Context context = obtainContext();
+        T entity = action(context, request, id);
+        context.commit();
+        return entity;
+    }
+
+    protected T action(Context context, HttpServletRequest request, ID id)
+        throws SQLException, IOException {
+        throw new RuntimeException("No implementation found; Method not allowed!");
     }
 
     /**

@@ -263,10 +263,7 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
         }
         wsi = converter.convert(source);
 
-        if (errors.isEmpty()) {
-            wsi.setStatus(true);
-        } else {
-            wsi.setStatus(false);
+        if (!errors.isEmpty()) {
             wsi.getErrors().addAll(errors);
         }
 
@@ -484,10 +481,7 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
                     }
                     WorkspaceItemRest wsi = converter.convert(wi);
                     if (result.size() == 1) {
-                        if (errors.isEmpty()) {
-                            wsi.setStatus(true);
-                        } else {
-                            wsi.setStatus(false);
+                        if (!errors.isEmpty()) {
                             wsi.getErrors().addAll(errors);
                         }
                     }
