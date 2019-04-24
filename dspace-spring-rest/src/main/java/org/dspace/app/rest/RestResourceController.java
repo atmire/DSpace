@@ -31,8 +31,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.atteo.evo.inflector.English;
 import org.dspace.app.rest.converter.JsonPatchConverter;
+import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.PaginationException;
-import org.dspace.app.rest.exception.PatchBadRequestException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.RepositoryNotFoundException;
 import org.dspace.app.rest.exception.RepositorySearchMethodNotFoundException;
@@ -497,7 +497,7 @@ public class RestResourceController implements InitializingBean {
                                                                             @PathVariable Integer id,
                                                                             @RequestParam("file") MultipartFile
                                                                                 uploadfile)
-        throws HttpRequestMethodNotSupportedException {
+        throws HttpRequestMethodNotSupportedException, SQLException {
         return uploadInternal(request, apiCategory, model, id, uploadfile);
     }
 
@@ -527,7 +527,7 @@ public class RestResourceController implements InitializingBean {
                                                                             @PathVariable UUID uuid,
                                                                             @RequestParam("file") MultipartFile
                                                                                 uploadfile)
-        throws HttpRequestMethodNotSupportedException {
+        throws HttpRequestMethodNotSupportedException, SQLException {
         return uploadInternal(request, apiCategory, model, uuid, uploadfile);
     }
 
@@ -558,7 +558,17 @@ public class RestResourceController implements InitializingBean {
                                                                             @RequestParam("file") MultipartFile
                                                                                 uploadfile)
         throws HttpRequestMethodNotSupportedException {
-        return putInternal(request, apiCategory, model, uuid, uploadfile);
+        String properties = request.getParameter("properties");
+
+        // We need to differentiate between PUT request with the "properties" param and without.
+        // This couldn't be done on RequestMapping level because of Spring's limitations and differences
+        // between how these Params are handled in PUT and POST
+        if (StringUtils.isNotBlank(properties)) {
+            return putOneInternalMultipartProperties(request, apiCategory, model, uuid,
+                                                     properties, uploadfile);
+        } else {
+            return putInternal(request, apiCategory, model, uuid, uploadfile);
+        }
     }
     /**
      * Internal upload method.
@@ -574,7 +584,7 @@ public class RestResourceController implements InitializingBean {
                                                                                      String apiCategory, String model,
                                                                                      ID id,
                                                                                      MultipartFile uploadfile)
-        throws HttpRequestMethodNotSupportedException {
+        throws HttpRequestMethodNotSupportedException, SQLException {
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
 
@@ -665,6 +675,36 @@ public class RestResourceController implements InitializingBean {
         return ControllerUtils.toResponseEntity(HttpStatus.OK, null, Resources.wrap(resources));
     }
 
+    @RequestMapping(method = { RequestMethod.POST }, headers = "content-type=multipart/form-data",
+        params = "properties")
+    public <T extends RestAddressableModel> ResponseEntity<ResourceSupport> upload(HttpServletRequest request,
+                                                                                   @PathVariable String apiCategory,
+                                                                                   @PathVariable String model,
+                                                                                   @RequestParam("properties") String
+                                                                                           properties,
+                                                                                   @RequestParam("file") MultipartFile
+                                                                                       uploadfile)
+        throws HttpRequestMethodNotSupportedException {
+
+        checkModelPluralForm(apiCategory, model);
+        DSpaceRestRepository repository = utils.getResourceRepository(apiCategory, model);
+        RestAddressableModel modelObject = null;
+        try {
+            modelObject = repository.createAndReturn(uploadfile, properties);
+        } catch (ClassCastException e) {
+            log.error(e.getMessage(), e);
+            return ControllerUtils.toEmptyResponse(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        if (modelObject == null) {
+            throw new HttpRequestMethodNotSupportedException(RequestMethod.POST.toString());
+        }
+        DSpaceResource result = repository.wrapResource(modelObject);
+        linkService.addLinks(result);
+        //TODO manage HTTPHeader
+        return ControllerUtils.toResponseEntity(HttpStatus.CREATED, null, result);
+    }
+
+
     /**
      * PATCH method, using operation on the resources following (JSON) Patch notation (https://tools.ietf
      * .org/html/rfc6902)
@@ -734,7 +774,7 @@ public class RestResourceController implements InitializingBean {
             Patch patch = patchConverter.convert(jsonNode);
             modelObject = repository.patch(request, apiCategory, model, id, patch);
         } catch (RepositoryMethodNotImplementedException | UnprocessableEntityException |
-            PatchBadRequestException | ResourceNotFoundException e) {
+            DSpaceBadRequestException | ResourceNotFoundException e) {
             log.error(e.getMessage(), e);
             throw e;
         }
@@ -1144,6 +1184,24 @@ public class RestResourceController implements InitializingBean {
                                                     @PathVariable Integer id,
                                                     @RequestBody JsonNode jsonNode) {
         return putOneInternal(request, apiCategory, model, id, jsonNode);
+    }
+
+    private <ID extends Serializable> ResponseEntity<ResourceSupport> putOneInternalMultipartProperties(
+        HttpServletRequest request, String apiCategory, String model, ID uuid, String properties,
+        MultipartFile uploadfile) {
+
+        checkModelPluralForm(apiCategory, model);
+        DSpaceRestRepository repository = utils.getResourceRepository(apiCategory, model);
+        RestAddressableModel modelObject = null;
+        modelObject = repository.put(request, apiCategory, model, uuid, properties, uploadfile);
+
+        if (modelObject == null) {
+            throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
+        }
+        DSpaceResource result = repository.wrapResource(modelObject);
+        linkService.addLinks(result);
+        return ControllerUtils.toResponseEntity(HttpStatus.OK, null, result);
+
     }
 
     /**

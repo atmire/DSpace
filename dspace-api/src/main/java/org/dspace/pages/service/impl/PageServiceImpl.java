@@ -19,6 +19,8 @@ import org.apache.log4j.Logger;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.Bitstream;
+import org.dspace.content.BitstreamFormat;
+import org.dspace.content.service.BitstreamFormatService;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
@@ -48,9 +50,15 @@ public class PageServiceImpl implements PageService {
     @Autowired
     private GroupService groupService;
 
+    @Autowired
+    private BitstreamFormatService bitstreamFormatService;
+
     public Page create(Context context, String name, String language) throws SQLException, AuthorizeException {
         if (!authorizeService.isAdmin(context)) {
             throw new AuthorizeException("You must be an admin to create a Page object");
+        }
+        if (findByNameAndLanguage(context, name, language) != null) {
+            throw new IllegalArgumentException("The given name and language combination already exists for a page");
         }
         Page page = new Page();
         page.setName(name);
@@ -74,7 +82,8 @@ public class PageServiceImpl implements PageService {
     }
 
     @Override
-    public void attachFile(Context context, InputStream inputStream, Page page)
+    public void attachFile(Context context, InputStream inputStream, String name, String contentType,
+                           Page page)
         throws IOException, SQLException, AuthorizeException {
         if (!authorizeService.isAdmin(context)) {
             throw new AuthorizeException("You must be an admin to attach a bitstream to a page object");
@@ -84,9 +93,13 @@ public class PageServiceImpl implements PageService {
             bitstreamService.delete(context, bitstream);
         }
         bitstream = bitstreamService.create(context, inputStream);
+        bitstream.setName(context, name);
+        BitstreamFormat bitstreamFormat = bitstreamFormatService.findByMIMEType(context, contentType);
+        bitstreamService.setFormat(context, bitstream, bitstreamFormat);
         Group anonymous = groupService.findByName(context, Group.ANONYMOUS);
         authorizeService.addPolicy(context, bitstream, Constants.READ, anonymous);
         page.setBitstream(bitstream);
+        bitstreamService.update(context, bitstream);
         update(context, page);
     }
 

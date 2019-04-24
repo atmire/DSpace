@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.logging.log4j.Logger;
-import org.dspace.app.rest.exception.PatchBadRequestException;
+import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.RESTAuthorizationException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
@@ -309,7 +309,7 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
      * @throws Exception
      */
     public T upload(HttpServletRequest request, String apiCategory, String model,
-                                                     ID id, MultipartFile file) {
+                                                     ID id, MultipartFile file) throws SQLException {
         Context context = null;
         try {
             context = obtainContext();
@@ -351,10 +351,10 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
      * @return
      * @throws HttpRequestMethodNotSupportedException
      * @throws UnprocessableEntityException
-     * @throws PatchBadRequestException
+     * @throws DSpaceBadRequestException
      */
     public T patch(HttpServletRequest request, String apiCategory, String model, ID id, Patch patch)
-        throws HttpRequestMethodNotSupportedException, UnprocessableEntityException, PatchBadRequestException {
+        throws HttpRequestMethodNotSupportedException, UnprocessableEntityException, DSpaceBadRequestException {
         Context context = obtainContext();
 
         try {
@@ -383,7 +383,7 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
      * @return the full new state of the REST object after patching
      * @throws HttpRequestMethodNotSupportedException
      * @throws UnprocessableEntityException
-     * @throws PatchBadRequestException
+     * @throws DSpaceBadRequestException
      * @throws RepositoryMethodNotImplementedException
      *             returned by the default implementation when the operation is not supported for the entity
      *
@@ -536,6 +536,40 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
     protected T put(Context context, HttpServletRequest request, String apiCategory, String model, ID id,
                          JsonNode jsonNode)
         throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException {
+        throw new RepositoryMethodNotImplementedException(apiCategory, model);
+    }
+
+    public T createAndReturn(MultipartFile uploadfile, String properties) {
+        Context context = null;
+        try {
+            context = obtainContext();
+            T entity = thisRepository.createAndReturn(context, uploadfile, properties);
+            context.commit();
+            return entity;
+        } catch (SQLException | AuthorizeException ex) {
+            throw new RuntimeException(ex.getMessage(), ex);
+        }
+    }
+
+    protected T createAndReturn(Context context, MultipartFile uploadfile, String properties)
+        throws SQLException, AuthorizeException {
+        throw new RepositoryMethodNotImplementedException("No implementation found; Method not allowed!", "");
+    }
+
+    public T put(HttpServletRequest request, String apiCategory, String model, ID uuid, String properties,
+                 MultipartFile uploadfile) {
+        Context context = obtainContext();
+        try {
+            thisRepository.put(context, request, apiCategory, model, uuid, properties, uploadfile);
+            context.commit();
+        } catch (SQLException e) {
+            throw new RuntimeException("Unable to update DSpace object " + model + " with id=" + uuid, e);
+        }
+        return findOne(uuid);
+    }
+
+    protected T put(Context context, HttpServletRequest request, String apiCategory, String model, ID uuid,
+                    String properties, MultipartFile uploadfile) {
         throw new RepositoryMethodNotImplementedException(apiCategory, model);
     }
 }
