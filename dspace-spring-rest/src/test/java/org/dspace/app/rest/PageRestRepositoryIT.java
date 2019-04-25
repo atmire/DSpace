@@ -456,7 +456,9 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
                 return mockHttpServletRequest;
             }
         });
-        getClient(authToken).perform(builder.file(newFile)).andExpect(status().isOk());
+        getClient(authToken).perform(builder.file(newFile).param("properties",
+                                                                 mapper.writeValueAsString(pageRest)))
+                            .andExpect(status().isOk());
 
         getClient(authToken).perform(get("/api/config/pages/" + id + "/content"))
                             .andExpect(status().isOk())
