@@ -13,10 +13,12 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.dspace.content.Bitstream;
+import org.dspace.content.DSpaceObject;
 import org.dspace.core.ReloadableEntity;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -66,6 +68,10 @@ public class Page implements ReloadableEntity<UUID> {
     @OneToOne
     @JoinColumn(name = "bitstreamuuid", nullable = true)
     private Bitstream bitstream;
+
+    @ManyToOne
+    @JoinColumn(name = "dspace_object", nullable = false)
+    private DSpaceObject dSpaceObject;
 
     /**
      * Generic setter for the id
@@ -145,5 +151,13 @@ public class Page implements ReloadableEntity<UUID> {
      */
     public void setBitstream(Bitstream bitstream) {
         this.bitstream = bitstream;
+    }
+
+    public DSpaceObject getdSpaceObject() {
+        return dSpaceObject;
+    }
+
+    public void setdSpaceObject(DSpaceObject dSpaceObject) {
+        this.dSpaceObject = dSpaceObject;
     }
 }

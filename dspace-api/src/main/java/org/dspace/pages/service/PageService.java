@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.DSpaceObject;
 import org.dspace.core.Context;
 import org.dspace.pages.Page;
 
@@ -30,7 +31,8 @@ public interface PageService {
      * @throws SQLException If something goes wrong
      * @throws AuthorizeException If something goes wrong
      */
-    public Page create(Context context, String name, String language) throws SQLException, AuthorizeException;
+    public Page create(Context context, String name, String language, DSpaceObject dSpaceObject)
+        throws SQLException, AuthorizeException;
 
     /**
      * This method will find a Page object by UUID and return it
@@ -62,6 +64,7 @@ public interface PageService {
      */
     public Page findByNameAndLanguage(Context context, String name, String language) throws SQLException;
 
+    public List<Page> findByDSpaceObject(Context context, DSpaceObject dSpaceObject) throws SQLException;
     /**
      * This method will delete the current Bitstream from the given Page object and it'll create a new Bitstream
      * with the Inputstream given in the parameters to then attach this new Bitstream to the Page object that is passed

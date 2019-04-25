@@ -20,6 +20,7 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.Bitstream;
 import org.dspace.content.BitstreamFormat;
+import org.dspace.content.DSpaceObject;
 import org.dspace.content.service.BitstreamFormatService;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.core.Constants;
@@ -53,7 +54,8 @@ public class PageServiceImpl implements PageService {
     @Autowired
     private BitstreamFormatService bitstreamFormatService;
 
-    public Page create(Context context, String name, String language) throws SQLException, AuthorizeException {
+    public Page create(Context context, String name, String language, DSpaceObject dSpaceObject)
+        throws SQLException, AuthorizeException {
         if (!authorizeService.isAdmin(context)) {
             throw new AuthorizeException("You must be an admin to create a Page object");
         }
@@ -63,6 +65,7 @@ public class PageServiceImpl implements PageService {
         Page page = new Page();
         page.setName(name);
         page.setLanguage(language);
+        page.setdSpaceObject(dSpaceObject);
         return pageDao.create(context, page);
     }
 
@@ -79,6 +82,10 @@ public class PageServiceImpl implements PageService {
     @Override
     public Page findByNameAndLanguage(Context context, String name, String language) throws SQLException {
         return pageDao.findByNameAndLanguage(context, name, language);
+    }
+
+    public List<Page> findByDSpaceObject(Context context, DSpaceObject dSpaceObject) throws SQLException {
+        return pageDao.findByDSpaceObject(context, dSpaceObject);
     }
 
     @Override

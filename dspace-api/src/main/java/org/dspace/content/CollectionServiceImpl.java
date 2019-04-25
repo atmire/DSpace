@@ -46,6 +46,8 @@ import org.dspace.eperson.service.SubscribeService;
 import org.dspace.event.Event;
 import org.dspace.harvest.HarvestedCollection;
 import org.dspace.harvest.service.HarvestedCollectionService;
+import org.dspace.pages.Page;
+import org.dspace.pages.service.PageService;
 import org.dspace.workflow.factory.WorkflowServiceFactory;
 import org.dspace.xmlworkflow.WorkflowConfigurationException;
 import org.dspace.xmlworkflow.factory.XmlWorkflowFactory;
@@ -98,6 +100,9 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
 
     @Autowired(required = true)
     protected CollectionRoleService collectionRoleService;
+
+    @Autowired
+    protected PageService pageService;
 
     protected CollectionServiceImpl() {
         super();
@@ -773,6 +778,10 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
             owningCommunity.removeCollection(collection);
         }
 
+        List<Page> attachedPages = pageService.findByDSpaceObject(context, collection);
+        for (Page page : attachedPages) {
+            pageService.delete(context, page);
+        }
         collectionDAO.delete(context, collection);
     }
 
