@@ -25,9 +25,11 @@ CREATE TABLE ui_pages
     name            varchar(24) NOT NULL,
     title           varchar(256),
     language        varchar(24) NOT NULL,
+    dspace_object   uuid NOT NULL REFERENCES dspaceobject(uuid),
     bitstreamuuid   uuid REFERENCES bitstream(uuid)
 );
 
 CREATE INDEX ui_pages_name_idx ON ui_pages(name);
 CREATE INDEX ui_pages_language_idx ON ui_pages(language);
-ALTER TABLE ui_pages ADD CONSTRAINT uq_ui_pages_name_language UNIQUE(name,language);
+CREATE INDEX ui_pages_dspace_object_idx on ui_pages(dspace_object);
+ALTER TABLE ui_pages ADD CONSTRAINT uq_ui_pages_name_language UNIQUE(name,language,dspace_object);

@@ -28,6 +28,7 @@ import org.dspace.app.rest.model.hateoas.DSpaceResource;
 import org.dspace.app.rest.model.hateoas.PageResource;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.service.BitstreamService;
+import org.dspace.content.service.SiteService;
 import org.dspace.core.Context;
 import org.dspace.pages.Page;
 import org.dspace.pages.service.PageService;
@@ -59,6 +60,9 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
 
     @Autowired
     ConfigurationService configurationService;
+
+    @Autowired
+    SiteService siteService;
 
     //TODO Permission
     @Override
@@ -105,7 +109,8 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
             throw new DSpaceBadRequestException("The given name and language combination in the request " +
                                                     "already existed in the database. This is not allowed");
         }
-        Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage());
+        Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage(),
+                                       siteService.findSite(context));
         page.setTitle(pageRest.getTitle());
         try {
             pageService.attachFile(context, utils.getInputStreamFromMultipart(uploadfile),

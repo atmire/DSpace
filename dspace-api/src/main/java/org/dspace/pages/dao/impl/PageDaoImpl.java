@@ -15,6 +15,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import org.dspace.content.DSpaceObject;
 import org.dspace.core.AbstractHibernateDAO;
 import org.dspace.core.Context;
 import org.dspace.pages.Page;
@@ -58,4 +59,12 @@ public class PageDaoImpl extends AbstractHibernateDAO<Page> implements PageDao {
             criteriaBuilder.and(criteriaBuilder.equal(pageRoot.get(Page_.name), name)),
                                 criteriaBuilder.equal(pageRoot.get(Page_.language), language));
         return uniqueResult(context, criteriaQuery, false, Page.class, -1, -1);    }
+
+    public List<Page> findByDSpaceObject(Context context, DSpaceObject dSpaceObject) throws SQLException {
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Page.class);
+        Root<Page> pageRoot = criteriaQuery.from(Page.class);
+        criteriaQuery.select(pageRoot);
+        criteriaQuery.where(criteriaBuilder.equal(pageRoot.get(Page_.dSpaceObject), dSpaceObject));
+        return list(context, criteriaQuery, false, Page.class, -1, -1);    }
 }
