@@ -15,6 +15,7 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
@@ -30,6 +31,7 @@ import org.dspace.core.Context;
 import org.dspace.pages.Page;
 import org.dspace.pages.service.PageService;
 import org.dspace.services.ConfigurationService;
+import org.dspace.util.UUIDUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -136,30 +138,6 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public PageRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
-                           MultipartFile file) {
-
-        Page page = null;
-        try {
-            page = pageService.findByUuid(context, uuid);
-            if (page == null) {
-                throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
-            }
-            pageService.attachFile(context, utils.getInputStreamFromMultipart(file), file.getName(),
-                                   file.getContentType(), page);
-        } catch (IOException e) {
-            throw new RuntimeException("The bitstream could not be created from the given file in the request", e);
-        } catch (SQLException e) {
-            throw new RuntimeException("Unable to process page with id: " + uuid, e);
-        } catch (AuthorizeException e) {
-            throw new AccessDeniedException("The current user was not allowed to make changes to the page with id: "
-                                                + uuid, e);
-        }
-        return pageConverter.fromModel(page);
-    }
-
-    @Override
     public Class<PageRest> getDomainClass() {
         return PageRest.class;
     }
@@ -195,6 +173,12 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
                 pageRest = new ObjectMapper().readValue(properties, PageRest.class);
             } catch (IOException e) {
                 throw new UnprocessableEntityException("error parsing the body ..." + e.getMessage());
+            }
+            Page foundPage = pageService.findByNameAndLanguage(context, pageRest.getName(), pageRest.getLanguage());
+
+            if (foundPage != null && !StringUtils.equals(foundPage.getID().toString(), uuid.toString())) {
+                throw new RuntimeException("The language and name combination for this PUT update" +
+                                                       " already exists in the database");
             }
             page.setLanguage(pageRest.getLanguage());
             page.setTitle(pageRest.getTitle());
