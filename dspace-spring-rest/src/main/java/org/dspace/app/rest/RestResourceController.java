@@ -615,8 +615,9 @@ public class RestResourceController implements InitializingBean {
                                                                             @PathVariable String apiCategory,
                                                                             @PathVariable String model,
                                                                             @PathVariable UUID uuid,
-                                                                            @RequestParam("file") MultipartFile
-                                                                                uploadfile)
+                                                                            @RequestParam(value = "file",
+                                                                                required = false) MultipartFile
+                                                                                 uploadfile)
         throws HttpRequestMethodNotSupportedException {
         String properties = request.getParameter("properties");
 
