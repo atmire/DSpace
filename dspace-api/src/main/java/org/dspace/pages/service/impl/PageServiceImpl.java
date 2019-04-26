@@ -59,7 +59,7 @@ public class PageServiceImpl implements PageService {
         if (!authorizeService.isAdmin(context)) {
             throw new AuthorizeException("You must be an admin to create a Page object");
         }
-        if (findByNameAndLanguage(context, name, language) != null) {
+        if (findByNameLanguageAndDSpaceObject(context, name, language, dSpaceObject) != null) {
             throw new IllegalArgumentException("The given name and language combination already exists for a page");
         }
         Page page = new Page();
@@ -75,13 +75,15 @@ public class PageServiceImpl implements PageService {
     }
 
     @Override
-    public List<Page> findByName(Context context, String name) throws SQLException {
-        return pageDao.findByName(context, name);
+    public List<Page> findByNameAndDSpaceObject(Context context, String name, DSpaceObject dSpaceObject)
+        throws SQLException {
+        return pageDao.findByNameAndDSpaceObject(context, name, dSpaceObject);
     }
 
     @Override
-    public Page findByNameAndLanguage(Context context, String name, String language) throws SQLException {
-        return pageDao.findByNameAndLanguage(context, name, language);
+    public Page findByNameLanguageAndDSpaceObject(Context context, String name, String language,
+                                                  DSpaceObject dSpaceObject) throws SQLException {
+        return pageDao.findByNameLanguageAndDSpaceObject(context, name, language, dSpaceObject);
     }
 
     public List<Page> findByDSpaceObject(Context context, DSpaceObject dSpaceObject) throws SQLException {

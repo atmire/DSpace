@@ -40,25 +40,31 @@ public class PageDaoImpl extends AbstractHibernateDAO<Page> implements PageDao {
     }
 
     @Override
-    public List<Page> findByName(Context context, String name) throws SQLException {
+    public List<Page> findByNameAndDSpaceObject(Context context, String name,
+                                                DSpaceObject dSpaceObject) throws SQLException {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
         CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Page.class);
         Root<Page> pageRoot = criteriaQuery.from(Page.class);
         criteriaQuery.select(pageRoot);
-        criteriaQuery.where(criteriaBuilder.equal(pageRoot.get(Page_.name), name));
+        criteriaQuery.where(criteriaBuilder.and(criteriaBuilder.equal(pageRoot.get(Page_.name), name),
+                                                criteriaBuilder.equal(pageRoot.get(Page_.dSpaceObject), dSpaceObject)));
         return list(context, criteriaQuery, false, Page.class, -1, -1);
     }
 
     @Override
-    public Page findByNameAndLanguage(Context context, String name, String language) throws SQLException {
+    public Page findByNameLanguageAndDSpaceObject(Context context, String name, String language,
+                                                  DSpaceObject dSpaceObject) throws SQLException {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
         CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Page.class);
         Root<Page> pageRoot = criteriaQuery.from(Page.class);
         criteriaQuery.select(pageRoot);
         criteriaQuery.where(
-            criteriaBuilder.and(criteriaBuilder.equal(pageRoot.get(Page_.name), name)),
-                                criteriaBuilder.equal(pageRoot.get(Page_.language), language));
-        return uniqueResult(context, criteriaQuery, false, Page.class, -1, -1);    }
+            criteriaBuilder.and(criteriaBuilder.equal(pageRoot.get(Page_.name), name),
+                                criteriaBuilder.equal(pageRoot.get(Page_.language), language),
+                                criteriaBuilder.equal(pageRoot.get(Page_.dSpaceObject), dSpaceObject)));
+
+        return uniqueResult(context, criteriaQuery, false, Page.class, -1, -1);
+    }
 
     public List<Page> findByDSpaceObject(Context context, DSpaceObject dSpaceObject) throws SQLException {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);

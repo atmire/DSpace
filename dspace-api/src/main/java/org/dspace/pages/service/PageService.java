@@ -46,23 +46,27 @@ public interface PageService {
     /**
      * This method will find a list of Page objects that have the same name as the given name in the parameters
      * and this list will be returned
-     * @param context   The relevant DSpace context
-     * @param name      The name on which the Page objects will be matched
-     * @return          The list of Page objects that have the same name as the name passed along in the parameters
+     * @param context       The relevant DSpace context
+     * @param name          The name on which the Page objects will be matched
+     * @param dSpaceObject  The DSpaceObject on which the Page objects will be matched
+     * @return              The list of Page objects that have the same name as the name passed along in the parameters
      * @throws SQLException If something goes wrong
      */
-    public List<Page> findByName(Context context, String name) throws SQLException;
+    public List<Page> findByNameAndDSpaceObject(Context context, String name, DSpaceObject dSpaceObject)
+        throws SQLException;
 
     /**
      * This method will find a Page object that has the same name and language as given in the parameters and this
      * object will be returned
-     * @param context   The relevant DSpace context
-     * @param name      The name on which the Page object will be matched
-     * @param language  The language on which the Page object will be matched
-     * @return          The Page object that has the same name and the same language as given in the parameters
+     * @param context       The relevant DSpace context
+     * @param name          The name on which the Page object will be matched
+     * @param language      The language on which the Page object will be matched
+     * @param dSpaceObject  The DSpaceObject on which the Page object will be matched
+     * @return              The Page object that has the same name and the same language as given in the parameters
      * @throws SQLException If something goes wrong
      */
-    public Page findByNameAndLanguage(Context context, String name, String language) throws SQLException;
+    public Page findByNameLanguageAndDSpaceObject(Context context, String name, String language,
+                                                  DSpaceObject dSpaceObject) throws SQLException;
 
     public List<Page> findByDSpaceObject(Context context, DSpaceObject dSpaceObject) throws SQLException;
     /**
