@@ -211,7 +211,7 @@ public class PageTest extends AbstractUnitTest {
     }
 
     /**
-     * Tests the {@link PageService#findByName(Context, String)} method
+     * Tests the {@link PageService#findByNameAndDSpaceObject(Context, String, DSpaceObject)} method
      * @throws Exception
      */
     @Test
@@ -224,14 +224,14 @@ public class PageTest extends AbstractUnitTest {
         Page secondPage = pageService.create(context, name, "atl", community);
 
 
-        List<Page> foundPages = pageService.findByName(context, name);
+        List<Page> foundPages = pageService.findByNameAndDSpaceObject(context, name, community);
         assertThat("testPagesFindByName 0", foundPages.size(), equalTo(2));
 
         context.restoreAuthSystemState();
     }
 
     /**
-     * Tests the {@link PageService#findByNameAndLanguage(Context, String, String)} method
+     * Tests the {@link PageService#findByNameLanguageAndDSpaceObject(Context, String, String, DSpaceObject)} method
      * @throws Exception
      */
     @Test
@@ -244,7 +244,8 @@ public class PageTest extends AbstractUnitTest {
         Page secondPage = pageService.create(context, name, "SecondLanguage", community);
 
 
-        Page foundPage = pageService.findByNameAndLanguage(context, name, "SecondLanguage");
+        Page foundPage = pageService.findByNameLanguageAndDSpaceObject(context, name, "SecondLanguage",
+                                                                       community);
         assertThat("testPagesFindByNameAndLanguage 0", foundPage, notNullValue());
         assertThat("testPagesFindByNameAndLanguage 1", foundPage.getID(), equalTo(secondPage.getID()));
         assertThat("testPagesFindByNameAndLanguage 2", foundPage.getName(), equalTo(secondPage.getName()));

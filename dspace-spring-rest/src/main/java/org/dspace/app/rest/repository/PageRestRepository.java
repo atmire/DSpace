@@ -105,7 +105,8 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         } catch (IOException e1) {
             throw new UnprocessableEntityException("Error parsing request body: " + e1.toString());
         }
-        if (pageService.findByNameAndLanguage(context, pageRest.getName(), pageRest.getLanguage()) != null) {
+        if (pageService.findByNameLanguageAndDSpaceObject(context, pageRest.getName(), pageRest.getLanguage(),
+                                                          siteService.findSite(context)) != null) {
             throw new DSpaceBadRequestException("The given name and language combination in the request " +
                                                     "already existed in the database. This is not allowed");
         }
@@ -156,7 +157,7 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
     public org.springframework.data.domain.Page<PageRest> findByName(
         @Parameter(value = "name", required = true) String pageName, Pageable pageable) throws SQLException {
         Context context = obtainContext();
-        List<Page> pages = pageService.findByName(context, pageName);
+        List<Page> pages = pageService.findByNameAndDSpaceObject(context, pageName, siteService.findSite(context));
 
         org.springframework.data.domain.Page<PageRest> page = utils.getPage(pages, pageable).map(pageConverter);
 
@@ -179,7 +180,9 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
             } catch (IOException e) {
                 throw new UnprocessableEntityException("error parsing the body ..." + e.getMessage());
             }
-            Page foundPage = pageService.findByNameAndLanguage(context, pageRest.getName(), pageRest.getLanguage());
+            Page foundPage = pageService.findByNameLanguageAndDSpaceObject(context, pageRest.getName(),
+                                                                           pageRest.getLanguage(),
+                                                                           siteService.findSite(context));
 
             if (foundPage != null && !StringUtils.equals(foundPage.getID().toString(), uuid.toString())) {
                 throw new RuntimeException("The language and name combination for this PUT update" +
