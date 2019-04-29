@@ -7,13 +7,9 @@
  */
 package org.dspace.app.rest.repository.patch.factories.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang3.BooleanUtils;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.model.RestModel;
-import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
 
 /**
@@ -65,35 +61,6 @@ public abstract class PatchOperation<R extends RestModel, T>
             bool = (Boolean) value;
         }
         return bool;
-    }
-
-    // This is duplicated code (see org.dspace.app.rest.submit.factory.impl.PatchOperation)
-    // If it stays here, it should be DRY. Current patch resource patch operations do not
-    // use these methods since operation values are either strings or booleans.
-    // These methods handle JsonValueEvaluator instances for json objects and arrays,
-    // as returned by the JsonPatchConverter. A complete implementation of the PatchOperation
-    // class will need these methods.
-    public List<T> evaluateArrayObject(LateObjectEvaluator value) {
-        List<T> results = new ArrayList<T>();
-        T[] list = null;
-        if (value != null) {
-            LateObjectEvaluator object = (LateObjectEvaluator) value;
-            list = (T[]) object.evaluate(getArrayClassForEvaluation());
-        }
-
-        for (T t : list) {
-            results.add(t);
-        }
-        return results;
-    }
-
-    public T evaluateSingleObject(LateObjectEvaluator value) {
-        T single = null;
-        if (value != null) {
-            LateObjectEvaluator object = (LateObjectEvaluator) value;
-            single = (T) object.evaluate(getClassForEvaluation());
-        }
-        return single;
     }
 
     /**

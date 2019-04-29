@@ -60,11 +60,10 @@ public class ItemWithdrawReplaceOperation extends ReplacePatchOperation<ItemRest
             return item;
         }
 
-
     }
 
     @Override
-    void checkModelForExistingValue(ItemRest resource) {
+    void checkModelForExistingValue(ItemRest resource, Operation operation) {
         if ((Object) resource.getWithdrawn() == null) {
             throw new DSpaceBadRequestException("Attempting to replace a non-existent value.");
         }
