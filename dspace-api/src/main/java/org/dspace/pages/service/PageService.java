@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.DSpaceObject;
 import org.dspace.core.Context;
 import org.dspace.pages.Page;
 
@@ -30,7 +31,8 @@ public interface PageService {
      * @throws SQLException If something goes wrong
      * @throws AuthorizeException If something goes wrong
      */
-    public Page create(Context context, String name, String language) throws SQLException, AuthorizeException;
+    public Page create(Context context, String name, String language, DSpaceObject dSpaceObject)
+        throws SQLException, AuthorizeException;
 
     /**
      * This method will find a Page object by UUID and return it
@@ -44,24 +46,29 @@ public interface PageService {
     /**
      * This method will find a list of Page objects that have the same name as the given name in the parameters
      * and this list will be returned
-     * @param context   The relevant DSpace context
-     * @param name      The name on which the Page objects will be matched
-     * @return          The list of Page objects that have the same name as the name passed along in the parameters
+     * @param context       The relevant DSpace context
+     * @param name          The name on which the Page objects will be matched
+     * @param dSpaceObject  The DSpaceObject on which the Page objects will be matched
+     * @return              The list of Page objects that have the same name as the name passed along in the parameters
      * @throws SQLException If something goes wrong
      */
-    public List<Page> findByName(Context context, String name) throws SQLException;
+    public List<Page> findByNameAndDSpaceObject(Context context, String name, DSpaceObject dSpaceObject)
+        throws SQLException;
 
     /**
      * This method will find a Page object that has the same name and language as given in the parameters and this
      * object will be returned
-     * @param context   The relevant DSpace context
-     * @param name      The name on which the Page object will be matched
-     * @param language  The language on which the Page object will be matched
-     * @return          The Page object that has the same name and the same language as given in the parameters
+     * @param context       The relevant DSpace context
+     * @param name          The name on which the Page object will be matched
+     * @param language      The language on which the Page object will be matched
+     * @param dSpaceObject  The DSpaceObject on which the Page object will be matched
+     * @return              The Page object that has the same name and the same language as given in the parameters
      * @throws SQLException If something goes wrong
      */
-    public Page findByNameAndLanguage(Context context, String name, String language) throws SQLException;
+    public Page findByNameLanguageAndDSpaceObject(Context context, String name, String language,
+                                                  DSpaceObject dSpaceObject) throws SQLException;
 
+    public List<Page> findByDSpaceObject(Context context, DSpaceObject dSpaceObject) throws SQLException;
     /**
      * This method will delete the current Bitstream from the given Page object and it'll create a new Bitstream
      * with the Inputstream given in the parameters to then attach this new Bitstream to the Page object that is passed
@@ -116,4 +123,6 @@ public interface PageService {
      */
     public void delete(Context context, Page page) throws SQLException, AuthorizeException;
 
+    public List<Page> findPagesByParameters(Context context, String name, String format, String language,
+                                            DSpaceObject dSpaceObject) throws SQLException;
 }

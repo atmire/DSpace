@@ -11,9 +11,11 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.List;
@@ -24,8 +26,13 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.AbstractUnitTest;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Bitstream;
+import org.dspace.content.Collection;
+import org.dspace.content.Community;
+import org.dspace.content.DSpaceObject;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.BitstreamService;
+import org.dspace.content.service.CollectionService;
+import org.dspace.content.service.CommunityService;
 import org.dspace.core.Context;
 import org.dspace.pages.factory.PagesServiceFactory;
 import org.dspace.pages.service.PageService;
@@ -48,11 +55,13 @@ public class PageTest extends AbstractUnitTest {
      */
     protected PageService pageService = PagesServiceFactory.getInstance().getPageService();
     protected BitstreamService bitstreamService = ContentServiceFactory.getInstance().getBitstreamService();
+    protected CollectionService collectionService = ContentServiceFactory.getInstance().getCollectionService();
+    protected CommunityService communityService = ContentServiceFactory.getInstance().getCommunityService();
     /**
      * Page instance used in the tests
      */
     private Page page;
-
+    private Community community;
     /**
      * This method will be run before every test as per @Before. It will
      * initialize resources required for the tests.
@@ -66,9 +75,8 @@ public class PageTest extends AbstractUnitTest {
         super.init();
         try {
             context.turnOffAuthorisationSystem();
-//            File f = new File(testProps.get("test.bitstream").toString());
-            //TODO Change to test file
-            this.page = pageService.create(context, "testName", "testLanguage");
+            community = communityService.create(null, context);
+            this.page = pageService.create(context, "testName", "testLanguage", community);
 
             context.restoreAuthSystemState();
         } catch (SQLException ex) {
@@ -94,13 +102,26 @@ public class PageTest extends AbstractUnitTest {
         try {
             pageService.delete(context, page);
         } catch (SQLException e) {
-            log.error("SQL Error in init", e);
-            fail("SQL Error in init: " + e.getMessage());
+            log.error("SQL Error in destroy", e);
+            fail("SQL Error in destroy: " + e.getMessage());
         } catch (AuthorizeException e) {
-            log.error("AuthorizeException Error in init", e);
-            fail("AuthorizeException Error in init: " + e.getMessage());
+            log.error("AuthorizeException Error in destroy", e);
+            fail("AuthorizeException Error in destroy: " + e.getMessage());
+        }
+        try {
+            communityService.delete(context, community);
+        } catch (SQLException e) {
+            log.error("SQL Error in destroy", e);
+            fail("SQL Error in destroy: " + e.getMessage());
+        } catch (AuthorizeException e) {
+            log.error("AuthorizeException Error in destroy", e);
+            fail("AuthorizeException Error in destroy: " + e.getMessage());
+        } catch (IOException e) {
+            log.error("IOException Error in destroy", e);
+            fail("IOException Error in destroy: " + e.getMessage());
         }
         page = null;
+        community = null;
         super.destroy();
         context.restoreAuthSystemState();
     }
@@ -121,15 +142,14 @@ public class PageTest extends AbstractUnitTest {
     }
 
     /**
-     * Tests the {@link PageService#create(Context, String, String)} method
+     * Tests the {@link PageService#create(Context, String, String, DSpaceObject)} method
      * @throws Exception
      */
     @Test
     public void testPagesCreate() throws Exception {
         context.turnOffAuthorisationSystem();
 
-        Page page = new Page();
-        page = pageService.create(context, "anotherTestPage", "anotherTestLanguage");
+        page = pageService.create(context, "anotherTestPage", "anotherTestLanguage", community);
 
 
         UUID uuid = page.getID();
@@ -138,6 +158,7 @@ public class PageTest extends AbstractUnitTest {
         assertThat("testPagesCreate 1", foundPage.getID(), equalTo(uuid));
         assertThat("testPagesCreate 2", foundPage.getName(), equalTo(page.getName()));
         assertThat("testPagesCreate 3", foundPage.getLanguage(), equalTo(page.getLanguage()));
+        assertThat("testPagesCreate 4", foundPage.getdSpaceObject(), equalTo(community));
 
         context.restoreAuthSystemState();
     }
@@ -159,6 +180,7 @@ public class PageTest extends AbstractUnitTest {
         assertThat("testPageUpdate 1", foundPage.getID(), equalTo(uuid));
         assertThat("testPageUpdate 2", foundPage.getName(), equalTo(page.getName()));
         assertThat("testPageUpdate 3", foundPage.getLanguage(), equalTo("ThisIsAtest"));
+        assertThat("testPageUpdate 4", foundPage.getdSpaceObject(), equalTo(page.getdSpaceObject()));
 
         context.restoreAuthSystemState();
     }
@@ -171,7 +193,7 @@ public class PageTest extends AbstractUnitTest {
     public void testPagesDelete() throws Exception {
         context.turnOffAuthorisationSystem();
 
-        Page page = pageService.create(context, "anotherPageTest", "anotherLanguageTest");
+        Page page = pageService.create(context, "anotherPageTest", "anotherLanguageTest", community);
 
 
         UUID uuid = page.getID();
@@ -180,6 +202,7 @@ public class PageTest extends AbstractUnitTest {
         assertThat("testPagesDelete 1", foundPage.getID(), equalTo(uuid));
         assertThat("testPagesDelete 2", foundPage.getName(), equalTo(page.getName()));
         assertThat("testPagesDelete 3", foundPage.getLanguage(), equalTo(page.getLanguage()));
+        assertThat("testPagesDelete 4", foundPage.getdSpaceObject(), equalTo(community));
 
         pageService.delete(context, foundPage);
         foundPage = pageService.findByUuid(context, uuid);
@@ -188,7 +211,7 @@ public class PageTest extends AbstractUnitTest {
     }
 
     /**
-     * Tests the {@link PageService#findByName(Context, String)} method
+     * Tests the {@link PageService#findByNameAndDSpaceObject(Context, String, DSpaceObject)} method
      * @throws Exception
      */
     @Test
@@ -196,19 +219,19 @@ public class PageTest extends AbstractUnitTest {
         context.turnOffAuthorisationSystem();
 
         String name = "anotherTestPage";
-        Page page = pageService.create(context, name, "tla");
+        Page page = pageService.create(context, name, "tla", community);
 
-        Page secondPage = pageService.create(context, name, "atl");
+        Page secondPage = pageService.create(context, name, "atl", community);
 
 
-        List<Page> foundPages = pageService.findByName(context, name);
+        List<Page> foundPages = pageService.findByNameAndDSpaceObject(context, name, community);
         assertThat("testPagesFindByName 0", foundPages.size(), equalTo(2));
 
         context.restoreAuthSystemState();
     }
 
     /**
-     * Tests the {@link PageService#findByNameAndLanguage(Context, String, String)} method
+     * Tests the {@link PageService#findByNameLanguageAndDSpaceObject(Context, String, String, DSpaceObject)} method
      * @throws Exception
      */
     @Test
@@ -216,16 +239,19 @@ public class PageTest extends AbstractUnitTest {
         context.turnOffAuthorisationSystem();
 
         String name = "anotherTestPage";
-        Page page = pageService.create(context, name, "FirstLanguage");
+        Page page = pageService.create(context, name, "FirstLanguage", community);
 
-        Page secondPage = pageService.create(context, name, "SecondLanguage");
+        Page secondPage = pageService.create(context, name, "SecondLanguage", community);
 
 
-        Page foundPage = pageService.findByNameAndLanguage(context, name, "SecondLanguage");
+        Page foundPage = pageService.findByNameLanguageAndDSpaceObject(context, name, "SecondLanguage",
+                                                                       community);
         assertThat("testPagesFindByNameAndLanguage 0", foundPage, notNullValue());
         assertThat("testPagesFindByNameAndLanguage 1", foundPage.getID(), equalTo(secondPage.getID()));
         assertThat("testPagesFindByNameAndLanguage 2", foundPage.getName(), equalTo(secondPage.getName()));
         assertThat("testPagesFindByNameAndLanguage 3", foundPage.getLanguage(), equalTo(secondPage.getLanguage()));
+        assertThat("testPagesFindByNameAndLanguage 4", foundPage.getdSpaceObject(), equalTo(community));
+
         context.restoreAuthSystemState();
     }
 
@@ -237,7 +263,7 @@ public class PageTest extends AbstractUnitTest {
     public void testPagesAttachFile() throws Exception {
         context.turnOffAuthorisationSystem();
 
-        Page page = pageService.create(context, "anotherPageTestName", "anotherPageTestLanguage");
+        Page page = pageService.create(context, "anotherPageTestName", "anotherPageTestLanguage", community);
 
 
         UUID uuid = page.getID();
@@ -247,6 +273,7 @@ public class PageTest extends AbstractUnitTest {
         assertThat("testPagesAttachFile 2", foundPage.getName(), equalTo(page.getName()));
         assertThat("testPagesAttachFile 3", foundPage.getLanguage(), equalTo(page.getLanguage()));
         assertThat("testPagesAttachFile 4", foundPage.getBitstream(), equalTo(page.getBitstream()));
+        assertThat("testPagesAttachFile 5", foundPage.getdSpaceObject(), equalTo(community));
 
         Bitstream bitstream = foundPage.getBitstream();
         InputStream newInputStream = IOUtils.toInputStream("secondbitstream");
@@ -257,5 +284,36 @@ public class PageTest extends AbstractUnitTest {
         assertNotEquals(bitstream, foundPage.getBitstream());
 
         context.restoreAuthSystemState();
+    }
+
+    @Test
+    public void testDeleteCommunityCollectionWithPagesAttached() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        Community community1 = communityService.create(null, context);
+        Collection collection = collectionService.create(context, community1);
+
+        Page page1 = pageService.create(context, "testCommunity1Deletion", "en", community1);
+        Page page2 = pageService.create(context, "testCollectionDeletion", "en", collection);
+
+        Page foundPage1 = pageService.findByUuid(context, page1.getID());
+        Page foundPage2 = pageService.findByUuid(context, page2.getID());
+
+        assertThat("testDeleteCommunityCollectionWithPagesAttached 1", foundPage1.getdSpaceObject(),
+                   equalTo(community1));
+        assertThat("testDeleteCommunityCollectionWithPagesAttached 2", foundPage2.getdSpaceObject(),
+                   equalTo(collection));
+
+        collectionService.delete(context, collection);
+        Page foundPage2AfterDeletion = pageService.findByUuid(context, page2.getID());
+        assertNull(foundPage2AfterDeletion);
+        Collection foundCollectionAfterDeletion = collectionService.find(context, collection.getID());
+        assertNull(foundCollectionAfterDeletion);
+
+        communityService.delete(context, community1);
+        Page foundPage1AfterDeletion = pageService.findByUuid(context, page1.getID());
+        assertNull(foundPage1AfterDeletion);
+        Community foundCommunityAfterDeletion = communityService.find(context, community1.getID());
+        assertNull(foundCommunityAfterDeletion);
     }
 }

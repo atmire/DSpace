@@ -55,7 +55,7 @@ public class PageResourceBuilder extends AbstractBuilder<Page, PageService> {
     private PageResourceBuilder create(final Context context, final String name, final String language) {
         this.context = context;
         try {
-            page = pageService.create(context, name, language);
+            page = pageService.create(context, name, language, siteService.findSite(context));
         } catch (Exception e) {
             return handleException(e);
         }

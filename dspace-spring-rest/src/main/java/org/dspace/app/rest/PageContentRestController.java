@@ -21,6 +21,8 @@ import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.MultipartFileSender;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Bitstream;
+import org.dspace.content.BitstreamFormat;
+import org.dspace.content.service.BitstreamFormatService;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.core.Context;
 import org.dspace.pages.Page;
@@ -50,6 +52,9 @@ public class PageContentRestController {
     private BitstreamService bitstreamService;
 
     @Autowired
+    private BitstreamFormatService bitstreamFormatService;
+
+    @Autowired
     private ConfigurationService configurationService;
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})
@@ -66,6 +71,10 @@ public class PageContentRestController {
         }
 
         Bitstream bitstream = page.getBitstream();
+        BitstreamFormat bitstreamFormat = bitstream.getFormat(context);
+        if (bitstreamFormat == null) {
+            bitstreamFormat = bitstreamFormatService.findUnknown(context);
+        }
         if (bitstream != null) {
             // Pipe the bits
             try (InputStream is = bitstreamService.retrieve(context, bitstream)) {
@@ -75,7 +84,7 @@ public class PageContentRestController {
                     .withFileName(bitstream.getName())
                     .withLength(bitstream.getSizeBytes())
                     .withChecksum(bitstream.getChecksum())
-                    .withMimetype("html")
+                    .withMimetype(bitstreamFormat.getMIMEType())
                     .withLastModified(bitstreamService.getLastModified(bitstream))
                     .with(request)
                     .with(response);

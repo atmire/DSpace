@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
+import org.dspace.content.DSpaceObject;
 import org.dspace.core.Context;
 import org.dspace.core.GenericDAO;
 import org.dspace.pages.Page;
@@ -30,14 +31,22 @@ public interface PageDao extends GenericDAO<Page> {
     public Page findByUuid(Context context, UUID uuid) throws SQLException;
 
     /**
-     * This is the DAO implementation for {@link org.dspace.pages.service.PageService#findByName(Context, String)}
+     * This is the DAO implementation for {@link org.dspace.pages.service.PageService#findByNameAndDSpaceObject
+     * (Context, String, DSpaceObject)}
      */
-    public List<Page> findByName(Context context, String name) throws SQLException;
+    public List<Page> findByNameAndDSpaceObject(Context context, String name,
+                                                DSpaceObject dSpaceObject) throws SQLException;
 
     /**
      * This is the DAO implementation for
-     * {@link org.dspace.pages.service.PageService#findByNameAndLanguage(Context, String, String)}
+     * {@link org.dspace.pages.service.PageService#findByNameLanguageAndDSpaceObject
+     * (Context, String, String, DSpaceObject)}
      */
-    public Page findByNameAndLanguage(Context context, String name, String language) throws SQLException;
+    public Page findByNameLanguageAndDSpaceObject(Context context, String name, String language,
+                                                  DSpaceObject dSpaceObject) throws SQLException;
 
+    public List<Page> findByDSpaceObject(Context context, DSpaceObject dSpaceObject) throws SQLException;
+
+    List<Page> findPagesByParameters(Context context, String name, String format, String language,
+                                     DSpaceObject dSpaceObject) throws SQLException;
 }

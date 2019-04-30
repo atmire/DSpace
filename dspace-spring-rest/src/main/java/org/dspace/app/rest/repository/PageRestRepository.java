@@ -10,11 +10,14 @@ package org.dspace.app.rest.repository;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
@@ -25,7 +28,9 @@ import org.dspace.app.rest.model.PageRest;
 import org.dspace.app.rest.model.hateoas.DSpaceResource;
 import org.dspace.app.rest.model.hateoas.PageResource;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.DSpaceObject;
 import org.dspace.content.service.BitstreamService;
+import org.dspace.content.service.SiteService;
 import org.dspace.core.Context;
 import org.dspace.pages.Page;
 import org.dspace.pages.service.PageService;
@@ -57,6 +62,9 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
 
     @Autowired
     ConfigurationService configurationService;
+
+    @Autowired
+    SiteService siteService;
 
     //TODO Permission
     @Override
@@ -99,11 +107,13 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         } catch (IOException e1) {
             throw new UnprocessableEntityException("Error parsing request body: " + e1.toString());
         }
-        if (pageService.findByNameAndLanguage(context, pageRest.getName(), pageRest.getLanguage()) != null) {
+        if (pageService.findByNameLanguageAndDSpaceObject(context, pageRest.getName(), pageRest.getLanguage(),
+                                                          siteService.findSite(context)) != null) {
             throw new DSpaceBadRequestException("The given name and language combination in the request " +
                                                     "already existed in the database. This is not allowed");
         }
-        Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage());
+        Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage(),
+                                       siteService.findSite(context));
         page.setTitle(pageRest.getTitle());
         try {
             pageService.attachFile(context, utils.getInputStreamFromMultipart(uploadfile),
@@ -136,30 +146,6 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public PageRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
-                           MultipartFile file) {
-
-        Page page = null;
-        try {
-            page = pageService.findByUuid(context, uuid);
-            if (page == null) {
-                throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
-            }
-            pageService.attachFile(context, utils.getInputStreamFromMultipart(file), file.getName(),
-                                   file.getContentType(), page);
-        } catch (IOException e) {
-            throw new RuntimeException("The bitstream could not be created from the given file in the request", e);
-        } catch (SQLException e) {
-            throw new RuntimeException("Unable to process page with id: " + uuid, e);
-        } catch (AuthorizeException e) {
-            throw new AccessDeniedException("The current user was not allowed to make changes to the page with id: "
-                                                + uuid, e);
-        }
-        return pageConverter.fromModel(page);
-    }
-
-    @Override
     public Class<PageRest> getDomainClass() {
         return PageRest.class;
     }
@@ -173,7 +159,7 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
     public org.springframework.data.domain.Page<PageRest> findByName(
         @Parameter(value = "name", required = true) String pageName, Pageable pageable) throws SQLException {
         Context context = obtainContext();
-        List<Page> pages = pageService.findByName(context, pageName);
+        List<Page> pages = pageService.findByNameAndDSpaceObject(context, pageName, siteService.findSite(context));
 
         org.springframework.data.domain.Page<PageRest> page = utils.getPage(pages, pageable).map(pageConverter);
 
@@ -196,6 +182,14 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
             } catch (IOException e) {
                 throw new UnprocessableEntityException("error parsing the body ..." + e.getMessage());
             }
+            Page foundPage = pageService.findByNameLanguageAndDSpaceObject(context, pageRest.getName(),
+                                                                           pageRest.getLanguage(),
+                                                                           siteService.findSite(context));
+
+            if (foundPage != null && !StringUtils.equals(foundPage.getID().toString(), uuid.toString())) {
+                throw new RuntimeException("The language and name combination for this PUT update" +
+                                                       " already exists in the database");
+            }
             page.setLanguage(pageRest.getLanguage());
             page.setTitle(pageRest.getTitle());
             if (uploadfile != null) {
@@ -211,6 +205,44 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         } catch (IOException e) {
             throw new RuntimeException("The bitstream could not be created from the given file in the request", e);
         }
-        return pageConverter.fromModel(page);    }
+        return pageConverter.fromModel(page);
+    }
+
+    @SearchRestMethod(name = "dso")
+    public org.springframework.data.domain.Page<PageRest> searchPages(
+        @Parameter(value = "uuid", required = true) UUID uuid,
+        @Parameter(value = "name") String name,
+        @Parameter(value = "format") String format,
+        @Parameter(value = "language") String language,
+        Pageable pageable) throws SQLException {
+        Context context = obtainContext();
+        DSpaceObject dSpaceObject = utils.getDSpaceObjectFromUUID(context, uuid);
+        List<Page> pages;
+
+        if (StringUtils.isNotBlank(language)) {
+            pages = pageService.findPagesByParameters(context, name, format, language, dSpaceObject);
+            if (pages.isEmpty()) {
+                throw new DSpaceBadRequestException("There were no Pages found for the given name: " + name + ", " +
+                    "format: " + format + ", language: " + language + " and DSpaceObject: " + dSpaceObject.getID());
+            }
+        } else {
+            pages = new LinkedList<>();
+            String acceptLanguageHeader = requestService.getCurrentRequest().getHttpServletRequest()
+                                                        .getHeader("Accept-Language");
+            if (StringUtils.isNotBlank(acceptLanguageHeader)) {
+                for (Locale.LanguageRange languageRange : Locale.LanguageRange.parse(
+                    acceptLanguageHeader)) {
+                    pages.addAll(pageService.findPagesByParameters(context, name, format, languageRange.getRange(),
+                                                                   dSpaceObject));
+                }
+            }
+            if (pages.isEmpty()) {
+                pages = pageService.findPagesByParameters(context, name, format, null, dSpaceObject);
+            }
+        }
+
+        org.springframework.data.domain.Page<PageRest> page = utils.getPage(pages, pageable).map(pageConverter);
+        return page;
+    }
 
 }

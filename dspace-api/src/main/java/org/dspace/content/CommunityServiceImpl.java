@@ -37,6 +37,8 @@ import org.dspace.core.LogManager;
 import org.dspace.eperson.Group;
 import org.dspace.eperson.service.GroupService;
 import org.dspace.event.Event;
+import org.dspace.pages.Page;
+import org.dspace.pages.service.PageService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -69,6 +71,9 @@ public class CommunityServiceImpl extends DSpaceObjectServiceImpl<Community> imp
     protected BitstreamService bitstreamService;
     @Autowired(required = true)
     protected SiteService siteService;
+
+    @Autowired
+    protected PageService pageService;
 
     protected CommunityServiceImpl() {
         super();
@@ -486,6 +491,10 @@ public class CommunityServiceImpl extends DSpaceObjectServiceImpl<Community> imp
         String removedHandle = community.getHandle();
         UUID removedId = community.getID();
 
+        List<Page> attachedPages = pageService.findByDSpaceObject(context, community);
+        for (Page page : attachedPages) {
+            pageService.delete(context, page);
+        }
 
         // If not a top-level community, have parent remove me; this
         // will call rawDelete() before removing the linkage
