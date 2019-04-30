@@ -20,9 +20,11 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.tika.mime.MimeTypes;
 import org.dspace.app.rest.matcher.PageResourceMatcher;
 import org.dspace.app.rest.model.PageRest;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
+import org.dspace.content.service.SiteService;
 import org.dspace.pages.Page;
 import org.dspace.pages.service.PageService;
 import org.junit.After;
@@ -44,6 +46,9 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
 
     @Autowired
     private PageService pageService;
+
+    @Autowired
+    private SiteService siteService;
 
     /**
      * This is to ensure that our Page objects get deleted when created by REST calls to not have any conflicts
@@ -584,5 +589,113 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
                             .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
                                 UUID.fromString(id), pageRest.getName(), "testTitle", "testLanguage"
                             )));
+    }
+
+    @Test
+    public void findByParametersTest() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        PageRest pageRest = new PageRest();
+        pageRest.setTitle("testTitle");
+        pageRest.setName("testName");
+        pageRest.setLanguage("testLanguage");
+
+        String authToken = getAuthToken(admin.getEmail(), password);
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        MvcResult mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
+                                                  .andExpect(status().isCreated())
+                                                  .andExpect(content().contentType(contentType))
+                                                  .andReturn();
+
+        pageRest = new PageRest();
+        pageRest.setTitle("testTitle2");
+        pageRest.setName("testName2");
+        pageRest.setLanguage("testLanguage2");
+
+        input = "Hello, World!";
+        file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                     input.getBytes());
+
+        mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                       .file(file)
+                                                                       .param("properties",
+                                                                              mapper.writeValueAsString(pageRest)))
+                                        .andExpect(status().isCreated())
+                                        .andExpect(content().contentType(contentType))
+                                        .andReturn();
+        pageRest = new PageRest();
+        pageRest.setTitle("testTitle");
+        pageRest.setName("testName");
+        pageRest.setLanguage("testLanguage3");
+
+        input = "Hello, World!";
+        file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                     input.getBytes());
+
+        mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                       .file(file)
+                                                                       .param("properties",
+                                                                              mapper.writeValueAsString(pageRest)))
+                                        .andExpect(status().isCreated())
+                                        .andExpect(content().contentType(contentType))
+                                        .andReturn();
+        pageRest = new PageRest();
+        pageRest.setTitle("testTitle");
+        pageRest.setName("testName");
+        pageRest.setLanguage("testLanguage4");
+
+        input = "Hello, World!";
+        file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                     input.getBytes());
+
+        mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                       .file(file)
+                                                                       .param("properties",
+                                                                              mapper.writeValueAsString(pageRest)))
+                                        .andExpect(status().isCreated())
+                                        .andExpect(content().contentType(contentType))
+                                        .andReturn();
+
+
+        getClient().perform(get("/api/config/pages/search/dso")
+                            .param("uuid", String.valueOf(siteService.findSite(context).getID())))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.page.totalElements", is(4)));
+
+        getClient().perform(get("/api/config/pages/search/dso")
+                                .param("uuid", String.valueOf(siteService.findSite(context).getID()))
+                                .param("name", "testName"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.page.totalElements", is(3)));
+
+        getClient().perform(get("/api/config/pages/search/dso")
+                                .param("uuid", String.valueOf(siteService.findSite(context).getID()))
+                                .param("name", "testName")
+                                .param("format", MimeTypes.PLAIN_TEXT))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.page.totalElements", is(3)));
+
+        getClient().perform(get("/api/config/pages/search/dso")
+                                .param("uuid", String.valueOf(siteService.findSite(context).getID()))
+                                .param("name", "testName")
+                                .param("format", MimeTypes.PLAIN_TEXT)
+                                .param("language", "testLanguage3"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.page.totalElements", is(1)));
+
+        getClient().perform(get("/api/config/pages/search/dso")
+                                .param("uuid", String.valueOf(siteService.findSite(context).getID()))
+                                .param("name", "testName")
+                                .param("format", MimeTypes.PLAIN_TEXT)
+                                .param("language", "ThisLanguageWontReturnAnyResults"))
+                   .andExpect(status().isBadRequest());
+
+        getClient().perform(get("/api/config/pages/search/dso"))
+                   .andExpect(status().isUnprocessableEntity());
     }
 }

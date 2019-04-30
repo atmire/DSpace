@@ -123,4 +123,6 @@ public interface PageService {
      */
     public void delete(Context context, Page page) throws SQLException, AuthorizeException;
 
+    public List<Page> findPagesByParameters(Context context, String name, String format, String language,
+                                            DSpaceObject dSpaceObject) throws SQLException;
 }

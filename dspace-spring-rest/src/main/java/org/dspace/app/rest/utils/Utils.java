@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -327,5 +328,16 @@ public class Utils {
             log.error("Couldn't retrieve inputstream for the multipart file given", e);
             throw e;
         }
+    }
+
+    public DSpaceObject getDSpaceObjectFromUUID(Context context, UUID uuid) throws SQLException {
+        for (DSpaceObjectService dSpaceObjectService : dSpaceObjectServices) {
+            DSpaceObject dSpaceObject = dSpaceObjectService.find(context, uuid);
+            if (dSpaceObject != null) {
+                return dSpaceObject;
+            }
+        }
+        return null;
+
     }
 }
