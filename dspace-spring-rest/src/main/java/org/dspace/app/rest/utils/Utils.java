@@ -16,7 +16,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +33,10 @@ import org.dspace.app.rest.model.RestAddressableModel;
 import org.dspace.app.rest.model.hateoas.DSpaceResource;
 import org.dspace.app.rest.repository.DSpaceRestRepository;
 import org.dspace.app.rest.repository.LinkRestRepository;
+import org.dspace.content.DSpaceObject;
+import org.dspace.content.service.DSpaceObjectService;
 import org.dspace.core.ConfigurationManager;
+import org.dspace.core.Context;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -54,6 +59,9 @@ public class Utils {
 
     @Autowired
     ApplicationContext applicationContext;
+
+    @Autowired(required = true)
+    private List<DSpaceObjectService<? extends DSpaceObject>> dSpaceObjectServices;
 
     public <T> Page<T> getPage(List<T> fullContents, Pageable pageable) {
         int total = fullContents.size();
@@ -236,5 +244,16 @@ public class Utils {
             log.error("Couldn't retrieve inputstream for the multipart file given", e);
             throw e;
         }
+    }
+
+    public DSpaceObject getDSpaceObjectFromUUID(Context context, UUID uuid) throws SQLException {
+        for (DSpaceObjectService dSpaceObjectService : dSpaceObjectServices) {
+            DSpaceObject dSpaceObject = dSpaceObjectService.find(context, uuid);
+            if (dSpaceObject != null) {
+                return dSpaceObject;
+            }
+        }
+        return null;
+
     }
 }

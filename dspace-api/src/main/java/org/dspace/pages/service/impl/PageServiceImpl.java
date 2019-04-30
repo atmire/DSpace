@@ -143,4 +143,9 @@ public class PageServiceImpl implements PageService {
         }
         pageDao.delete(context, page);
     }
+
+    public List<Page> findPagesByParameters(Context context, String name, String format, String language,
+                                            DSpaceObject dSpaceObject) throws SQLException {
+        return pageDao.findPagesByParameters(context, name, format, language, dSpaceObject);
+    }
 }

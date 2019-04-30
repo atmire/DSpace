@@ -46,4 +46,7 @@ public interface PageDao extends GenericDAO<Page> {
                                                   DSpaceObject dSpaceObject) throws SQLException;
 
     public List<Page> findByDSpaceObject(Context context, DSpaceObject dSpaceObject) throws SQLException;
+
+    List<Page> findPagesByParameters(Context context, String name, String format, String language,
+                                     DSpaceObject dSpaceObject) throws SQLException;
 }

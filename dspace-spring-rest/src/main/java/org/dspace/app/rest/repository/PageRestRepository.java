@@ -10,7 +10,9 @@ package org.dspace.app.rest.repository;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
@@ -26,6 +28,7 @@ import org.dspace.app.rest.model.PageRest;
 import org.dspace.app.rest.model.hateoas.DSpaceResource;
 import org.dspace.app.rest.model.hateoas.PageResource;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.DSpaceObject;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.SiteService;
 import org.dspace.core.Context;
@@ -202,6 +205,44 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         } catch (IOException e) {
             throw new RuntimeException("The bitstream could not be created from the given file in the request", e);
         }
-        return pageConverter.fromModel(page);    }
+        return pageConverter.fromModel(page);
+    }
+
+    @SearchRestMethod(name = "dso")
+    public org.springframework.data.domain.Page<PageRest> searchPages(
+        @Parameter(value = "uuid", required = true) UUID uuid,
+        @Parameter(value = "name") String name,
+        @Parameter(value = "format") String format,
+        @Parameter(value = "language") String language,
+        Pageable pageable) throws SQLException {
+        Context context = obtainContext();
+        DSpaceObject dSpaceObject = utils.getDSpaceObjectFromUUID(context, uuid);
+        List<Page> pages;
+
+        if (StringUtils.isNotBlank(language)) {
+            pages = pageService.findPagesByParameters(context, name, format, language, dSpaceObject);
+            if (pages.isEmpty()) {
+                throw new DSpaceBadRequestException("There were no Pages found for the given name: " + name + ", " +
+                    "format: " + format + ", language: " + language + " and DSpaceObject: " + dSpaceObject.getID());
+            }
+        } else {
+            pages = new LinkedList<>();
+            String acceptLanguageHeader = requestService.getCurrentRequest().getHttpServletRequest()
+                                                        .getHeader("Accept-Language");
+            if (StringUtils.isNotBlank(acceptLanguageHeader)) {
+                for (Locale.LanguageRange languageRange : Locale.LanguageRange.parse(
+                    acceptLanguageHeader)) {
+                    pages.addAll(pageService.findPagesByParameters(context, name, format, languageRange.getRange(),
+                                                                   dSpaceObject));
+                }
+            }
+            if (pages.isEmpty()) {
+                pages = pageService.findPagesByParameters(context, name, format, null, dSpaceObject);
+            }
+        }
+
+        org.springframework.data.domain.Page<PageRest> page = utils.getPage(pages, pageable).map(pageConverter);
+        return page;
+    }
 
 }
