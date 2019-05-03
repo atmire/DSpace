@@ -218,6 +218,10 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         Pageable pageable) throws SQLException {
         Context context = obtainContext();
         DSpaceObject dSpaceObject = utils.getDSpaceObjectFromUUID(context, uuid);
+        if (dSpaceObject == null) {
+            throw new ResourceNotFoundException("The DSpaceObject for UUID: " + uuid +
+                                                    " was not found in the database");
+        }
         List<Page> pages;
 
         if (StringUtils.isNotBlank(language)) {

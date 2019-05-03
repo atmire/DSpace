@@ -662,26 +662,27 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
                                         .andReturn();
 
 
+        String siteUuidString = String.valueOf(siteService.findSite(context).getID());
         getClient().perform(get("/api/config/pages/search/dso")
-                            .param("uuid", String.valueOf(siteService.findSite(context).getID())))
+                            .param("uuid", siteUuidString))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$.page.totalElements", is(4)));
 
         getClient().perform(get("/api/config/pages/search/dso")
-                                .param("uuid", String.valueOf(siteService.findSite(context).getID()))
+                                .param("uuid", siteUuidString)
                                 .param("name", "testName"))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$.page.totalElements", is(3)));
 
         getClient().perform(get("/api/config/pages/search/dso")
-                                .param("uuid", String.valueOf(siteService.findSite(context).getID()))
+                                .param("uuid", siteUuidString)
                                 .param("name", "testName")
                                 .param("format", MimeTypes.PLAIN_TEXT))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$.page.totalElements", is(3)));
 
         getClient().perform(get("/api/config/pages/search/dso")
-                                .param("uuid", String.valueOf(siteService.findSite(context).getID()))
+                                .param("uuid", siteUuidString)
                                 .param("name", "testName")
                                 .param("format", MimeTypes.PLAIN_TEXT)
                                 .param("language", "testLanguage3"))
@@ -689,7 +690,7 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
                    .andExpect(jsonPath("$.page.totalElements", is(1)));
 
         getClient().perform(get("/api/config/pages/search/dso")
-                                .param("uuid", String.valueOf(siteService.findSite(context).getID()))
+                                .param("uuid", siteUuidString)
                                 .param("name", "testName")
                                 .param("format", MimeTypes.PLAIN_TEXT)
                                 .param("language", "ThisLanguageWontReturnAnyResults"))
@@ -697,5 +698,10 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         getClient().perform(get("/api/config/pages/search/dso"))
                    .andExpect(status().isUnprocessableEntity());
+
+        getClient().perform(get("/api/config/pages/search/dso")
+                            .param("uuid", String.valueOf(UUID.randomUUID())))
+                   .andExpect(status().isNotFound());
+
     }
 }
