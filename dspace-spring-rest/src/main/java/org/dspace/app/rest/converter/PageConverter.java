@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
  * PageRest object. This class allows us to convert from the DSpace API data model to the REST data model and vice versa
  */
 @Component
-public class PageConverter extends DSpaceConverter<Page, PageRest> {
+public class PageConverter implements DSpaceConverter<Page, PageRest> {
 
     private static final Logger log = org.apache.logging.log4j.LogManager.getLogger();
 

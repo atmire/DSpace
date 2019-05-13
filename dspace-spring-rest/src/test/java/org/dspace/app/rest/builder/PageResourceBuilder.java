@@ -21,7 +21,7 @@ public class PageResourceBuilder extends AbstractBuilder<Page, PageService> {
         super(context);
     }
 
-    protected void cleanup() throws Exception {
+    public void cleanup() throws Exception {
         delete(page);
     }
 

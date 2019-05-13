@@ -652,7 +652,7 @@ public class RestResourceController implements InitializingBean {
         RestAddressableModel modelObject = null;
         try {
             modelObject = repository.upload(request, apiCategory, model, id, uploadfile);
-        } catch (ClassCastException e) {
+        } catch (Exception e) {
             log.error(e.getMessage(), e);
             return ControllerUtils.toEmptyResponse(HttpStatus.INTERNAL_SERVER_ERROR);
         }
