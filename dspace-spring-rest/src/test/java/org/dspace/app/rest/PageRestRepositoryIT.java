@@ -761,4 +761,244 @@ public class PageRestRepositoryIT extends AbstractControllerIntegrationTest {
                    .andExpect(status().isNotFound());
 
     }
+
+    @Test
+    public void createNoDSpaceObjectParameterBadRequest() throws Exception {
+
+
+        ObjectMapper mapper = new ObjectMapper();
+        PageRest pageRest = new PageRest();
+        pageRest.setTitle("testTitle");
+        pageRest.setName("testName");
+        pageRest.setLanguage("testLanguage");
+
+        String authToken = getAuthToken(admin.getEmail(), password);
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
+                                                  .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void createNonExistingDSpaceObjectParameterBadRequest() throws Exception {
+
+
+        ObjectMapper mapper = new ObjectMapper();
+        PageRest pageRest = new PageRest();
+        pageRest.setTitle("testTitle");
+        pageRest.setName("testName");
+        pageRest.setLanguage("testLanguage");
+
+        String authToken = getAuthToken(admin.getEmail(), password);
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                           .file(file)
+                                                           .param("dspaceobject",
+                                                                  String.valueOf(UUID.randomUUID()))
+                                                           .param("properties", mapper
+                                                               .writeValueAsString(pageRest)))
+                            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void createInvalidDSpaceObjectParameterBadRequest() throws Exception {
+
+
+        ObjectMapper mapper = new ObjectMapper();
+        PageRest pageRest = new PageRest();
+        pageRest.setTitle("testTitle");
+        pageRest.setName("testName");
+        pageRest.setLanguage("testLanguage");
+
+        String authToken = getAuthToken(admin.getEmail(), password);
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                           .file(file)
+                                                           .param("dspaceobject",
+                                                                  "invalid uuid")
+                                                           .param("properties", mapper
+                                                               .writeValueAsString(pageRest)))
+                            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void putNoDSpaceObjectParameterBadRequest() throws Exception {
+
+
+        ObjectMapper mapper = new ObjectMapper();
+        PageRest pageRest = new PageRest();
+        pageRest.setTitle("testTitle");
+        pageRest.setName("testName");
+        pageRest.setLanguage("testLanguage");
+
+        String authToken = getAuthToken(admin.getEmail(), password);
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        MvcResult mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("dspaceobject",
+                                                                                        parentCommunityUUIDString)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
+                                                  .andExpect(status().isCreated())
+                                                  .andExpect(content().contentType(contentType))
+                                                  .andReturn();
+
+
+        String content = mvcResult.getResponse().getContentAsString();
+        Map<String, Object> map = mapper.readValue(content, Map.class);
+        String id = String.valueOf(map.get("id"));
+
+        getClient(authToken).perform(get("/api/config/pages/" + id)
+                                         .content(mapper.writeValueAsBytes(pageRest))
+                                         .contentType(contentType))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
+                                UUID.fromString(id), pageRest.getName(), pageRest.getTitle(), pageRest.getLanguage()
+                            )));
+
+        pageRest.setLanguage("ThisIsANewLanguage");
+        pageRest.setTitle("ThisIsANewTitle");
+
+        MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.fileUpload("/api/config/pages/" + id);
+
+        builder.with(new RequestPostProcessor() {
+            public MockHttpServletRequest postProcessRequest(MockHttpServletRequest mockHttpServletRequest) {
+                mockHttpServletRequest.setMethod("PUT");
+                return mockHttpServletRequest;
+            }
+        });
+        getClient(authToken).perform(builder.file(file)
+                                            .param("properties", mapper.writeValueAsString(pageRest)))
+                            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void putNonExistingDSpaceObjectParameterBadRequest() throws Exception {
+
+
+        ObjectMapper mapper = new ObjectMapper();
+        PageRest pageRest = new PageRest();
+        pageRest.setTitle("testTitle");
+        pageRest.setName("testName");
+        pageRest.setLanguage("testLanguage");
+
+        String authToken = getAuthToken(admin.getEmail(), password);
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        MvcResult mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("dspaceobject",
+                                                                                        parentCommunityUUIDString)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
+                                                  .andExpect(status().isCreated())
+                                                  .andExpect(content().contentType(contentType))
+                                                  .andReturn();
+
+
+        String content = mvcResult.getResponse().getContentAsString();
+        Map<String, Object> map = mapper.readValue(content, Map.class);
+        String id = String.valueOf(map.get("id"));
+
+        getClient(authToken).perform(get("/api/config/pages/" + id)
+                                         .content(mapper.writeValueAsBytes(pageRest))
+                                         .contentType(contentType))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
+                                UUID.fromString(id), pageRest.getName(), pageRest.getTitle(), pageRest.getLanguage()
+                            )));
+
+        pageRest.setLanguage("ThisIsANewLanguage");
+        pageRest.setTitle("ThisIsANewTitle");
+
+        MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders
+            .fileUpload("/api/config/pages/" + id);
+
+        builder.with(new RequestPostProcessor() {
+            public MockHttpServletRequest postProcessRequest(MockHttpServletRequest mockHttpServletRequest) {
+                mockHttpServletRequest.setMethod("PUT");
+                return mockHttpServletRequest;
+            }
+        });
+        getClient(authToken).perform(builder.file(file)
+                                            .param("properties", mapper.writeValueAsString(pageRest))
+                                            .param("dspaceobject", String.valueOf(UUID.randomUUID())))
+                            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void putInvalidDSpaceObjectParameterBadRequest() throws Exception {
+
+
+        ObjectMapper mapper = new ObjectMapper();
+        PageRest pageRest = new PageRest();
+        pageRest.setTitle("testTitle");
+        pageRest.setName("testName");
+        pageRest.setLanguage("testLanguage");
+
+        String authToken = getAuthToken(admin.getEmail(), password);
+        String input = "Hello, World!";
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                       input.getBytes());
+
+        MvcResult mvcResult = getClient(authToken).perform(MockMvcRequestBuilders.fileUpload("/api/config/pages")
+                                                                                 .file(file)
+                                                                                 .param("dspaceobject",
+                                                                                        parentCommunityUUIDString)
+                                                                                 .param("properties", mapper
+                                                                                     .writeValueAsString(pageRest)))
+                                                  .andExpect(status().isCreated())
+                                                  .andExpect(content().contentType(contentType))
+                                                  .andReturn();
+
+
+        String content = mvcResult.getResponse().getContentAsString();
+        Map<String, Object> map = mapper.readValue(content, Map.class);
+        String id = String.valueOf(map.get("id"));
+
+        getClient(authToken).perform(get("/api/config/pages/" + id)
+                                         .content(mapper.writeValueAsBytes(pageRest))
+                                         .contentType(contentType))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$", PageResourceMatcher.matchPageResource(
+                                UUID.fromString(id), pageRest.getName(), pageRest.getTitle(), pageRest.getLanguage()
+                            )));
+
+        pageRest.setLanguage("ThisIsANewLanguage");
+        pageRest.setTitle("ThisIsANewTitle");
+
+        MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders
+            .fileUpload("/api/config/pages/" + id);
+
+        builder.with(new RequestPostProcessor() {
+            public MockHttpServletRequest postProcessRequest(MockHttpServletRequest mockHttpServletRequest) {
+                mockHttpServletRequest.setMethod("PUT");
+                return mockHttpServletRequest;
+            }
+        });
+        getClient(authToken).perform(builder.file(file)
+                                            .param("properties", mapper.writeValueAsString(pageRest))
+                                            .param("dspaceobject", "invalid uuid"))
+                            .andExpect(status().isBadRequest());
+    }
+
 }
