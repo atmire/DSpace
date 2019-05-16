@@ -31,6 +31,7 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.SiteService;
+import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.pages.Page;
 import org.dspace.pages.service.PageService;
@@ -138,8 +139,12 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
             throw new DSpaceBadRequestException("The dspaceobject parameter was not a valid uuid");
         }
         DSpaceObject dSpaceObject = utils.getDSpaceObjectFromUUID(context, dspaceObjectUUID);
-        if (dSpaceObject == null) {
-            throw new DSpaceBadRequestException("The dspaceobject UUID did not resolve to a DSpaceObject");
+        if (dSpaceObject == null ||
+            (dSpaceObject.getType() != Constants.SITE &&
+                dSpaceObject.getType() != Constants.COLLECTION &&
+                dSpaceObject.getType() != Constants.COMMUNITY)) {
+            throw new DSpaceBadRequestException("The dspaceobject UUID did not resolve to a Site," +
+                                                    " Community or Collection");
         }
         return dSpaceObject;
     }
@@ -213,6 +218,7 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
             }
             page.setLanguage(pageRest.getLanguage());
             page.setTitle(pageRest.getTitle());
+            page.setdSpaceObject(dSpaceObject);
             if (uploadfile != null) {
                 pageService.attachFile(context, utils.getInputStreamFromMultipart(uploadfile),
                                       uploadfile.getOriginalFilename(), uploadfile.getContentType(), page);
