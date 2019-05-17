@@ -296,9 +296,9 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
         Root<Item> itemRoot = criteriaQuery.from(Item.class);
         criteriaQuery.select(itemRoot);
         criteriaQuery.where(criteriaBuilder.and(
-            criteriaBuilder.notEqual(itemRoot.get(Item_.owningCollection), collection),
-            criteriaBuilder.isMember(collection, itemRoot.get(Item_.collections)),
-            criteriaBuilder.isTrue(itemRoot.get(Item_.inArchive))));
+                criteriaBuilder.notEqual(itemRoot.get(Item_.owningCollection), collection),
+                criteriaBuilder.isMember(collection, itemRoot.get(Item_.collections)),
+                criteriaBuilder.isTrue(itemRoot.get(Item_.inArchive))));
         return list(context, criteriaQuery, false, Item.class, limit, offset).iterator();
     }
 
@@ -309,9 +309,9 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
         Root<Item> itemRoot = criteriaQuery.from(Item.class);
         criteriaQuery.select(itemRoot);
         criteriaQuery.where(criteriaBuilder.and(
-            criteriaBuilder.notEqual(itemRoot.get(Item_.owningCollection), collection),
-            criteriaBuilder.isMember(collection, itemRoot.get(Item_.collections)),
-            criteriaBuilder.isTrue(itemRoot.get(Item_.inArchive))));
+                criteriaBuilder.notEqual(itemRoot.get(Item_.owningCollection), collection),
+                criteriaBuilder.isMember(collection, itemRoot.get(Item_.collections)),
+                criteriaBuilder.isTrue(itemRoot.get(Item_.inArchive))));
         return count(context, criteriaQuery, criteriaBuilder, itemRoot);
     }
 

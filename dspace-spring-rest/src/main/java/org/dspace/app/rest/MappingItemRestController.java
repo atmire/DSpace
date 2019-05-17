@@ -7,7 +7,6 @@
  */
 package org.dspace.app.rest;
 
-import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -59,11 +58,11 @@ public class MappingItemRestController {
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})
     public MappingItemResourceWrapper retrieve(@PathVariable UUID uuid, HttpServletResponse response,
-                                               HttpServletRequest request, Pageable pageable) throws SQLException {
+                                               HttpServletRequest request, Pageable pageable) throws Exception {
         Context context = ContextUtil.obtainContext(request);
         Collection collection = collectionService.find(context, uuid);
-        Iterator<Item> itemIterator = itemService
-            .findByCollectionMapping(context, collection, pageable.getPageSize(), pageable.getOffset());
+        Iterator<Item> itemIterator = itemService.findByCollectionMapping(context, collection, pageable.getPageSize(),
+                                                                          pageable.getOffset());
         int totalElements = itemService.countByCollectionMapping(context, collection);
         List<ItemRest> mappedItemRestList = new LinkedList<>();
         while (itemIterator.hasNext()) {
@@ -76,11 +75,10 @@ public class MappingItemRestController {
         MappingItemRestWrapper mappingItemRestWrapper = new MappingItemRestWrapper();
         mappingItemRestWrapper.setMappingItemRestList(mappedItemRestList);
         mappingItemRestWrapper.setCollectionUuid(uuid);
-        MappingItemResourceWrapper mappingItemResourceWrapper = new MappingItemResourceWrapper(mappingItemRestWrapper,
-                                                                                               utils, pageable,
-                                                                                               totalElements);
+        MappingItemResourceWrapper mappingItemResourceWrapper =
+            new MappingItemResourceWrapper(mappingItemRestWrapper, utils, totalElements);
 
-        halLinkService.addLinks(mappingItemResourceWrapper);
+        halLinkService.addLinks(mappingItemResourceWrapper, pageable);
         return mappingItemResourceWrapper;
     }
 }
