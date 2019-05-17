@@ -40,7 +40,7 @@ public class ResourcePolicyBuilder extends AbstractBuilder<ResourcePolicy, Resou
     }
 
     @Override
-    protected void cleanup() throws Exception {
+    public void cleanup() throws Exception {
         delete(resourcePolicy);
     }
 
