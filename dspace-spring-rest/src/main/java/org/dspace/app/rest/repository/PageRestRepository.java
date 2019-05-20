@@ -179,17 +179,6 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         return new PageResource(model, utils, rels);
     }
 
-    @SearchRestMethod(name = "languages")
-    public org.springframework.data.domain.Page<PageRest> findByName(
-        @Parameter(value = "name", required = true) String pageName, Pageable pageable) throws SQLException {
-        Context context = obtainContext();
-        List<Page> pages = pageService.findByNameAndDSpaceObject(context, pageName, siteService.findSite(context));
-
-        org.springframework.data.domain.Page<PageRest> page = utils.getPage(pages, pageable).map(pageConverter);
-
-        return page;
-    }
-
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
     protected PageRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
