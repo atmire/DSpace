@@ -23,7 +23,8 @@ public class BitstreamFormatConverter implements DSpaceConverter<BitstreamFormat
     public BitstreamFormatRest fromModel(BitstreamFormat obj) {
         BitstreamFormatRest bf = new BitstreamFormatRest();
         bf.setDescription(obj.getDescription());
-        bf.setExtensions(bf.getExtensions());
+        bf.setSupportLevel(obj.getSupportLevel());
+        bf.setExtensions(obj.getExtensions());
         bf.setId(obj.getID());
         bf.setMimetype(obj.getMIMEType());
         bf.setShortDescription(obj.getShortDescription());
