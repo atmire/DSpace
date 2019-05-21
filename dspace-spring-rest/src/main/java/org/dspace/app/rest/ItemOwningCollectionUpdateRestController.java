@@ -17,6 +17,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.dspace.app.rest.converter.CollectionConverter;
+import org.dspace.app.rest.exception.DSpaceBadRequestException;
+import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.CollectionRest;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.Utils;
@@ -70,7 +72,8 @@ public class ItemOwningCollectionUpdateRestController {
         List<DSpaceObject> dsoList = utils.constructDSpaceObjectList(context, utils.getStringListFromRequest(request));
 
         if (dsoList.size() != 1 || dsoList.get(0).getType() != COLLECTION) {
-            throw new IllegalArgumentException("exactly one owning collection is provided not");
+            throw new UnprocessableEntityException("The collection doesn't exist " +
+                    "or the data cannot be resolved to a collection.");
         }
 
         Collection targetCollection = performItemMove(context, itemUuid, (Collection) dsoList.get(0));
@@ -86,6 +89,8 @@ public class ItemOwningCollectionUpdateRestController {
                                 final Collection targetCollection)
             throws SQLException, IOException, AuthorizeException {
         itemService.move(context, item, currentCollection, targetCollection);
+        //Necessary because Controller does not pass through general RestResourceController, and as such does not do its
+        //  commit in DSpaceRestRepository.createAndReturn() or similar
         context.commit();
 
         return context.reloadEntity(targetCollection);
@@ -98,6 +103,12 @@ public class ItemOwningCollectionUpdateRestController {
 
         if (item == null) {
             throw new ResourceNotFoundException("Item with id: " + itemUuid + " not found");
+        }
+        if (!(item.isArchived() || item.isWithdrawn())) {
+            throw new DSpaceBadRequestException("Only archived or withdrawn items can be moved between collections");
+        }
+        if (targetCollection.equals(item.getOwningCollection())) {
+            throw new DSpaceBadRequestException("The provided collection is already the owning collection");
         }
 
         Collection currentCollection = item.getOwningCollection();
