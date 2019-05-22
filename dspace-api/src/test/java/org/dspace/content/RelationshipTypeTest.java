@@ -136,7 +136,7 @@ public class RelationshipTypeTest extends AbstractUnitTest {
         RelationshipType type3 = relationshipTypeService.create(context, authorEntityType, projectEntityType,
                 "leftLabel3","rightLabel3",0, null,
                 0, null);
-        RelationshipType type4= relationshipTypeService.create(context, authorEntityType, projectEntityType,
+        RelationshipType type4 = relationshipTypeService.create(context, authorEntityType, projectEntityType,
                 "leftLabel4","rightLabel4",0, null,
                 0, null);
 
@@ -179,7 +179,7 @@ public class RelationshipTypeTest extends AbstractUnitTest {
         RelationshipType type3 = relationshipTypeService.create(context, authorEntityType, projectEntityType,
                 "isAuthorOfPublication","isPersonOfProject",0, null,
                 0, null);
-        RelationshipType type4= relationshipTypeService.create(context, authorEntityType, projectEntityType,
+        RelationshipType type4 = relationshipTypeService.create(context, authorEntityType, projectEntityType,
                 "isAuthorOfPublication","rightLabel4",0, null,
                 0, null);
 
