@@ -557,7 +557,7 @@ public class RestResourceController implements InitializingBean {
                                                                             @PathVariable Integer id,
                                                                             @RequestParam("file") MultipartFile
                                                                                 uploadfile)
-        throws HttpRequestMethodNotSupportedException, SQLException {
+        throws HttpRequestMethodNotSupportedException {
         return uploadInternal(request, apiCategory, model, id, uploadfile);
     }
 
@@ -587,40 +587,10 @@ public class RestResourceController implements InitializingBean {
                                                                             @PathVariable UUID uuid,
                                                                             @RequestParam("file") MultipartFile
                                                                                 uploadfile)
-        throws HttpRequestMethodNotSupportedException, SQLException {
-        return uploadInternal(request, apiCategory, model, uuid, uploadfile);
-    }
-
-    /**
-     * Called in PUT, multipart, upload to a specific rest resource the file passed as "file" request parameter
-     *
-     * Note that the regular expression in the request mapping accept a UUID as identifier;
-     *
-     * @param request
-     *            the http request
-     * @param apiCategory
-     *            the api category
-     * @param model
-     *            the rest model that identify the REST resource collection
-     * @param uuid
-     *            the id of the specific rest resource
-     * @param uploadfile
-     *            the file to upload
-     * @return the created resource
-     * @throws HttpRequestMethodNotSupportedException
-     */
-    @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID, headers =
-        "content-type=multipart/form-data")
-    public <ID extends Serializable> ResponseEntity<ResourceSupport> put(HttpServletRequest request,
-                                                                            @PathVariable String apiCategory,
-                                                                            @PathVariable String model,
-                                                                            @PathVariable UUID uuid,
-                                                                            @RequestParam(value = "file",
-                                                                                required = false) MultipartFile
-                                                                                 uploadfile)
         throws HttpRequestMethodNotSupportedException {
         return uploadInternal(request, apiCategory, model, uuid, uploadfile);
     }
+
 
     /**
      * Called in PUT, multipart, upload to a specific rest resource the file passed as "file" request parameter
@@ -683,7 +653,7 @@ public class RestResourceController implements InitializingBean {
         RestAddressableModel modelObject = null;
         try {
             modelObject = repository.upload(request, apiCategory, model, id, uploadfile);
-        } catch (ClassCastException e) {
+        } catch (Exception e) {
             log.error(e.getMessage(), e);
             return ControllerUtils.toEmptyResponse(HttpStatus.INTERNAL_SERVER_ERROR);
         }
