@@ -7,6 +7,7 @@
  */
 package org.dspace.content;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -128,12 +129,82 @@ public class RelationshipTypeTest extends AbstractUnitTest {
     }
 
     @Test
+    public void testRelationshipTypeFindAllPagination() throws Exception {
+        //With a limit (how many results to get) and an offset (starting at certain index/row nr)
+        //make a few more relationshipTypes
+        context.turnOffAuthorisationSystem();
+        RelationshipType type3 = relationshipTypeService.create(context, authorEntityType, projectEntityType,
+                "leftLabel3","rightLabel3",0, null,
+                0, null);
+        RelationshipType type4= relationshipTypeService.create(context, authorEntityType, projectEntityType,
+                "leftLabel4","rightLabel4",0, null,
+                0, null);
+
+        List<RelationshipType> foundRelationshipTypes = relationshipTypeService.findAll(context, 2, 0);
+        assertThat(foundRelationshipTypes, notNullValue());
+        assertThat(foundRelationshipTypes.size(), equalTo(2));
+        checkRelationshipTypeValues(foundRelationshipTypes.get(0), firstRelationshipType);
+        checkRelationshipTypeValues(foundRelationshipTypes.get(1), secondRelationshipType);
+
+        foundRelationshipTypes = relationshipTypeService.findAll(context, 1, 1);
+        assertThat(foundRelationshipTypes, notNullValue());
+        assertThat(foundRelationshipTypes.size(), equalTo(1));
+        checkRelationshipTypeValues(foundRelationshipTypes.get(0), secondRelationshipType);
+
+        foundRelationshipTypes = relationshipTypeService.findAll(context, 3, 2);
+        assertThat(foundRelationshipTypes, notNullValue());
+        assertThat(foundRelationshipTypes.size(), equalTo(2));
+        checkRelationshipTypeValues(foundRelationshipTypes.get(0), type3);
+        checkRelationshipTypeValues(foundRelationshipTypes.get(1), type4);
+
+        relationshipTypeService.delete(context, relationshipTypeService.find(context, type3.getID()));
+        relationshipTypeService.delete(context, relationshipTypeService.find(context, type4.getID()));
+        context.restoreAuthSystemState();
+    }
+
+    @Test
     public void testRelationshipTypeFindByLeftOrRightLabel() throws Exception {
         List<RelationshipType> found = relationshipTypeService.findByLeftOrRightLabel(context,
                                                                                       "isAuthorOfPublication");
         assertThat(found, notNullValue());
         assertThat(found.size(), equalTo(1));
         checkRelationshipTypeValues(found.get(0), firstRelationshipType);
+    }
+
+    @Test
+    public void testRelationshipTypeFindByLeftOrRightLabelPagination() throws Exception {
+        //With a limit (how many results to get) and an offset (starting at certain index/row nr)
+        //make a few more relationshipTypes
+        context.turnOffAuthorisationSystem();
+        RelationshipType type3 = relationshipTypeService.create(context, authorEntityType, projectEntityType,
+                "isAuthorOfPublication","isPersonOfProject",0, null,
+                0, null);
+        RelationshipType type4= relationshipTypeService.create(context, authorEntityType, projectEntityType,
+                "isAuthorOfPublication","rightLabel4",0, null,
+                0, null);
+
+        List<RelationshipType> found = relationshipTypeService.findByLeftOrRightLabel(context,
+                "isAuthorOfPublication", 2, 0);
+        assertThat(found, notNullValue());
+        assertThat(found.size(), equalTo(2));
+        assertTrue(listRelationshipTypeContains(found, firstRelationshipType));
+        assertTrue(listRelationshipTypeContains(found, type3));
+
+        found = relationshipTypeService.findByLeftOrRightLabel(context,
+                "isAuthorOfPublication", 1, 2);
+        assertThat(found, notNullValue());
+        assertThat(found.size(), equalTo(1));
+        assertTrue(listRelationshipTypeContains(found, type4)
+                || listRelationshipTypeContains(found, firstRelationshipType));
+
+        found = relationshipTypeService.findByLeftOrRightLabel(context,
+                "isPersonOfProject", 2, 2);
+        assertThat(found, notNullValue());
+        assertThat(found.size(), equalTo(0));
+
+        relationshipTypeService.delete(context, relationshipTypeService.find(context, type3.getID()));
+        relationshipTypeService.delete(context, relationshipTypeService.find(context, type4.getID()));
+        context.restoreAuthSystemState();
     }
 
     @Test
@@ -154,5 +225,14 @@ public class RelationshipTypeTest extends AbstractUnitTest {
         assertThat(found.getLeftMaxCardinality(), equalTo(original.getLeftMaxCardinality()));
         assertThat(found.getRightMinCardinality(), equalTo(original.getRightMinCardinality()));
         assertThat(found.getRightMaxCardinality(), equalTo(original.getRightMaxCardinality()));
+    }
+
+    private boolean listRelationshipTypeContains(List<RelationshipType> list, RelationshipType relationshipType) {
+        for (RelationshipType type: list) {
+            if (type.equals(relationshipType)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
