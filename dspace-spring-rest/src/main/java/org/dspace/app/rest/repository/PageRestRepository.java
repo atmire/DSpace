@@ -31,6 +31,7 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.SiteService;
+import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.pages.Page;
 import org.dspace.pages.service.PageService;
@@ -100,6 +101,8 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
     @PreAuthorize("hasAuthority('ADMIN')")
     protected PageRest createAndReturn(Context context, MultipartFile uploadfile, String properties)
         throws SQLException, AuthorizeException {
+        HttpServletRequest httpServletRequest = getRequestService().getCurrentRequest().getHttpServletRequest();
+        DSpaceObject dSpaceObject = getdSpaceObjectFromRequestParameter(context, httpServletRequest);
         ObjectMapper objectMapper = new ObjectMapper();
         PageRest pageRest;
         try {
@@ -108,12 +111,12 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
             throw new UnprocessableEntityException("Error parsing request body: " + e1.toString());
         }
         if (pageService.findByNameLanguageAndDSpaceObject(context, pageRest.getName(), pageRest.getLanguage(),
-                                                          siteService.findSite(context)) != null) {
+                                                          dSpaceObject) != null) {
             throw new DSpaceBadRequestException("The given name and language combination in the request " +
                                                     "already existed in the database. This is not allowed");
         }
         Page page = pageService.create(context, pageRest.getName(), pageRest.getLanguage(),
-                                       siteService.findSite(context));
+                                       dSpaceObject);
         page.setTitle(pageRest.getTitle());
         try {
             pageService.attachFile(context, utils.getInputStreamFromMultipart(uploadfile),
@@ -123,6 +126,27 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         }
         pageService.update(context, page);
         return pageConverter.fromModel(page);
+    }
+
+    private DSpaceObject getdSpaceObjectFromRequestParameter(Context context, HttpServletRequest httpServletRequest)
+        throws SQLException {
+        String dspaceObjectUUIDString = httpServletRequest.getParameter("dspaceobject");
+        if (StringUtils.isBlank(dspaceObjectUUIDString)) {
+            throw new DSpaceBadRequestException("The dspaceobject parameter cannot be missing or empty");
+        }
+        UUID dspaceObjectUUID = UUID.fromString(dspaceObjectUUIDString);
+        if (dspaceObjectUUID == null) {
+            throw new DSpaceBadRequestException("The dspaceobject parameter was not a valid uuid");
+        }
+        DSpaceObject dSpaceObject = utils.getDSpaceObjectFromUUID(context, dspaceObjectUUID);
+        if (dSpaceObject == null ||
+            (dSpaceObject.getType() != Constants.SITE &&
+                dSpaceObject.getType() != Constants.COLLECTION &&
+                dSpaceObject.getType() != Constants.COMMUNITY)) {
+            throw new DSpaceBadRequestException("The dspaceobject UUID did not resolve to a Site," +
+                                                    " Community or Collection");
+        }
+        return dSpaceObject;
     }
 
     @Override
@@ -155,17 +179,6 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         return new PageResource(model, utils, rels);
     }
 
-    @SearchRestMethod(name = "languages")
-    public org.springframework.data.domain.Page<PageRest> findByName(
-        @Parameter(value = "name", required = true) String pageName, Pageable pageable) throws SQLException {
-        Context context = obtainContext();
-        List<Page> pages = pageService.findByNameAndDSpaceObject(context, pageName, siteService.findSite(context));
-
-        org.springframework.data.domain.Page<PageRest> page = utils.getPage(pages, pageable).map(pageConverter);
-
-        return page;
-    }
-
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
     protected PageRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
@@ -173,6 +186,8 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         Page page = null;
         try {
             page = pageService.findByUuid(context, uuid);
+            HttpServletRequest httpServletRequest = getRequestService().getCurrentRequest().getHttpServletRequest();
+            DSpaceObject dSpaceObject = getdSpaceObjectFromRequestParameter(context, httpServletRequest);
             if (page == null) {
                 throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
             }
@@ -184,7 +199,7 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
             }
             Page foundPage = pageService.findByNameLanguageAndDSpaceObject(context, pageRest.getName(),
                                                                            pageRest.getLanguage(),
-                                                                           siteService.findSite(context));
+                                                                           dSpaceObject);
 
             if (foundPage != null && !StringUtils.equals(foundPage.getID().toString(), uuid.toString())) {
                 throw new RuntimeException("The language and name combination for this PUT update" +
@@ -192,6 +207,7 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
             }
             page.setLanguage(pageRest.getLanguage());
             page.setTitle(pageRest.getTitle());
+            page.setdSpaceObject(dSpaceObject);
             if (uploadfile != null) {
                 pageService.attachFile(context, utils.getInputStreamFromMultipart(uploadfile),
                                       uploadfile.getOriginalFilename(), uploadfile.getContentType(), page);
@@ -217,6 +233,10 @@ public class PageRestRepository extends DSpaceRestRepository<PageRest, UUID> {
         Pageable pageable) throws SQLException {
         Context context = obtainContext();
         DSpaceObject dSpaceObject = utils.getDSpaceObjectFromUUID(context, uuid);
+        if (dSpaceObject == null) {
+            throw new ResourceNotFoundException("The DSpaceObject for UUID: " + uuid +
+                                                    " was not found in the database");
+        }
         List<Page> pages;
 
         if (StringUtils.isNotBlank(language)) {

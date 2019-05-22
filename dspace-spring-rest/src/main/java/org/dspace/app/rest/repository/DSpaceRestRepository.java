@@ -351,7 +351,7 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
      * @throws Exception
      */
     public T upload(HttpServletRequest request, String apiCategory, String model,
-                                                     ID id, MultipartFile file) throws SQLException {
+                                                     ID id, MultipartFile file) throws Exception {
         Context context = null;
         try {
             context = obtainContext();

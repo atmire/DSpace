@@ -619,6 +619,37 @@ public class RestResourceController implements InitializingBean {
                                                                                 required = false) MultipartFile
                                                                                  uploadfile)
         throws HttpRequestMethodNotSupportedException {
+        return uploadInternal(request, apiCategory, model, uuid, uploadfile);
+    }
+
+    /**
+     * Called in PUT, multipart, upload to a specific rest resource the file passed as "file" request parameter
+     *
+     * Note that the regular expression in the request mapping accept a UUID as identifier;
+     *
+     * @param request
+     *            the http request
+     * @param apiCategory
+     *            the api category
+     * @param model
+     *            the rest model that identify the REST resource collection
+     * @param uuid
+     *            the id of the specific rest resource
+     * @param uploadfile
+     *            the file to upload
+     * @return the created resource
+     * @throws HttpRequestMethodNotSupportedException
+     */
+    @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID, headers =
+        "content-type=multipart/form-data")
+    public <ID extends Serializable> ResponseEntity<ResourceSupport> put(HttpServletRequest request,
+                                                                            @PathVariable String apiCategory,
+                                                                            @PathVariable String model,
+                                                                            @PathVariable UUID uuid,
+                                                                            @RequestParam(value = "file",
+                                                                                required = false) MultipartFile
+                                                                                 uploadfile)
+        throws HttpRequestMethodNotSupportedException {
         String properties = request.getParameter("properties");
 
         // We need to differentiate between PUT request with the "properties" param and without.
@@ -645,7 +676,7 @@ public class RestResourceController implements InitializingBean {
                                                                                      String apiCategory, String model,
                                                                                      ID id,
                                                                                      MultipartFile uploadfile)
-        throws HttpRequestMethodNotSupportedException, SQLException {
+        throws HttpRequestMethodNotSupportedException {
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
 
@@ -1263,32 +1294,6 @@ public class RestResourceController implements InitializingBean {
         linkService.addLinks(result);
         return ControllerUtils.toResponseEntity(HttpStatus.OK, null, result);
 
-    }
-
-    /**
-     * Internal method to update a single entity
-     *
-     * @param request     the http request
-     * @param apiCategory the API category e.g. "api"
-     * @param model       the DSpace model e.g. "metadatafield"
-     * @param uuid        the ID of the target REST object
-     * @param jsonNode    the part of the request body representing the updated rest object
-     * @return the relevant REST resource
-     */
-    private <ID extends Serializable> DSpaceResource<RestAddressableModel> putOneInternal(HttpServletRequest request,
-                                                                                          String apiCategory,
-                                                                                          String model, ID uuid,
-                                                                                          JsonNode jsonNode) {
-        checkModelPluralForm(apiCategory, model);
-        DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
-        RestAddressableModel modelObject = null;
-        modelObject = repository.put(request, apiCategory, model, uuid, jsonNode);
-        if (modelObject == null) {
-            throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
-        }
-        DSpaceResource result = repository.wrapResource(modelObject);
-        linkService.addLinks(result);
-        return result;
     }
 
     /**
