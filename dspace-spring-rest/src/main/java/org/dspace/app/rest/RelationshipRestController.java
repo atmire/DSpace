@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest;
 
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -15,10 +16,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.converter.RelationshipConverter;
+import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.link.HalLinkService;
 import org.dspace.app.rest.model.RelationshipRest;
 import org.dspace.app.rest.model.RelationshipRestWrapper;
 import org.dspace.app.rest.model.hateoas.RelationshipResourceWrapper;
+import org.dspace.app.rest.repository.RelationshipRestRepository;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.Utils;
 import org.dspace.content.Item;
@@ -54,6 +57,9 @@ public class RelationshipRestController {
 
     @Autowired
     private RelationshipTypeService relationshipTypeService;
+
+    @Autowired
+    private RelationshipRestRepository relationshipRestRepository;
 
     @Autowired
     private RelationshipService relationshipService;
@@ -130,4 +136,58 @@ public class RelationshipRestController {
         return relationshipResourceWrapper;
     }
 
+    /**
+     * Method to change the left item of a relationship with a given item in the body
+     * @return The modified relationship
+     */
+    @RequestMapping(method = RequestMethod.PUT, value = "{id}/leftItem", consumes={"text/uri-list"})
+    public RelationshipRest updateRelationshipLeft(@PathVariable String id, HttpServletResponse response,
+                                                              HttpServletRequest request) throws SQLException {
+        Context context = ContextUtil.obtainContext(request);
+        Integer idInt = this.getIntegerID(id);
+
+        if (idInt != null) {
+            return relationshipRestRepository.put(context, "/api/core/relationships/", idInt,
+                    utils.getStringListFromRequest(request), false);
+        }
+        return null;
+    }
+
+    /**
+     * Method to change the right item of a relationship with a given item in the body
+     * @return The modified relationship
+     */
+    @RequestMapping(method = RequestMethod.PUT, value = "{id}/rightItem", consumes={"text/uri-list"})
+    public RelationshipRest updateRelationshipRight(@PathVariable String id, HttpServletResponse response,
+                                                               HttpServletRequest request) throws SQLException {
+        Context context = ContextUtil.obtainContext(request);
+        Integer idInt = this.getIntegerID(id);
+
+        if (idInt != null) {
+            return relationshipRestRepository.put(context,"/api/core/relationships/", idInt,
+                    utils.getStringListFromRequest(request), true);
+        }
+        return null;
+    }
+
+    private Integer getIntegerID(String id) {
+        Integer idInt;
+        try {
+            idInt = Integer.valueOf(id);
+        } catch (NumberFormatException e) {
+            throw new UnprocessableEntityException("Not a valid relationship id (" + id + ").");
+        }
+        return idInt;
+    }
+
+//    private boolean itemToReplaceIsRight(String rightOrLeft) {
+//        if (rightOrLeft.equalsIgnoreCase("leftItem")) {
+//            return false;
+//        } else if (rightOrLeft.equalsIgnoreCase("rightItem")) {
+//            return true;
+//        } else {
+//            throw new UnprocessableEntityException("The last value (" + rightOrLeft
+//                    + "must be either leftItem or rightItem");
+//        }
+//    }
 }

@@ -34,6 +34,7 @@ import org.dspace.eperson.EPerson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
@@ -93,7 +94,7 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
 
     @Override
     protected RelationshipRest createAndReturn(Context context, List<String> stringList)
-        throws AuthorizeException, SQLException, RepositoryMethodNotImplementedException {
+            throws AuthorizeException, SQLException, RepositoryMethodNotImplementedException {
 
         HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
         List<DSpaceObject> list = utils.constructDSpaceObjectList(context, stringList);
@@ -101,13 +102,13 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
             Item leftItem = (Item) list.get(0);
             Item rightItem = (Item) list.get(1);
             RelationshipType relationshipType = relationshipTypeService
-                .find(context, Integer.parseInt(req.getParameter("relationshipType")));
+                    .find(context, Integer.parseInt(req.getParameter("relationshipType")));
 
             EPerson ePerson = context.getCurrentUser();
             if (authorizeService.authorizeActionBoolean(context, leftItem, Constants.WRITE) ||
-                authorizeService.authorizeActionBoolean(context, rightItem, Constants.WRITE)) {
+                    authorizeService.authorizeActionBoolean(context, rightItem, Constants.WRITE)) {
                 Relationship relationship = relationshipService.create(context, leftItem, rightItem,
-                                                                       relationshipType, 0, 0);
+                        relationshipType, 0, 0);
                 // The above if check deals with the case that a Relationship can be created if the user has write
                 // rights on one of the two items. The following updateItem calls can however call the
                 // ItemService.update() functions which would fail if the user doesn't have permission on both items.
@@ -127,30 +128,61 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
 
 
     }
+    /**
+     * Discussed here: https://jira.duraspace.org/browse/DS-4230
+     * Method to replace either the right or left item of a relationship with a given new item
+     * Called by request mappings in RelationshipRestController
+     * @param context
+     * @param contextPath           What API call was made to get here
+     * @param id                    ID of the relationship we wish to modify
+     * @param stringList            Item to replace either right or left item of relationship with
+     * @param itemToReplaceIsRight  Boolean to decide whether to replace right item (true) or left item (false)
+     * @return  The (modified) relationship
+     * @throws SQLException
+     */
+    public RelationshipRest put(Context context, String contextPath, Integer id, List<String> stringList,
+                                Boolean itemToReplaceIsRight) throws SQLException {
 
-    /*
-     * Disabled the put until https://jira.duraspace.org/browse/DS-4230 is discussed
-    @Override
-    protected RelationshipRest put(Context context, HttpServletRequest request, String apiCategory, String model,
-                                   Integer id, List<String> stringList)
-        throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException {
-
-        Relationship relationship = relationshipService.find(context, id);
-        if (relationship == null) {
-            throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");
+        //If working with api/core/relationships/891?rightOrLeft=rightItem
+        //String rightOrLeft = request.getParameter("rightOrLeft");
+        Relationship relationship;
+        try {
+            relationship = relationshipService.find(context, id);
+        } catch (SQLException e) {
+            throw new ResourceNotFoundException(contextPath + " with id: " + id + " not found");
         }
-        List<DSpaceObject> dSpaceObjects = utils.constructDSpaceObjectList(context, stringList);
-        if (dSpaceObjects.size() == 2 && dSpaceObjects.get(0).getType() == Constants.ITEM
-            && dSpaceObjects.get(1).getType() == Constants.ITEM) {
-            Item leftItem = (Item) dSpaceObjects.get(0);
-            Item rightItem = (Item) dSpaceObjects.get(1);
+        if (relationship == null) {
+            throw new ResourceNotFoundException(contextPath + " with id: " + id + " not found");
+        }
 
-            if (isAllowedToModifyRelationship(context, relationship, leftItem, rightItem)) {
+        List<DSpaceObject> dSpaceObjects = utils.constructDSpaceObjectList(context, stringList);
+        if (dSpaceObjects.size() == 1 && dSpaceObjects.get(0).getType() == Constants.ITEM) {
+
+            Item replacementItemInRelationship = (Item) dSpaceObjects.get(0);
+            Item leftItem;
+            Item rightItem;
+            if (itemToReplaceIsRight) {
+                leftItem = relationship.getLeftItem();
+                rightItem = replacementItemInRelationship;
+            } else {
+                leftItem = replacementItemInRelationship;
+                rightItem = relationship.getRightItem();
+            }
+            //TODO: Allow to change relationship if new relationship already exists?
+            checkIfRelationshipAlreadyExists(context, leftItem, rightItem);
+
+            if (isAllowedToModifyRelationship(context, relationship, leftItem, rightItem, itemToReplaceIsRight)) {
                 relationship.setLeftItem(leftItem);
                 relationship.setRightItem(rightItem);
 
-                relationshipService.updatePlaceInRelationship(context, relationship, false);
-                relationshipService.update(context, relationship);
+                try {
+                    relationshipService.updatePlaceInRelationship(context, relationship, false);
+                    relationshipService.update(context, relationship);
+                    context.commit();
+                    context.reloadEntity(relationship);
+                } catch (AuthorizeException e) {
+                    throw new AccessDeniedException("You do not have write rights on this relationship's items");
+                }
 
                 return relationshipConverter.fromModel(relationship);
             } else {
@@ -159,27 +191,41 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
         } else {
             throw new UnprocessableEntityException("The given items in the request were not valid");
         }
-
     }
-    */
+
+    private void checkIfRelationshipAlreadyExists(Context context, Item leftItem, Item rightItem) throws SQLException {
+        List<Relationship> relationshipsLeft = relationshipService.findByItem(context, leftItem);
+        for (Relationship relationship: relationshipsLeft) {
+            if (relationship.getLeftItem().equals(leftItem) && relationship.getRightItem().equals(rightItem)) {
+                //TODO : Allow or not?
+            }
+        }
+    }
 
     /**
-     * This method will check with the current user has write rights on both one of the original items and one of the
-     * new items for the relationship.
+     * This method will check if the current user has the right permissions to modify either the right or the left item.
+     * If replacing the left item:
+     *      rightItem.WRITE OR (leftItem.WRITE AND old-leftItem.WRITE)
+     * If replacing the right item:
+     *      lefttItem.WRITE OR (rightItem.WRITE AND old-rightItem.WRITE)
      * @param context       The relevant DSpace context
      * @param relationship  The relationship to be checked on
      * @param leftItem      The new left Item
      * @param rightItem     The new right Item
-     * @return              A boolean indicating whether the user is allowed or not
+     * @return A boolean indicating whether the user is allowed or not
      * @throws SQLException If something goes wrong
      */
     private boolean isAllowedToModifyRelationship(Context context, Relationship relationship, Item leftItem,
-                                                  Item rightItem) throws SQLException {
-        return (authorizeService.authorizeActionBoolean(context, leftItem, Constants.WRITE) ||
-            authorizeService.authorizeActionBoolean(context, rightItem, Constants.WRITE)) &&
-            (authorizeService.authorizeActionBoolean(context, relationship.getLeftItem(), Constants.WRITE) ||
-            authorizeService.authorizeActionBoolean(context, relationship.getRightItem(), Constants.WRITE)
-            );
+                                                  Item rightItem, boolean itemToReplaceIsRight) throws SQLException {
+        if (!itemToReplaceIsRight) {
+            return (authorizeService.authorizeActionBoolean(context, rightItem, Constants.WRITE) ||
+                    (authorizeService.authorizeActionBoolean(context, leftItem, Constants.WRITE) &&
+                       authorizeService.authorizeActionBoolean(context, relationship.getLeftItem(), Constants.WRITE)));
+        } else {
+            return (authorizeService.authorizeActionBoolean(context, leftItem, Constants.WRITE) ||
+                    (authorizeService.authorizeActionBoolean(context, rightItem, Constants.WRITE) &&
+                       authorizeService.authorizeActionBoolean(context, relationship.getRightItem(), Constants.WRITE)));
+        }
     }
 
     @Override
