@@ -55,6 +55,11 @@ public class RelationshipRestController {
     private static final String REGEX_REQUESTMAPPING_LABEL = "/{label:^(?!^\\d+$)" +
         "(?!^[0-9a-fxA-FX]{8}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{4}-[0-9a-fxA-FX]{12}$)[\\w+\\-]+$+}";
 
+    /**
+     * Regular expression in the request mapping to accept number as identifier
+     */
+    private static final String REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT = "/{id:\\d+}";
+
     @Autowired
     private RelationshipTypeService relationshipTypeService;
 
@@ -140,7 +145,8 @@ public class RelationshipRestController {
      * Method to change the left item of a relationship with a given item in the body
      * @return The modified relationship
      */
-    @RequestMapping(method = RequestMethod.PUT, value = "{id}/leftItem", consumes={"text/uri-list"})
+    @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT + "/leftItem",
+            consumes={"text/uri-list"})
     public RelationshipRest updateRelationshipLeft(@PathVariable String id, HttpServletResponse response,
                                                               HttpServletRequest request) throws SQLException {
         Context context = ContextUtil.obtainContext(request);
@@ -157,7 +163,8 @@ public class RelationshipRestController {
      * Method to change the right item of a relationship with a given item in the body
      * @return The modified relationship
      */
-    @RequestMapping(method = RequestMethod.PUT, value = "{id}/rightItem", consumes={"text/uri-list"})
+    @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT + "/rightItem",
+            consumes={"text/uri-list"})
     public RelationshipRest updateRelationshipRight(@PathVariable String id, HttpServletResponse response,
                                                                HttpServletRequest request) throws SQLException {
         Context context = ContextUtil.obtainContext(request);
@@ -179,15 +186,4 @@ public class RelationshipRestController {
         }
         return idInt;
     }
-
-//    private boolean itemToReplaceIsRight(String rightOrLeft) {
-//        if (rightOrLeft.equalsIgnoreCase("leftItem")) {
-//            return false;
-//        } else if (rightOrLeft.equalsIgnoreCase("rightItem")) {
-//            return true;
-//        } else {
-//            throw new UnprocessableEntityException("The last value (" + rightOrLeft
-//                    + "must be either leftItem or rightItem");
-//        }
-//    }
 }
