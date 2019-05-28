@@ -8,7 +8,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.ArrayList;
@@ -85,6 +84,4 @@ public class CollectedTest {
         valueList.add("TestValue");
         assertEquals("TestGetValues 0", valueList, collected.getValues(context, item));
     }
-
-
 }

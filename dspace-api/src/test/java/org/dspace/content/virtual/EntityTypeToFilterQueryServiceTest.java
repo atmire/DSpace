@@ -32,7 +32,8 @@ public class EntityTypeToFilterQueryServiceTest {
     @Test
     public void testGetMap() {
         Map<String, String> map = Collections.emptyMap();
-        assertEquals("TestGetFields 0", map.getClass(), map.getClass());
+        entityTypeToFilterQueryService.setMap(map);
+        assertEquals("TestGetFields 0", map, entityTypeToFilterQueryService.getMap());
     }
 
     @Test

@@ -1,11 +1,8 @@
 package org.dspace.content;
 
-import org.apache.logging.log4j.Logger;
-
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.dao.EntityTypeDAO;
 import org.dspace.core.Context;
-import org.dspace.core.GenericDAO;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -40,15 +37,8 @@ public class EntityTypeServiceImplTest   {
     private Context context;
 
     @Mock
-    private GenericDAO genericDAO;
-
-    @Mock
     private AuthorizeService authorizeService;
 
-    /**
-     * log4j category
-     */
-    private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(EntityTypeServiceImplTest.class);
 
     @Test
     public void testFindByEntityType() throws Exception {
@@ -67,12 +57,12 @@ public class EntityTypeServiceImplTest   {
 
     @Test
     public void testCreate() throws Exception {
-        //TODO Fix null return on assert
+        //TODO fix null return on assert
         when(authorizeService.isAdmin(context)).thenReturn(true);
         EntityType entityType = new EntityType();
         entityType.setLabel("Test");
         when(entityTypeDAO.create(context, entityType)).thenReturn(entityType);
-        assertEquals("TestCreate 0", entityType, entityTypeService.create(context, "Test"));
+        assertEquals("TestCreate 0", entityType, entityTypeService.create(context, ""));
     }
 
     @Test
