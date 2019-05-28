@@ -1,38 +1,25 @@
 package org.dspace.content;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
-import org.dspace.AbstractUnitTest;
-import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.dao.RelationshipDAO;
-import org.dspace.content.dao.RelationshipTypeDAO;
-import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.*;
 import org.dspace.content.virtual.VirtualMetadataPopulator;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
-import org.dspace.eperson.EPerson;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.management.relation.RelationService;
-import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Created by: Andrew Wood
@@ -74,8 +61,7 @@ public class RelationshipServiceImplTest {
     @Test
     public void testFindAll() throws Exception {
         when(relationshipDAO.findAll(context, Relationship.class)).thenReturn(relationshipsList);
-        List<Relationship> result = relationshipService.findAll(context);
-        assertEquals("TestFindAll 0", relationshipsList, result);
+        assertEquals("TestFindAll 0", relationshipsList, relationshipService.findAll(context));
     }
 
     @Test
@@ -111,14 +97,53 @@ public class RelationshipServiceImplTest {
     }
 
     @Test
-    public void testCreate() throws Exception {
-        Relationship relationship = relationshipDAO.create(context,new Relationship());
-        relationshipService = mock(relationshipService.getClass());
-        context.turnOffAuthorisationSystem();
+    public void testFindLeftPlaceByLeftItem() throws Exception {
+        Item item = mock(Item.class);
+        when(relationshipDAO.findLeftPlaceByLeftItem(context, item)).thenReturn(0);
+        assertEquals("TestFindLeftPlaceByLeftItem 0", relationshipDAO.findLeftPlaceByLeftItem(context, item), relationshipService.findLeftPlaceByLeftItem(context, item));
+    }
 
+    @Test
+    public void testFindRightPlaceByRightItem() throws Exception {
+        Item item = mock(Item.class);
+        when(relationshipDAO.findRightPlaceByRightItem(context, item)).thenReturn(0);
+        assertEquals("TestFindRightPlaceByRightItem 0", relationshipDAO.findRightPlaceByRightItem(context, item), relationshipService.findRightPlaceByRightItem(context, item));
+    }
+
+    @Test
+    public void testFindByItemAndRelationshipType() throws Exception {
+        List<Relationship> relList = new LinkedList<>();
+        Item item = mock(Item.class);
+        RelationshipType testRel = new RelationshipType();
+
+        assertEquals("TestFindByItemAndRelationshipType 0", relList, relationshipService.findByItemAndRelationshipType(context, item, testRel, true));
+        assertEquals("TestFindByItemAndRelationshipType 1", relList, relationshipService.findByItemAndRelationshipType(context, item, testRel));
+    }
+
+    @Test
+    public void testFindByRelationshipType() throws Exception {
+        List<Relationship> relList = new LinkedList<>();
+        RelationshipType testRel = new RelationshipType();
+
+        assertEquals("TestFindByRelationshipType 0", relList, relationshipService.findByRelationshipType(context, testRel));
+        assertEquals("TestFindByRelationshipType 1", relList, relationshipService.findByRelationshipType(context, testRel));
+    }
+
+    @Test
+    public void find() throws Exception {
+        Relationship relationship = new Relationship();
+        relationship.setId(1337);
+        when(relationshipDAO.findByID(context, Relationship.class, relationship.getID())).thenReturn(relationship);
+        assertEquals("TestFind 0", relationship, relationshipService.find(context, relationship.getID()));
+    }
+
+    @Test
+    public void testCreate() throws Exception {
+        //TODO Test 2
+        Relationship relationship = relationshipDAO.create(context,new Relationship());
+        context.turnOffAuthorisationSystem();
         when(authorizeService.isAdmin(context)).thenReturn(true);
         assertEquals("TestCreate 0", relationship, relationshipService.create(context));
-
         MetadataValue metVal = mock(MetadataValue.class);
         List<MetadataValue> metsList = new ArrayList<>();
         List<Relationship> leftTypelist = new ArrayList<>();
@@ -144,24 +169,42 @@ public class RelationshipServiceImplTest {
         when(leftEntityType.getLabel()).thenReturn("Entitylabel");
         when(rightEntityType.getLabel()).thenReturn("Entitylabel");
         when(metVal.getValue()).thenReturn("Entitylabel");
-        when(metVal.getValue()).thenReturn("Entitylabel");
         when(metsList.get(0).getValue()).thenReturn("Entitylabel");
         when(relationshipService.findByItemAndRelationshipType(context, leftItem, testRel, true)).thenReturn(leftTypelist);
         when(itemService.getMetadata(leftItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
         when(itemService.getMetadata(rightItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
-        when(relationshipService.create(context, relationship)).thenReturn(relationship);
-        when(relationshipService.create(context, leftItem, rightItem, testRel,0,0)).thenReturn(relationship);
         when(relationshipDAO.create(context, relationship)).thenReturn(relationship);
+        when(relationshipDAO.create(context, relationshipService.create(context, leftItem, rightItem, testRel,0,0))).thenReturn(relationship);
 
-
-        assertEquals("TestCreate 1", relationship, relationshipService.create(context, leftItem, rightItem, testRel,0,0));
+        assertEquals("TestCreate 1", relationship, relationshipService.create(context, relationship));
+        assertEquals("TestCreate 2", relationship, relationshipService.create(context, leftItem, rightItem, testRel,0,0));
 
         context.restoreAuthSystemState();
     }
 
     @Test
-    public void findLeftPlaceByLeftItem(){
+    public void testDelete() throws Exception {
+        Relationship relationship = new Relationship();
+        RelationshipService relationshipService = mock(RelationshipService.class);
 
+        relationshipService.delete(context, relationship);
+
+        Mockito.verify(relationshipService, times(1)).delete(context, relationship);
+
+    }
+
+    @Test
+    public void update() throws Exception {
+        RelationshipService relationshipService = mock(RelationshipService.class);
+        Relationship relationship = new Relationship();
+        relationship.setId(1337);
+        relationshipService.update(context, relationship);
+        Mockito.verify(relationshipService, times(1)).update(context, relationship);
+
+        List<Relationship> relationshipList = new ArrayList<>();
+        relationshipList.add(relationship);
+        relationshipService.update(context, relationshipList);
+        Mockito.verify(relationshipService, times(1)).update(context, relationshipList);
     }
 
     private Relationship getRelationship(Item leftItem, Item rightItem, RelationshipType relationshipType, int leftPlace, int rightPlace){
