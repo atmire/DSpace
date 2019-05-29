@@ -1,35 +1,27 @@
 package org.dspace.content;
 
-import org.apache.logging.log4j.Logger;
-import org.dspace.AbstractUnitTest;
-import org.dspace.authorize.AuthorizeException;
-import org.dspace.authorize.service.AuthorizeService;
-import org.dspace.content.dao.EntityTypeDAO;
-import org.dspace.content.dao.RelationshipDAO;
 import org.dspace.content.dao.RelationshipTypeDAO;
-import org.dspace.content.factory.ContentServiceFactory;
-import org.dspace.content.service.*;
-import org.dspace.core.Constants;
+import org.dspace.content.service.EntityTypeService;
+import org.dspace.content.service.ItemService;
+import org.dspace.content.service.RelationshipService;
+import org.dspace.content.service.RelationshipTypeService;
 import org.dspace.core.Context;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by: Andrew Wood
@@ -48,9 +40,6 @@ public class EntityServiceImplTest  {
     private ItemService itemService;
 
     @Mock
-    private AuthorizeService authorizeService;
-
-    @Mock
     private RelationshipService relationshipService;
 
     @Mock
@@ -67,11 +56,15 @@ public class EntityServiceImplTest  {
 
     @Test
     public void testfindByItemId() throws Exception {
-        //TODO Test works but does not pass
         Item item = mock(Item.class);
         List<Relationship> relationshipList = new ArrayList<>();
-        Entity entity = new Entity(item, relationshipList);
-        assertEquals("TestFindByItem 0", entity, entityService.findByItemId(context, item.getID()));
+        Relationship relationship = mock(Relationship.class);
+        relationship.setId(9);
+        relationshipList.add(relationship);
+        when(itemService.find(any(), any())).thenReturn(item);
+        when(item.getName()).thenReturn("ItemName");
+        when(relationshipService.findByItem(any(), any())).thenReturn(relationshipList);
+        assertEquals("TestFindByItem 0", "ItemName", entityService.findByItemId(context, item.getID()).getItem().getName());
     }
 
     @Test
@@ -89,7 +82,7 @@ public class EntityServiceImplTest  {
     }
 
     @Test
-    public void testGetLeftRelation() throws Exception {
+    public void testGetLeftRelation() {
         Item item = mock(Item.class);
         UUID uuid = UUID.randomUUID();
         Relationship relationship = mock(Relationship.class);
@@ -104,7 +97,7 @@ public class EntityServiceImplTest  {
     }
 
     @Test
-    public void testGetRightRelation() throws Exception {
+    public void testGetRightRelation() {
         Item item = mock(Item.class);
         UUID uuid = UUID.randomUUID();
         Relationship relationship = mock(Relationship.class);
@@ -160,6 +153,51 @@ public class EntityServiceImplTest  {
         when(entityService.getType(context, entity)).thenReturn(leftType);
         assertEquals("TestGetAllRelationshipTypes 0", relationshipTypeList, entityService.getAllRelationshipTypes(context, entity));
     }
+
+    @Test
+    public void testGetLeftRelationshipTypes() throws Exception {
+        Item item = mock(Item.class);
+        Entity entity = mock(Entity.class);
+        EntityType entityType = mock(EntityType.class);
+        RelationshipType relationshipType = mock(RelationshipType.class);
+        List<RelationshipType> relationshipTypeList = new LinkedList<>();
+        relationshipTypeList.add(relationshipType);
+        List<MetadataValue> metsList = new ArrayList<>();
+        MetadataValue metadataValue = mock(MetadataValue.class);
+        metsList.add(metadataValue);
+        when(itemService.getMetadata(any(), any(), any(), any(), any())).thenReturn(metsList);
+        when(entity.getItem()).thenReturn(item);
+        when(entityType.getID()).thenReturn(0);
+        when(relationshipTypeService.findAll(any())).thenReturn(relationshipTypeList);
+        when(relationshipType.getLeftType()).thenReturn(entityType);
+        when(entityService.getType(context, entity)).thenReturn(entityType);
+        when(entityTypeService.findByEntityType(any(), any())).thenReturn(entityType);
+
+        assertEquals("TestGetLeftRelationshipTypes 0", relationshipTypeList, entityService.getLeftRelationshipTypes(context, entity));
+    }
+
+    @Test
+    public void testGetRightRelationshipTypes() throws Exception {
+        Item item = mock(Item.class);
+        Entity entity = mock(Entity.class);
+        EntityType entityType = mock(EntityType.class);
+        RelationshipType relationshipType = mock(RelationshipType.class);
+        List<RelationshipType> relationshipTypeList = new LinkedList<>();
+        relationshipTypeList.add(relationshipType);
+        List<MetadataValue> metsList = new ArrayList<>();
+        MetadataValue metadataValue = mock(MetadataValue.class);
+        metsList.add(metadataValue);
+        when(itemService.getMetadata(any(), any(), any(), any(), any())).thenReturn(metsList);
+        when(entity.getItem()).thenReturn(item);
+        when(entityType.getID()).thenReturn(0);
+        when(relationshipTypeService.findAll(any())).thenReturn(relationshipTypeList);
+        when(relationshipType.getRightType()).thenReturn(entityType);
+        when(entityService.getType(context, entity)).thenReturn(entityType);
+        when(entityTypeService.findByEntityType(any(), any())).thenReturn(entityType);
+
+        assertEquals("TestGetRightRelationshipTypes 0", relationshipTypeList, entityService.getRightRelationshipTypes(context, entity));
+    }
+
 
     @Test
     public void testGetRelationshipTypesByLabel() throws Exception {

@@ -57,12 +57,12 @@ public class EntityTypeServiceImplTest   {
 
     @Test
     public void testCreate() throws Exception {
-        //TODO fix null return on assert
         when(authorizeService.isAdmin(context)).thenReturn(true);
         EntityType entityType = new EntityType();
         entityType.setLabel("Test");
-        when(entityTypeDAO.create(context, entityType)).thenReturn(entityType);
-        assertEquals("TestCreate 0", entityType, entityTypeService.create(context, ""));
+        when(entityTypeDAO.create(any(), any())).thenReturn(entityType);
+        assertEquals("TestCreate 0", entityType.getLabel(), entityTypeService.create(context, "Test").getLabel());
+        assertEquals("TestCreate 1", entityType, entityTypeService.create(context));
     }
 
     @Test
@@ -73,9 +73,11 @@ public class EntityTypeServiceImplTest   {
 
     @Test
     public void testUpdate() throws Exception {
+        EntityType entityTypeTest = mock(EntityType.class);
         List<EntityType> entityTypeList = new ArrayList<>();
         entityTypeList.add(entityType);
         when(authorizeService.isAdmin(context)).thenReturn(true);
+        entityTypeService.update(context, entityTypeTest);
         entityTypeService.update(context, entityTypeList);
         Mockito.verify(entityTypeDAO, times(1)).save(context, entityType);
     }
@@ -85,6 +87,10 @@ public class EntityTypeServiceImplTest   {
         when(authorizeService.isAdmin(context)).thenReturn(true);
         entityTypeService.delete(context, entityType);
         Mockito.verify(entityTypeDAO, times(1)).delete(context, entityType);
+    }
+
+    public EntityType makeEntityType(){
+        return new EntityType();
     }
 
 

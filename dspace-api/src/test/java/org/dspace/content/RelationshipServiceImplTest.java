@@ -93,7 +93,7 @@ public class RelationshipServiceImplTest {
 
 
         List<Relationship> results = relationshipService.findByItem(context, cindy);
-        assertEquals("TestFindByItem 0", relationshipTest.size(), results.size());
+        assertEquals("TestFindByItem 0", relationshipTest, results);
     }
 
     @Test
@@ -139,7 +139,6 @@ public class RelationshipServiceImplTest {
 
     @Test
     public void testCreate() throws Exception {
-        //TODO Test 2
         Relationship relationship = relationshipDAO.create(context,new Relationship());
         context.turnOffAuthorisationSystem();
         when(authorizeService.isAdmin(context)).thenReturn(true);
@@ -173,8 +172,7 @@ public class RelationshipServiceImplTest {
         when(relationshipService.findByItemAndRelationshipType(context, leftItem, testRel, true)).thenReturn(leftTypelist);
         when(itemService.getMetadata(leftItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
         when(itemService.getMetadata(rightItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
-        when(relationshipDAO.create(context, relationship)).thenReturn(relationship);
-        when(relationshipDAO.create(context, relationshipService.create(context, leftItem, rightItem, testRel,0,0))).thenReturn(relationship);
+        when(relationshipDAO.create(any(), any())).thenReturn(relationship);
 
         assertEquals("TestCreate 1", relationship, relationshipService.create(context, relationship));
         assertEquals("TestCreate 2", relationship, relationshipService.create(context, leftItem, rightItem, testRel,0,0));
@@ -184,31 +182,75 @@ public class RelationshipServiceImplTest {
 
     @Test
     public void testDelete() throws Exception {
-        Relationship relationship = new Relationship();
-        RelationshipService relationshipService = mock(RelationshipService.class);
-
+        context.turnOffAuthorisationSystem();
+        when(authorizeService.isAdmin(context)).thenReturn(true);
+        MetadataValue metVal = mock(MetadataValue.class);
+        List<MetadataValue> metsList = new ArrayList<>();
+        List<Relationship> leftTypelist = new ArrayList<>();
+        List<Relationship> rightTypelist = new ArrayList<>();
+        Item leftItem = mock(Item.class);
+        Item rightItem = mock(Item.class);
+        RelationshipType testRel = new RelationshipType();
+        EntityType leftEntityType = mock(EntityType.class);
+        EntityType rightEntityType = mock(EntityType.class);
+        testRel.setLeftType(leftEntityType);
+        testRel.setRightType(rightEntityType);
+        testRel.setLeftLabel("Entitylabel");
+        testRel.setRightLabel("Entitylabel");
+        testRel.setLeftMinCardinality(0);
+        testRel.setRightMinCardinality(0);
+        metsList.add(metVal);
+        relationship = getRelationship(leftItem, rightItem, testRel, 0,0);
+        leftTypelist.add(relationship);
+        rightTypelist.add(relationship);
+        when(virtualMetadataPopulator.isUseForPlaceTrueForRelationshipType(relationship.getRelationshipType(), true)).thenReturn(true);
+        when(authorizeService.authorizeActionBoolean(context, relationship.getLeftItem(), Constants.WRITE)).thenReturn(true);
+        when(authorizeService.authorizeActionBoolean(context, relationship.getRightItem(), Constants.WRITE)).thenReturn(true);
+        when(relationshipService.findByItem(context,leftItem)).thenReturn(leftTypelist);
+        when(relationshipService.findByItem(context,rightItem)).thenReturn(rightTypelist);
+        when(leftEntityType.getLabel()).thenReturn("Entitylabel");
+        when(rightEntityType.getLabel()).thenReturn("Entitylabel");
+        when(metVal.getValue()).thenReturn("Entitylabel");
+        when(metsList.get(0).getValue()).thenReturn("Entitylabel");
+        when(relationshipService.findByItemAndRelationshipType(context, leftItem, testRel, true)).thenReturn(leftTypelist);
+        when(itemService.getMetadata(leftItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
+        when(itemService.getMetadata(rightItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
+        when(relationshipDAO.create(any(), any())).thenReturn(relationship);
+        when(relationshipService.find(context,0)).thenReturn(relationship);
         relationshipService.delete(context, relationship);
-
-        Mockito.verify(relationshipService, times(1)).delete(context, relationship);
-
+        Mockito.verify(relationshipDAO).delete(context, relationship);
     }
 
     @Test
-    public void update() throws Exception {
-        RelationshipService relationshipService = mock(RelationshipService.class);
-        Relationship relationship = new Relationship();
-        relationship.setId(1337);
+    public void testUpdate() throws Exception {
+        context.turnOffAuthorisationSystem();
+        when(authorizeService.isAdmin(context)).thenReturn(true);
+        MetadataValue metVal = mock(MetadataValue.class);
+        List<MetadataValue> metsList = new ArrayList<>();
+        Item leftItem = mock(Item.class);
+        Item rightItem = mock(Item.class);
+        RelationshipType testRel = new RelationshipType();
+        EntityType leftEntityType = mock(EntityType.class);
+        EntityType rightEntityType = mock(EntityType.class);
+        testRel.setLeftType(leftEntityType);
+        testRel.setRightType(rightEntityType);
+        testRel.setLeftLabel("Entitylabel");
+        testRel.setRightLabel("Entitylabel");
+        testRel.setLeftMinCardinality(0);
+        testRel.setRightMinCardinality(0);
+        metsList.add(metVal);
+        relationship = getRelationship(leftItem, rightItem, testRel, 0,0);
+        when(itemService.getMetadata(leftItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
+        when(itemService.getMetadata(rightItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
+        when(authorizeService.authorizeActionBoolean(context, relationship.getLeftItem(), Constants.WRITE)).thenReturn(true);
+        when(authorizeService.authorizeActionBoolean(context, relationship.getRightItem(), Constants.WRITE)).thenReturn(true);
         relationshipService.update(context, relationship);
-        Mockito.verify(relationshipService, times(1)).update(context, relationship);
-
-        List<Relationship> relationshipList = new ArrayList<>();
-        relationshipList.add(relationship);
-        relationshipService.update(context, relationshipList);
-        Mockito.verify(relationshipService, times(1)).update(context, relationshipList);
+        Mockito.verify(relationshipDAO).save(context, relationship);
     }
 
     private Relationship getRelationship(Item leftItem, Item rightItem, RelationshipType relationshipType, int leftPlace, int rightPlace){
         Relationship relationship = new Relationship();
+        relationship.setId(0);
         relationship.setLeftItem(leftItem);
         relationship.setRightItem(rightItem);
         relationship.setRelationshipType(relationshipType);
