@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest;
@@ -390,6 +390,7 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
     /**
      * This method will test the addition of a mixture of plain-text metadatavalues and relationships to then
      * verify that the place property is still being handled correctly.
+     *
      * @throws Exception
      */
     @Test
@@ -700,6 +701,7 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
     /**
      * This method will test the deletion of a plain-text metadatavalue to then
      * verify that the place property is still being handled correctly.
+     *
      * @throws Exception
      */
     @Test
@@ -930,6 +932,7 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
     /**
      * This method will test the deletion of a Relationship to then
      * verify that the place property is still being handled correctly.
+     *
      * @throws Exception
      */
     @Test
@@ -1163,6 +1166,7 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
      * This test will simply add Relationships between Items with a useForPlace attribute set to false for the
      * RelationshipType. We want to test that the Relationships that are created will still have their place
      * attributes handled in a correct way
+     *
      * @throws Exception
      */
     @Test
@@ -1286,6 +1290,7 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
      * RelationshipType. We want to test that the Relationships that are created will still have their place
      * attributes handled in a correct way. It will then delete a Relationship and once again ensure that the place
      * attributes are being handled correctly.
+     *
      * @throws Exception
      */
     @Test
@@ -1419,8 +1424,9 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
 
     /**
      * This test will create a relationship with author 1 - publication 1
-     *  Then modify this relationship by changing the left item to author 2 via PUT > Verify
-     *  Then modify this relationship by changing the right item to publication 2 via PUT > Verify
+     * Then modify this relationship by changing the left item to author 2 via PUT > Verify
+     * Then modify this relationship by changing the right item to publication 2 via PUT > Verify
+     *
      * @throws Exception
      */
     @Test
@@ -1504,13 +1510,10 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
                 .andExpect(status().isOk())
                 .andReturn();
 
-        //verify left item change
+        //verify left item change and other not changed
         getClient(token).perform(get("/api/core/relationships/" + id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.leftId", is(publication2.getID().toString())));
-        //verify right item not changed
-        getClient(token).perform(get("/api/core/relationships/" + id))
-                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.leftId", is(publication2.getID().toString())))
                 .andExpect(jsonPath("$.rightId", is(author1.getID().toString())));
 
         //Modify the right item in the relationship publication > publication 2
@@ -1523,13 +1526,10 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
                 .andExpect(status().isOk())
                 .andReturn();
 
-        //verify right item change
+        //verify right item change and other not changed
         getClient(token).perform(get("/api/core/relationships/" + id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.rightId", is(author2.getID().toString())));
-        //verify left item not changed
-        getClient(token).perform(get("/api/core/relationships/" + id))
-                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rightId", is(author2.getID().toString())))
                 .andExpect(jsonPath("$.leftId", is(publication2.getID().toString())));
 
     }
@@ -1617,13 +1617,10 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
                 .content("https://localhost:8080/spring-rest/api/core/items/" + author2.getID()))
                 .andExpect(status().isOk())
                 .andReturn();
-        //verify change
+        //verify change  and other not changed
         getClient(token).perform(get("/api/core/relationships/" + id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.rightId", is(author2.getID().toString())));
-        //verify left item not changed
-        getClient(token).perform(get("/api/core/relationships/" + id))
-                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rightId", is(author2.getID().toString())))
                 .andExpect(jsonPath("$.leftId", is(publication.getID().toString())));
 
     }
@@ -1709,13 +1706,10 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
                 .content("https://localhost:8080/spring-rest/api/core/items/" + author2.getID()))
                 .andExpect(status().isOk())
                 .andReturn();
-        //verify right item change
+        //verify right item change and other not changed
         getClient(token).perform(get("/api/core/relationships/" + id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.rightId", is(author2.getID().toString())));
-        //verify left item not changed
-        getClient(token).perform(get("/api/core/relationships/" + id))
-                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rightId", is(author2.getID().toString())))
                 .andExpect(jsonPath("$.leftId", is(publication.getID().toString())));
 
     }
@@ -1802,13 +1796,10 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
                 .content("https://localhost:8080/spring-rest/api/core/items/" + publication2.getID()))
                 .andExpect(status().isOk())
                 .andReturn();
-        //verify change
+        //verify change  and other not changed
         getClient(token).perform(get("/api/core/relationships/" + id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.leftId", is(publication2.getID().toString())));
-        //verify right item not changed
-        getClient(token).perform(get("/api/core/relationships/" + id))
-                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.leftId", is(publication2.getID().toString())))
                 .andExpect(jsonPath("$.rightId", is(author1.getID().toString())));
     }
 
@@ -1895,13 +1886,10 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
                 .content("https://localhost:8080/spring-rest/api/core/items/" + publication2.getID()))
                 .andExpect(status().isOk())
                 .andReturn();
-        //verify change
+        //verify change and other not changed
         getClient(token).perform(get("/api/core/relationships/" + id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.leftId", is(publication2.getID().toString())));
-        //verify right item not changed
-        getClient(token).perform(get("/api/core/relationships/" + id))
-                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.leftId", is(publication2.getID().toString())))
                 .andExpect(jsonPath("$.rightId", is(author1.getID().toString())));
     }
 
@@ -1986,7 +1974,11 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
                 .content("https://localhost:8080/spring-rest/api/core/items/" + author2.getID()))
                 .andExpect(status().isForbidden())
                 .andReturn();
-
+        //verify nothing changed
+        getClient(token).perform(get("/api/core/relationships/" + id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.leftId", is(publication.getID().toString())))
+                .andExpect(jsonPath("$.rightId", is(author1.getID().toString())));
     }
 
     /**
@@ -2075,9 +2067,7 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
         //verify not changed
         getClient(token).perform(get("/api/core/relationships/" + id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.leftId", is(publication.getID().toString())));
-        getClient(token).perform(get("/api/core/relationships/" + id))
-                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.leftId", is(publication.getID().toString())))
                 .andExpect(jsonPath("$.rightId", is(author1.getID().toString())));
     }
 
@@ -2164,10 +2154,99 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
         //verify not changed
         getClient(token).perform(get("/api/core/relationships/" + id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.leftId", is(publication1.getID().toString())));
-        getClient(token).perform(get("/api/core/relationships/" + id))
-                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.leftId", is(publication1.getID().toString())))
                 .andExpect(jsonPath("$.rightId", is(author1.getID().toString())));
+
+    }
+
+    @Test
+    public void putRelationshipWithNonexistentID() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                .withName("Parent Community")
+                .build();
+        Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
+                .withName("Sub Community")
+                .build();
+        Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
+        Item publication1 = ItemBuilder.createItem(context, col1)
+                .withTitle("Publication1")
+                .withAuthor("Testy, TEst")
+                .withIssueDate("2015-01-01")
+                .withRelationshipType("Publication")
+                .build();
+
+        String token = getAuthToken(admin.getEmail(), password);
+
+        context.restoreAuthSystemState();
+
+        int nonexistentRelationshipID = 404404404;
+        //attempt left item change on non-existent relationship
+        MvcResult mvcResult = getClient(token).perform(put("/api/core/relationships/" + nonexistentRelationshipID + "/leftItem")
+                .contentType(MediaType.parseMediaType("text/uri-list"))
+                .content("https://localhost:8080/spring-rest/api/core/items/" + publication1.getID()))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+    }
+
+    @Test
+    public void putRelationshipWithInvalidItemIDInBody() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                .withName("Parent Community")
+                .build();
+        Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
+                .withName("Sub Community")
+                .build();
+        Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
+        Item author1 = ItemBuilder.createItem(context, col1)
+                .withTitle("Author1")
+                .withIssueDate("2017-10-17")
+                .withAuthor("Smith, Donald")
+                .withRelationshipType("Person")
+                .build();
+        Item publication1 = ItemBuilder.createItem(context, col1)
+                .withTitle("Publication1")
+                .withAuthor("Testy, TEst")
+                .withIssueDate("2015-01-01")
+                .withRelationshipType("Publication")
+                .build();
+
+        RelationshipType isAuthorOfPublicationRelationshipType = relationshipTypeService
+                .findbyTypesAndLabels(context, entityTypeService.findByEntityType(context, "Publication"),
+                        entityTypeService.findByEntityType(context, "Person"),
+                        "isAuthorOfPublication", "isPublicationOfAuthor");
+
+        String token = getAuthToken(admin.getEmail(), password);
+
+        context.restoreAuthSystemState();
+
+        MvcResult mvcResult = getClient(token).perform(post("/api/core/relationships")
+                .param("relationshipType",
+                        isAuthorOfPublicationRelationshipType.getID()
+                                .toString())
+                .contentType(MediaType.parseMediaType("text/uri-list"))
+                .content(
+                        "https://localhost:8080/spring-rest/api/core/items/" + publication1.getID() + "\n" +
+                                "https://localhost:8080/spring-rest/api/core/items/" + author1.getID()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        ObjectMapper mapper = new ObjectMapper();
+        String content = mvcResult.getResponse().getContentAsString();
+        Map<String, Object> map = mapper.readValue(content, Map.class);
+        String id = String.valueOf(map.get("id"));
+
+        int nonexistentItemID = 404404404;
+        //attempt left item change on non-existent relationship
+        MvcResult mvcResult2 = getClient(token).perform(put("/api/core/relationships/" + id + "/leftItem")
+                .contentType(MediaType.parseMediaType("text/uri-list"))
+                .content("https://localhost:8080/spring-rest/api/core/items/" + nonexistentItemID))
+                .andExpect(status().isUnprocessableEntity())
+                .andReturn();
 
     }
 }

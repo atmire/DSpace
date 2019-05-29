@@ -147,16 +147,11 @@ public class RelationshipRestController {
      */
     @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT + "/leftItem",
             consumes = {"text/uri-list"})
-    public RelationshipRest updateRelationshipLeft(@PathVariable String id, HttpServletResponse response,
+    public RelationshipRest updateRelationshipLeft(@PathVariable Integer id, HttpServletResponse response,
                                                               HttpServletRequest request) throws SQLException {
         Context context = ContextUtil.obtainContext(request);
-        Integer idInt = this.getIntegerID(id);
-
-        if (idInt != null) {
-            return relationshipRestRepository.put(context, "/api/core/relationships/", idInt,
-                    utils.getStringListFromRequest(request), false);
-        }
-        return null;
+        return relationshipRestRepository.put(context,"/api/core/relationships/", id,
+                utils.getStringListFromRequest(request), false);
     }
 
     /**
@@ -165,16 +160,11 @@ public class RelationshipRestController {
      */
     @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT + "/rightItem",
             consumes = {"text/uri-list"})
-    public RelationshipRest updateRelationshipRight(@PathVariable String id, HttpServletResponse response,
+    public RelationshipRest updateRelationshipRight(@PathVariable Integer id, HttpServletResponse response,
                                                                HttpServletRequest request) throws SQLException {
         Context context = ContextUtil.obtainContext(request);
-        Integer idInt = this.getIntegerID(id);
-
-        if (idInt != null) {
-            return relationshipRestRepository.put(context,"/api/core/relationships/", idInt,
-                    utils.getStringListFromRequest(request), true);
-        }
-        return null;
+        return relationshipRestRepository.put(context,"/api/core/relationships/", id,
+                utils.getStringListFromRequest(request), true);
     }
 
     private Integer getIntegerID(String id) {
