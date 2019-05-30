@@ -1,8 +1,24 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.content;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.dao.RelationshipDAO;
-import org.dspace.content.service.*;
+import org.dspace.content.service.ItemService;
 import org.dspace.content.virtual.VirtualMetadataPopulator;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
@@ -14,17 +30,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
-
-/**
- * Created by: Andrew Wood
- * Date: 20 May 2019
- */
 @RunWith(MockitoJUnitRunner.class)
 public class RelationshipServiceImplTest {
 
@@ -100,14 +105,16 @@ public class RelationshipServiceImplTest {
     public void testFindLeftPlaceByLeftItem() throws Exception {
         Item item = mock(Item.class);
         when(relationshipDAO.findLeftPlaceByLeftItem(context, item)).thenReturn(0);
-        assertEquals("TestFindLeftPlaceByLeftItem 0", relationshipDAO.findLeftPlaceByLeftItem(context, item), relationshipService.findLeftPlaceByLeftItem(context, item));
+        assertEquals("TestFindLeftPlaceByLeftItem 0", relationshipDAO.findLeftPlaceByLeftItem(context, item),
+                relationshipService.findLeftPlaceByLeftItem(context, item));
     }
 
     @Test
     public void testFindRightPlaceByRightItem() throws Exception {
         Item item = mock(Item.class);
         when(relationshipDAO.findRightPlaceByRightItem(context, item)).thenReturn(0);
-        assertEquals("TestFindRightPlaceByRightItem 0", relationshipDAO.findRightPlaceByRightItem(context, item), relationshipService.findRightPlaceByRightItem(context, item));
+        assertEquals("TestFindRightPlaceByRightItem 0", relationshipDAO.findRightPlaceByRightItem(context, item),
+                relationshipService.findRightPlaceByRightItem(context, item));
     }
 
     @Test
@@ -116,8 +123,10 @@ public class RelationshipServiceImplTest {
         Item item = mock(Item.class);
         RelationshipType testRel = new RelationshipType();
 
-        assertEquals("TestFindByItemAndRelationshipType 0", relList, relationshipService.findByItemAndRelationshipType(context, item, testRel, true));
-        assertEquals("TestFindByItemAndRelationshipType 1", relList, relationshipService.findByItemAndRelationshipType(context, item, testRel));
+        assertEquals("TestFindByItemAndRelationshipType 0", relList,
+                relationshipService.findByItemAndRelationshipType(context, item, testRel, true));
+        assertEquals("TestFindByItemAndRelationshipType 1", relList,
+                relationshipService.findByItemAndRelationshipType(context, item, testRel));
     }
 
     @Test
@@ -125,8 +134,10 @@ public class RelationshipServiceImplTest {
         List<Relationship> relList = new LinkedList<>();
         RelationshipType testRel = new RelationshipType();
 
-        assertEquals("TestFindByRelationshipType 0", relList, relationshipService.findByRelationshipType(context, testRel));
-        assertEquals("TestFindByRelationshipType 1", relList, relationshipService.findByRelationshipType(context, testRel));
+        assertEquals("TestFindByRelationshipType 0", relList,
+                relationshipService.findByRelationshipType(context, testRel));
+        assertEquals("TestFindByRelationshipType 1", relList,
+                relationshipService.findByRelationshipType(context, testRel));
     }
 
     @Test
@@ -160,22 +171,27 @@ public class RelationshipServiceImplTest {
         relationship = getRelationship(leftItem, rightItem, testRel, 0,0);
         leftTypelist.add(relationship);
         rightTypelist.add(relationship);
-        when(virtualMetadataPopulator.isUseForPlaceTrueForRelationshipType(relationship.getRelationshipType(), true)).thenReturn(true);
-        when(authorizeService.authorizeActionBoolean(context, relationship.getLeftItem(), Constants.WRITE)).thenReturn(true);
-        when(authorizeService.authorizeActionBoolean(context, relationship.getRightItem(), Constants.WRITE)).thenReturn(true);
+        when(virtualMetadataPopulator
+                .isUseForPlaceTrueForRelationshipType(relationship.getRelationshipType(), true)).thenReturn(true);
+        when(authorizeService
+                .authorizeActionBoolean(context, relationship.getLeftItem(), Constants.WRITE)).thenReturn(true);
+        when(authorizeService
+                .authorizeActionBoolean(context, relationship.getRightItem(), Constants.WRITE)).thenReturn(true);
         when(relationshipService.findByItem(context,leftItem)).thenReturn(leftTypelist);
         when(relationshipService.findByItem(context,rightItem)).thenReturn(rightTypelist);
         when(leftEntityType.getLabel()).thenReturn("Entitylabel");
         when(rightEntityType.getLabel()).thenReturn("Entitylabel");
         when(metVal.getValue()).thenReturn("Entitylabel");
         when(metsList.get(0).getValue()).thenReturn("Entitylabel");
-        when(relationshipService.findByItemAndRelationshipType(context, leftItem, testRel, true)).thenReturn(leftTypelist);
+        when(relationshipService
+                .findByItemAndRelationshipType(context, leftItem, testRel, true)).thenReturn(leftTypelist);
         when(itemService.getMetadata(leftItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
         when(itemService.getMetadata(rightItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
         when(relationshipDAO.create(any(), any())).thenReturn(relationship);
 
         assertEquals("TestCreate 1", relationship, relationshipService.create(context, relationship));
-        assertEquals("TestCreate 2", relationship, relationshipService.create(context, leftItem, rightItem, testRel,0,0));
+        assertEquals("TestCreate 2", relationship, relationshipService.create(context, leftItem, rightItem,
+                testRel,0,0));
 
         context.restoreAuthSystemState();
     }
@@ -203,16 +219,20 @@ public class RelationshipServiceImplTest {
         relationship = getRelationship(leftItem, rightItem, testRel, 0,0);
         leftTypelist.add(relationship);
         rightTypelist.add(relationship);
-        when(virtualMetadataPopulator.isUseForPlaceTrueForRelationshipType(relationship.getRelationshipType(), true)).thenReturn(true);
-        when(authorizeService.authorizeActionBoolean(context, relationship.getLeftItem(), Constants.WRITE)).thenReturn(true);
-        when(authorizeService.authorizeActionBoolean(context, relationship.getRightItem(), Constants.WRITE)).thenReturn(true);
+        when(virtualMetadataPopulator.isUseForPlaceTrueForRelationshipType(relationship.getRelationshipType(), true))
+                .thenReturn(true);
+        when(authorizeService.authorizeActionBoolean(context, relationship.getLeftItem(), Constants.WRITE))
+                .thenReturn(true);
+        when(authorizeService.authorizeActionBoolean(context, relationship.getRightItem(), Constants.WRITE))
+                .thenReturn(true);
         when(relationshipService.findByItem(context,leftItem)).thenReturn(leftTypelist);
         when(relationshipService.findByItem(context,rightItem)).thenReturn(rightTypelist);
         when(leftEntityType.getLabel()).thenReturn("Entitylabel");
         when(rightEntityType.getLabel()).thenReturn("Entitylabel");
         when(metVal.getValue()).thenReturn("Entitylabel");
         when(metsList.get(0).getValue()).thenReturn("Entitylabel");
-        when(relationshipService.findByItemAndRelationshipType(context, leftItem, testRel, true)).thenReturn(leftTypelist);
+        when(relationshipService.findByItemAndRelationshipType(context, leftItem, testRel, true))
+                .thenReturn(leftTypelist);
         when(itemService.getMetadata(leftItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
         when(itemService.getMetadata(rightItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
         when(relationshipDAO.create(any(), any())).thenReturn(relationship);
@@ -242,13 +262,16 @@ public class RelationshipServiceImplTest {
         relationship = getRelationship(leftItem, rightItem, testRel, 0,0);
         when(itemService.getMetadata(leftItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
         when(itemService.getMetadata(rightItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
-        when(authorizeService.authorizeActionBoolean(context, relationship.getLeftItem(), Constants.WRITE)).thenReturn(true);
-        when(authorizeService.authorizeActionBoolean(context, relationship.getRightItem(), Constants.WRITE)).thenReturn(true);
+        when(authorizeService.authorizeActionBoolean(context, relationship.getLeftItem(),
+                Constants.WRITE)).thenReturn(true);
+        when(authorizeService.authorizeActionBoolean(context, relationship.getRightItem(),
+                Constants.WRITE)).thenReturn(true);
         relationshipService.update(context, relationship);
         Mockito.verify(relationshipDAO).save(context, relationship);
     }
 
-    private Relationship getRelationship(Item leftItem, Item rightItem, RelationshipType relationshipType, int leftPlace, int rightPlace){
+    private Relationship getRelationship(Item leftItem, Item rightItem, RelationshipType relationshipType,
+                                         int leftPlace, int rightPlace) {
         Relationship relationship = new Relationship();
         relationship.setId(0);
         relationship.setLeftItem(leftItem);

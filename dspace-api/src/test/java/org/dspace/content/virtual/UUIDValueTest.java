@@ -1,4 +1,19 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.content.virtual;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 
 import org.dspace.content.Item;
 import org.dspace.core.Context;
@@ -8,18 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-/**
- * Created by: Andrew Wood
- * Date: 28 May 2019
- */
 @RunWith(MockitoJUnitRunner.class)
 public class UUIDValueTest {
 

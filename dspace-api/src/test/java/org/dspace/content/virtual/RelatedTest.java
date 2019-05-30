@@ -1,6 +1,27 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.content.virtual;
 
-import org.dspace.content.*;
+import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
+
+import org.dspace.content.Entity;
+import org.dspace.content.EntityType;
+import org.dspace.content.Item;
+import org.dspace.content.Relationship;
+import org.dspace.content.RelationshipType;
 import org.dspace.content.service.EntityService;
 import org.dspace.content.service.RelationshipService;
 import org.dspace.core.Context;
@@ -10,20 +31,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
-
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-/**
- * Created by: Andrew Wood
- * Date: 28 May 2019
- */
 @RunWith(MockitoJUnitRunner.class)
 public class RelatedTest {
 
@@ -69,13 +76,15 @@ public class RelatedTest {
 
     @Test
     public void testGetVirtualMetadataConfiguration() {
-        assertEquals("TestGetVirtualMetadataConfiguration 0", virtualMetadataConfiguration.getClass(), related.getVirtualMetadataConfiguration().getClass());
+        assertEquals("TestGetVirtualMetadataConfiguration 0", virtualMetadataConfiguration.getClass(),
+                related.getVirtualMetadataConfiguration().getClass());
     }
 
     @Test
     public void testSetVirtualMetadataConfiguration() {
         related.setVirtualMetadataConfiguration(virtualMetadataConfiguration);
-        assertEquals("TestGetVirtualMetadataConfiguration 0", virtualMetadataConfiguration, related.getVirtualMetadataConfiguration());
+        assertEquals("TestGetVirtualMetadataConfiguration 0", virtualMetadataConfiguration,
+                related.getVirtualMetadataConfiguration());
     }
 
     @Test
@@ -111,16 +120,19 @@ public class RelatedTest {
         when(entityService.getAllRelationshipTypes(context, entity)).thenReturn(relationshipTypeList);
         when(entityService.findByItemId(context, item.getID())).thenReturn(entity);
         when(entityService.getType(context, entity)).thenReturn(entityType);
-        when(relationshipService.findByItemAndRelationshipType(context, item, relationshipType)).thenReturn(relationshipList);
+        when(relationshipService.findByItemAndRelationshipType(context, item, relationshipType))
+                .thenReturn(relationshipList);
         when(relationship.getRelationshipType()).thenReturn(relationshipType);
         when(relationship.getLeftPlace()).thenReturn(0);
         when(relationship.getRightPlace()).thenReturn(1);
         when(relationship.getRightItem()).thenReturn(item);
         when(relationship.getLeftItem()).thenReturn(item);
 
-        assertEquals("TestGetValues 0", virtualMetadataConfiguration.getValues(context, item), related.getValues(context, item));
+        assertEquals("TestGetValues 0", virtualMetadataConfiguration.getValues(context, item),
+                related.getValues(context, item));
         related.setPlace(1);
-        assertEquals("TestGetValues 1", virtualMetadataConfiguration.getValues(context, item), related.getValues(context, item));
+        assertEquals("TestGetValues 1", virtualMetadataConfiguration.getValues(context, item),
+                related.getValues(context, item));
         related.setPlace(2);
         assertEquals("TestGetValues 2", new LinkedList<>(), related.getValues(context, item));
     }

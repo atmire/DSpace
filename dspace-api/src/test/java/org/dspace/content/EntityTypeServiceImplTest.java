@@ -1,4 +1,20 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.content;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.dao.EntityTypeDAO;
@@ -10,16 +26,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
-/**
- * Created by: Andrew Wood
- * Date: 17 May 2019
- */
 @RunWith(MockitoJUnitRunner.class)
 public class EntityTypeServiceImplTest   {
 
@@ -79,17 +85,17 @@ public class EntityTypeServiceImplTest   {
         when(authorizeService.isAdmin(context)).thenReturn(true);
         entityTypeService.update(context, entityTypeTest);
         entityTypeService.update(context, entityTypeList);
-        Mockito.verify(entityTypeDAO, times(1)).save(context, entityType);
+        Mockito.verify(entityTypeDAO,times(1)).save(context, entityType);
     }
 
     @Test
     public void testDelete() throws Exception {
         when(authorizeService.isAdmin(context)).thenReturn(true);
         entityTypeService.delete(context, entityType);
-        Mockito.verify(entityTypeDAO, times(1)).delete(context, entityType);
+        Mockito.verify(entityTypeDAO,times(1)).delete(context, entityType);
     }
 
-    public EntityType makeEntityType(){
+    public EntityType makeEntityType() {
         return new EntityType();
     }
 

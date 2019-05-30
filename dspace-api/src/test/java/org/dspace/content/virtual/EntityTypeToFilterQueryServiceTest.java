@@ -1,20 +1,23 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.content.virtual;
+
+import static org.junit.Assert.assertEquals;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-
-/**
- * Created by: Andrew Wood
- * Date: 28 May 2019
- */
 @RunWith(MockitoJUnitRunner.class)
 public class EntityTypeToFilterQueryServiceTest {
 
@@ -49,6 +52,7 @@ public class EntityTypeToFilterQueryServiceTest {
         Map<String, String> map = new HashMap<String, String>();
         map.put("key", "value");
         entityTypeToFilterQueryService.setMap(map);
-        assertEquals("TestGetFilterQueryForKey 0", "value", entityTypeToFilterQueryService.getFilterQueryForKey("key"));
+        assertEquals("TestGetFilterQueryForKey 0", "value",
+                entityTypeToFilterQueryService.getFilterQueryForKey("key"));
     }
 }

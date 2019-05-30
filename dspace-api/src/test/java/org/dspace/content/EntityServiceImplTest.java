@@ -1,4 +1,21 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.content;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 
 import org.dspace.content.dao.RelationshipTypeDAO;
 import org.dspace.content.service.EntityTypeService;
@@ -12,21 +29,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-/**
- * Created by: Andrew Wood
- * Date: 13 May 2019
- */
 @RunWith(MockitoJUnitRunner.class)
 public class EntityServiceImplTest  {
 
@@ -64,7 +66,8 @@ public class EntityServiceImplTest  {
         when(itemService.find(any(), any())).thenReturn(item);
         when(item.getName()).thenReturn("ItemName");
         when(relationshipService.findByItem(any(), any())).thenReturn(relationshipList);
-        assertEquals("TestFindByItem 0", "ItemName", entityService.findByItemId(context, item.getID()).getItem().getName());
+        assertEquals("TestFindByItem 0", "ItemName",
+                entityService.findByItemId(context, item.getID()).getItem().getName());
     }
 
     @Test
@@ -122,7 +125,8 @@ public class EntityServiceImplTest  {
         when(relationship.getRelationshipType()).thenReturn(relationshipType);
         when(relationshipType.getLeftLabel()).thenReturn("leftLabel");
         when(relationshipType.getRightLabel()).thenReturn("rightLabel");
-        assertEquals("TestGetRelationsByLabel 0", relationshipList, entityService.getRelationsByLabel(context, "leftLabel"));
+        assertEquals("TestGetRelationsByLabel 0", relationshipList,
+                entityService.getRelationsByLabel(context, "leftLabel"));
     }
 
     @Test
@@ -151,7 +155,8 @@ public class EntityServiceImplTest  {
         when(leftType.getID()).thenReturn(0);
         when(rightType.getID()).thenReturn(1);
         when(entityService.getType(context, entity)).thenReturn(leftType);
-        assertEquals("TestGetAllRelationshipTypes 0", relationshipTypeList, entityService.getAllRelationshipTypes(context, entity));
+        assertEquals("TestGetAllRelationshipTypes 0", relationshipTypeList,
+                entityService.getAllRelationshipTypes(context, entity));
     }
 
     @Test
@@ -173,7 +178,8 @@ public class EntityServiceImplTest  {
         when(entityService.getType(context, entity)).thenReturn(entityType);
         when(entityTypeService.findByEntityType(any(), any())).thenReturn(entityType);
 
-        assertEquals("TestGetLeftRelationshipTypes 0", relationshipTypeList, entityService.getLeftRelationshipTypes(context, entity));
+        assertEquals("TestGetLeftRelationshipTypes 0", relationshipTypeList,
+                entityService.getLeftRelationshipTypes(context, entity));
     }
 
     @Test
@@ -195,7 +201,8 @@ public class EntityServiceImplTest  {
         when(entityService.getType(context, entity)).thenReturn(entityType);
         when(entityTypeService.findByEntityType(any(), any())).thenReturn(entityType);
 
-        assertEquals("TestGetRightRelationshipTypes 0", relationshipTypeList, entityService.getRightRelationshipTypes(context, entity));
+        assertEquals("TestGetRightRelationshipTypes 0", relationshipTypeList,
+                entityService.getRightRelationshipTypes(context, entity));
     }
 
 
@@ -207,7 +214,8 @@ public class EntityServiceImplTest  {
         when(relationshipTypeService.findAll(context)).thenReturn(list);
         when(relationshipType.getLeftLabel()).thenReturn("leftLabel");
         when(relationshipType.getRightLabel()).thenReturn("rightLabel");
-        assertEquals("TestGetRelationshipTypesByLabel 0", list, entityService.getRelationshipTypesByLabel(context, "leftLabel"));
+        assertEquals("TestGetRelationshipTypesByLabel 0", list,
+                entityService.getRelationshipTypesByLabel(context, "leftLabel"));
     }
 
 
