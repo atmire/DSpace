@@ -2183,7 +2183,8 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
 
         int nonexistentRelationshipID = 404404404;
         //attempt left item change on non-existent relationship
-        MvcResult mvcResult = getClient(token).perform(put("/api/core/relationships/" + nonexistentRelationshipID + "/leftItem")
+        MvcResult mvcResult = getClient(token).perform(
+                put("/api/core/relationships/" + nonexistentRelationshipID + "/leftItem")
                 .contentType(MediaType.parseMediaType("text/uri-list"))
                 .content("https://localhost:8080/spring-rest/api/core/items/" + publication1.getID()))
                 .andExpect(status().isNotFound())
