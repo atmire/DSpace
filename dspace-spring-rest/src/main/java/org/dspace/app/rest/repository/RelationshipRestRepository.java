@@ -130,7 +130,6 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
     }
 
     /**
-     * Discussed here: https://jira.duraspace.org/browse/DS-4230
      * Method to replace either the right or left item of a relationship with a given new item
      * Called by request mappings in RelationshipRestController
      * - For replace right item (itemToReplaceIsRight = true)
