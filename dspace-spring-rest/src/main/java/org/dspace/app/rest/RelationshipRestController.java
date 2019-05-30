@@ -166,14 +166,4 @@ public class RelationshipRestController {
         return relationshipRestRepository.put(context,"/api/core/relationships/", id,
                 utils.getStringListFromRequest(request), true);
     }
-
-    private Integer getIntegerID(String id) {
-        Integer idInt;
-        try {
-            idInt = Integer.valueOf(id);
-        } catch (NumberFormatException e) {
-            throw new UnprocessableEntityException("Not a valid relationship id (" + id + ").");
-        }
-        return idInt;
-    }
 }
