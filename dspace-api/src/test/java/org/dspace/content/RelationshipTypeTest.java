@@ -10,118 +10,91 @@ package org.dspace.content;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.logging.log4j.Logger;
-import org.dspace.AbstractUnitTest;
-import org.dspace.authorize.AuthorizeException;
-import org.dspace.content.factory.ContentServiceFactory;
-import org.dspace.content.service.EntityTypeService;
-import org.dspace.content.service.RelationshipTypeService;
-import org.junit.After;
+import org.dspace.content.dao.RelationshipTypeDAO;
+import org.dspace.core.Context;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
-public class RelationshipTypeTest extends AbstractUnitTest {
+@RunWith(MockitoJUnitRunner.class)
+public class RelationshipTypeTest {
 
     private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(RelationshipTypeTest.class);
 
-    private RelationshipTypeService relationshipTypeService = ContentServiceFactory.getInstance()
-                                                                                   .getRelationshipTypeService();
-    private EntityTypeService entityTypeService = ContentServiceFactory.getInstance().getEntityTypeService();
+    @InjectMocks
+    private RelationshipTypeServiceImpl relationshipTypeService;
+
+    @Mock
+    private RelationshipTypeDAO relationshipTypeDAO;
 
     private RelationshipType firstRelationshipType;
     private RelationshipType secondRelationshipType;
 
-    private EntityType authorEntityType;
-    private EntityType publicationEntityType;
-    private EntityType projectEntityType;
+    private Context context;
+
 
     @Before
-    @Override
     public void init() {
-        super.init();
-        try {
-            //we have to create a new community in the database
-            context.turnOffAuthorisationSystem();
+        firstRelationshipType = mock(RelationshipType.class);
+        firstRelationshipType.setId(new Random().nextInt());
+        firstRelationshipType.setLeftType(mock(EntityType.class));
+        firstRelationshipType.setRightType(mock(EntityType.class));
+        firstRelationshipType.setLeftLabel("isAuthorOfPublication");
+        firstRelationshipType.setRightLabel("isPublicationOfAuthor");
+        firstRelationshipType.setLeftMinCardinality(0);
+        firstRelationshipType.setLeftMaxCardinality(null);
+        firstRelationshipType.setRightMinCardinality(0);
+        firstRelationshipType.setRightMinCardinality(null);
 
-            authorEntityType = entityTypeService.create(context, "person");
-            publicationEntityType = entityTypeService.create(context, "publication");
-            projectEntityType = entityTypeService.create(context, "project");
+        secondRelationshipType = mock(RelationshipType.class);
+        secondRelationshipType.setId(new Random().nextInt());
+        secondRelationshipType.setLeftType(mock(EntityType.class));
+        secondRelationshipType.setRightType(mock(EntityType.class));
+        secondRelationshipType.setLeftLabel("isProjectOfPerson");
+        secondRelationshipType.setRightLabel("isPersonOfProject");
+        secondRelationshipType.setLeftMinCardinality(0);
+        secondRelationshipType.setLeftMaxCardinality(null);
+        secondRelationshipType.setRightMinCardinality(0);
+        secondRelationshipType.setRightMinCardinality(null);
 
-            firstRelationshipType = relationshipTypeService.create(context, publicationEntityType, authorEntityType,
-                                                                   "isAuthorOfPublication",
-                                                                   "isPublicationOfAuthor",
-                                                                   0, null,
-                                                                   0, null);
-            secondRelationshipType = relationshipTypeService.create(context, authorEntityType, projectEntityType,
-                                                                    "isProjectOfPerson",
-                                                                    "isPersonOfProject",
-                                                                    0, null,
-                                                                    0, null);
-            //we need to commit the changes so we don't block the table for testing
-            context.restoreAuthSystemState();
-        } catch (AuthorizeException ex) {
-            log.error("Authorization Error in init", ex);
-            fail("Authorization Error in init: " + ex.getMessage());
-        } catch (SQLException ex) {
-            log.error("SQL Error in init", ex);
-            fail("SQL Error in init: " + ex.getMessage());
-        }
     }
 
-    @After
-    @Override
-    public void destroy() {
-        try {
-            context.turnOffAuthorisationSystem();
-            if (firstRelationshipType != null) {
-                relationshipTypeService.delete(context, relationshipTypeService.find(context,
-                                                                                     firstRelationshipType.getID()));
-            }
-            if (secondRelationshipType != null) {
-                relationshipTypeService.delete(context, relationshipTypeService.find(context,
-                                                                                     secondRelationshipType.getID()));
-            }
-            if (authorEntityType != null) {
-                entityTypeService.delete(context, authorEntityType);
-            }
-            if (publicationEntityType != null) {
-                entityTypeService.delete(context, publicationEntityType);
-            }
-            if (projectEntityType != null) {
-                entityTypeService.delete(context, projectEntityType);
-            }
-            context.restoreAuthSystemState();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (AuthorizeException e) {
-            e.printStackTrace();
-        }
-        super.destroy();
-    }
 
     @Test
     public void testRelationshipTypeFind() throws Exception {
-        Integer firstRelationshipTypeId = firstRelationshipType.getID();
-        RelationshipType found = relationshipTypeService.find(context, firstRelationshipTypeId);
+        when(relationshipTypeDAO.findByID(any(), any(), any(Integer.class))).thenReturn(firstRelationshipType);
+        RelationshipType found = relationshipTypeService.find(context, new Random().nextInt());
         checkRelationshipTypeValues(found, firstRelationshipType);
     }
 
     @Test
     public void testRelationshipTypeFindByTypesAndLabels() throws Exception {
-        RelationshipType found = relationshipTypeService.findbyTypesAndLabels(context, publicationEntityType,
-                                                                              authorEntityType,
-                                                                              "isAuthorOfPublication",
-                                                                              "isPublicationOfAuthor");
+        when(relationshipTypeDAO.findByTypesAndLabels(any(), any(), any(), any(), any()))
+            .thenReturn(firstRelationshipType);
+        RelationshipType found = relationshipTypeService.findbyTypesAndLabels(context, mock(EntityType.class),
+                                                                              mock(EntityType.class),
+                                                                              "mock", "mock");
         checkRelationshipTypeValues(found, firstRelationshipType);
     }
 
     @Test
     public void testRelationshipTypeFindAll() throws Exception {
+        List<RelationshipType> mockedList = new LinkedList<>();
+        mockedList.add(firstRelationshipType);
+        mockedList.add(secondRelationshipType);
+        when(relationshipTypeDAO.findAll(context, RelationshipType.class)).thenReturn(mockedList);
         List<RelationshipType> foundRelationshipTypes = relationshipTypeService.findAll(context);
         assertThat(foundRelationshipTypes, notNullValue());
         assertThat(foundRelationshipTypes.size(), equalTo(2));
@@ -129,8 +102,10 @@ public class RelationshipTypeTest extends AbstractUnitTest {
 
     @Test
     public void testRelationshipTypeFindByLeftOrRightLabel() throws Exception {
-        List<RelationshipType> found = relationshipTypeService.findByLeftOrRightLabel(context,
-                                                                                      "isAuthorOfPublication");
+        List<RelationshipType> mockedList = new LinkedList<>();
+        mockedList.add(firstRelationshipType);
+        when(relationshipTypeDAO.findByLeftOrRightLabel(any(), any())).thenReturn(mockedList);
+        List<RelationshipType> found = relationshipTypeService.findByLeftOrRightLabel(context, "mock");
         assertThat(found, notNullValue());
         assertThat(found.size(), equalTo(1));
         checkRelationshipTypeValues(found.get(0), firstRelationshipType);
@@ -138,10 +113,13 @@ public class RelationshipTypeTest extends AbstractUnitTest {
 
     @Test
     public void testRelationshipTypefindByEntityType() throws Exception {
-        List<RelationshipType> found = relationshipTypeService.findByEntityType(context, projectEntityType);
+        List<RelationshipType> mockedList = new LinkedList<>();
+        mockedList.add(firstRelationshipType);
+        when(relationshipTypeDAO.findByEntityType(any(), any())).thenReturn(mockedList);
+        List<RelationshipType> found = relationshipTypeService.findByEntityType(context, mock(EntityType.class));
         assertThat(found, notNullValue());
         assertThat(found.size(), equalTo(1));
-        checkRelationshipTypeValues(found.get(0), secondRelationshipType);
+        checkRelationshipTypeValues(found.get(0), firstRelationshipType);
     }
 
     private void checkRelationshipTypeValues(RelationshipType found, RelationshipType original) {
