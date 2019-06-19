@@ -8,10 +8,14 @@
 package org.dspace.app.rest.repository;
 
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
+import org.dspace.app.rest.Parameter;
+import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.RelationshipConverter;
 import org.dspace.app.rest.converter.RelationshipTypeConverter;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
@@ -34,6 +38,7 @@ import org.dspace.eperson.EPerson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
@@ -47,7 +52,13 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
 
 
     @Autowired
+    private ItemService itemService;
+
+    @Autowired
     private RelationshipService relationshipService;
+
+    @Autowired
+    private RelationshipTypeService relationshipTypeService;
 
     @Autowired
     private RelationshipConverter relationshipConverter;
@@ -56,13 +67,8 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
     private RelationshipTypeConverter relationshipTypeConverter;
 
     @Autowired
-    private RelationshipTypeService relationshipTypeService;
-
-    @Autowired
     private AuthorizeService authorizeService;
 
-    @Autowired
-    private ItemService itemService;
 
     public RelationshipRest findOne(Context context, Integer integer) {
         try {
@@ -170,7 +176,7 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
      * @param relationship  The relationship to be checked on
      * @param leftItem      The new left Item
      * @param rightItem     The new right Item
-     * @return              A boolean indicating whether the user is allowed or not
+     * @return A boolean indicating whether the user is allowed or not
      * @throws SQLException If something goes wrong
      */
     private boolean isAllowedToModifyRelationship(Context context, Relationship relationship, Item leftItem,
@@ -178,7 +184,7 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
         return (authorizeService.authorizeActionBoolean(context, leftItem, Constants.WRITE) ||
             authorizeService.authorizeActionBoolean(context, rightItem, Constants.WRITE)) &&
             (authorizeService.authorizeActionBoolean(context, relationship.getLeftItem(), Constants.WRITE) ||
-            authorizeService.authorizeActionBoolean(context, relationship.getRightItem(), Constants.WRITE)
+                authorizeService.authorizeActionBoolean(context, relationship.getRightItem(), Constants.WRITE)
             );
     }
 
@@ -197,5 +203,36 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
         } catch (SQLException e) {
             log.error("Error deleting Relationship specified by ID:" + id, e);
         }
+    }
+
+    @SearchRestMethod(name = "byLabel")
+    public Page<RelationshipRest> findByLabel(@Parameter(value = "label", required = true) String label,
+                                              @Parameter(value = "dso", required = false) UUID dsoId,
+                                              Pageable pageable) throws SQLException {
+
+        Context context = obtainContext();
+
+        List<RelationshipType> relationshipTypeList = relationshipTypeService.findByLeftOrRightLabel(context, label);
+        List<Relationship> relationships = new LinkedList<>();
+        if (dsoId != null) {
+
+            Item item = itemService.find(context, dsoId);
+
+            if (item == null) {
+                throw new ResourceNotFoundException("The request DSO with id: " + dsoId + " was not found");
+            }
+            for (RelationshipType relationshipType : relationshipTypeList) {
+                relationships.addAll(relationshipService.findByItemAndRelationshipType(context,
+                                                                                       item, relationshipType));
+            }
+        } else {
+            for (RelationshipType relationshipType : relationshipTypeList) {
+                relationships.addAll(relationshipService.findByRelationshipType(context, relationshipType));
+            }
+        }
+
+        Page<RelationshipRest> page = utils.getPage(relationships, pageable).map(relationshipConverter);
+        return page;
+
     }
 }
