@@ -65,7 +65,7 @@ public class RelationshipServiceImplTest {
 
     @Test
     public void testFindAll() throws Exception {
-        when(relationshipDAO.findAll(context, Relationship.class)).thenReturn(relationshipsList);
+        when(relationshipDAO.findAll(context, Relationship.class, -1, -1)).thenReturn(relationshipsList);
         assertEquals("TestFindAll 0", relationshipsList, relationshipService.findAll(context));
     }
 

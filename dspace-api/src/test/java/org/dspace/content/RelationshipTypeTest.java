@@ -7,13 +7,16 @@
  */
 package org.dspace.content;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -41,12 +44,14 @@ public class RelationshipTypeTest {
 
     private RelationshipType firstRelationshipType;
     private RelationshipType secondRelationshipType;
+    private RelationshipType thirdRelationshipType;
 
     private Context context;
 
 
     @Before
-    public void init() {
+    public void init() throws SQLException {
+
         firstRelationshipType = mock(RelationshipType.class);
         firstRelationshipType.setId(new Random().nextInt());
         firstRelationshipType.setLeftType(mock(EntityType.class));
@@ -69,8 +74,52 @@ public class RelationshipTypeTest {
         secondRelationshipType.setRightMinCardinality(0);
         secondRelationshipType.setRightMinCardinality(null);
 
+        thirdRelationshipType = mock(RelationshipType.class);
+        thirdRelationshipType.setId(new Random().nextInt());
+        thirdRelationshipType.setLeftType(mock(EntityType.class));
+        thirdRelationshipType.setRightType(mock(EntityType.class));
+        thirdRelationshipType.setLeftLabel("isProjectOfPerson");
+        thirdRelationshipType.setRightLabel("isPersonOfProject");
+        thirdRelationshipType.setLeftMinCardinality(0);
+        thirdRelationshipType.setLeftMaxCardinality(null);
+        thirdRelationshipType.setRightMinCardinality(0);
+        thirdRelationshipType.setRightMinCardinality(null);
+
+        List<RelationshipType> relationshipTypes = asList(
+                firstRelationshipType,
+                secondRelationshipType,
+                thirdRelationshipType
+        );
+
+        when(relationshipTypeDAO.findAll(eq(context), eq(RelationshipType.class), any(), any()))
+                .thenAnswer(invocation -> subList(relationshipTypes,
+                        (Integer) invocation.getArguments()[2], (Integer) invocation.getArguments()[3]));
+
+        when(relationshipTypeDAO.findByLeftOrRightLabel(any(), any(), any(), any()))
+                .thenAnswer(invocation -> subList(relationshipTypes,
+                        (Integer) invocation.getArguments()[2], (Integer) invocation.getArguments()[3]));
     }
 
+    private static <T> List<T> subList(List<T> list, Integer limit, Integer offset) {
+
+        int startIndex;
+        if (offset == -1) {
+            startIndex = 0;
+        } else if (offset > list.size()) {
+            startIndex = list.size();
+        } else {
+            startIndex = offset;
+        }
+
+        int endIndex;
+        if (limit == -1 || startIndex + limit > list.size()) {
+            endIndex = list.size();
+        } else {
+            endIndex = startIndex + limit;
+        }
+
+        return list.subList(startIndex, endIndex);
+    }
 
     @Test
     public void testRelationshipTypeFind() throws Exception {
@@ -82,40 +131,89 @@ public class RelationshipTypeTest {
     @Test
     public void testRelationshipTypeFindByTypesAndLabels() throws Exception {
         when(relationshipTypeDAO.findByTypesAndLabels(any(), any(), any(), any(), any()))
-            .thenReturn(firstRelationshipType);
+                .thenReturn(firstRelationshipType);
         RelationshipType found = relationshipTypeService.findbyTypesAndLabels(context, mock(EntityType.class),
-                                                                              mock(EntityType.class),
-                                                                              "mock", "mock");
+                mock(EntityType.class),
+                "mock", "mock");
         checkRelationshipTypeValues(found, firstRelationshipType);
     }
 
     @Test
     public void testRelationshipTypeFindAll() throws Exception {
-        List<RelationshipType> mockedList = new LinkedList<>();
-        mockedList.add(firstRelationshipType);
-        mockedList.add(secondRelationshipType);
-        when(relationshipTypeDAO.findAll(context, RelationshipType.class)).thenReturn(mockedList);
-        List<RelationshipType> foundRelationshipTypes = relationshipTypeService.findAll(context);
+
+        List<RelationshipType> foundRelationshipTypes;
+
+        // no limit, no offset
+        foundRelationshipTypes = relationshipTypeService.findAll(context);
+        assertThat(foundRelationshipTypes, notNullValue());
+        assertThat(foundRelationshipTypes.size(), equalTo(3));
+        assertThat(foundRelationshipTypes.get(0), equalTo(firstRelationshipType));
+        assertThat(foundRelationshipTypes.get(1), equalTo(secondRelationshipType));
+        assertThat(foundRelationshipTypes.get(2), equalTo(thirdRelationshipType));
+
+        // only limit
+        foundRelationshipTypes = relationshipTypeService.findAll(context, 2, -1);
         assertThat(foundRelationshipTypes, notNullValue());
         assertThat(foundRelationshipTypes.size(), equalTo(2));
+        assertThat(foundRelationshipTypes.get(0), equalTo(firstRelationshipType));
+        assertThat(foundRelationshipTypes.get(1), equalTo(secondRelationshipType));
+
+        // only offset
+        foundRelationshipTypes = relationshipTypeService.findAll(context, -1, 1);
+        assertThat(foundRelationshipTypes, notNullValue());
+        assertThat(foundRelationshipTypes.size(), equalTo(2));
+        assertThat(foundRelationshipTypes.get(0), equalTo(secondRelationshipType));
+        assertThat(foundRelationshipTypes.get(1), equalTo(thirdRelationshipType));
+
+        // limit & offset
+        foundRelationshipTypes = relationshipTypeService.findAll(context, 2, 1);
+        assertThat(foundRelationshipTypes, notNullValue());
+        assertThat(foundRelationshipTypes.size(), equalTo(2));
+        assertThat(foundRelationshipTypes.get(0), equalTo(secondRelationshipType));
+        assertThat(foundRelationshipTypes.get(1), equalTo(thirdRelationshipType));
     }
 
     @Test
     public void testRelationshipTypeFindByLeftOrRightLabel() throws Exception {
-        List<RelationshipType> mockedList = new LinkedList<>();
-        mockedList.add(firstRelationshipType);
-        when(relationshipTypeDAO.findByLeftOrRightLabel(any(), any())).thenReturn(mockedList);
-        List<RelationshipType> found = relationshipTypeService.findByLeftOrRightLabel(context, "mock");
-        assertThat(found, notNullValue());
-        assertThat(found.size(), equalTo(1));
-        checkRelationshipTypeValues(found.get(0), firstRelationshipType);
+
+        List<RelationshipType> foundRelationshipTypes;
+
+        // no limit, no offset
+        foundRelationshipTypes = relationshipTypeService.findByLeftOrRightLabel(context, "mock");
+        assertThat(foundRelationshipTypes, notNullValue());
+        assertThat(foundRelationshipTypes.size(), equalTo(3));
+        assertThat(foundRelationshipTypes.get(0), equalTo(firstRelationshipType));
+        assertThat(foundRelationshipTypes.get(1), equalTo(secondRelationshipType));
+        assertThat(foundRelationshipTypes.get(2), equalTo(thirdRelationshipType));
+
+        // only limit
+        foundRelationshipTypes = relationshipTypeService.findByLeftOrRightLabel(context, "mock", 2, -1);
+        assertThat(foundRelationshipTypes, notNullValue());
+        assertThat(foundRelationshipTypes.size(), equalTo(2));
+        assertThat(foundRelationshipTypes.get(0), equalTo(firstRelationshipType));
+        assertThat(foundRelationshipTypes.get(1), equalTo(secondRelationshipType));
+
+        // only offset
+        foundRelationshipTypes = relationshipTypeService.findByLeftOrRightLabel(context, "mock", -1, 1);
+        assertThat(foundRelationshipTypes, notNullValue());
+        assertThat(foundRelationshipTypes.size(), equalTo(2));
+        assertThat(foundRelationshipTypes.get(0), equalTo(secondRelationshipType));
+        assertThat(foundRelationshipTypes.get(1), equalTo(thirdRelationshipType));
+
+        // limit & offset
+        foundRelationshipTypes = relationshipTypeService.findByLeftOrRightLabel(context, "mock", 2, 1);
+        assertThat(foundRelationshipTypes, notNullValue());
+        assertThat(foundRelationshipTypes.size(), equalTo(2));
+        assertThat(foundRelationshipTypes.get(0), equalTo(secondRelationshipType));
+        assertThat(foundRelationshipTypes.get(1), equalTo(thirdRelationshipType));
+
     }
 
     @Test
     public void testRelationshipTypefindByEntityType() throws Exception {
         List<RelationshipType> mockedList = new LinkedList<>();
         mockedList.add(firstRelationshipType);
-        when(relationshipTypeDAO.findByEntityType(any(), any())).thenReturn(mockedList);
+        when(relationshipTypeDAO.findByEntityType(any(), any(), eq(-1), eq(-1))).thenReturn(mockedList);
         List<RelationshipType> found = relationshipTypeService.findByEntityType(context, mock(EntityType.class));
         assertThat(found, notNullValue());
         assertThat(found.size(), equalTo(1));

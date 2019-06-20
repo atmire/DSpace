@@ -9,6 +9,7 @@ package org.dspace.content;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -121,7 +122,7 @@ public class EntityServiceImplTest  {
         relationship.setRelationshipType(relationshipType);
         List<Relationship> relationshipList = new ArrayList<>();
         relationshipList.add(relationship);
-        when(relationshipService.findAll(context)).thenReturn(relationshipList);
+        when(relationshipService.findAll(context, -1, -1)).thenReturn(relationshipList);
         when(relationship.getRelationshipType()).thenReturn(relationshipType);
         when(relationshipType.getLeftLabel()).thenReturn("leftLabel");
         when(relationshipType.getRightLabel()).thenReturn("rightLabel");
@@ -148,7 +149,7 @@ public class EntityServiceImplTest  {
         when(entity.getItem()).thenReturn(item);
         when(itemService.getMetadata(item, "relationship", "type", null, Item.ANY)).thenReturn(list);
         when(relationshipTypeDAO.findAll(context, RelationshipType.class)).thenReturn(relationshipTypeList);
-        when(relationshipTypeService.findAll(context)).thenReturn(relationshipTypeList);
+        when(relationshipTypeService.findAll(context, -1, -1)).thenReturn(relationshipTypeList);
         when(relationshipType.getLeftType()).thenReturn(leftType);
         when(relationshipType.getRightType()).thenReturn(rightType);
         when(entityTypeService.findByEntityType(context, "value")).thenReturn(leftType);
@@ -173,7 +174,7 @@ public class EntityServiceImplTest  {
         when(itemService.getMetadata(any(), any(), any(), any(), any())).thenReturn(metsList);
         when(entity.getItem()).thenReturn(item);
         when(entityType.getID()).thenReturn(0);
-        when(relationshipTypeService.findAll(any())).thenReturn(relationshipTypeList);
+        when(relationshipTypeService.findAll(any(), eq(-1), eq(-1))).thenReturn(relationshipTypeList);
         when(relationshipType.getLeftType()).thenReturn(entityType);
         when(entityService.getType(context, entity)).thenReturn(entityType);
         when(entityTypeService.findByEntityType(any(), any())).thenReturn(entityType);
@@ -196,7 +197,7 @@ public class EntityServiceImplTest  {
         when(itemService.getMetadata(any(), any(), any(), any(), any())).thenReturn(metsList);
         when(entity.getItem()).thenReturn(item);
         when(entityType.getID()).thenReturn(0);
-        when(relationshipTypeService.findAll(any())).thenReturn(relationshipTypeList);
+        when(relationshipTypeService.findAll(any(), eq(-1), eq(-1))).thenReturn(relationshipTypeList);
         when(relationshipType.getRightType()).thenReturn(entityType);
         when(entityService.getType(context, entity)).thenReturn(entityType);
         when(entityTypeService.findByEntityType(any(), any())).thenReturn(entityType);
@@ -211,7 +212,7 @@ public class EntityServiceImplTest  {
         List<RelationshipType> list = new LinkedList<>();
         RelationshipType relationshipType = mock(RelationshipType.class);
         list.add(relationshipType);
-        when(relationshipTypeService.findAll(context)).thenReturn(list);
+        when(relationshipTypeService.findAll(context, -1, -1)).thenReturn(list);
         when(relationshipType.getLeftLabel()).thenReturn("leftLabel");
         when(relationshipType.getRightLabel()).thenReturn("rightLabel");
         assertEquals("TestGetRelationshipTypesByLabel 0", list,
