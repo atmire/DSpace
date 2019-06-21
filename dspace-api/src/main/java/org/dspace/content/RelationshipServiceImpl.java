@@ -259,7 +259,14 @@ public class RelationshipServiceImpl implements RelationshipService {
     @Override
     public List<Relationship> findByItem(Context context, Item item) throws SQLException {
 
-        List<Relationship> list = relationshipDAO.findByItem(context, item);
+        return findByItem(context, item, -1, -1);
+    }
+
+    @Override
+    public List<Relationship> findByItem(Context context, Item item, Integer limit, Integer offset)
+            throws SQLException {
+
+        List<Relationship> list = relationshipDAO.findByItem(context, item, limit, offset);
 
         list.sort((o1, o2) -> {
             int relationshipType = o1.getRelationshipType().getLeftLabel()
@@ -279,7 +286,14 @@ public class RelationshipServiceImpl implements RelationshipService {
 
     @Override
     public List<Relationship> findAll(Context context) throws SQLException {
-        return relationshipDAO.findAll(context, Relationship.class);
+
+        return findAll(context, -1, -1);
+    }
+
+    @Override
+    public List<Relationship> findAll(Context context, Integer limit, Integer offset) throws SQLException {
+
+        return relationshipDAO.findAll(context, Relationship.class, limit, offset);
     }
 
     @Override
@@ -407,7 +421,15 @@ public class RelationshipServiceImpl implements RelationshipService {
     @Override
     public List<Relationship> findByRelationshipType(Context context, RelationshipType relationshipType)
         throws SQLException {
-        return relationshipDAO.findByRelationshipType(context, relationshipType);
+
+        return findByRelationshipType(context, relationshipType, -1, -1);
+    }
+
+    @Override
+    public List<Relationship> findByRelationshipType(Context context, RelationshipType relationshipType, Integer limit,
+                                                     Integer offset)
+        throws SQLException {
+        return relationshipDAO.findByRelationshipType(context, relationshipType, limit, offset);
     }
 
 
