@@ -10,6 +10,7 @@ package org.dspace.app.rest.converter;
 import java.util.List;
 import java.util.Map;
 
+import com.github.jsonldjava.utils.Obj;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.log4j.Logger;
@@ -86,10 +87,10 @@ public class DiscoverResultConverter {
         }
     }
 
-    private RestAddressableModel convertDSpaceObject(final IndexableObject dspaceObject) {
-        for (IndexableObjectConverter<IndexableObject, RestAddressableModel> converter : converters) {
-            if (converter.supportsModel(dspaceObject)) {
-                return converter.convert(dspaceObject);
+    private RestAddressableModel convertDSpaceObject(final IndexableObject indexableObject) {
+        for (IndexableObjectConverter<Object, RestAddressableModel> converter : converters) {
+            if (converter.supportsModel(indexableObject)) {
+                return converter.convert(indexableObject.getIndexedObject());
             }
         }
         return null;

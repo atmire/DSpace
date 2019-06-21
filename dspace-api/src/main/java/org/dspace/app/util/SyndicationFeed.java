@@ -53,6 +53,9 @@ import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.discovery.IndexableObject;
+import org.dspace.discovery.indexobject.IndexableCollection;
+import org.dspace.discovery.indexobject.IndexableCommunity;
+import org.dspace.discovery.indexobject.IndexableItem;
 import org.dspace.handle.factory.HandleServiceFactory;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
@@ -200,8 +203,8 @@ public class SyndicationFeed {
             logoURL = ConfigurationManager.getProperty("webui.feed.logo.url");
         } else {
             Bitstream logo = null;
-            if (dso.getType() == Constants.COLLECTION) {
-                Collection col = (Collection) dso;
+            if (StringUtils.equals(dso.getType(), String.valueOf(Constants.COLLECTION))) {
+                Collection col = ((IndexableCollection) dso).getIndexedObject();
                 defaultTitle = col.getName();
                 feed.setDescription(collectionService.getMetadata(col, "short_description"));
                 logo = col.getLogo();
@@ -210,8 +213,8 @@ public class SyndicationFeed {
                     podcastFeed = true;
                 }
                 objectURL = resolveURL(request, col);
-            } else if (dso.getType() == Constants.COMMUNITY) {
-                Community comm = (Community) dso;
+            } else if (StringUtils.equals(dso.getType(), String.valueOf(Constants.COMMUNITY))) {
+                Community comm = ((IndexableCommunity) dso).getIndexedObject();
                 defaultTitle = comm.getName();
                 feed.setDescription(communityService.getMetadata(comm, "short_description"));
                 logo = comm.getLogo();
@@ -251,10 +254,10 @@ public class SyndicationFeed {
         if (items != null) {
             List<SyndEntry> entries = new ArrayList<SyndEntry>();
             for (IndexableObject idxObj : items) {
-                if (idxObj.getType() != Constants.ITEM) {
+                if (!StringUtils.equals(idxObj.getType(), String.valueOf(Constants.ITEM))) {
                     continue;
                 }
-                Item item = (Item) idxObj;
+                Item item = ((IndexableItem) idxObj).getIndexedObject();
                 boolean hasDate = false;
                 SyndEntry entry = new SyndEntryImpl();
                 entries.add(entry);

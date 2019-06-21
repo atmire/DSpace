@@ -32,6 +32,7 @@ import org.dspace.discovery.IndexableObject;
 import org.dspace.discovery.SearchService;
 import org.dspace.discovery.SearchServiceException;
 import org.dspace.discovery.configuration.DiscoveryConfigurationParameters;
+import org.dspace.discovery.indexobject.IndexableItem;
 import org.dspace.services.factory.DSpaceServicesFactory;
 
 /**
@@ -308,10 +309,10 @@ public class SolrBrowseDAO implements BrowseDAO {
         DiscoverResult resp = getSolrResponse();
 
         List<Item> bitems = new ArrayList<>();
-        for (IndexableObject<UUID> solrDoc : resp.getIndexableObjects()) {
+        for (IndexableObject solrDoc : resp.getIndexableObjects()) {
             // FIXME introduce project, don't retrieve Item immediately when
             // processing the query...
-            Item item = (Item) solrDoc;
+            Item item = ((IndexableItem) solrDoc).getIndexedObject();
             bitems.add(item);
         }
         return bitems;

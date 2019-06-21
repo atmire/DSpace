@@ -112,5 +112,15 @@
     <bean class="org.dspace.xmlworkflow.XmlWorkflowServiceImpl"/>
     <bean class="org.dspace.xmlworkflow.WorkflowRequirementsServiceImpl"/>
     <bean class="org.dspace.xmlworkflow.XmlWorkflowFactoryImpl"/>
+
+    <!-- Discovery indexable object services -->
+    <bean class="org.dspace.discovery.indexobject.IndexableClaimedTaskServiceImpl"/>
+    <bean class="org.dspace.discovery.indexobject.IndexableCollectionServiceImpl"/>
+    <bean class="org.dspace.discovery.indexobject.IndexableCommunityServiceImpl"/>
+    <bean class="org.dspace.discovery.indexobject.IndexableItemServiceImpl"/>
+    <bean class="org.dspace.discovery.indexobject.IndexablePoolTaskServiceImpl"/>
+    <bean class="org.dspace.discovery.indexobject.IndexableWorkflowItemServiceImpl"/>
+    <bean class="org.dspace.discovery.indexobject.IndexableWorkspaceItemServiceImpl"/>
+
 </beans>
 

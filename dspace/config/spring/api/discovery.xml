@@ -20,9 +20,11 @@
            http://www.springframework.org/schema/context/spring-context-3.0.xsd
            http://www.springframework.org/schema/util
            http://www.springframework.org/schema/util/spring-util-3.0.xsd"
-    default-autowire-candidates="*Service,*DAO,javax.sql.DataSource">
+    default-autowire-candidates="*Service,*DAO,javax.sql.DataSource,*Plugin" default-lazy-init="true">
 
     <context:annotation-config /> <!-- allows us to use spring annotations in beans -->
+
+    <bean class="org.dspace.discovery.SolrSearchCore" autowire-candidate="true"/>
 
     <bean id="solrServiceResourceIndexPlugin" class="org.dspace.discovery.SolrServiceResourceRestrictionPlugin" scope="prototype"/>
     <bean id="SolrServiceSpellIndexingPlugin" class="org.dspace.discovery.SolrServiceSpellIndexingPlugin" scope="prototype"/>
@@ -31,7 +33,7 @@
     <alias name="solrServiceResourceIndexPlugin" alias="org.dspace.discovery.SolrServiceResourceRestrictionPlugin"/>
     
     <!-- Additional indexing plugin make filtering by has content in original bundle (like pdf's, images) posible via SOLR -->
-    <bean id="hasContentInOriginalBundle" class="org.dspace.discovery.SolrServiceContentInOriginalBundleFilterPlugin"/>
+    <bean id="hasContentInOriginalBundlePlugin" class="org.dspace.discovery.SolrServiceContentInOriginalBundleFilterPlugin"/>
 
     <!-- Additional indexing plugin enables searching by filenames and by file descriptions for files in ORIGINAL bundle -->
     <bean id="solrServiceFileInfoPlugin" class="org.dspace.discovery.SolrServiceFileInfoPlugin"/>
@@ -395,7 +397,7 @@
         <property name="defaultFilterQueries">
             <list>
                 <!--Only find items, workspace and accepted for workflow -->
-                <value>search.resourcetype:2 OR search.resourcetype:[8 TO 9]</value>
+                <value>search.resourcetype:2 OR search.resourcetype:IndexableWorkspaceItem OR resourcetype:IndexableWorkflowItem</value>
             </list>
         </property>
         <!--Default result per page  -->
@@ -472,7 +474,7 @@
         <property name="defaultFilterQueries">
             <list>
                 <!--Only find PoolTask and ClaimedTask -->
-                <value>search.resourcetype:[10 TO 11]</value>
+                <value>search.resourcetype:IndexablePoolTask OR search.resourcetype:IndexableClaimedTask</value>
             </list>
         </property>
         <!--Default result per page  -->

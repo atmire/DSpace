@@ -112,7 +112,7 @@ public class OpenSearchController {
             }
 
             // then the rest - we are processing the query
-            IndexableObject<UUID> container = null;
+            IndexableObject container = null;
 
             // support pagination parameters
             DiscoverQuery queryArgs = new DiscoverQuery();

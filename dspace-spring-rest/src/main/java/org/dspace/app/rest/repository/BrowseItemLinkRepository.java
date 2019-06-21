@@ -153,8 +153,8 @@ public class BrowseItemLinkRepository extends AbstractDSpaceRestRepository
         Pageable pageResultInfo =
                 new PageRequest((binfo.getStart() - 1) / binfo.getResultsPerPage(), binfo.getResultsPerPage());
         List<Item> tmpResult = new ArrayList<Item>();
-        for (IndexableObject bb : binfo.getBrowseItemResults()) {
-            tmpResult.add((Item) bb);
+        for (Item bb : binfo.getBrowseItemResults()) {
+            tmpResult.add(bb);
         }
         Page<ItemRest> page = new PageImpl<Item>(tmpResult, pageResultInfo, binfo.getTotal()).map(converter);
         return page;

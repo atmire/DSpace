@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class WorkspaceItemConverter
-    extends AInprogressItemConverter<WorkspaceItem, WorkspaceItemRest, Integer> {
+    extends AInprogressItemConverter<WorkspaceItem, WorkspaceItemRest> {
 
     public WorkspaceItemConverter() throws SubmissionConfigReaderException {
         super();
@@ -42,6 +42,6 @@ public class WorkspaceItemConverter
 
     @Override
     public boolean supportsModel(IndexableObject object) {
-        return object instanceof WorkspaceItem;
+        return object.getIndexedObject() instanceof WorkspaceItem;
     }
 }

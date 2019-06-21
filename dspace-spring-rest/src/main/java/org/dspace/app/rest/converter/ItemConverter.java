@@ -140,6 +140,6 @@ public class ItemConverter
 
     @Override
     public boolean supportsModel(IndexableObject idxo) {
-        return idxo instanceof Item;
+        return idxo.getIndexedObject() instanceof Item;
     }
 }
