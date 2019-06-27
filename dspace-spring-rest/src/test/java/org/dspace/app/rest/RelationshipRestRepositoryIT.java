@@ -1206,8 +1206,9 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
 
         String adminToken = getAuthToken(admin.getEmail(), password);
 
-        // First create 1 relationship.
         context.restoreAuthSystemState();
+        // First create 1 relationship.
+
         // This post request will add a first relationship to the publication and thus create a first set of metadata
         // For the author values, namely "Donald Smith"
         MvcResult mvcResult = getClient(adminToken).perform(post("/api/core/relationships")
