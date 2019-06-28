@@ -169,7 +169,7 @@ public class AnonymizeStatistics {
                 }
             }
 
-            printInfo(updated + "documents updated");
+            printInfo(updated + " documents updated");
             if (updated == total) {
                 printInfo("all relevant documents were updated");
             } else {
