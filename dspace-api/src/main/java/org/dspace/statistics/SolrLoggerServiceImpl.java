@@ -859,6 +859,9 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
                     }
                 }
             }
+
+            solrDocument.removeFields("_version_");
+
             SolrInputDocument newInput = ClientUtils
                     .toSolrInputDocument(solrDocument);
             solr.add(newInput);
@@ -1035,9 +1038,15 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
     }
 
     @Override
+    public QueryResponse query(String query, String filterQuery, String facetField, int rows, int max, String dateType, String dateStart, String dateEnd, List<String> facetQueries, String sort, boolean ascending) throws SolrServerException {
+
+        return query(query, filterQuery, facetField, rows, max, dateType, dateStart, dateEnd, facetQueries, sort, ascending, 0);
+    }
+
+    @Override
     public QueryResponse query(String query, String filterQuery,
             String facetField, int rows, int max, String dateType, String dateStart,
-            String dateEnd, List<String> facetQueries, String sort, boolean ascending)
+            String dateEnd, List<String> facetQueries, String sort, boolean ascending, Integer start)
             throws SolrServerException
     {
         if (solr == null)
@@ -1136,6 +1145,10 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
         if (filterQuery != null)
         {
             solrQuery.addFilterQuery(filterQuery);
+        }
+
+        if (start != null) {
+            solrQuery.setStart(start);
         }
 
         QueryResponse response;
