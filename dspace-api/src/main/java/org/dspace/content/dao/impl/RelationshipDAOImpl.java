@@ -38,14 +38,14 @@ public class RelationshipDAOImpl extends AbstractHibernateDAO<Relationship> impl
     @Override
     public int findLeftPlaceByLeftItem(Context context, Item item) throws SQLException {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
-        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Relationship.class);
+        CriteriaQuery<Integer> criteriaQuery = criteriaBuilder.createQuery(Integer.class);
         Root<Relationship> relationshipRoot = criteriaQuery.from(Relationship.class);
-        criteriaQuery.select(relationshipRoot);
+        
+        criteriaQuery.select(criteriaBuilder.max(relationshipRoot.get(Relationship_.leftPlace)));
         criteriaQuery.where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.leftItem), item));
-        List<Relationship> list = list(context, criteriaQuery, false, Relationship.class, -1, -1);
-        list.sort((o1, o2) -> o2.getLeftPlace() - o1.getLeftPlace());
-        if (!list.isEmpty()) {
-            return list.get(0).getLeftPlace();
+        Integer result = this.getHibernateSession(context).createQuery(criteriaQuery).getSingleResult();
+        if (result != null) {
+            return result;
         } else {
             return 1;
         }
@@ -54,14 +54,14 @@ public class RelationshipDAOImpl extends AbstractHibernateDAO<Relationship> impl
     @Override
     public int findRightPlaceByRightItem(Context context, Item item) throws SQLException {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
-        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Relationship.class);
+        CriteriaQuery<Integer> criteriaQuery = criteriaBuilder.createQuery(Integer.class);
         Root<Relationship> relationshipRoot = criteriaQuery.from(Relationship.class);
-        criteriaQuery.select(relationshipRoot);
+
+        criteriaQuery.select(criteriaBuilder.max(relationshipRoot.get(Relationship_.leftPlace)));
         criteriaQuery.where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.rightItem), item));
-        List<Relationship> list = list(context, criteriaQuery, false, Relationship.class, -1, -1);
-        list.sort((o1, o2) -> o2.getLeftPlace() - o1.getLeftPlace());
-        if (!list.isEmpty()) {
-            return list.get(0).getLeftPlace();
+        Integer result = this.getHibernateSession(context).createQuery(criteriaQuery).getSingleResult();
+        if (result != null) {
+            return result;
         } else {
             return 1;
         }
