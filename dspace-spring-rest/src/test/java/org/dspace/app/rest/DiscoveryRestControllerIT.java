@@ -28,8 +28,11 @@ import org.dspace.app.rest.builder.ClaimedTaskBuilder;
 import org.dspace.app.rest.builder.CollectionBuilder;
 import org.dspace.app.rest.builder.CommunityBuilder;
 import org.dspace.app.rest.builder.EPersonBuilder;
+import org.dspace.app.rest.builder.EntityTypeBuilder;
 import org.dspace.app.rest.builder.GroupBuilder;
 import org.dspace.app.rest.builder.ItemBuilder;
+import org.dspace.app.rest.builder.RelationshipBuilder;
+import org.dspace.app.rest.builder.RelationshipTypeBuilder;
 import org.dspace.app.rest.builder.WorkflowItemBuilder;
 import org.dspace.app.rest.builder.WorkspaceItemBuilder;
 import org.dspace.app.rest.matcher.AppliedFilterMatcher;
@@ -46,7 +49,9 @@ import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
+import org.dspace.content.EntityType;
 import org.dspace.content.Item;
+import org.dspace.content.RelationshipType;
 import org.dspace.content.WorkspaceItem;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
@@ -100,7 +105,39 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 );
     }
 
+
+    // TODO ask what exactly do they mean with "works as expected"?
     @Test
+    public void discoverEntityTypeFacetWorksAsExpectedTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+        EntityType type = EntityTypeBuilder.createEntityTypeBuilder(context, "Publication").build();
+
+        getClient().perform(get("/api/discover/facets/entityType"))
+                .andExpect(status().isOk())
+
+                // ??? TODO ask why it needs to be discover
+                .andExpect(jsonPath("$.type", is("discover")))
+
+                .andExpect(jsonPath("$.name", is("entityType")))
+
+                .andExpect(jsonPath("$.facetType", is("text")))
+
+                //There always needs to be a self link present
+                .andExpect(jsonPath("$._links.self.href", containsString("api/discover/facets/entityType")))
+
+                //The page object needs to present and exactly like how it is specified here. 20 is entered as the
+                // size because that's the default in the configuration if no size parameter has been given
+                .andExpect(jsonPath("$.page",
+                        is(PageMatcher.pageEntry(0, 20))))
+                //The authors need to be embedded in the values, all 4 of them have to be present as the size
+                // allows it
+                .andExpect(jsonPath("$._embedded.values", containsInAnyOrder(
+                        FacetValueMatcher.entryEntityType("Publication", 0)
+                )));
+    }
+
+
+        @Test
     public void discoverFacetsAuthorTestWithSizeParameter() throws Exception {
         //Turn off the authorization system, otherwise we can't make the objects
         context.turnOffAuthorisationSystem();
@@ -385,6 +422,57 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                         FacetValueMatcher.entryAuthor("Smith, Donald")
                 )))
         ;
+    }
+
+    @Test
+    public void discoverFacetsAuthorTestForRelationshipMetadata() throws Exception {
+        // Turn off the authorization system to construct the structure defined below
+        context.turnOffAuthorisationSystem();
+
+        // Given
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                .withName("Parent Community")
+                .build();
+        Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
+                .withName("Sub Community")
+                .build();
+        Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
+
+        Item leftItem = ItemBuilder.createItem(context, col1)
+                .withTitle("Left")
+                .withIssueDate("2019-1-17")
+                .withAuthor("McLefty, Louis")
+                .withRelationshipType("leftType")
+                .build();
+
+        Item rightItem = ItemBuilder.createItem(context, col1)
+                .withTitle("Right")
+                .withIssueDate("2019-1-17")
+                .withAuthor("McRighty, Ronald")
+                .withRelationshipType("rightType")
+                .build();
+
+        EntityType leftType = EntityTypeBuilder.createEntityTypeBuilder(context, "leftType").build();
+        EntityType rightType = EntityTypeBuilder.createEntityTypeBuilder(context, "rightType").build();
+
+        RelationshipType relationshipType = RelationshipTypeBuilder.createRelationshipTypeBuilder(context, leftType,
+                rightType, "leftRelation", "rightRelation",  0,
+                null, 0, null).build();
+
+        RelationshipBuilder.createRelationshipBuilder(context, leftItem, rightItem, relationshipType);
+
+        getClient().perform(get("/api/discover/facets/author"))
+
+                //The status has to be 200 OK
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.type", is("discover")))
+                .andExpect(jsonPath("$.name", is("author")))
+                .andExpect(jsonPath("$._embedded.values", containsInAnyOrder(
+                        FacetValueMatcher.entryAuthor("McLefty, Louis"),
+                        FacetValueMatcher.entryAuthor("McRighty, Ronald")
+                )));
+
+
     }
 
 
@@ -3579,6 +3667,12 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 //There always needs to be a self link
                 .andExpect(jsonPath("$._links.self.href", containsString("/api/discover/search/objects")))
         ;
+
+    }
+
+    @Test
+    public void WideSearchReturnsDifferentTypesOfEntitiesTest() throws Exception {
+
 
     }
 

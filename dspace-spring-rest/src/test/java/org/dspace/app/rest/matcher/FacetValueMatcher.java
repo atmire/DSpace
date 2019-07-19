@@ -19,6 +19,20 @@ public class FacetValueMatcher {
 
     private FacetValueMatcher() { }
 
+    public static Matcher<? super Object> entryEntityType(String label) {
+        return entryEntityType(label, 1);
+    }
+
+    public static Matcher<? super Object> entryEntityType(String label, int count) {
+        return allOf(
+                hasJsonPath("$.label", is(label)),
+                hasJsonPath("$.count", is(count)),
+                hasJsonPath("$.type", is("discover")),
+                hasJsonPath("$._links.search.href", containsString("api/discover/search/objects")),
+                hasJsonPath("$._links.search.href", containsString("f.entityType=" + label + ",equals"))
+        );
+    }
+
     public static Matcher<? super Object> entryAuthor(String label) {
         return allOf(
             hasJsonPath("$.label", is(label)),
