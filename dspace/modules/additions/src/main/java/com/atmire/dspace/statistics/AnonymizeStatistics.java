@@ -61,7 +61,7 @@ public class AnonymizeStatistics {
     private static final String IP_V6_REGEX = "^(.*):.*:.*$";
 
     private static final String IP_V4_MASK =
-            configurationService.getProperty("anonymise_statistics.ip_v4_mask", "254");
+            configurationService.getProperty("anonymise_statistics.ip_v4_mask", "255");
     private static final String IP_V6_MASK =
             configurationService.getProperty("anonymise_statistics.ip_v6_mask", "FFFF:FFFF");
 
