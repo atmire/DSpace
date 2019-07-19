@@ -40,7 +40,7 @@ public class RelationshipDAOImpl extends AbstractHibernateDAO<Relationship> impl
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
         CriteriaQuery<Integer> criteriaQuery = criteriaBuilder.createQuery(Integer.class);
         Root<Relationship> relationshipRoot = criteriaQuery.from(Relationship.class);
-        
+
         criteriaQuery.select(criteriaBuilder.max(relationshipRoot.get(Relationship_.leftPlace)));
         criteriaQuery.where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.leftItem), item));
         Integer result = this.getHibernateSession(context).createQuery(criteriaQuery).getSingleResult();
