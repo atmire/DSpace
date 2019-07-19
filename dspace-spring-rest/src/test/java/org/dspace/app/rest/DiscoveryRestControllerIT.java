@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
@@ -105,39 +106,52 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 );
     }
 
-
-    // TODO ask what exactly do they mean with "works as expected"?
     @Test
     public void discoverEntityTypeFacetWorksAsExpectedTest() throws Exception {
         context.turnOffAuthorisationSystem();
-        EntityType type = EntityTypeBuilder.createEntityTypeBuilder(context, "Publication").build();
 
+        // Create the three entities we want to see in the entityType facet
+        EntityType publicationType = EntityTypeBuilder.createEntityTypeBuilder(context, "Publication").build();
+        EntityType personType = EntityTypeBuilder.createEntityTypeBuilder(context, "Person").build();
+        EntityType journalType = EntityTypeBuilder.createEntityTypeBuilder(context, "Journal").build();
+
+        // Create the commnuity/collection  in which we will store our entities with different types
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                .withName("Parent Community").build();
+
+        Collection collection = CollectionBuilder.createCollection(context, parentCommunity)
+                .withName("Collection 1").build();
+
+        // Create entities with different entity types, so that these types show up when look at the entityType facet
+        Item publication = ItemBuilder.createItem(context, collection)
+                .withRelationshipType(publicationType.getLabel())
+                .build();
+
+        Item person = ItemBuilder.createItem(context, collection)
+                .withRelationshipType(personType.getLabel())
+                .build();
+
+        Item journal = ItemBuilder.createItem(context, collection)
+                .withRelationshipType(journalType.getLabel())
+                .build();
+
+        // See if the API returns all three entity types in the entityType facet endpoint
         getClient().perform(get("/api/discover/facets/entityType"))
                 .andExpect(status().isOk())
-
-                // ??? TODO ask why it needs to be discover
                 .andExpect(jsonPath("$.type", is("discover")))
-
                 .andExpect(jsonPath("$.name", is("entityType")))
-
                 .andExpect(jsonPath("$.facetType", is("text")))
-
-                //There always needs to be a self link present
                 .andExpect(jsonPath("$._links.self.href", containsString("api/discover/facets/entityType")))
-
-                //The page object needs to present and exactly like how it is specified here. 20 is entered as the
-                // size because that's the default in the configuration if no size parameter has been given
                 .andExpect(jsonPath("$.page",
                         is(PageMatcher.pageEntry(0, 20))))
-                //The authors need to be embedded in the values, all 4 of them have to be present as the size
-                // allows it
                 .andExpect(jsonPath("$._embedded.values", containsInAnyOrder(
-                        FacetValueMatcher.entryEntityType("Publication", 0)
+                        FacetValueMatcher.entryEntityType(publicationType.getLabel(), 1),
+                        FacetValueMatcher.entryEntityType(personType.getLabel(), 1),
+                        FacetValueMatcher.entryEntityType(journalType.getLabel(), 1)
                 )));
     }
 
-
-        @Test
+    @Test
     public void discoverFacetsAuthorTestWithSizeParameter() throws Exception {
         //Turn off the authorization system, otherwise we can't make the objects
         context.turnOffAuthorisationSystem();
@@ -429,7 +443,6 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
         // Turn off the authorization system to construct the structure defined below
         context.turnOffAuthorisationSystem();
 
-        // Given
         parentCommunity = CommunityBuilder.createCommunity(context)
                 .withName("Parent Community")
                 .build();
@@ -438,43 +451,43 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 .build();
         Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
 
-        Item leftItem = ItemBuilder.createItem(context, col1)
-                .withTitle("Left")
+        EntityType publicationType = EntityTypeBuilder.createEntityTypeBuilder(context, "Publication").build();
+        EntityType personType = EntityTypeBuilder.createEntityTypeBuilder(context, "Person").build();
+
+        // Create a publication entity
+        Item publication = ItemBuilder.createItem(context, col1)
+                .withTitle("Publication Title")
                 .withIssueDate("2019-1-17")
-                .withAuthor("McLefty, Louis")
-                .withRelationshipType("leftType")
+                .withRelationshipType("Publication")
                 .build();
 
-        Item rightItem = ItemBuilder.createItem(context, col1)
-                .withTitle("Right")
+        // Create a person entity
+        Item author = ItemBuilder.createItem(context, col1)
+                .withPersonIdentifierLastName("McDonald")
+                .withPersonIdentifierFirstName("Ronald")
+                .withBirthDate(LocalDate.of(1975, 6, 3))
                 .withIssueDate("2019-1-17")
-                .withAuthor("McRighty, Ronald")
-                .withRelationshipType("rightType")
+                .withRelationshipType("Person")
                 .build();
 
-        EntityType leftType = EntityTypeBuilder.createEntityTypeBuilder(context, "leftType").build();
-        EntityType rightType = EntityTypeBuilder.createEntityTypeBuilder(context, "rightType").build();
+        RelationshipType publicationRelationshipType = RelationshipTypeBuilder.createRelationshipTypeBuilder(
+                context, publicationType, personType, "isPublicationOfAuthor", "isAuthorOfPublication",
+                0, null, 0, null).build();
 
-        RelationshipType relationshipType = RelationshipTypeBuilder.createRelationshipTypeBuilder(context, leftType,
-                rightType, "leftRelation", "rightRelation",  0,
-                null, 0, null).build();
+        RelationshipBuilder.createRelationshipBuilder(context, publication, author, publicationRelationshipType)
+                .build();
 
-        RelationshipBuilder.createRelationshipBuilder(context, leftItem, rightItem, relationshipType);
+        // TODO Does a re-index need to happen here to test the author facet?
 
         getClient().perform(get("/api/discover/facets/author"))
-
                 //The status has to be 200 OK
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.type", is("discover")))
                 .andExpect(jsonPath("$.name", is("author")))
                 .andExpect(jsonPath("$._embedded.values", containsInAnyOrder(
-                        FacetValueMatcher.entryAuthor("McLefty, Louis"),
-                        FacetValueMatcher.entryAuthor("McRighty, Ronald")
+                        FacetValueMatcher.entryAuthor("McDonald, Ronald")
                 )));
-
-
     }
-
 
     @Test
     public void discoverFacetsTestWithSimpleQueryAndSearchFilter() throws Exception {
@@ -3671,7 +3684,60 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
     }
 
     @Test
-    public void WideSearchReturnsDifferentTypesOfEntitiesTest() throws Exception {
+    public void wideSearchReturnsDifferentTypesOfEntitiesTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        // Create the community/collection in which we will store different types of entities
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                .withName("Parent Community").build();
+
+        Collection collection = CollectionBuilder.createCollection(context, parentCommunity)
+                .withName("Collection 1").build();
+
+        // Create three different entity types
+        EntityType publicationType = EntityTypeBuilder.createEntityTypeBuilder(context, "publication").build();
+        EntityType authorType = EntityTypeBuilder.createEntityTypeBuilder(context, "author").build();
+        EntityType journalType = EntityTypeBuilder.createEntityTypeBuilder(context, "journal").build();
+
+        // Create a publication entity
+        Item publication = ItemBuilder.createItem(context, collection)
+                .withTitle("Publication Title")
+                .withIssueDate("2019-1-17")
+                .withRelationshipType(publicationType.getLabel())
+                .build();
+
+        // Create a person entity
+        Item author = ItemBuilder.createItem(context, collection)
+                .withPersonIdentifierLastName("McDonald")
+                .withPersonIdentifierFirstName("Ronald")
+                .withBirthDate(LocalDate.of(1975, 6, 3))
+                .withIssueDate("2019-1-17")
+                .withRelationshipType(authorType.getLabel())
+                .build();
+
+        // Create a journal entity
+        Item journal = ItemBuilder.createItem(context, collection)
+                .withTitle("Journal title")
+                .withRelationshipType(journalType.getLabel())
+                .build();
+
+        // See if the API endpoint returns different kinds of entities when doing a wide search
+        getClient().perform(get("/api/discover/search/objects?scope=" + collection.getID()))
+                //The status has to be 200 OK
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.type", is("discover")))
+                .andExpect(jsonPath("$._embedded.searchResult._embedded.objects", Matchers.containsInAnyOrder(
+                        SearchResultMatcher.matchOnEntityType(
+                                publication.getID().toString(),
+                                publicationType.getLabel()),
+                        SearchResultMatcher.matchOnEntityType(
+                                author.getID().toString(),
+                                authorType.getLabel()),
+                        SearchResultMatcher.matchOnEntityType(
+                                journal.getID().toString(),
+                                journalType.getLabel())
+                )));
+
 
 
     }

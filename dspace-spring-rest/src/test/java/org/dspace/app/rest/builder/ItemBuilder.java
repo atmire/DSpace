@@ -7,6 +7,9 @@
  */
 package org.dspace.app.rest.builder;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 import org.dspace.content.Collection;
 import org.dspace.content.DCDate;
 import org.dspace.content.Item;
@@ -74,6 +77,19 @@ public class ItemBuilder extends AbstractDSpaceObjectBuilder<Item> {
 
     public ItemBuilder withSubject(final String subject) {
         return addMetadataValue(item, MetadataSchemaEnum.DC.getName(), "subject", null, subject);
+    }
+
+    public ItemBuilder withBirthDate(final LocalDate date) {
+        return setMetadataSingleValue(item, "person", "identifier","birthdate",
+                date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+    }
+
+    public ItemBuilder withJobTitle(final String jobTitle) {
+        return setMetadataSingleValue(item, "person", "identifier", "jobtitle", jobTitle);
+    }
+
+    public ItemBuilder withEmail(final String email) {
+        return setMetadataSingleValue(item, "person", "identifier", "email", email);
     }
 
     public ItemBuilder withRelationshipType(final String relationshipType) {

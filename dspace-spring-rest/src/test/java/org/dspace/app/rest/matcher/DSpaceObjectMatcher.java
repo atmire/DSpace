@@ -22,5 +22,4 @@ public class DSpaceObjectMatcher {
             hasJsonPath("$.uuid", notNullValue())
         );
     }
-
 }

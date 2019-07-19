@@ -69,6 +69,14 @@ public class SearchResultMatcher {
         );
     }
 
+    public static Matcher<? super Object> matchOnEntityType(String uuid, String entityType) {
+        return allOf(
+                hasJsonPath("$._embedded.indexableObject.uuid", is(uuid)),
+                hasJsonPath("$._embedded.indexableObject.metadata.['relationship.type'][0].value",
+                        is(entityType))
+        );
+    }
+
     public static Matcher<? super Object> matchOnItemNameAndHitHighlight(String type, String typePlural,
                                                                          String itemName, String hitHighlightQuery,
                                                                          String expectedFieldInHitHighlightning) {
