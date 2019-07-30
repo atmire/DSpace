@@ -146,12 +146,14 @@ public class AnonymizeStatistics {
         try {
 
             long updated = 0;
-            long total = getDocuments(0).getResults().getNumFound();
+            long total = getDocuments().getResults().getNumFound();
             printInfo(total + " documents to update");
 
-            for (int start = 0; start < total; start += BATCH_SIZE) {
+            QueryResponse documents;
+            do {
+                documents = getDocuments();
 
-                for (SolrDocument document : getDocuments(start).getResults()) {
+                for (SolrDocument document : documents.getResults()) {
                     try {
                         solrLoggerService.update(
                                 "uid:" + document.getFieldValue("uid"),
@@ -167,7 +169,7 @@ public class AnonymizeStatistics {
                         printError(e);
                     }
                 }
-            }
+            } while (documents.getResults().getNumFound() > 0);
 
             printInfo(updated + " documents updated");
             if (updated == total) {
@@ -181,7 +183,7 @@ public class AnonymizeStatistics {
         }
     }
 
-    private static QueryResponse getDocuments(int start) throws SolrServerException {
+    private static QueryResponse getDocuments() throws SolrServerException {
 
         if (sleep > 0) {
             try {
@@ -198,8 +200,7 @@ public class AnonymizeStatistics {
                 "time:[* TO " + TIME_LIMIT + "]" +
                         " AND -ip:(*" + escape(IP_V4_MASK) + ")" +
                         " AND -ip:(*" + escape(IP_V6_MASK) + ")",
-                null, BATCH_SIZE, -1, null, null, null, null, null, false,
-                start
+                null, BATCH_SIZE, -1, null, null, null, null, null, false
         );
     }
 
