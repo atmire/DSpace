@@ -52,11 +52,11 @@
                 <entry key="default" value-ref="defaultConfiguration"/>
 
                 <!--Use site to override the default configuration for the home page & default discovery page-->
-                <entry key="site" value-ref="homepageConfiguration"/>
+                <entry key="site" value-ref="homepageConfiguration" />
                 <!--<entry key="123456789/7621" value-ref="defaultConfiguration"/>-->
                 <!-- Used to show filters and results on MyDSpace -->
-                <entry key="workspace" value-ref="workspaceConfiguration"/>
-                <entry key="workflow" value-ref="workflowConfiguration"/>
+                <entry key="workspace" value-ref="workspaceConfiguration" />
+                <entry key="workflow" value-ref="workflowConfiguration" />
 
                 <entry key="publicationConfiguration" value-ref="publicationConfiguration"/>
 
@@ -917,7 +917,7 @@
         </property>
     </bean>
 
-    <!--TagCloud configuration bean for default discovery configuration-->
+     <!--TagCloud configuration bean for default discovery configuration-->
     <bean id="defaultTagCloudFacetConfiguration" class="org.dspace.discovery.configuration.TagCloudFacetConfiguration">
         <!-- Actual configuration of the tagcloud (colors, sorting, etc.) -->
         <property name="tagCloudConfiguration" ref="tagCloudConfiguration"/>
@@ -1128,8 +1128,7 @@
 
     </bean>
 
-    <bean id="searchFilterContentInOriginalBundle"
-          class="org.dspace.discovery.configuration.DiscoverySearchFilterFacet">
+    <bean id="searchFilterContentInOriginalBundle" class="org.dspace.discovery.configuration.DiscoverySearchFilterFacet">
         <property name="indexFieldName" value="has_content_in_original_bundle"/>
         <property name="metadataFields">
             <list/>
