@@ -200,7 +200,7 @@ public class AnonymizeStatistics {
                 "time:[* TO " + TIME_LIMIT + "]" +
                         " AND -ip:(*" + escape(IP_V4_MASK) + ")" +
                         " AND -ip:(*" + escape(IP_V6_MASK) + ")",
-                null, BATCH_SIZE, -1, null, null, null, null, null, false
+                null, BATCH_SIZE, -1, null, null, null, null, null, false, false
         );
     }
 

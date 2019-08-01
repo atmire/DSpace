@@ -1020,6 +1020,12 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
     @Override
     public QueryResponse query(String query, String filterQuery, String facetField, int rows, int max, String dateType, String dateStart, String dateEnd, List<String> facetQueries, String sort, boolean ascending) throws SolrServerException {
 
+        return query(query, filterQuery, facetField, rows, max, dateType, dateStart, dateEnd, facetQueries, sort, ascending, true);
+    }
+
+    @Override
+    public QueryResponse query(String query, String filterQuery, String facetField, int rows, int max, String dateType, String dateStart, String dateEnd, List<String> facetQueries, String sort, boolean ascending, boolean defaultFilterQueries) throws SolrServerException {
+
         if (solr == null)
         {
             return null;
@@ -1074,14 +1080,14 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
         // not be influenced
 
         // Choose to filter by the Legacy spider IP list (may get too long to properly filter all IP's
-        if(configurationService.getBooleanProperty("solr-statistics.query.filter.spiderIp",false))
+        if (defaultFilterQueries && configurationService.getBooleanProperty("solr-statistics.query.filter.spiderIp",false))
         {
             solrQuery.addFilterQuery(getIgnoreSpiderIPs());
         }
 
         // Choose to filter by isBot field, may be overriden in future
         // to allow views on stats based on bots.
-        if(configurationService.getBooleanProperty("solr-statistics.query.filter.isBot",true))
+        if (defaultFilterQueries && configurationService.getBooleanProperty("solr-statistics.query.filter.isBot",true))
         {
             solrQuery.addFilterQuery("-isBot:true");
         }
@@ -1091,7 +1097,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
         }
 
         String[] bundles = configurationService.getArrayProperty("solr-statistics.query.filter.bundles");
-        if(bundles != null && bundles.length > 0){
+        if (defaultFilterQueries && bundles != null && bundles.length > 0){
 
             /**
              * The code below creates a query that will allow only records which do not have a bundlename

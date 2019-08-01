@@ -179,6 +179,12 @@ public interface SolrLoggerService {
                                String dateEnd, List<String> facetQueries, String sort, boolean ascending)
             throws SolrServerException;
 
+    public QueryResponse query(String query, String filterQuery,
+                               String facetField, int rows, int max, String dateType, String dateStart,
+                               String dateEnd, List<String> facetQueries, String sort, boolean ascending,
+                               boolean defaultFilterQueries)
+            throws SolrServerException;
+
     /**
      * Returns in a filterQuery string all the ip addresses that should be ignored
      *
