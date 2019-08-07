@@ -645,6 +645,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
             Map<String, String> params = new HashMap<String, String>();
             params.put("q", query);
             params.put("rows", "10");
+            params.put("fl","[shard],*");
             if(0 < statisticYearCores.size()){
                 params.put(ShardParams.SHARDS, StringUtils.join(statisticYearCores.iterator(), ','));
             }
@@ -798,13 +799,14 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
 
         processor.execute(query);
 
-        // We have all the docs delete the ones we don't need
-        solr.deleteByQuery(query);
-
         // Add the new (updated onces
         for (int i = 0; i < docsToUpdate.size(); i++)
         {
             SolrDocument solrDocument = docsToUpdate.get(i);
+
+            HttpSolrServer shard = new HttpSolrServer("http://" + solrDocument.getFieldValue("[shard]"));
+            shard.deleteByQuery("uid:" + solrDocument.getFieldValue("uid"));
+
             // Now loop over our fieldname actions
             for (int j = 0; j < fieldNames.size(); j++)
             {
@@ -845,8 +847,10 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
             SolrInputDocument newInput = ClientUtils
                     .toSolrInputDocument(solrDocument);
             solr.add(newInput);
+
+            shard.commit();
+            solr.commit();
         }
-        solr.commit();
         // System.out.println("SolrLogger.update(\""+query+"\"):"+(new
         // Date().getTime() - start)+"ms,"+numbFound+"records");
     }
