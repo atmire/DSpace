@@ -843,6 +843,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
             }
 
             solrDocument.removeFields("_version_");
+            solrDocument.removeFields("[shard]");
 
             SolrInputDocument newInput = ClientUtils
                     .toSolrInputDocument(solrDocument);
