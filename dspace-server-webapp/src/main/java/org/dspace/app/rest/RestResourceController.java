@@ -940,7 +940,7 @@ public class RestResourceController implements InitializingBean {
 
         Page<DSpaceResource<T>> resources;
         try {
-            resources = repository.findAll(page).map(repository::wrapResource);
+            resources = repository.findAll(page, projection).map(repository::wrapResource);
             resources.forEach(linkService::addLinks);
         } catch (PaginationException pe) {
             resources = new PageImpl<DSpaceResource<T>>(new ArrayList<DSpaceResource<T>>(), page, pe.getTotal());
