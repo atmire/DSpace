@@ -61,7 +61,7 @@ public class MetadataFieldRestRepository extends DSpaceRestRepository<MetadataFi
     }
 
     @Override
-    public MetadataFieldRest findOne(Context context, Integer id) {
+    public MetadataFieldRest findOne(Context context, Integer id, String projection) {
         MetadataField metadataField = null;
         try {
             metadataField = metadataFieldService.find(context, id);
@@ -71,18 +71,20 @@ public class MetadataFieldRestRepository extends DSpaceRestRepository<MetadataFi
         if (metadataField == null) {
             return null;
         }
-        return converter.fromModel(metadataField);
+        return converter.fromModel(utils.applyProjection(metadataField, projection));
     }
 
     @Override
-    public Page<MetadataFieldRest> findAll(Context context, Pageable pageable) {
+    public Page<MetadataFieldRest> findAll(Context context, Pageable pageable, String projection) {
         List<MetadataField> metadataField = null;
         try {
             metadataField = metadataFieldService.findAll(context);
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<MetadataFieldRest> page = utils.getPage(metadataField, pageable).map(converter);
+        Page<MetadataFieldRest> page = utils.getPage(metadataField, pageable)
+            .map(object -> utils.applyProjection(object, projection))
+            .map(converter);
         return page;
     }
 

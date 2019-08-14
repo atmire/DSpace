@@ -48,7 +48,7 @@ public class SiteRestRepository extends DSpaceObjectRestRepository<Site, SiteRes
     }
 
     @Override
-    public SiteRest findOne(Context context, UUID id) {
+    public SiteRest findOne(Context context, UUID id, String projection) {
         Site site = null;
         try {
             site = sitesv.find(context, id);
@@ -58,11 +58,11 @@ public class SiteRestRepository extends DSpaceObjectRestRepository<Site, SiteRes
         if (site == null) {
             return null;
         }
-        return dsoConverter.fromModel(site);
+        return dsoConverter.fromModel(utils.applyProjection(site, projection));
     }
 
     @Override
-    public Page<SiteRest> findAll(Context context, Pageable pageable) {
+    public Page<SiteRest> findAll(Context context, Pageable pageable, String projection) {
         List<Site> sites = new ArrayList<Site>();
         int total = 1;
         try {
@@ -70,7 +70,9 @@ public class SiteRestRepository extends DSpaceObjectRestRepository<Site, SiteRes
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<SiteRest> page = new PageImpl<Site>(sites, pageable, total).map(dsoConverter);
+        Page<SiteRest> page = new PageImpl<Site>(sites, pageable, total)
+            .map(object -> utils.applyProjection(object, projection))
+            .map(dsoConverter);
         return page;
     }
 

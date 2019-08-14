@@ -101,14 +101,18 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
     }
 
     @Override
+    public T findOne(ID id) {
+        return findOne(id, null);
+    }
+
     /**
      * Return a specific REST object
      *
      * @return the REST object identified by its ID
      */
-    public T findOne(ID id) {
+    public T findOne(ID id, String projection) {
         Context context = obtainContext();
-        return thisRepository.findOne(context, id);
+        return thisRepository.findOne(context, id, projection);
     }
 
     /**
@@ -120,7 +124,7 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
      *            the rest object id
      * @return the REST object identified by its ID
      */
-    public abstract T findOne(Context context, ID id);
+    public abstract T findOne(Context context, ID id, String projection);
 
     @Override
     /**
@@ -224,12 +228,16 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
     }
 
     @Override
+    public Page<T> findAll(Pageable pageable) {
+        return findAll(pageable, null);
+    }
+
     /**
      * Provide access to the manage entity instances in a paginated way
      */
-    public Page<T> findAll(Pageable pageable) {
+    public Page<T> findAll(Pageable pageable, String projection) {
         Context context = obtainContext();
-        return thisRepository.findAll(context, pageable);
+        return thisRepository.findAll(context, pageable, projection);
     }
 
     /**
@@ -241,7 +249,7 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
      *            object embedding the requested pagination info
      * @return
      */
-    public abstract Page<T> findAll(Context context, Pageable pageable);
+    public abstract Page<T> findAll(Context context, Pageable pageable, String projection);
 
     /**
      * The REST model supported by the repository

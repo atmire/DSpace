@@ -53,7 +53,7 @@ public class MetadataSchemaRestRepository extends DSpaceRestRepository<MetadataS
     }
 
     @Override
-    public MetadataSchemaRest findOne(Context context, Integer id) {
+    public MetadataSchemaRest findOne(Context context, Integer id, String projection) {
         MetadataSchema metadataSchema = null;
         try {
             metadataSchema = metadataSchemaService.find(context, id);
@@ -63,18 +63,20 @@ public class MetadataSchemaRestRepository extends DSpaceRestRepository<MetadataS
         if (metadataSchema == null) {
             return null;
         }
-        return converter.fromModel(metadataSchema);
+        return converter.fromModel(utils.applyProjection(metadataSchema, projection));
     }
 
     @Override
-    public Page<MetadataSchemaRest> findAll(Context context, Pageable pageable) {
+    public Page<MetadataSchemaRest> findAll(Context context, Pageable pageable, String projection) {
         List<MetadataSchema> metadataSchema = null;
         try {
             metadataSchema = metadataSchemaService.findAll(context);
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<MetadataSchemaRest> page = utils.getPage(metadataSchema, pageable).map(converter);
+        Page<MetadataSchemaRest> page = utils.getPage(metadataSchema, pageable)
+            .map(object -> utils.applyProjection(object, projection))
+            .map(converter);
         return page;
     }
 

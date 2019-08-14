@@ -98,7 +98,7 @@ public class WorkflowItemRestRepository extends DSpaceRestRepository<WorkflowIte
 
     @Override
     @PreAuthorize("hasPermission(#id, 'WORKFLOWITEM', 'READ')")
-    public WorkflowItemRest findOne(Context context, Integer id) {
+    public WorkflowItemRest findOne(Context context, Integer id, String projection) {
         XmlWorkflowItem witem = null;
         try {
             witem = wis.find(context, id);
@@ -108,12 +108,12 @@ public class WorkflowItemRestRepository extends DSpaceRestRepository<WorkflowIte
         if (witem == null) {
             return null;
         }
-        return converter.fromModel(witem);
+        return converter.fromModel(utils.applyProjection(witem, projection));
     }
 
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
-    public Page<WorkflowItemRest> findAll(Context context, Pageable pageable) {
+    public Page<WorkflowItemRest> findAll(Context context, Pageable pageable, String projection) {
         List<XmlWorkflowItem> witems = null;
         int total = 0;
         try {
@@ -122,7 +122,9 @@ public class WorkflowItemRestRepository extends DSpaceRestRepository<WorkflowIte
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<WorkflowItemRest> page = new PageImpl<XmlWorkflowItem>(witems, pageable, total).map(converter);
+        Page<WorkflowItemRest> page = new PageImpl<XmlWorkflowItem>(witems, pageable, total)
+            .map(object -> utils.applyProjection(object, projection))
+            .map(converter);
         return page;
     }
 

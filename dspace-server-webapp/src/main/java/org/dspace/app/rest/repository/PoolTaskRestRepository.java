@@ -80,7 +80,7 @@ public class PoolTaskRestRepository extends DSpaceRestRepository<PoolTaskRest, I
 
     @Override
     @PreAuthorize("hasPermission(#id, 'POOLTASK', 'READ')")
-    public PoolTaskRest findOne(Context context, Integer id) {
+    public PoolTaskRest findOne(Context context, Integer id, String projection) {
         PoolTask task = null;
         try {
             task = poolTaskService.find(context, id);
@@ -90,7 +90,7 @@ public class PoolTaskRestRepository extends DSpaceRestRepository<PoolTaskRest, I
         if (task == null) {
             return null;
         }
-        return converter.fromModel(task);
+        return converter.fromModel(utils.applyProjection(task, projection));
     }
 
     @SearchRestMethod(name = "findByUser")
@@ -156,7 +156,7 @@ public class PoolTaskRestRepository extends DSpaceRestRepository<PoolTaskRest, I
     }
 
     @Override
-    public Page<PoolTaskRest> findAll(Context context, Pageable pageable) {
+    public Page<PoolTaskRest> findAll(Context context, Pageable pageable, String projection) {
         throw new RuntimeException("Method not allowed!");
     }
 }

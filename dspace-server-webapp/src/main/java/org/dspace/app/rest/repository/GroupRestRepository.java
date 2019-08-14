@@ -84,7 +84,7 @@ public class GroupRestRepository extends DSpaceObjectRestRepository<Group, Group
 
     @Override
     @PreAuthorize("hasPermission(#id, 'GROUP', 'READ')")
-    public GroupRest findOne(Context context, UUID id) {
+    public GroupRest findOne(Context context, UUID id, String projection) {
         Group group = null;
         try {
             group = gs.find(context, id);
@@ -94,12 +94,12 @@ public class GroupRestRepository extends DSpaceObjectRestRepository<Group, Group
         if (group == null) {
             return null;
         }
-        return dsoConverter.fromModel(group);
+        return dsoConverter.fromModel(utils.applyProjection(group, projection));
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @Override
-    public Page<GroupRest> findAll(Context context, Pageable pageable) {
+    public Page<GroupRest> findAll(Context context, Pageable pageable, String projection) {
         List<Group> groups = null;
         int total = 0;
         try {
@@ -108,7 +108,9 @@ public class GroupRestRepository extends DSpaceObjectRestRepository<Group, Group
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<GroupRest> page = new PageImpl<Group>(groups, pageable, total).map(dsoConverter);
+        Page<GroupRest> page = new PageImpl<Group>(groups, pageable, total)
+            .map(object -> utils.applyProjection(object, projection))
+            .map(dsoConverter);
         return page;
     }
 

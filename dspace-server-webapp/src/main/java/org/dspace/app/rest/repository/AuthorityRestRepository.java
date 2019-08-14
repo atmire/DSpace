@@ -40,15 +40,16 @@ public class AuthorityRestRepository extends DSpaceRestRepository<AuthorityRest,
 
     @PreAuthorize("hasAuthority('AUTHENTICATED')")
     @Override
-    public AuthorityRest findOne(Context context, String name) {
+    public AuthorityRest findOne(Context context, String name, String projection) {
         ChoiceAuthority source = cas.getChoiceAuthorityByAuthorityName(name);
         AuthorityRest result = authorityUtils.convertAuthority(source, name);
-        return result;
+
+        return utils.applyProjection(result, projection);
     }
 
     @PreAuthorize("hasAuthority('AUTHENTICATED')")
     @Override
-    public Page<AuthorityRest> findAll(Context context, Pageable pageable) {
+    public Page<AuthorityRest> findAll(Context context, Pageable pageable, String projection) {
         Set<String> authoritiesName = cas.getChoiceAuthoritiesNames();
         List<AuthorityRest> results = new ArrayList<AuthorityRest>();
         for (String authorityName : authoritiesName) {
@@ -56,7 +57,8 @@ public class AuthorityRestRepository extends DSpaceRestRepository<AuthorityRest,
             AuthorityRest result = authorityUtils.convertAuthority(source, authorityName);
             results.add(result);
         }
-        return new PageImpl<AuthorityRest>(results, pageable, results.size());
+        return new PageImpl<AuthorityRest>(results, pageable, results.size())
+            .map(object -> utils.applyProjection(object, projection));
     }
 
     @Override

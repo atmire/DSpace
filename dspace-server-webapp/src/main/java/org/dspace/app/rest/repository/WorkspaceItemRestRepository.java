@@ -114,7 +114,7 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
 
     //TODO @PreAuthorize("hasPermission(#id, 'WORKSPACEITEM', 'READ')")
     @Override
-    public WorkspaceItemRest findOne(Context context, Integer id) {
+    public WorkspaceItemRest findOne(Context context, Integer id, String projection) {
         WorkspaceItem witem = null;
         try {
             witem = wis.find(context, id);
@@ -124,12 +124,12 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
         if (witem == null) {
             return null;
         }
-        return converter.fromModel(witem);
+        return converter.fromModel(utils.applyProjection(witem, projection));
     }
 
     //TODO @PreAuthorize("hasAuthority('ADMIN')")
     @Override
-    public Page<WorkspaceItemRest> findAll(Context context, Pageable pageable) {
+    public Page<WorkspaceItemRest> findAll(Context context, Pageable pageable, String projection) {
         List<WorkspaceItem> witems = null;
         int total = 0;
         try {
@@ -138,7 +138,9 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<WorkspaceItemRest> page = new PageImpl<WorkspaceItem>(witems, pageable, total).map(converter);
+        Page<WorkspaceItemRest> page = new PageImpl<WorkspaceItem>(witems, pageable, total)
+            .map(object -> utils.applyProjection(object, projection))
+            .map(converter);
         return page;
     }
 

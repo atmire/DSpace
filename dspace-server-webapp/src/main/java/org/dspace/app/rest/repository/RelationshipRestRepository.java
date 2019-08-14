@@ -70,22 +70,25 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
     private AuthorizeService authorizeService;
 
 
-    public RelationshipRest findOne(Context context, Integer integer) {
+    public RelationshipRest findOne(Context context, Integer integer, String projection) {
         try {
-            return relationshipConverter.fromModel(relationshipService.find(context, integer));
+            Relationship relationship = relationshipService.find(context, integer);
+            return relationshipConverter.fromModel(utils.applyProjection(relationship, projection));
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
 
-    public Page<RelationshipRest> findAll(Context context, Pageable pageable) {
+    public Page<RelationshipRest> findAll(Context context, Pageable pageable, String projection) {
         List<Relationship> relationships = null;
         try {
             relationships = relationshipService.findAll(context);
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<RelationshipRest> page = utils.getPage(relationships, pageable).map(relationshipConverter);
+        Page<RelationshipRest> page = utils.getPage(relationships, pageable)
+            .map(object -> utils.applyProjection(object, projection))
+            .map(relationshipConverter);
         return page;
     }
 

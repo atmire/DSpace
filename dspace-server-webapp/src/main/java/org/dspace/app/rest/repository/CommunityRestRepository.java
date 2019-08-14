@@ -114,7 +114,7 @@ public class CommunityRestRepository extends DSpaceObjectRestRepository<Communit
 
     @Override
     @PreAuthorize("hasPermission(#id, 'COMMUNITY', 'READ')")
-    public CommunityRest findOne(Context context, UUID id) {
+    public CommunityRest findOne(Context context, UUID id, String projection) {
         Community community = null;
         try {
             community = cs.find(context, id);
@@ -124,11 +124,11 @@ public class CommunityRestRepository extends DSpaceObjectRestRepository<Communit
         if (community == null) {
             return null;
         }
-        return dsoConverter.fromModel(community);
+        return dsoConverter.fromModel(utils.applyProjection(community, projection));
     }
 
     @Override
-    public Page<CommunityRest> findAll(Context context, Pageable pageable) {
+    public Page<CommunityRest> findAll(Context context, Pageable pageable, String projection) {
         List<Community> it = null;
         List<Community> communities = new ArrayList<Community>();
         int total = 0;
@@ -136,7 +136,7 @@ public class CommunityRestRepository extends DSpaceObjectRestRepository<Communit
             total = cs.countTotal(context);
             it = cs.findAll(context, pageable.getPageSize(), pageable.getOffset());
             for (Community c : it) {
-                communities.add(c);
+                communities.add(utils.applyProjection(c, projection));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);

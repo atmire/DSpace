@@ -42,7 +42,7 @@ public class ResourcePolicyRestRepository extends DSpaceRestRepository<ResourceP
 
     @PreAuthorize("hasAuthority('AUTHENTICATED')")
     @Override
-    public ResourcePolicyRest findOne(Context context, Integer id) {
+    public ResourcePolicyRest findOne(Context context, Integer id, String projection) {
         ResourcePolicy source = null;
         try {
             source = resourcePolicyService.find(context, id);
@@ -52,12 +52,12 @@ public class ResourcePolicyRestRepository extends DSpaceRestRepository<ResourceP
         if (source == null) {
             return null;
         }
-        return resourcePolicyConverter.convert(source);
+        return resourcePolicyConverter.convert(utils.applyProjection(source, projection));
     }
 
     @PreAuthorize("hasAuthority('AUTHENTICATED')")
     @Override
-    public Page<ResourcePolicyRest> findAll(Context context, Pageable pageable) {
+    public Page<ResourcePolicyRest> findAll(Context context, Pageable pageable, String projection) {
         throw new RepositoryMethodNotImplementedException(ResourcePolicyRest.NAME, "findAll");
     }
 

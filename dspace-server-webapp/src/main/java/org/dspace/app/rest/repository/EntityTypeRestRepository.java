@@ -35,26 +35,28 @@ public class EntityTypeRestRepository extends DSpaceRestRepository<EntityTypeRes
     @Autowired
     private EntityTypeConverter entityTypeConverter;
 
-    public EntityTypeRest findOne(Context context, Integer integer) {
+    public EntityTypeRest findOne(Context context, Integer integer, String projection) {
         try {
             EntityType entityType = entityTypeService.find(context, integer);
             if (entityType == null) {
                 throw new ResourceNotFoundException("The entityType for ID: " + integer + " could not be found");
             }
-            return entityTypeConverter.fromModel(entityType);
+            return entityTypeConverter.fromModel(utils.applyProjection(entityType, projection));
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
 
-    public Page<EntityTypeRest> findAll(Context context, Pageable pageable) {
+    public Page<EntityTypeRest> findAll(Context context, Pageable pageable, String projection) {
         List<EntityType> entityTypeList = null;
         try {
             entityTypeList = entityTypeService.findAll(context);
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<EntityTypeRest> page = utils.getPage(entityTypeList, pageable).map(entityTypeConverter);
+        Page<EntityTypeRest> page = utils.getPage(entityTypeList, pageable)
+            .map(object -> utils.applyProjection(object, projection))
+            .map(entityTypeConverter);
         return page;
     }
 

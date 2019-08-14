@@ -13,6 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.model.BitstreamRest;
 import org.dspace.app.rest.model.ItemRest;
@@ -85,7 +86,7 @@ public class ItemConverter
             log.error("Error setting template item of for item " + item.getHandle(), e);
         }
         List<BitstreamRest> bitstreams = new ArrayList<BitstreamRest>();
-        for (Bundle bun : obj.getBundles()) {
+        for (Bundle bun : CollectionUtils.emptyIfNull(obj.getBundles())) {
             for (Bitstream bit : bun.getBitstreams()) {
                 BitstreamRest bitrest = bitstreamConverter.fromModel(bit);
                 bitstreams.add(bitrest);

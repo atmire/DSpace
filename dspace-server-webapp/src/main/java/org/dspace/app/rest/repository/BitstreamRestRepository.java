@@ -55,7 +55,7 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
 
     @Override
     @PreAuthorize("hasPermission(#id, 'BITSTREAM', 'READ')")
-    public BitstreamRest findOne(Context context, UUID id) {
+    public BitstreamRest findOne(Context context, UUID id, String projection) {
         Bitstream bit = null;
         try {
             bit = bs.find(context, id);
@@ -72,12 +72,12 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        return dsoConverter.fromModel(bit);
+        return dsoConverter.fromModel(utils.applyProjection(bit, projection));
     }
 
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
-    public Page<BitstreamRest> findAll(Context context, Pageable pageable) {
+    public Page<BitstreamRest> findAll(Context context, Pageable pageable, String projection) {
         List<Bitstream> bit = new ArrayList<Bitstream>();
         Iterator<Bitstream> it = null;
         int total = 0;
@@ -85,7 +85,7 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
             total = bs.countTotal(context);
             it = bs.findAll(context, pageable.getPageSize(), pageable.getOffset());
             while (it.hasNext()) {
-                bit.add(it.next());
+                bit.add(utils.applyProjection(it.next(), projection));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);

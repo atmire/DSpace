@@ -33,7 +33,7 @@ public class BrowseIndexRestRepository extends DSpaceRestRepository<BrowseIndexR
     BrowseIndexConverter converter;
 
     @Override
-    public BrowseIndexRest findOne(Context context, String name) {
+    public BrowseIndexRest findOne(Context context, String name, String projection) {
         BrowseIndexRest bi = null;
         BrowseIndex bix;
         try {
@@ -42,13 +42,13 @@ public class BrowseIndexRestRepository extends DSpaceRestRepository<BrowseIndexR
             throw new RuntimeException(e.getMessage(), e);
         }
         if (bix != null) {
-            bi = converter.convert(bix);
+            bi = converter.convert(utils.applyProjection(bix, projection));
         }
         return bi;
     }
 
     @Override
-    public Page<BrowseIndexRest> findAll(Context context, Pageable pageable) {
+    public Page<BrowseIndexRest> findAll(Context context, Pageable pageable, String projection) {
         List<BrowseIndexRest> it = null;
         List<BrowseIndex> indexesList = new ArrayList<BrowseIndex>();
         int total = 0;
@@ -56,7 +56,7 @@ public class BrowseIndexRestRepository extends DSpaceRestRepository<BrowseIndexR
             BrowseIndex[] indexes = BrowseIndex.getBrowseIndices();
             total = indexes.length;
             for (BrowseIndex bix : indexes) {
-                indexesList.add(bix);
+                indexesList.add(utils.applyProjection(bix, projection));
             }
         } catch (BrowseException e) {
             throw new RuntimeException(e.getMessage(), e);

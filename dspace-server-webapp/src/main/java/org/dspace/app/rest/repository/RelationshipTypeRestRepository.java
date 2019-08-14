@@ -34,15 +34,16 @@ public class RelationshipTypeRestRepository extends DSpaceRestRepository<Relatio
     @Autowired
     private RelationshipTypeConverter relationshipTypeConverter;
 
-    public RelationshipTypeRest findOne(Context context, Integer integer) {
+    public RelationshipTypeRest findOne(Context context, Integer integer, String projection) {
         try {
-            return relationshipTypeConverter.fromModel(relationshipTypeService.find(context, integer));
+            RelationshipType relationshipType = relationshipTypeService.find(context, integer);
+            return relationshipTypeConverter.fromModel(utils.applyProjection(relationshipType, projection));
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
 
-    public Page<RelationshipTypeRest> findAll(Context context, Pageable pageable) {
+    public Page<RelationshipTypeRest> findAll(Context context, Pageable pageable, String projection) {
         List<RelationshipType> relationshipTypeList = null;
         try {
             relationshipTypeList = relationshipTypeService.findAll(context);

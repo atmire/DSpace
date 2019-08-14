@@ -39,15 +39,16 @@ public class FilteredDiscoveryPageRestRepository extends DSpaceRestRepository<Fi
     @Autowired
     private EntityTypeToFilterQueryService entityTypeToFilterQueryService;
 
-    public FilteredDiscoveryPageRest findOne(Context context, String string) {
+    public FilteredDiscoveryPageRest findOne(Context context, String string, String projection) {
         try {
-            return filteredDiscoveryPageConverter.fromModel(entityTypeService.findByEntityType(context, string));
+            EntityType entityType = entityTypeService.findByEntityType(context, string);
+            return filteredDiscoveryPageConverter.fromModel(utils.applyProjection(entityType, projection));
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
 
-    public Page<FilteredDiscoveryPageRest> findAll(Context context, Pageable pageable) {
+    public Page<FilteredDiscoveryPageRest> findAll(Context context, Pageable pageable, String projection) {
         List<EntityType> entityTypeList = null;
         try {
             entityTypeList = entityTypeService.findAll(context);
@@ -61,7 +62,8 @@ public class FilteredDiscoveryPageRestRepository extends DSpaceRestRepository<Fi
             }
         }
         Page<FilteredDiscoveryPageRest> page = utils.getPage(resultingList, pageable)
-                                                    .map(filteredDiscoveryPageConverter);
+            .map(object -> utils.applyProjection(object, projection))
+            .map(filteredDiscoveryPageConverter);
         return page;    }
 
     public Class<FilteredDiscoveryPageRest> getDomainClass() {

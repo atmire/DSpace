@@ -241,7 +241,7 @@ public class RestResourceController implements InitializingBean {
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
         RestAddressableModel modelObject = null;
         try {
-            modelObject = repository.findOne(id);
+            modelObject = repository.findOne(id, projection);
         } catch (ClassCastException e) {
             // ignore, as handled below
         }

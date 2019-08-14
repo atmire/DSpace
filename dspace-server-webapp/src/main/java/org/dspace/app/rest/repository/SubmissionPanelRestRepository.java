@@ -45,10 +45,10 @@ public class SubmissionPanelRestRepository extends DSpaceRestRepository<Submissi
 
     @PreAuthorize("hasAuthority('AUTHENTICATED')")
     @Override
-    public SubmissionSectionRest findOne(Context context, String id) {
+    public SubmissionSectionRest findOne(Context context, String id, String projection) {
         try {
             SubmissionStepConfig step = submissionConfigReader.getStepConfig(id);
-            return converter.convert(step);
+            return converter.convert(utils.applyProjection(step, projection));
         } catch (SubmissionConfigReaderException e) {
             //TODO wrap with a specific exception
             throw new RuntimeException(e.getMessage(), e);
@@ -57,7 +57,7 @@ public class SubmissionPanelRestRepository extends DSpaceRestRepository<Submissi
 
     @PreAuthorize("hasAuthority('AUTHENTICATED')")
     @Override
-    public Page<SubmissionSectionRest> findAll(Context context, Pageable pageable) {
+    public Page<SubmissionSectionRest> findAll(Context context, Pageable pageable, String projection) {
         List<SubmissionConfig> subConfs = new ArrayList<SubmissionConfig>();
         subConfs = submissionConfigReader.getAllSubmissionConfigs(pageable.getPageSize(), pageable.getOffset());
         int total = 0;
@@ -70,6 +70,7 @@ public class SubmissionPanelRestRepository extends DSpaceRestRepository<Submissi
             }
         }
         Page<SubmissionSectionRest> page = new PageImpl<SubmissionStepConfig>(stepConfs, pageable, total)
+            .map(object -> utils.applyProjection(object, projection))
             .map(converter);
         return page;
     }

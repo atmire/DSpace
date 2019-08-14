@@ -7,9 +7,12 @@
  */
 package org.dspace.app.rest.utils;
 
+import org.dspace.app.rest.projection.MetadataOnlyProjection;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
+import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurerAdapter;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
 
 /**
@@ -25,16 +28,29 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
 @EnableSpringDataWebSupport
 @ComponentScan( {"org.dspace.app.rest.converter", "org.dspace.app.rest.repository", "org.dspace.app.rest.utils",
                  "org.dspace.app.configuration"})
-public class ApplicationConfig {
+public class ApplicationConfig extends RepositoryRestConfigurerAdapter {
+
+    @Value("${dspace.dir}")
+    private String dspaceHome;
+
     // Allowed CORS origins. Defaults to * (everywhere)
     // Can be overridden in DSpace configuration
     @Value("${rest.cors.allowed-origins:*}")
     private String corsAllowedOrigins;
+
+    public String getDspaceHome() {
+        return dspaceHome;
+    }
 
     public String[] getCorsAllowedOrigins() {
         if (corsAllowedOrigins != null) {
             return corsAllowedOrigins.split("\\s*,\\s*");
         }
         return null;
+    }
+
+    @Override
+    public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config) {
+        config.getProjectionConfiguration().addProjection(MetadataOnlyProjection.class);
     }
 }

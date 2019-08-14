@@ -44,7 +44,7 @@ public class SubmissionFormRestRepository extends DSpaceRestRepository<Submissio
 
     @PreAuthorize("hasAuthority('AUTHENTICATED')")
     @Override
-    public SubmissionFormRest findOne(Context context, String submitName) {
+    public SubmissionFormRest findOne(Context context, String submitName, String projection) {
         DCInputSet inputConfig;
         try {
             inputConfig = inputReader.getInputsByFormName(submitName);
@@ -54,12 +54,12 @@ public class SubmissionFormRestRepository extends DSpaceRestRepository<Submissio
         if (inputConfig == null) {
             return null;
         }
-        return converter.convert(inputConfig);
+        return converter.convert(utils.applyProjection(inputConfig, projection));
     }
 
     @PreAuthorize("hasAuthority('AUTHENTICATED')")
     @Override
-    public Page<SubmissionFormRest> findAll(Context context, Pageable pageable) {
+    public Page<SubmissionFormRest> findAll(Context context, Pageable pageable, String projection) {
         List<DCInputSet> subConfs = new ArrayList<DCInputSet>();
         int total = inputReader.countInputs();
         try {
@@ -67,7 +67,9 @@ public class SubmissionFormRestRepository extends DSpaceRestRepository<Submissio
         } catch (DCInputsReaderException e) {
             throw new IllegalStateException(e.getMessage(), e);
         }
-        Page<SubmissionFormRest> page = new PageImpl<DCInputSet>(subConfs, pageable, total).map(converter);
+        Page<SubmissionFormRest> page = new PageImpl<DCInputSet>(subConfs, pageable, total)
+            .map(object -> utils.applyProjection(object, projection))
+            .map(converter);
         return page;
     }
 

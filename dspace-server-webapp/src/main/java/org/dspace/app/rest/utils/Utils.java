@@ -34,6 +34,7 @@ import org.dspace.app.rest.model.LinksRest;
 import org.dspace.app.rest.model.ResourcePolicyRest;
 import org.dspace.app.rest.model.RestAddressableModel;
 import org.dspace.app.rest.model.hateoas.DSpaceResource;
+import org.dspace.app.rest.projection.RestProjectionFactory;
 import org.dspace.app.rest.repository.DSpaceRestRepository;
 import org.dspace.app.rest.repository.LinkRestRepository;
 import org.dspace.content.DSpaceObject;
@@ -47,6 +48,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -67,6 +69,24 @@ public class Utils {
     @Autowired(required = true)
     private List<DSpaceObjectService<? extends DSpaceObject>> dSpaceObjectServices;
 
+    @Autowired
+    private RepositoryRestConfiguration restConfiguration;
+
+    public <T> T applyProjection(T object, final String projectionName) {
+        if (StringUtils.isBlank(projectionName)) {
+            return object;
+        } else {
+            Class<?> projectionType = restConfiguration
+                                            .getProjectionConfiguration()
+                                            .getProjectionType(object.getClass(), projectionName);
+
+            if (projectionType == null) {
+                return object;
+            } else {
+                return RestProjectionFactory.createProjection(object, projectionType);
+            }
+        }
+    }
 
     public <T> Page<T> getPage(List<T> fullContents, Pageable pageable) {
         int total = fullContents.size();
@@ -184,7 +204,7 @@ public class Utils {
 
     /**
      * Create a temporary file from a multipart file upload
-     * 
+     *
      * @param multipartFile
      *            the multipartFile representing the uploaded file. Please note that it is a complex object including
      *            additional information other than the binary like the orginal file name and the mimetype
@@ -218,7 +238,7 @@ public class Utils {
     /**
      * Return the filename part from a multipartFile upload that could eventually contains the fullpath on the client
      * filesystem
-     * 
+     *
      * @param multipartFile
      *            the file uploaded
      * @return the filename part of the file on the client filesystem
@@ -281,21 +301,17 @@ public class Utils {
         Scanner scanner = new Scanner(request.getInputStream());
 
         try {
-
             while (scanner.hasNextLine()) {
-
                 String line = scanner.nextLine();
                 if (org.springframework.util.StringUtils.hasText(line)) {
                     list.add(line);
                 }
             }
-
         } finally {
             scanner.close();
         }
         return list;
     }
-
 
     /**
      * This method will retrieve a list of DSpaceObjects from the Request by reading in the Request's InputStream

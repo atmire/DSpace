@@ -51,21 +51,23 @@ public class SubmissionDefinitionRestRepository extends DSpaceRestRepository<Sub
 
     @PreAuthorize("hasAuthority('AUTHENTICATED')")
     @Override
-    public SubmissionDefinitionRest findOne(Context context, String submitName) {
+    public SubmissionDefinitionRest findOne(Context context, String submitName, String projection) {
         SubmissionConfig subConfig = submissionConfigReader.getSubmissionConfigByName(submitName);
         if (subConfig == null) {
             return null;
         }
-        return converter.convert(subConfig);
+        return converter.convert(utils.applyProjection(subConfig, projection));
     }
 
     @PreAuthorize("hasAuthority('AUTHENTICATED')")
     @Override
-    public Page<SubmissionDefinitionRest> findAll(Context context, Pageable pageable) {
+    public Page<SubmissionDefinitionRest> findAll(Context context, Pageable pageable, String projection) {
         List<SubmissionConfig> subConfs = new ArrayList<SubmissionConfig>();
         int total = submissionConfigReader.countSubmissionConfigs();
         subConfs = submissionConfigReader.getAllSubmissionConfigs(pageable.getPageSize(), pageable.getOffset());
-        Page<SubmissionDefinitionRest> page = new PageImpl<SubmissionConfig>(subConfs, pageable, total).map(converter);
+        Page<SubmissionDefinitionRest> page = new PageImpl<SubmissionConfig>(subConfs, pageable, total)
+            .map(object -> utils.applyProjection(object, projection))
+            .map(converter);
         return page;
     }
 

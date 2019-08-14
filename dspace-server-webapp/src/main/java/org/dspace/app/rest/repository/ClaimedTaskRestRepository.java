@@ -85,7 +85,7 @@ public class ClaimedTaskRestRepository extends DSpaceRestRepository<ClaimedTaskR
 
     @Override
     @PreAuthorize("hasPermission(#id, 'CLAIMEDTASK', 'READ')")
-    public ClaimedTaskRest findOne(Context context, Integer id) {
+    public ClaimedTaskRest findOne(Context context, Integer id, String projection) {
         ClaimedTask task = null;
         try {
             task = claimedTaskService.find(context, id);
@@ -95,7 +95,7 @@ public class ClaimedTaskRestRepository extends DSpaceRestRepository<ClaimedTaskR
         if (task == null) {
             return null;
         }
-        return converter.fromModel(task);
+        return converter.fromModel(utils.applyProjection(task, projection));
     }
 
     @SearchRestMethod(name = "findByUser")
@@ -192,7 +192,7 @@ public class ClaimedTaskRestRepository extends DSpaceRestRepository<ClaimedTaskR
         }
     }
 
-    public Page<ClaimedTaskRest> findAll(Context context, Pageable pageable) {
+    public Page<ClaimedTaskRest> findAll(Context context, Pageable pageable, String projection) {
         throw new RepositoryMethodNotImplementedException(ClaimedTaskRest.NAME, "findAll");
     }
 }

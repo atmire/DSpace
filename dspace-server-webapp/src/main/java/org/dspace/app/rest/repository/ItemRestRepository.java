@@ -87,7 +87,7 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
 
     @Override
     @PreAuthorize("hasPermission(#id, 'ITEM', 'READ')")
-    public ItemRest findOne(Context context, UUID id) {
+    public ItemRest findOne(Context context, UUID id, String projection) {
         Item item = null;
         try {
             item = is.find(context, id);
@@ -97,12 +97,12 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
         if (item == null) {
             return null;
         }
-        return dsoConverter.fromModel(item);
+        return dsoConverter.fromModel(utils.applyProjection(item, projection));
     }
 
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
-    public Page<ItemRest> findAll(Context context, Pageable pageable) {
+    public Page<ItemRest> findAll(Context context, Pageable pageable, String projection) {
         Iterator<Item> it = null;
         List<Item> items = new ArrayList<Item>();
         int total = 0;
@@ -116,7 +116,9 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<ItemRest> page = new PageImpl<Item>(items, pageable, total).map(dsoConverter);
+        Page<ItemRest> page = new PageImpl<Item>(items, pageable, total)
+            .map(object -> utils.applyProjection(object, projection))
+            .map(dsoConverter);
         return page;
     }
 

@@ -102,7 +102,7 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
 
     @Override
     @PreAuthorize("hasPermission(#id, 'EPERSON', 'READ')")
-    public EPersonRest findOne(Context context, UUID id) {
+    public EPersonRest findOne(Context context, UUID id, String projection) {
         EPerson eperson = null;
         try {
             eperson = es.find(context, id);
@@ -112,12 +112,12 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
         if (eperson == null) {
             return null;
         }
-        return dsoConverter.fromModel(eperson);
+        return dsoConverter.fromModel(utils.applyProjection(eperson, projection));
     }
 
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
-    public Page<EPersonRest> findAll(Context context, Pageable pageable) {
+    public Page<EPersonRest> findAll(Context context, Pageable pageable, String projection) {
         List<EPerson> epersons = null;
         int total = 0;
         try {
@@ -130,7 +130,9 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<EPersonRest> page = new PageImpl<EPerson>(epersons, pageable, total).map(dsoConverter);
+        Page<EPersonRest> page = new PageImpl<EPerson>(epersons, pageable, total)
+            .map(object -> utils.applyProjection(object, projection))
+            .map(dsoConverter);
         return page;
     }
 

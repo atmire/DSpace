@@ -79,7 +79,7 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
 
     @Override
     @PreAuthorize("hasPermission(#id, 'COLLECTION', 'READ')")
-    public CollectionRest findOne(Context context, UUID id) {
+    public CollectionRest findOne(Context context, UUID id, String projection) {
         Collection collection = null;
         try {
             collection = cs.find(context, id);
@@ -89,11 +89,11 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
         if (collection == null) {
             return null;
         }
-        return dsoConverter.fromModel(collection);
+        return dsoConverter.fromModel(utils.applyProjection(collection, projection));
     }
 
     @Override
-    public Page<CollectionRest> findAll(Context context, Pageable pageable) {
+    public Page<CollectionRest> findAll(Context context, Pageable pageable, String projection) {
         List<Collection> it = null;
         List<Collection> collections = new ArrayList<Collection>();
         int total = 0;
@@ -101,7 +101,7 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
             total = cs.countTotal(context);
             it = cs.findAll(context, pageable.getPageSize(), pageable.getOffset());
             for (Collection c : it) {
-                collections.add(c);
+                collections.add(utils.applyProjection(c, projection));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
