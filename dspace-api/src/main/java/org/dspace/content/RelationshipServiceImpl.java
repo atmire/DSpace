@@ -148,6 +148,34 @@ public class RelationshipServiceImpl implements RelationshipService {
         itemService.update(context, relatedItem);
     }
 
+    @Override
+    public void validateRelationshipTyping(Context context, Relationship relationship)
+            throws RelationshipValidationException, SQLException {
+        RelationshipType relationshipType = relationship.getRelationshipType();
+        if (!verifyEntityTypes(relationship.getLeftItem(), relationshipType.getLeftType())) {
+            throw  new RelationshipValidationException("The leftItem and leftType do no match on entityType.");
+        }
+        if (!verifyEntityTypes(relationship.getRightItem(), relationshipType.getRightType())) {
+            throw  new RelationshipValidationException("The rightItem and rightType do no match on entityType.");
+        }
+    }
+
+    @Override
+    public void validateRelationshipCardinality(Context context, Relationship relationship)
+            throws RelationshipValidationException, SQLException {
+        RelationshipType relationshipType = relationship.getRelationshipType();
+        if (!verifyMaxCardinality(context, relationship.getLeftItem(),
+                relationshipType.getLeftMaxCardinality(), relationshipType)) {
+            throw new RelationshipValidationException("The left item has more relationships than the left " +
+                    "max cardinality allows after we'd store this relationship");
+        }
+        if (!verifyMaxCardinality(context, relationship.getRightItem(),
+                relationshipType.getRightMaxCardinality(), relationshipType)) {
+            throw new RelationshipValidationException("The relationship has been deemed invalid since the right" +
+                    " item has more relationships than the right max cardinality allows after we'd store " +
+                    "this relationship");
+        }
+    }
 
     //Sets the places for the Relationship properly if the updatePlaceInRelationship was called for a new creation
     //of this Relationship
@@ -188,32 +216,12 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     private boolean isRelationshipValidToCreate(Context context, Relationship relationship) throws SQLException {
-        RelationshipType relationshipType = relationship.getRelationshipType();
-
-        if (!verifyEntityTypes(relationship.getLeftItem(), relationshipType.getLeftType())) {
-            log.warn("The relationship has been deemed invalid since the leftItem" +
-                         " and leftType do no match on entityType");
-            logRelationshipTypeDetailsForError(relationshipType);
-            return false;
-        }
-        if (!verifyEntityTypes(relationship.getRightItem(), relationshipType.getRightType())) {
-            log.warn("The relationship has been deemed invalid since the rightItem" +
-                         " and rightType do no match on entityType");
-            logRelationshipTypeDetailsForError(relationshipType);
-            return false;
-        }
-        if (!verifyMaxCardinality(context, relationship.getLeftItem(),
-                                  relationshipType.getLeftMaxCardinality(), relationshipType)) {
-            log.warn("The relationship has been deemed invalid since the left item has more" +
-                         " relationships than the left max cardinality allows after we'd store this relationship");
-            logRelationshipTypeDetailsForError(relationshipType);
-            return false;
-        }
-        if (!verifyMaxCardinality(context, relationship.getRightItem(),
-                                  relationshipType.getRightMaxCardinality(), relationshipType)) {
-            log.warn("The relationship has been deemed invalid since the right item has more" +
-                         " relationships than the right max cardinality allows after we'd store this relationship");
-            logRelationshipTypeDetailsForError(relationshipType);
+        try {
+            validateRelationshipTyping(context, relationship);
+            validateRelationshipCardinality(context, relationship);
+        } catch (RelationshipValidationException e) {
+            log.warn("Relationship validation failed: " + e.getMessage());
+            logRelationshipTypeDetailsForError(relationship.getRelationshipType());
             return false;
         }
         return true;

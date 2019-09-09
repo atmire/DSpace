@@ -14,6 +14,7 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Item;
 import org.dspace.content.Relationship;
 import org.dspace.content.RelationshipType;
+import org.dspace.content.RelationshipValidationException;
 import org.dspace.core.Context;
 import org.dspace.service.DSpaceCRUDService;
 
@@ -141,4 +142,10 @@ public interface RelationshipService extends DSpaceCRUDService<Relationship> {
     Relationship create(Context c, Item leftItem, Item rightItem, RelationshipType relationshipType,
                         int leftPlace, int rightPlace)
         throws AuthorizeException, SQLException;
+
+    void validateRelationshipTyping(Context context, Relationship relationship) throws RelationshipValidationException,
+            SQLException;
+
+    void validateRelationshipCardinality(Context context, Relationship relationship) throws RelationshipValidationException,
+            SQLException;
 }

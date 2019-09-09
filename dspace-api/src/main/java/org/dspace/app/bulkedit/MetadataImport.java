@@ -120,6 +120,13 @@ public class MetadataImport {
     protected HashMap<Integer, UUID> csvRowMap = new HashMap<>();
 
     /**
+     * Map of csv UUID to relationship type, used to validate relationships
+     *
+     * @see #populateRefAndRowMap(DSpaceCSVLine, int, UUID)
+     */
+    protected HashMap<UUID, String> entityMap = new HashMap<>();
+
+    /**
      * Logger
      */
     protected static final Logger log = org.apache.logging.log4j.LogManager.getLogger(MetadataImport.class);
@@ -201,7 +208,7 @@ public class MetadataImport {
                 WorkflowItem wfItem = null;
                 Item item = null;
 
-                // Is this a new item?
+                // Is this an existing item?
                 if (id != null) {
                     // Get the item
                     item = itemService.find(c, id);
@@ -239,8 +246,14 @@ public class MetadataImport {
                                 }
                             }
 
+                            // Validate
+                            if (md.startsWith(MetadataSchemaEnum.RELATION.getName() + ".")) {
+
+
+                            }
+
                             // Compare
-                            compare(item, fromCSV, change, md, whatHasChanged, line);
+                            compareAndUpdate(item, fromCSV, change, md, whatHasChanged, line);
                         }
                     }
 
@@ -378,16 +391,9 @@ public class MetadataImport {
                         item = wsItem.getItem();
 
                         // Add the metadata to the item
-                        List<BulkEditMetadataValue> relationships = new LinkedList<>();
                         for (BulkEditMetadataValue dcv : whatHasChanged.getAdds()) {
                             if (StringUtils.equals(dcv.getSchema(), MetadataSchemaEnum.RELATION.getName())) {
-
-                                if (!StringUtils.equals(dcv.getElement(), "type")) {
-                                    relationships.add(dcv);
-                                } else {
-                                    handleRelationshipMetadataValueFromBulkEditMetadataValue(item, dcv);
-                                }
-
+                                addRelationship(c, item, dcv.getElement(), dcv.getValue());
                             } else {
                                 itemService.addMetadata(c, item, dcv.getSchema(),
                                                         dcv.getElement(),
@@ -399,9 +405,6 @@ public class MetadataImport {
                             }
                         }
 
-                        for (BulkEditMetadataValue relationship : relationships) {
-                            handleRelationshipMetadataValueFromBulkEditMetadataValue(item, relationship);
-                        }
                         // Should the workflow be used?
                         if (useWorkflow) {
                             WorkflowService workflowService = WorkflowServiceFactory.getInstance().getWorkflowService();
@@ -455,27 +458,6 @@ public class MetadataImport {
         return changes;
     }
 
-
-    /**
-     * This metod handles the BulkEditMetadataValue objects that correspond to Relationship metadatavalues
-     * @param item  The item to which this metadatavalue will belong
-     * @param dcv   The BulkEditMetadataValue to be processed
-     * @throws SQLException If something goes wrong
-     * @throws AuthorizeException   If something goes wrong
-     */
-    private void handleRelationshipMetadataValueFromBulkEditMetadataValue(Item item, BulkEditMetadataValue dcv)
-        throws SQLException, AuthorizeException, MetadataImportException {
-        LinkedList<String> values = new LinkedList<>();
-        values.add(dcv.getValue());
-        LinkedList<String> authorities = new LinkedList<>();
-        authorities.add(dcv.getAuthority());
-        LinkedList<Integer> confidences = new LinkedList<>();
-        confidences.add(dcv.getConfidence());
-        handleRelationMetadata(c, item, dcv.getSchema(), dcv.getElement(),
-                               dcv.getQualifier(),
-                               dcv.getLanguage(), values, authorities, confidences);
-    }
-
     /**
      * Compare an item metadata with a line from CSV, and optionally update the item
      *
@@ -488,8 +470,8 @@ public class MetadataImport {
      * @throws SQLException       if there is a problem accessing a Collection from the database, from its handle
      * @throws AuthorizeException if there is an authorization problem with permissions
      */
-    protected void compare(Item item, String[] fromCSV, boolean change,
-                           String md, BulkEditChange changes, DSpaceCSVLine line)
+    protected void compareAndUpdate(Item item, String[] fromCSV, boolean change,
+                                    String md, BulkEditChange changes, DSpaceCSVLine line)
         throws SQLException, AuthorizeException, MetadataImportException {
         // Log what metadata element we're looking at
         String all = "";
@@ -674,7 +656,7 @@ public class MetadataImport {
                         relationshipService.update(c, relationship);
                     }
                 }
-                handleRelationMetadata(c, item, schema, element, qualifier, language, values, authorities, confidences);
+                addRelationships(c, item, element, values);
             } else {
                 itemService.clearMetadata(c, item, schema, element, qualifier, language);
                 itemService.addMetadata(c, item, schema, element, qualifier,
@@ -689,30 +671,15 @@ public class MetadataImport {
      * a relationship and handles it accordingly to their respective methods
      * @param c             The relevant DSpace context
      * @param item          The item to which this metadatavalue belongs to
-     * @param schema        The schema for the metadatavalue
-     * @param element       The element for the metadatavalue
-     * @param qualifier     The qualifier for the metadatavalue
-     * @param language      The language for the metadatavalue
-     * @param values        The values for the metadatavalue
-     * @param authorities   The authorities for the metadatavalue
-     * @param confidences   The confidences for the metadatavalue
+     * @param label       The element for the metadatavalue
      * @throws SQLException If something goes wrong
      * @throws AuthorizeException   If something goes wrong
      */
-    private void handleRelationMetadata(Context c, Item item, String schema, String element, String qualifier,
-                                        String language, List<String> values, List<String> authorities,
-                                        List<Integer> confidences) throws SQLException, AuthorizeException,
+    private void addRelationships(Context c, Item item, String label, List<String> values) throws SQLException, AuthorizeException,
                                         MetadataImportException {
-
-        if (StringUtils.equals(element, "type") && StringUtils.isBlank(qualifier)) {
-            handleRelationTypeMetadata(c, item, schema, element, qualifier, language, values, authorities, confidences);
-
-        } else {
-            for (String value : values) {
-                handleRelationOtherMetadata(c, item, element, value);
-            }
+        for (String value : values) {
+            addRelationship(c, item, label, value);
         }
-
     }
 
     /**
@@ -739,16 +706,15 @@ public class MetadataImport {
     }
 
     /**
-     * This method takes the item, element and values to determine what relationships should be built
-     * for these parameters and calls on the method to construct them
+     * TODO: Rewrite this javadoc
      * @param c         The relevant DSpace context
      * @param item      The item that the relationships will be made for
-     * @param element   The string determining which relationshiptype is to be used
+     * @param label     The relationship label
      * @param value    The value for the relationship
      * @throws SQLException If something goes wrong
      * @throws AuthorizeException   If something goes wrong
      */
-    private void handleRelationOtherMetadata(Context c, Item item, String element, String value)
+    private void addRelationship(Context c, Item item, String label, String value)
         throws SQLException, AuthorizeException, MetadataImportException {
         if (value.isEmpty()) {
             return;
@@ -759,16 +725,23 @@ public class MetadataImport {
 
         Entity relationEntity = getEntity(c, value);
 
+        Relationship relationship = new Relationship();
+        relationship.setLeftItem(leftItem);
+        relationship.setRightItem(rightItem);
+        relationship.setRelationshipType(relationshipType);
+        relationship.setLeftPlace(leftPlace);
+        relationship.setRightPlace(rightPlace);
+
         List<RelationshipType> leftRelationshipTypesForEntity = entityService.getLeftRelationshipTypes(c, entity);
         List<RelationshipType> rightRelationshipTypesForEntity = entityService.getRightRelationshipTypes(c, entity);
 
         for (RelationshipType relationshipType : entityService.getAllRelationshipTypes(c, entity)) {
-            if (StringUtils.equalsIgnoreCase(relationshipType.getLeftLabel(), element)) {
+            if (StringUtils.equalsIgnoreCase(relationshipType.getLeftLabel(), label)) {
                 left = handleLeftLabelEqualityRelationshipTypeElement(c, entity, relationEntity, left,
                                                                       acceptableRelationshipTypes,
                                                                       leftRelationshipTypesForEntity,
                                                                       relationshipType);
-            } else if (StringUtils.equalsIgnoreCase(relationshipType.getRightLabel(), element)) {
+            } else if (StringUtils.equalsIgnoreCase(relationshipType.getRightLabel(), label)) {
                 left = handleRightLabelEqualityRelationshipTypeElement(c, entity, relationEntity, left,
                                                                        acceptableRelationshipTypes,
                                                                        rightRelationshipTypesForEntity,
@@ -849,10 +822,14 @@ public class MetadataImport {
                                          relationshipType.getLeftType().getLabel())) {
 
             for (RelationshipType rightRelationshipType : rightRelationshipTypesForEntity) {
-                if (StringUtils.equalsIgnoreCase(rightRelationshipType.getLeftType().getLabel(),
-                                                 relationshipType.getLeftType().getLabel()) ||
-                    StringUtils.equalsIgnoreCase(rightRelationshipType.getRightType().getLabel(),
-                                                 relationshipType.getLeftType().getLabel())) {
+                if (StringUtils.equalsIgnoreCase(relationshipType.getLeftLabel(),
+                                rightRelationshipType.getLeftLabel()) &&
+                        StringUtils.equalsIgnoreCase(relationshipType.getRightLabel(),
+                                rightRelationshipType.getRightLabel()) &&
+                        StringUtils.equalsIgnoreCase(rightRelationshipType.getLeftType().getLabel(),
+                                relationshipType.getLeftType().getLabel()) ||
+                        StringUtils.equalsIgnoreCase(rightRelationshipType.getRightType().getLabel(),
+                                relationshipType.getLeftType().getLabel())) {
                     left = false;
                     acceptableRelationshipTypes.add(relationshipType);
                 }
@@ -890,10 +867,14 @@ public class MetadataImport {
             StringUtils.equalsIgnoreCase(entityService.getType(c, relationEntity).getLabel(),
                                          relationshipType.getRightType().getLabel())) {
             for (RelationshipType leftRelationshipType : leftRelationshipTypesForEntity) {
-                if (StringUtils.equalsIgnoreCase(leftRelationshipType.getRightType().getLabel(),
-                                                 relationshipType.getRightType().getLabel()) ||
+                if (StringUtils.equalsIgnoreCase(relationshipType.getLeftLabel(),
+                                leftRelationshipType.getLeftLabel()) &&
+                        StringUtils.equalsIgnoreCase(relationshipType.getRightLabel(),
+                                leftRelationshipType.getRightLabel()) &&
+                        StringUtils.equalsIgnoreCase(leftRelationshipType.getRightType().getLabel(),
+                                relationshipType.getRightType().getLabel()) ||
                     StringUtils.equalsIgnoreCase(leftRelationshipType.getLeftType().getLabel(),
-                                                 relationshipType.getRightType().getLabel())) {
+                                relationshipType.getRightType().getLabel())) {
                     left = true;
                     acceptableRelationshipTypes.add(relationshipType);
                 }
@@ -1643,6 +1624,11 @@ public class MetadataImport {
     private void populateRefAndRowMap(DSpaceCSVLine line, int rowNumber, @Nullable UUID uuid) {
         if (uuid != null) {
             csvRowMap.put(rowNumber, uuid);
+            if(line.keys().contains("relationship.type")) {
+                entityMap.put(uuid, line.get("relationship.type").get(0));
+            }
+        } else {
+            entityMap.put(new UUID(0, rowNumber), line.get("relationship.type").get(0));
         }
         for (String key : line.keys()) {
             if (key.contains(".") && !key.split("\\.")[0].equalsIgnoreCase("relation") ||
