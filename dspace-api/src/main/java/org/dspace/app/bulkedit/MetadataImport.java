@@ -17,7 +17,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -38,7 +37,6 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.Entity;
-import org.dspace.content.EntityType;
 import org.dspace.content.Item;
 import org.dspace.content.MetadataField;
 import org.dspace.content.MetadataSchemaEnum;
@@ -120,11 +118,18 @@ public class MetadataImport {
     protected HashMap<Integer, UUID> csvRowMap = new HashMap<>();
 
     /**
-     * Map of csv UUID to relationship type, used to validate relationships
+     * Map of UUIDs to their entity types
      *
      * @see #populateRefAndRowMap(DSpaceCSVLine, int, UUID)
      */
-    protected HashMap<UUID, String> entityMap = new HashMap<>();
+    protected static HashMap<UUID, String> entityTypeMap = new HashMap<>();
+
+    /**
+     * Map of UUIDs to their relations that are referenced within any import with their referers
+     *
+     * @see #populateEntityRelationMap(String, String, String)
+     */
+    protected static HashMap<String, HashMap<String, ArrayList<String>>> entityRelationMap = new HashMap<>();
 
     /**
      * Logger
@@ -195,7 +200,7 @@ public class MetadataImport {
             for (DSpaceCSVLine line : toImport) {
                 //Resolve references to other items
                 populateRefAndRowMap(line, rowCount, null);
-                line = resolveEntityRefs(line);
+                line = resolveEntityRefs(line, rowCount);
                 // Get the DSpace item to compare with
                 UUID id = line.getID();
 
@@ -392,9 +397,6 @@ public class MetadataImport {
 
                         // Add the metadata to the item
                         for (BulkEditMetadataValue dcv : whatHasChanged.getAdds()) {
-                            if (StringUtils.equals(dcv.getSchema(), MetadataSchemaEnum.RELATION.getName())) {
-                                addRelationship(c, item, dcv.getElement(), dcv.getValue());
-                            } else {
                                 itemService.addMetadata(c, item, dcv.getSchema(),
                                                         dcv.getElement(),
                                                         dcv.getQualifier(),
@@ -402,8 +404,14 @@ public class MetadataImport {
                                                         dcv.getValue(),
                                                         dcv.getAuthority(),
                                                         dcv.getConfidence());
+                        }
+                        //Add relations after all metadata has been processed
+                        for (BulkEditMetadataValue dcv : whatHasChanged.getAdds()) {
+                            if (StringUtils.equals(dcv.getSchema(), MetadataSchemaEnum.RELATION.getName())) {
+                                addRelationship(c, item, dcv.getElement(), dcv.getValue());
                             }
                         }
+
 
                         // Should the workflow be used?
                         if (useWorkflow) {
@@ -427,8 +435,6 @@ public class MetadataImport {
                             }
                         }
 
-                        // Commit changes to the object
-//                        c.commit();
                         whatHasChanged.setItem(item);
                     }
 
@@ -455,6 +461,7 @@ public class MetadataImport {
         }
 
         // Return the changes
+        validateExpressedRelations();
         return changes;
     }
 
@@ -645,7 +652,6 @@ public class MetadataImport {
                 }
             }
 
-
             if (StringUtils.equals(schema, MetadataSchemaEnum.RELATION.getName())) {
                 List<RelationshipType> relationshipTypeList = relationshipTypeService
                     .findByLeftOrRightLabel(c, element);
@@ -667,11 +673,13 @@ public class MetadataImport {
     }
 
     /**
-     * This method decides whether the metadatavalue is of type relation.type or if it corresponds to
-     * a relationship and handles it accordingly to their respective methods
+     *
+     * Proccess relationships to add
+     *
      * @param c             The relevant DSpace context
      * @param item          The item to which this metadatavalue belongs to
      * @param label       The element for the metadatavalue
+     * @param values to iterate over
      * @throws SQLException If something goes wrong
      * @throws AuthorizeException   If something goes wrong
      */
@@ -706,7 +714,9 @@ public class MetadataImport {
     }
 
     /**
-     * TODO: Rewrite this javadoc
+     *
+     * Creates a relationship for the given item
+     *
      * @param c         The relevant DSpace context
      * @param item      The item that the relationships will be made for
      * @param label     The relationship label
@@ -719,199 +729,42 @@ public class MetadataImport {
         if (value.isEmpty()) {
             return;
         }
-        Entity entity = entityService.findByItemId(c, item.getID());
         boolean left = false;
-        List<RelationshipType> acceptableRelationshipTypes = new LinkedList<>();
 
+        //Get entity from reference
         Entity relationEntity = getEntity(c, value);
+        //Get relationship type of entity and item
+        String relationEntityRelationshipType = itemService.getMetadata(relationEntity.getItem(), "relationship", "type",
+        null, Item.ANY).get(0).getValue();
+        String itemRelationshipType = itemService.getMetadata(item, "relationship", "type",
+                null, Item.ANY).get(0).getValue();
 
-        Relationship relationship = new Relationship();
-        relationship.setLeftItem(leftItem);
-        relationship.setRightItem(rightItem);
-        relationship.setRelationshipType(relationshipType);
-        relationship.setLeftPlace(leftPlace);
-        relationship.setRightPlace(rightPlace);
+        //Get the correct RelationshipType based on label
+        List<RelationshipType> relType = relationshipTypeService.findByLeftOrRightLabel(c, label);
+        RelationshipType foundRelationshipType = matchRelationshipType(relType,
+                itemRelationshipType,relationEntityRelationshipType);
 
-        List<RelationshipType> leftRelationshipTypesForEntity = entityService.getLeftRelationshipTypes(c, entity);
-        List<RelationshipType> rightRelationshipTypesForEntity = entityService.getRightRelationshipTypes(c, entity);
-
-        for (RelationshipType relationshipType : entityService.getAllRelationshipTypes(c, entity)) {
-            if (StringUtils.equalsIgnoreCase(relationshipType.getLeftLabel(), label)) {
-                left = handleLeftLabelEqualityRelationshipTypeElement(c, entity, relationEntity, left,
-                                                                      acceptableRelationshipTypes,
-                                                                      leftRelationshipTypesForEntity,
-                                                                      relationshipType);
-            } else if (StringUtils.equalsIgnoreCase(relationshipType.getRightLabel(), label)) {
-                left = handleRightLabelEqualityRelationshipTypeElement(c, entity, relationEntity, left,
-                                                                       acceptableRelationshipTypes,
-                                                                       rightRelationshipTypesForEntity,
-                                                                       relationshipType);
-            }
+        if (foundRelationshipType.getLeftLabel().equalsIgnoreCase(label)) {
+            left = true;
         }
 
-        if (acceptableRelationshipTypes.size() > 1) {
-            log.error("Ambiguous relationship_types were found");
-            return;
-        }
-        if (acceptableRelationshipTypes.size() == 0) {
-            log.error("no relationship_types were found");
-            return;
-        }
-
-        //There is exactly one
-        buildRelationObject(c, item, relationEntity.getItem(), left, acceptableRelationshipTypes.get(0));
-    }
-
-    /**
-     * This method creates the relationship for the item and stores it in the database
-     * @param c         The relevant DSpace context
-     * @param item      The item for which this relationship will be constructed
-     * @param otherItem    The item for the relationship
-     * @param left      A boolean indicating whether the item is the leftItem or the rightItem
-     * @param acceptedRelationshipType   The acceptable relationship type
-     * @throws SQLException If something goes wrong
-     * @throws AuthorizeException   If something goes wrong
-     */
-    private void buildRelationObject(Context c, Item item, Item otherItem, boolean left,
-                                     RelationshipType acceptedRelationshipType)
-        throws SQLException, AuthorizeException {
+        //Placeholder items for relation placing
         Item leftItem = null;
         Item rightItem = null;
-        if (left) {
+        if (left){
             leftItem = item;
-            rightItem = otherItem;
+            rightItem = relationEntity.getItem();
         } else {
+            leftItem = relationEntity.getItem();
             rightItem = item;
-            leftItem = otherItem;
         }
-        RelationshipType relationshipType = acceptedRelationshipType;
+
+        //Create the relationship
         int leftPlace = relationshipService.findLeftPlaceByLeftItem(c, leftItem) + 1;
         int rightPlace = relationshipService.findRightPlaceByRightItem(c, rightItem) + 1;
         Relationship persistedRelationship = relationshipService.create(c, leftItem, rightItem,
-                                                                        relationshipType, leftPlace, rightPlace);
+                relType.get(0), leftPlace, rightPlace);
         relationshipService.update(c, persistedRelationship);
-    }
-
-    /**
-     * This method will add RelationshipType objects to the acceptableRelationshipTypes list
-     * if applicable and valid RelationshipType objects are found. It will also return a boolean indicating
-     * whether we're dealing with a left Relationship or not
-     * @param c                                 The relevant DSpace context
-     * @param entity                            The Entity for which the RelationshipType has to be checked
-     * @param relationEntity                    The other Entity of the Relationship
-     * @param left                              Boolean indicating whether the Relationship is left or not
-     * @param acceptableRelationshipTypes       The list of RelationshipType objects that will be added to
-     * @param rightRelationshipTypesForEntity   The list of RelationshipType objects that are possible
-     *                                          for the right entity
-     * @param relationshipType                  The RelationshipType object that we want to check whether it's
-     *                                          valid to be added or not
-     * @return                                  A boolean indicating whether the relationship is left or right, will
-     *                                          be false in this case
-     * @throws SQLException                     If something goes wrong
-     */
-    private boolean handleRightLabelEqualityRelationshipTypeElement(Context c, Entity entity, Entity relationEntity,
-                                                                    boolean left,
-                                                                    List<RelationshipType> acceptableRelationshipTypes,
-                                                                    List<RelationshipType>
-                                                                        rightRelationshipTypesForEntity,
-                                                                    RelationshipType relationshipType)
-        throws SQLException {
-        if (StringUtils.equalsIgnoreCase(entityService.getType(c, entity).getLabel(),
-                                         relationshipType.getRightType().getLabel()) &&
-            StringUtils.equalsIgnoreCase(entityService.getType(c, relationEntity).getLabel(),
-                                         relationshipType.getLeftType().getLabel())) {
-
-            for (RelationshipType rightRelationshipType : rightRelationshipTypesForEntity) {
-                if (StringUtils.equalsIgnoreCase(relationshipType.getLeftLabel(),
-                                rightRelationshipType.getLeftLabel()) &&
-                        StringUtils.equalsIgnoreCase(relationshipType.getRightLabel(),
-                                rightRelationshipType.getRightLabel()) &&
-                        StringUtils.equalsIgnoreCase(rightRelationshipType.getLeftType().getLabel(),
-                                relationshipType.getLeftType().getLabel()) ||
-                        StringUtils.equalsIgnoreCase(rightRelationshipType.getRightType().getLabel(),
-                                relationshipType.getLeftType().getLabel())) {
-                    left = false;
-                    acceptableRelationshipTypes.add(relationshipType);
-                }
-            }
-        }
-        return left;
-    }
-
-    /**
-     * This method will add RelationshipType objects to the acceptableRelationshipTypes list
-     * if applicable and valid RelationshipType objects are found. It will also return a boolean indicating
-     * whether we're dealing with a left Relationship or not
-     * @param c                                 The relevant DSpace context
-     * @param entity                            The Entity for which the RelationshipType has to be checked
-     * @param relationEntity                    The other Entity of the Relationship
-     * @param left                              Boolean indicating whether the Relationship is left or not
-     * @param acceptableRelationshipTypes       The list of RelationshipType objects that will be added to
-     * @param leftRelationshipTypesForEntity    The list of RelationshipType objects that are possible
-     *                                          for the left entity
-     * @param relationshipType                  The RelationshipType object that we want to check whether it's
-     *                                          valid to be added or not
-     * @return                                  A boolean indicating whether the relationship is left or right, will
-     *                                          be true in this case
-     * @throws SQLException                     If something goes wrong
-     */
-    private boolean handleLeftLabelEqualityRelationshipTypeElement(Context c, Entity entity, Entity relationEntity,
-                                                                   boolean left,
-                                                                   List<RelationshipType> acceptableRelationshipTypes,
-                                                                   List<RelationshipType>
-                                                                       leftRelationshipTypesForEntity,
-                                                                   RelationshipType relationshipType)
-        throws SQLException {
-        if (StringUtils.equalsIgnoreCase(entityService.getType(c, entity).getLabel(),
-                                         relationshipType.getLeftType().getLabel()) &&
-            StringUtils.equalsIgnoreCase(entityService.getType(c, relationEntity).getLabel(),
-                                         relationshipType.getRightType().getLabel())) {
-            for (RelationshipType leftRelationshipType : leftRelationshipTypesForEntity) {
-                if (StringUtils.equalsIgnoreCase(relationshipType.getLeftLabel(),
-                                leftRelationshipType.getLeftLabel()) &&
-                        StringUtils.equalsIgnoreCase(relationshipType.getRightLabel(),
-                                leftRelationshipType.getRightLabel()) &&
-                        StringUtils.equalsIgnoreCase(leftRelationshipType.getRightType().getLabel(),
-                                relationshipType.getRightType().getLabel()) ||
-                    StringUtils.equalsIgnoreCase(leftRelationshipType.getLeftType().getLabel(),
-                                relationshipType.getRightType().getLabel())) {
-                    left = true;
-                    acceptableRelationshipTypes.add(relationshipType);
-                }
-            }
-        }
-        return left;
-    }
-
-    /**
-     * This method will add the relationship.type metadata to the item if an EntityType can be found for the value in
-     * the values list.
-     * @param c             The relevant DSpace context
-     * @param item          The item to which this metadatavalue will be added
-     * @param schema        The schema for the metadatavalue to be added
-     * @param element       The element for the metadatavalue to be added
-     * @param qualifier     The qualifier for the metadatavalue to be added
-     * @param language      The language for the metadatavalue to be added
-     * @param values        The value on which we'll search for EntityType object and it's the value
-     *                      for the metadatavalue that will be created
-     * @param authorities   The authority for the metadatavalue. This will be filled with the ID
-     *                      of the found EntityType for the value if it exists
-     * @param confidences   The confidence for the metadatavalue
-     * @throws SQLException If something goes wrong
-     * @throws AuthorizeException   If something goes wrong
-     */
-    private void handleRelationTypeMetadata(Context c, Item item, String schema, String element, String qualifier,
-                                            String language, List<String> values, List<String> authorities,
-                                            List<Integer> confidences)
-        throws SQLException, AuthorizeException {
-        EntityType entityType = entityTypeService.findByEntityType(c, values.get(0));
-        if (entityType != null) {
-            authorities.add(String.valueOf(entityType.getID()));
-            itemService.clearMetadata(c, item, schema, element, qualifier, language);
-            itemService.addMetadata(c, item, schema, element, qualifier, language,
-                                    values, authorities, confidences);
-            itemService.update(c, item);
-        }
     }
 
     /**
@@ -1554,9 +1407,6 @@ public class MetadataImport {
 
                 // Display the changes
                 displayChanges(changes, true);
-
-                // Commit the change to the DB
-//                c.commit();
             }
 
             // Finsh off and tidy up
@@ -1578,8 +1428,9 @@ public class MetadataImport {
      * @return a copy, with all references resolved.
      * @throws MetadataImportException if there is an error resolving any entity reference.
      */
-    public DSpaceCSVLine resolveEntityRefs(DSpaceCSVLine line) throws MetadataImportException {
+    public DSpaceCSVLine resolveEntityRefs(DSpaceCSVLine line, int rowCount) throws MetadataImportException {
         DSpaceCSVLine newLine = new DSpaceCSVLine(line.getID());
+        String originId = evaluateOriginId(rowCount, line.get("id") == null ? null : line.get("id").get(0));
         for (String key : line.keys()) {
             // If a key represents a relation field attempt to resolve the reference from the csvRefMap
             if (key.split("\\.")[0].equalsIgnoreCase("relation")) {
@@ -1589,6 +1440,9 @@ public class MetadataImport {
                         // These can be a UUID, metadata reference or rowName reference
                         String uuid = resolveEntityRef(c, val).toString();
                         newLine.add(key, uuid);
+                        //Entity refs have been resolved / placeholdered
+                        //Populate the EntityRelationMap
+                        populateEntityRelationMap(uuid, key, originId);
                     }
                 }
             } else {
@@ -1603,7 +1457,40 @@ public class MetadataImport {
                 }
             }
         }
+
         return newLine;
+    }
+
+    /**
+     * Gets a copy of the given csv line with all entity references resolved to UUID strings.
+     * Keys being iterated over represent metadatafields or special columns to be processed.
+     *
+     * @param refUUID the reference UUID for the relation
+     * @param relationField the
+     * @return a copy, with all references resolved.
+     * @throws MetadataImportException if there is an error resolving any entity reference.
+     */
+    private void populateEntityRelationMap(String refUUID, String relationField, String originId) {
+        HashMap<String, ArrayList<String>> labels = null;
+        if (entityRelationMap.get(refUUID) == null) {
+            labels = new HashMap<>();
+            ArrayList<String> originIds = new ArrayList<>();
+            originIds.add(originId);
+            labels.put(relationField, originIds);
+            entityRelationMap.put(refUUID, labels);
+        } else {
+            labels = entityRelationMap.get(refUUID);
+            if (labels.get(relationField) == null) {
+                ArrayList<String> originIds = new ArrayList<>();
+                originIds.add(originId);
+                labels.put(relationField, originIds);
+            } else {
+                ArrayList<String> originIds =  labels.get(relationField);
+                originIds.add(originId);
+                labels.put(relationField, originIds);
+            }
+            entityRelationMap.put(refUUID, labels);
+        }
     }
 
     /**
@@ -1624,11 +1511,6 @@ public class MetadataImport {
     private void populateRefAndRowMap(DSpaceCSVLine line, int rowNumber, @Nullable UUID uuid) {
         if (uuid != null) {
             csvRowMap.put(rowNumber, uuid);
-            if(line.keys().contains("relationship.type")) {
-                entityMap.put(uuid, line.get("relationship.type").get(0));
-            }
-        } else {
-            entityMap.put(new UUID(0, rowNumber), line.get("relationship.type").get(0));
         }
         for (String key : line.keys()) {
             if (key.contains(".") && !key.split("\\.")[0].equalsIgnoreCase("relation") ||
@@ -1641,6 +1523,14 @@ public class MetadataImport {
                         csvRefMap.put(valueKey, rowNums);
                     }
                     rowNums.add(rowNumber);
+                }
+            }
+            //Populate entityTypeMap
+            if (key.equalsIgnoreCase("relationship.type")) {
+                if(uuid == null) {
+                    entityTypeMap.put(new UUID(0, rowNumber), line.get(key).get(0));
+                } else {
+                    entityTypeMap.put(uuid, line.get(key).get(0));
                 }
             }
         }
@@ -1751,6 +1641,144 @@ public class MetadataImport {
         } else {
             return new UUID(0, rowNum);
         }
+    }
+
+    private String evaluateOriginId(int rowCount,@Nullable String originId) {
+        if (originId != null) {
+            return originId;
+        } else {
+            return new UUID(0, rowCount).toString();
+        }
+    }
+
+    //TODO determine cardinality requirments
+    /**
+     * Validate the every Relation modification expressed in the CSV
+     *
+     */
+    private void validateExpressedRelations() throws MetadataImportException {
+        String errors = "";
+        for (String referenceUUID : entityRelationMap.keySet()) {
+            String referenceType = null;
+            try {
+                //Get relation type of reference
+                if (entityTypeMap.get(UUID.fromString(referenceUUID)) != null) {
+                    referenceType = entityTypeService.
+                            findByEntityType(c, entityTypeMap.get(UUID.fromString(referenceUUID))).getLabel();
+                } else {
+                    //UUID of reference item may be archived; check there
+                    Item referenceItem = null;
+                    if (itemService.find(c, UUID.fromString(referenceUUID)) != null) {
+                        referenceItem = itemService.find(c, UUID.fromString(referenceUUID));
+                        List<MetadataValue> relTypes = itemService.
+                                getMetadata(referenceItem, "relationship", "type", null, Item.ANY);
+                        String relTypeValue = null;
+                        if (relTypes.size() > 0) {
+                            relTypeValue = relTypes.get(0).getValue();
+                            referenceType = entityTypeService.findByEntityType(c, relTypeValue).getLabel();
+                        } else {
+                            //TODO improve what's reported. Row number?
+                            errors += "Cannot resolve Entity type for reference: " + referenceUUID + "\n";
+                        }
+                    } else {
+                        //TODO improve what's reported. Row number?
+                        errors += "Cannot resolve Entity type for reference: " + referenceUUID + "\n";
+                    }
+                }
+                if (referenceType == null) {
+                    continue;
+                }
+                //Get labels and origin referers for each label
+                for (String label : entityRelationMap.get(referenceUUID).keySet()) {
+                    //Resovle Entity Type for each origin referer
+                    for (String originRefererUUID : entityRelationMap.get(referenceUUID).get(label)) {
+                        String originType = "";
+                        //Validate reference type and origin type pairing with label or add to errors
+                        if (entityTypeMap.get(UUID.fromString(originRefererUUID)) != null) {
+                            originType = entityTypeMap.get(UUID.fromString(originRefererUUID));
+                            validateTypesByTypeWithLabel(referenceType, originType, label, errors);
+                        } else {
+                            //UUID of origin item may be archived; check there
+                            Item originItem = null;
+                            if (itemService.find(c, UUID.fromString(referenceUUID)) != null) {
+                                originItem = itemService.find(c, UUID.fromString(referenceUUID));
+                                List<MetadataValue> relTypes = itemService.
+                                        getMetadata(originItem, "relationship", "type", null, Item.ANY);
+                                String relTypeValue = null;
+                                if (relTypes.size() > 0) {
+                                    relTypeValue = relTypes.get(0).getValue();
+                                    originType = entityTypeService.findByEntityType(c, relTypeValue).toString();
+                                    validateTypesByTypeWithLabel(referenceType, originType, label, errors);
+                                } else {
+                                    //TODO improve what's reported. Row number?
+                                    errors += "Cannot resolve Entity type for reference: " + referenceUUID + "\n";
+                                }
+
+                            } else {
+                                //TODO improve what's reported. Row number?
+                                errors += "Cannot resolve Entity type for reference: " + referenceUUID + "\n";
+                            }
+                        }
+                    }
+                }
+
+            } catch (SQLException sqle) {
+                throw new MetadataImportException("Error interacting with database!", sqle);
+            }
+
+        }
+    }
+
+    /**
+     * Gets the UUID of the item of a given row in the CSV, if it has been minted.
+     * If the UUID has not yet been minted, gets a UUID representation of the row
+     * (a UUID whose numeric value equals the row number).
+     *
+     * @param referenceType entity type of reference
+     * @param originType entity type of origin referer.
+     * @param label left or right label of the respective Relationship.
+     * @param errors string of errors to be appened to on a per error basis.
+     * @return the UUID of the item
+     */
+    private void validateTypesByTypeWithLabel(String referenceType, String originType, String label, String errors)
+            throws MetadataImportException {
+        try {
+            RelationshipType foundRelationshipType = null;
+            List<RelationshipType> relationshipTypeList = relationshipTypeService.
+                    findByLeftOrRightLabel(c, label.split("\\.")[1]);
+            //Validate described relationship form the CSV
+            foundRelationshipType = matchRelationshipType(relationshipTypeList, referenceType, originType);
+            if (foundRelationshipType == null) {
+                errors += "No Relationship type found for:\n" +
+                        "Referenced type: " + referenceType + "\n" +
+                        "Origin referer type: " + originType + "\n" +
+                        "with label: " + label + "\n";
+            }
+        } catch (SQLException sqle) {
+            throw new MetadataImportException("Error interacting with database!", sqle);
+        }
+    }
+
+    /**
+     * Matches two entity types to a Relationship Type from a set of Relationship Types
+     *
+     * @param relTypes set of Relationship Types.
+     * @param typeOne first type to be used in matching.
+     * @param typeTwo second item to be used in matching.
+     * @return null or atched Relationship Type
+     */
+    private RelationshipType matchRelationshipType(List<RelationshipType> relTypes,
+                                                   String typeOne, String typeTwo) {
+        RelationshipType foundRelationshipType = null;
+        for (RelationshipType relationshipType : relTypes) {
+            if (relationshipType.getLeftType().getLabel().equalsIgnoreCase(typeOne) ||
+                    relationshipType.getRightType().getLabel().equalsIgnoreCase(typeOne) &&
+                            relationshipType.getLeftType().getLabel().equalsIgnoreCase(typeTwo) ||
+                    relationshipType.getRightType().getLabel().equalsIgnoreCase(typeTwo)) {
+                foundRelationshipType = relationshipType;
+            }
+        }
+        return foundRelationshipType;
     }
 
 }
