@@ -104,14 +104,14 @@ public class MetadataImport {
     protected static final String AC_PREFIX = "authority.controlled.";
 
     /**
-     * Map of field:value to csv row number, used to resolve indirect entity references.
+     * Map of field:value to csv row number, used to resolve indirect entity target references.
      *
      * @see #populateRefAndRowMap(DSpaceCSVLine, int, UUID)
      */
     protected HashMap<String, Set<Integer>> csvRefMap = new HashMap<>();
 
     /**
-     * Map of csv row number to UUID, used to resolve indirect entity references.
+     * Map of csv row number to UUID, used to resolve indirect entity target references.
      *
      * @see #populateRefAndRowMap(DSpaceCSVLine, int, UUID)
      */
@@ -130,6 +130,12 @@ public class MetadataImport {
      * @see #populateEntityRelationMap(String, String, String)
      */
     protected static HashMap<String, HashMap<String, ArrayList<String>>> entityRelationMap = new HashMap<>();
+
+
+    /**
+     * Collection of errors generated during relation validation process
+     */
+    protected ArrayList<String> relationValidationErrors = new ArrayList<>();
 
     /**
      * Logger
@@ -198,7 +204,7 @@ public class MetadataImport {
             // Process each change
             int rowCount = 1;
             for (DSpaceCSVLine line : toImport) {
-                //Resolve references to other items
+                //Resolve target references to other items
                 populateRefAndRowMap(line, rowCount, null);
                 line = resolveEntityRefs(line, rowCount);
                 // Get the DSpace item to compare with
@@ -461,7 +467,9 @@ public class MetadataImport {
         }
 
         // Return the changes
-        validateExpressedRelations();
+        if(!change) {
+            validateExpressedRelations();
+        }
         return changes;
     }
 
@@ -691,16 +699,16 @@ public class MetadataImport {
     }
 
     /**
-     * Gets an existing entity from a reference.
+     * Gets an existing entity from a target reference.
      *
      * @param context the context to use.
-     * @param reference the reference which may be a UUID, metadata reference, or rowName reference.
+     * @param targetReference the target reference which may be a UUID, metadata reference, or rowName reference.
      * @return the entity, which is guaranteed to exist.
-     * @throws MetadataImportException if the reference is badly formed or refers to a non-existing item.
+     * @throws MetadataImportException if the target reference is badly formed or refers to a non-existing item.
      */
-    private Entity getEntity(Context context, String reference) throws MetadataImportException {
+    private Entity getEntity(Context context, String targetReference) throws MetadataImportException {
         Entity entity = null;
-        UUID uuid = resolveEntityRef(context, reference);
+        UUID uuid = resolveEntityRef(context, targetReference);
         // At this point, we have a uuid, so we can get an entity
         try {
             entity = entityService.findByItemId(context, uuid);
@@ -709,7 +717,7 @@ public class MetadataImport {
             }
             return entity;
         } catch (SQLException sqle) {
-            throw new MetadataImportException("Unable to find entity using reference: " + reference, sqle);
+            throw new MetadataImportException("Unable to find entity using reference: " + targetReference, sqle);
         }
     }
 
@@ -731,7 +739,7 @@ public class MetadataImport {
         }
         boolean left = false;
 
-        //Get entity from reference
+        //Get entity from target reference
         Entity relationEntity = getEntity(c, value);
         //Get relationship type of entity and item
         String relationEntityRelationshipType = itemService.getMetadata(relationEntity.getItem(), "relationship", "type",
@@ -751,7 +759,7 @@ public class MetadataImport {
         //Placeholder items for relation placing
         Item leftItem = null;
         Item rightItem = null;
-        if (left){
+        if (left) {
             leftItem = item;
             rightItem = relationEntity.getItem();
         } else {
@@ -763,7 +771,7 @@ public class MetadataImport {
         int leftPlace = relationshipService.findLeftPlaceByLeftItem(c, leftItem) + 1;
         int rightPlace = relationshipService.findRightPlaceByRightItem(c, rightItem) + 1;
         Relationship persistedRelationship = relationshipService.create(c, leftItem, rightItem,
-                relType.get(0), leftPlace, rightPlace);
+                foundRelationshipType, leftPlace, rightPlace);
         relationshipService.update(c, persistedRelationship);
     }
 
@@ -1421,23 +1429,23 @@ public class MetadataImport {
     }
 
     /**
-     * Gets a copy of the given csv line with all entity references resolved to UUID strings.
+     * Gets a copy of the given csv line with all entity target references resolved to UUID strings.
      * Keys being iterated over represent metadatafields or special columns to be processed.
      *
      * @param line the csv line to process.
      * @return a copy, with all references resolved.
-     * @throws MetadataImportException if there is an error resolving any entity reference.
+     * @throws MetadataImportException if there is an error resolving any entity target reference.
      */
     public DSpaceCSVLine resolveEntityRefs(DSpaceCSVLine line, int rowCount) throws MetadataImportException {
         DSpaceCSVLine newLine = new DSpaceCSVLine(line.getID());
         String originId = evaluateOriginId(rowCount, line.get("id") == null ? null : line.get("id").get(0));
         for (String key : line.keys()) {
-            // If a key represents a relation field attempt to resolve the reference from the csvRefMap
+            // If a key represents a relation field attempt to resolve the target reference from the csvRefMap
             if (key.split("\\.")[0].equalsIgnoreCase("relation")) {
                 if (line.get(key).size() > 0) {
                     for (String val : line.get(key)) {
-                        // Attempt to resolve the relation reference
-                        // These can be a UUID, metadata reference or rowName reference
+                        // Attempt to resolve the relation target reference
+                        // These can be a UUID, metadata target reference or rowName target reference
                         String uuid = resolveEntityRef(c, val).toString();
                         newLine.add(key, uuid);
                         //Entity refs have been resolved / placeholdered
@@ -1462,13 +1470,13 @@ public class MetadataImport {
     }
 
     /**
-     * Gets a copy of the given csv line with all entity references resolved to UUID strings.
+     * Gets a copy of the given csv line with all entity target references resolved to UUID strings.
      * Keys being iterated over represent metadatafields or special columns to be processed.
      *
-     * @param refUUID the reference UUID for the relation
+     * @param refUUID the target reference UUID for the relation
      * @param relationField the
-     * @return a copy, with all references resolved.
-     * @throws MetadataImportException if there is an error resolving any entity reference.
+     * @return a copy, with all target references resolved.
+     * @throws MetadataImportException if there is an error resolving any entity target reference.
      */
     private void populateEntityRelationMap(String refUUID, String relationField, String originId) {
         HashMap<String, ArrayList<String>> labels = null;
@@ -1498,7 +1506,7 @@ public class MetadataImport {
      *
      * The csvRefMap is an index that keeps track of which rows have a specific value for
      * a specific metadata field or the special "rowName" column. This is used to help resolve indirect
-     * entity references in the same CSV.
+     * entity target references in the same CSV.
      *
      * The csvRowMap is a row number to UUID map, and contains an entry for every row that has
      * been processed so far which has a known (minted) UUID for its item. This is used to help complete
@@ -1537,15 +1545,15 @@ public class MetadataImport {
     }
 
     /**
-     * Gets the UUID of the item indicated by the given reference, which may be a direct UUID string, a row reference
+     * Gets the UUID of the item indicated by the given target reference, which may be a direct UUID string, a row reference
      * of the form rowName:VALUE, or a metadata value reference of the form schema.element[.qualifier]:VALUE.
      *
      * The reference may refer to a previously-processed item in the CSV or an item in the database.
      *
      * @param context the context to use.
-     * @param reference the reference which may be a UUID, metadata reference, or rowName reference.
+     * @param reference the target reference which may be a UUID, metadata reference, or rowName reference.
      * @return the uuid.
-     * @throws MetadataImportException if the reference is malformed or ambiguous (refers to multiple items).
+     * @throws MetadataImportException if the target reference is malformed or ambiguous (refers to multiple items).
      */
     private UUID resolveEntityRef(Context context, String reference) throws MetadataImportException {
         // value reference
@@ -1657,66 +1665,85 @@ public class MetadataImport {
      *
      */
     private void validateExpressedRelations() throws MetadataImportException {
-        String errors = "";
-        for (String referenceUUID : entityRelationMap.keySet()) {
-            String referenceType = null;
+        for (String targetUUID : entityRelationMap.keySet()) {
+            String targetType = null;
+            //Evaluate row number for target
+            String targetRow = "Not in CSV";
+            if (csvRowMap.containsValue(UUID.fromString(targetUUID))) {
+                for(int key : csvRowMap.keySet()) {
+                    if (csvRowMap.get(key).toString().equalsIgnoreCase(targetUUID)) {
+                        targetRow = csvRowMap.get(key).toString();
+                        break;
+                    }
+                }
+            }
             try {
                 //Get relation type of reference
-                if (entityTypeMap.get(UUID.fromString(referenceUUID)) != null) {
-                    referenceType = entityTypeService.
-                            findByEntityType(c, entityTypeMap.get(UUID.fromString(referenceUUID))).getLabel();
+                if (entityTypeMap.get(UUID.fromString(targetUUID)) != null) {
+                    targetType = entityTypeService.
+                            findByEntityType(c, entityTypeMap.get(UUID.fromString(targetUUID))).getLabel();
                 } else {
                     //UUID of reference item may be archived; check there
-                    Item referenceItem = null;
-                    if (itemService.find(c, UUID.fromString(referenceUUID)) != null) {
-                        referenceItem = itemService.find(c, UUID.fromString(referenceUUID));
+                    Item targetItem = null;
+                    if (itemService.find(c, UUID.fromString(targetUUID)) != null) {
+                        targetItem = itemService.find(c, UUID.fromString(targetUUID));
                         List<MetadataValue> relTypes = itemService.
-                                getMetadata(referenceItem, "relationship", "type", null, Item.ANY);
+                                getMetadata(targetItem, "relationship", "type", null, Item.ANY);
                         String relTypeValue = null;
                         if (relTypes.size() > 0) {
                             relTypeValue = relTypes.get(0).getValue();
-                            referenceType = entityTypeService.findByEntityType(c, relTypeValue).getLabel();
+                            targetType = entityTypeService.findByEntityType(c, relTypeValue).getLabel();
                         } else {
-                            //TODO improve what's reported. Row number?
-                            errors += "Cannot resolve Entity type for reference: " + referenceUUID + "\n";
+                            relationValidationErrors.add("Cannot resolve Entity type for target UUID: " +
+                                    targetUUID + " in row: " + targetRow + "\n");
                         }
                     } else {
-                        //TODO improve what's reported. Row number?
-                        errors += "Cannot resolve Entity type for reference: " + referenceUUID + "\n";
+                        relationValidationErrors.add("Cannot resolve Entity type for target UUID: " +
+                                targetUUID + " in row: " + targetRow + "\n");
                     }
                 }
-                if (referenceType == null) {
+                if (targetType == null) {
                     continue;
                 }
                 //Get labels and origin referers for each label
-                for (String label : entityRelationMap.get(referenceUUID).keySet()) {
+                for (String label : entityRelationMap.get(targetUUID).keySet()) {
                     //Resovle Entity Type for each origin referer
-                    for (String originRefererUUID : entityRelationMap.get(referenceUUID).get(label)) {
+                    for (String originRefererUUID : entityRelationMap.get(targetUUID).get(label)) {
+                        //Evaluate row number for origin
+                        String originRow = "Not in CSV";
+                        if (csvRowMap.containsValue(UUID.fromString(originRefererUUID))) {
+                            for(int key : csvRowMap.keySet()) {
+                                if (csvRowMap.get(key).toString().equalsIgnoreCase(originRefererUUID)) {
+                                    originRow = csvRowMap.get(key).toString();
+                                    break;
+                                }
+                            }
+                        }
                         String originType = "";
-                        //Validate reference type and origin type pairing with label or add to errors
+                        //Validate target type and origin type pairing with label or add to errors
                         if (entityTypeMap.get(UUID.fromString(originRefererUUID)) != null) {
                             originType = entityTypeMap.get(UUID.fromString(originRefererUUID));
-                            validateTypesByTypeWithLabel(referenceType, originType, label, errors);
+                            validateTypesByTypeWithLabel(targetType, originType, label);
                         } else {
                             //UUID of origin item may be archived; check there
                             Item originItem = null;
-                            if (itemService.find(c, UUID.fromString(referenceUUID)) != null) {
-                                originItem = itemService.find(c, UUID.fromString(referenceUUID));
+                            if (itemService.find(c, UUID.fromString(targetUUID)) != null) {
+                                originItem = itemService.find(c, UUID.fromString(targetUUID));
                                 List<MetadataValue> relTypes = itemService.
                                         getMetadata(originItem, "relationship", "type", null, Item.ANY);
                                 String relTypeValue = null;
                                 if (relTypes.size() > 0) {
                                     relTypeValue = relTypes.get(0).getValue();
                                     originType = entityTypeService.findByEntityType(c, relTypeValue).toString();
-                                    validateTypesByTypeWithLabel(referenceType, originType, label, errors);
+                                    validateTypesByTypeWithLabel(targetType, originType, label);
                                 } else {
-                                    //TODO improve what's reported. Row number?
-                                    errors += "Cannot resolve Entity type for reference: " + referenceUUID + "\n";
+                                    relationValidationErrors.add("Cannot resolve Entity type for reference: "
+                                            + originRefererUUID + " in row: " + originRow + "\n");
                                 }
 
                             } else {
-                                //TODO improve what's reported. Row number?
-                                errors += "Cannot resolve Entity type for reference: " + referenceUUID + "\n";
+                                relationValidationErrors.add("Cannot resolve Entity type for reference: "
+                                        + originRefererUUID + " in row: " + originRow + "\n");
                             }
                         }
                     }
@@ -1727,6 +1754,13 @@ public class MetadataImport {
             }
 
         }
+        if (!relationValidationErrors.isEmpty()) {
+            String errors = "";
+            for (String error : relationValidationErrors) {
+                errors += error;
+            }
+            throw new MetadataImportException("Error validating relationships: " + errors);
+        }
     }
 
     /**
@@ -1734,25 +1768,24 @@ public class MetadataImport {
      * If the UUID has not yet been minted, gets a UUID representation of the row
      * (a UUID whose numeric value equals the row number).
      *
-     * @param referenceType entity type of reference
+     * @param targetType entity type of target
      * @param originType entity type of origin referer.
      * @param label left or right label of the respective Relationship.
-     * @param errors string of errors to be appened to on a per error basis.
      * @return the UUID of the item
      */
-    private void validateTypesByTypeWithLabel(String referenceType, String originType, String label, String errors)
+    private void validateTypesByTypeWithLabel(String targetType, String originType, String label)
             throws MetadataImportException {
         try {
             RelationshipType foundRelationshipType = null;
             List<RelationshipType> relationshipTypeList = relationshipTypeService.
                     findByLeftOrRightLabel(c, label.split("\\.")[1]);
             //Validate described relationship form the CSV
-            foundRelationshipType = matchRelationshipType(relationshipTypeList, referenceType, originType);
+            foundRelationshipType = matchRelationshipType(relationshipTypeList, targetType, originType);
             if (foundRelationshipType == null) {
-                errors += "No Relationship type found for:\n" +
-                        "Referenced type: " + referenceType + "\n" +
+                relationValidationErrors.add("No Relationship type found for:\n" +
+                        "Target type: " + targetType + "\n" +
                         "Origin referer type: " + originType + "\n" +
-                        "with label: " + label + "\n";
+                        "with label: " + label + "\n");
             }
         } catch (SQLException sqle) {
             throw new MetadataImportException("Error interacting with database!", sqle);
