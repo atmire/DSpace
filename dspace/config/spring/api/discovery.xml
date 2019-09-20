@@ -525,7 +525,7 @@
         <property name="spellCheckEnabled" value="true"/>
     </bean>
 
-    <bean id="publication" class="org.dspace.discovery.configuration.DiscoveryConfiguration" scope="prototype">
+    <bean id="publicationConfiguration" class="org.dspace.discovery.configuration.DiscoveryConfiguration" scope="prototype">
         <property name="id" value="publication"/>
         <!--Which sidebar facets are to be displayed-->
         <property name="sidebarFacets">
@@ -595,7 +595,7 @@
         <property name="spellCheckEnabled" value="true"/>
     </bean>
 
-    <bean id="person" class="org.dspace.discovery.configuration.DiscoveryConfiguration" scope="prototype">
+    <bean id="personConfiguration" class="org.dspace.discovery.configuration.DiscoveryConfiguration" scope="prototype">
         <property name="id" value="person"/>
         <!--Which sidebar facets are to be displayed-->
         <property name="sidebarFacets">
@@ -657,7 +657,7 @@
         <property name="spellCheckEnabled" value="true"/>
     </bean>
 
-    <bean id="organization" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
+    <bean id="organizationConfiguration" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
         scope="prototype">
         <property name="id" value="organization"/>
         <!--Which sidebar facets are to be displayed-->
@@ -721,7 +721,7 @@
         <property name="spellCheckEnabled" value="true"/>
     </bean>
 
-    <bean id="publicationIssue" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
+    <bean id="publicationIssueConfiguration" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
         scope="prototype">
         <property name="id" value="publicationIssue"/>
         <!--Which sidebar facets are to be displayed-->
@@ -781,7 +781,7 @@
         <property name="spellCheckEnabled" value="true"/>
     </bean>
 
-    <bean id="publicationVolume" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
+    <bean id="publicationVolumeConfiguration" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
         scope="prototype">
         <property name="id" value="publicationVolume"/>
         <!--Which sidebar facets are to be displayed-->
@@ -840,7 +840,7 @@
         <property name="spellCheckEnabled" value="true"/>
     </bean>
 
-    <bean id="periodical" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
+    <bean id="periodicalConfiguration" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
         scope="prototype">
         <property name="id" value="periodical"/>
         <!--Which sidebar facets are to be displayed-->
