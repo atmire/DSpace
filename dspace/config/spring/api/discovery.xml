@@ -54,12 +54,12 @@
                 <entry key="workspace" value-ref="workspaceConfiguration" />
                 <entry key="workflow" value-ref="workflowConfiguration" />
 
-                <entry key="publicationConfiguration" value-ref="publicationConfiguration"/>
-                <entry key="personConfiguration" value-ref="personConfiguration"/>
-                <entry key="organizationConfiguration" value-ref="organizationConfiguration"/>
-                <entry key="publicationIssueConfiguration" value-ref="publicationIssueConfiguration"/>
-                <entry key="publicationVolumeConfiguration" value-ref="publicationVolumeConfiguration"/>
-                <entry key="periodicalConfiguration" value-ref="periodicalConfiguration"/>
+                <entry key="publication" value-ref="publicationConfiguration"/>
+                <entry key="person" value-ref="personConfiguration"/>
+                <entry key="organization" value-ref="organizationConfiguration"/>
+                <entry key="publicationIssue" value-ref="publicationIssueConfiguration"/>
+                <entry key="publicationVolume" value-ref="publicationVolumeConfiguration"/>
+                <entry key="periodical" value-ref="periodicalConfiguration"/>
 
                 <entry key="123456789/6" value-ref="personConfiguration"/>
                 <entry key="123456789/279" value-ref="personConfiguration"/>

@@ -51,7 +51,7 @@
             <row>
                 <relation-field>
                     <relationship-type>isAuthorOfPublication</relationship-type>
-                    <search-configuration>personConfiguration</search-configuration>
+                    <search-configuration>person</search-configuration>
                     <repeatable>true</repeatable>
                     <label>Author</label>
                     <hint>Add an author</hint>
@@ -117,6 +117,16 @@
                     <required></required>
                 </field>
             </row>
+
+            <row>
+                <relation-field>
+                    <relationship-type>isJournalIssueOfPublication</relationship-type>
+                    <search-configuration>publicationIssue</search-configuration>
+                    <label>Journal Issue</label>
+                    <hint>Select the journal issue related to this publication.</hint>
+                </relation-field>
+            </row>
+
             <row>
                 <field>
                     <dc-schema>dc</dc-schema>
@@ -306,6 +316,16 @@
                     <hint>Enter the job title of the person</hint>
                 </field>
             </row>
+
+            <row>
+                <relation-field>
+                    <relationship-type>isPublicationOfAuthor</relationship-type>
+                    <search-configuration>publication</search-configuration>
+                    <repeatable>true</repeatable>
+                    <label>Publications</label>
+                    <hint>Select the publications related to this author.</hint>
+                </relation-field>
+            </row>
         </form>
 
 
@@ -436,6 +456,17 @@
                     <hint>Enter the description of the orgunit</hint>
                 </field>
             </row>
+
+            <row>
+                <relation-field>
+                    <relationship-type>isPersonOfOrgUnit</relationship-type>
+                    <search-configuration>person</search-configuration>
+                    <repeatable>true</repeatable>
+                    <label>Members</label>
+                    <hint>Select the members in this Org Unit.</hint>
+                </relation-field>
+            </row>
+
         </form>
 
         <form name="journalStep">
@@ -491,7 +522,7 @@
             <row>
                 <relation-field>
                     <relationship-type>isVolumeOfJournal</relationship-type>
-                    <search-configuration>periodicalConfiguration</search-configuration>
+                    <search-configuration>periodical</search-configuration>
                     <filter>creativework.publisher:somepublishername</filter>
                     <label>Journal</label>
                     <hint>Select the journal related to this volume.</hint>
@@ -581,6 +612,16 @@
                     <input-type>onebox</input-type>
                     <hint>Enter the keywords of the journal issue</hint>
                 </field>
+            </row>
+
+            <row>
+                <relation-field>
+                    <relationship-type>isPublicationOfJournalIssue</relationship-type>
+                    <search-configuration>publication</search-configuration>
+                    <repeatable>true</repeatable>
+                    <label>Publications</label>
+                    <hint>Select the publications related to this journal issue.</hint>
+                </relation-field>
             </row>
 
         </form>
