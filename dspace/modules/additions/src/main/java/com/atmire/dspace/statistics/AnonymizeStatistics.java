@@ -10,6 +10,7 @@ package com.atmire.dspace.statistics;
 import static java.lang.Integer.parseInt;
 import static java.lang.Thread.currentThread;
 import static java.lang.Thread.sleep;
+import static java.util.Arrays.asList;
 import static java.util.Calendar.DAY_OF_YEAR;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.cli.Option.builder;
@@ -48,6 +49,8 @@ public class AnonymizeStatistics {
 
     private static final String HELP_OPTION = "h";
     private static final String SLEEP_OPTION = "s";
+
+    private static final Object ANONYMISED = "anonymised";
 
     private static int sleep;
 
@@ -158,10 +161,14 @@ public class AnonymizeStatistics {
                         solrLoggerService.update(
                                 "uid:" + document.getFieldValue("uid"),
                                 "replace",
-                                singletonList("ip"),
-                                singletonList(singletonList(
-                                        anonymise(document.getFieldValue("ip").toString())
-                                ))
+                                asList(
+                                        "ip",
+                                        "dns"
+                                ),
+                                asList(
+                                        singletonList(anonymise(document.getFieldValue("ip").toString())),
+                                        singletonList(ANONYMISED)
+                                )
                         );
                         updated++;
                         printInfo("updated document with uid " + document.getFieldValue("uid"));
