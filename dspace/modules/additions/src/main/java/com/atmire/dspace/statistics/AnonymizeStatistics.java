@@ -16,7 +16,6 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.cli.Option.builder;
 import static org.apache.commons.lang.time.DateFormatUtils.format;
 import static org.apache.log4j.Logger.getLogger;
-import static org.apache.lucene.queryparser.classic.QueryParserBase.escape;
 import static org.dspace.core.LogManager.getHeader;
 import static org.dspace.statistics.SolrLoggerServiceImpl.DATE_FORMAT_8601;
 
@@ -204,9 +203,7 @@ public class AnonymizeStatistics {
 
         return solrLoggerService.query(
                 "ip:*",
-                "time:[* TO " + TIME_LIMIT + "]" +
-                        " AND -ip:(*" + escape(IP_V4_MASK) + ")" +
-                        " AND -ip:(*" + escape(IP_V6_MASK) + ")",
+                "time:[* TO " + TIME_LIMIT + "] AND -dns:" + ANONYMISED,
                 null, BATCH_SIZE, -1, null, null, null, null, null, false, false
         );
     }
