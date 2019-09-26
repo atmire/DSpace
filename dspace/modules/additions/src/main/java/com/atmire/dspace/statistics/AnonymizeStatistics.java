@@ -49,8 +49,6 @@ public class AnonymizeStatistics {
     private static final String HELP_OPTION = "h";
     private static final String SLEEP_OPTION = "s";
 
-    private static final Object ANONYMISED = "anonymised";
-
     private static int sleep;
 
     private static SolrLoggerService solrLoggerService = StatisticsServiceFactory.getInstance().getSolrLoggerService();
@@ -66,6 +64,8 @@ public class AnonymizeStatistics {
             configurationService.getProperty("anonymise_statistics.ip_v4_mask", "255");
     private static final String IP_V6_MASK =
             configurationService.getProperty("anonymise_statistics.ip_v6_mask", "FFFF:FFFF");
+
+    private static final Object ANONYMISED = configurationService.getProperty("anonymise_statistics.dns_mask", "anonymised");;
 
     private static final String TIME_LIMIT;
 
