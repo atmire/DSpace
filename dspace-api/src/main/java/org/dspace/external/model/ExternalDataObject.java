@@ -4,6 +4,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ExternalDataObject {
+
+    private String id;
+    private String value;
     private String source;
     private List<MockMetadataValue> metadata;
     private String displayValue;
@@ -46,5 +49,21 @@ public class ExternalDataObject {
 
     public void setDisplayValue(String displayValue) {
         this.displayValue = displayValue;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 }

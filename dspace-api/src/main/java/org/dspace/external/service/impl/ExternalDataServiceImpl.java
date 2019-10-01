@@ -1,8 +1,8 @@
 package org.dspace.external.service.impl;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.dspace.external.model.ExternalDataObject;
 import org.dspace.external.provider.ExternalDataProvider;
 import org.dspace.external.service.ExternalDataService;
@@ -31,13 +31,6 @@ public class ExternalDataServiceImpl implements ExternalDataService {
         return provider.searchExternalDataObjects(query, start, limit);
     }
 
-    @Override
-    public List<String> getExternalSources() {
-        return getExternalDataProviders().stream()
-                                         .map(externalDataProvider -> externalDataProvider.getSourceIdentifier())
-                                         .collect(Collectors.toList());
-    }
-
     private ExternalDataProvider getExternalDataProviderForSource(String source) {
         for (ExternalDataProvider externalDataProvider : externalDataProviders) {
             if (externalDataProvider.supports(source)) {
@@ -47,8 +40,17 @@ public class ExternalDataServiceImpl implements ExternalDataService {
         return null;
     }
 
-    private List<ExternalDataProvider> getExternalDataProviders() {
+    public List<ExternalDataProvider> getExternalDataProviders() {
         return externalDataProviders;
+    }
+
+    public ExternalDataProvider getExternalDataProvider(String sourceIdentifier) {
+        for (ExternalDataProvider externalDataProvider : externalDataProviders) {
+            if (StringUtils.equalsIgnoreCase(externalDataProvider.getSourceIdentifier(), sourceIdentifier)) {
+                return externalDataProvider;
+            }
+        }
+        return null;
     }
 
 }

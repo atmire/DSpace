@@ -113,14 +113,18 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
                                                                  firstName, null, 0));
 
         }
+        externalDataObject.setId(person.getName().getPath());
         externalDataObject.addMetadata(new MockMetadataValue("dc", "identifier", "orcid", null, person.getName().getPath(), null, 0));
         externalDataObject.addMetadata(new MockMetadataValue("dc", "identifier", "uri", null, "https://orcid.org/" + person.getName().getPath(), null, 0));
         if (!StringUtils.isBlank(lastName) && !StringUtils.isBlank(firstName)) {
             externalDataObject.setDisplayValue(lastName + ", " + firstName);
+            externalDataObject.setValue(lastName + ", " + firstName);
         } else if (StringUtils.isBlank(firstName)) {
             externalDataObject.setDisplayValue(lastName);
+            externalDataObject.setValue(lastName);
         } else if (StringUtils.isBlank(lastName)) {
             externalDataObject.setDisplayValue(firstName);
+            externalDataObject.setValue(firstName);
         }
         return externalDataObject;
     }

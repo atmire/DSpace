@@ -198,6 +198,7 @@ public class SherpaPublisherDataProvider implements ExternalDataProvider {
                     ExternalDataObject externalDataObject = new ExternalDataObject();
                     externalDataObject.setSource(sourceIdentifier);
                     if (StringUtils.isNotBlank(currentId)) {
+                        externalDataObject.setId(currentId);
                         externalDataObject.addMetadata(new MockMetadataValue("dc", "identifier", "sherpaPublisher", null, currentId, null, 0));
                     }
                     result[rindex] = externalDataObject;
@@ -206,6 +207,7 @@ public class SherpaPublisherDataProvider implements ExternalDataProvider {
             } else if (localName.equals("name") && textValue != null) {
                 result[rindex].addMetadata(new MockMetadataValue("dc", "title", null, null, textValue.trim(), null, 0));
                 result[rindex].setDisplayValue(textValue.trim());
+                result[rindex].setValue(textValue.trim());
             } else if (localName.equals("homeurl") && textValue != null) {
                 result[rindex]
                     .addMetadata(new MockMetadataValue("dc", "identifier", "other", null, textValue.trim(), null, 0));

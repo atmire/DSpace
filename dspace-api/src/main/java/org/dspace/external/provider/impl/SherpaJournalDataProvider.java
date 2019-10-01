@@ -240,6 +240,8 @@ public class SherpaJournalDataProvider implements ExternalDataProvider {
             } else if (localName.equals("jtitle") && textValue != null) {
                 result[rindex].addMetadata(new MockMetadataValue("dc", "title", null, null, textValue.trim(), null, 0));
                 result[rindex].setDisplayValue(textValue.trim());
+                result[rindex].setValue(textValue.trim());
+                result[rindex].setId(textValue.trim());
             } else if ("issn" != null && localName.equals("issn") && textValue != null) {
                 result[rindex]
                     .addMetadata(new MockMetadataValue("dc", "identifier", "issn", null, textValue.trim(), null, 0));
