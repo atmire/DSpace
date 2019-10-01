@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.content.crosswalk;
+package org.dspace.external.model;
 
 import org.dspace.content.MetadataField;
 import org.dspace.content.MetadataSchema;
@@ -41,6 +41,17 @@ public class MockMetadataValue {
     }
 
     public MockMetadataValue() {
+    }
+
+    public MockMetadataValue(String schema, String element, String qualifier, String language, String value,
+                             String authority, int confidence) {
+        this.schema = schema;
+        this.element = element;
+        this.qualifier = qualifier;
+        this.language = language;
+        this.value = value;
+        this.authority = authority;
+        this.confidence = confidence;
     }
 
     public String getSchema() {
