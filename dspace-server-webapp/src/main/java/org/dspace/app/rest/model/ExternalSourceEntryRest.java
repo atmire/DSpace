@@ -8,14 +8,17 @@ public class ExternalSourceEntryRest extends BaseObjectRest<String> {
     public static final String PLURAL_NAME = "externalSourceEntries";
     public static final String CATEGORY = RestAddressableModel.INTEGRATION;
 
+    @Override
     public String getCategory() {
         return CATEGORY;
     }
 
+    @Override
     public Class getController() {
         return ExternalSourcesRestController.class;
     }
 
+    @Override
     public String getType() {
         return NAME;
     }
@@ -23,7 +26,6 @@ public class ExternalSourceEntryRest extends BaseObjectRest<String> {
     private String id;
     private String display;
     private String value;
-    private String type;
     private String externalSource;
     private MetadataRest metadata = new MetadataRest();
 
@@ -49,10 +51,6 @@ public class ExternalSourceEntryRest extends BaseObjectRest<String> {
 
     public void setValue(String value) {
         this.value = value;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public String getExternalSource() {

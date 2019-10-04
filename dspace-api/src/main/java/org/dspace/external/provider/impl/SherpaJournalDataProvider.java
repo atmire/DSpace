@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -26,7 +27,7 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.sherpa.SHERPAJournal;
 import org.dspace.app.sherpa.SHERPAResponse;
 import org.dspace.external.model.ExternalDataObject;
-import org.dspace.external.model.MockMetadataValue;
+import org.dspace.mock.MockMetadataValue;
 import org.dspace.external.provider.ExternalDataProvider;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -59,7 +60,7 @@ public class SherpaJournalDataProvider implements ExternalDataProvider {
             .build();
     }
 
-    public ExternalDataObject getExternalDataObject(String id) {
+    public Optional<ExternalDataObject> getExternalDataObject(String id) {
 
         HttpGet method = null;
         SHERPAResponse sherpaResponse = null;
@@ -109,12 +110,14 @@ public class SherpaJournalDataProvider implements ExternalDataProvider {
 
             ExternalDataObject externalDataObject = new ExternalDataObject();
             externalDataObject.setSource(sourceIdentifier);
+            externalDataObject.setId(sherpaJournal.getIssn());
             externalDataObject
-                .addMetadata(new MockMetadataValue("dc", "title", null, null, sherpaJournal.getTitle(), null, 0));
+                .addMetadata(new MockMetadataValue("dc", "title", null, null, sherpaJournal.getTitle()));
             externalDataObject
-                .addMetadata(new MockMetadataValue("dc", "identifier", "issn", null, sherpaJournal.getIssn(), null, 0));
+                .addMetadata(new MockMetadataValue("dc", "identifier", "issn", null, sherpaJournal.getIssn()));
+            externalDataObject.setValue(sherpaJournal.getTitle());
             externalDataObject.setDisplayValue(sherpaJournal.getTitle());
-            return externalDataObject;
+            return Optional.of(externalDataObject);
         }
         return null;
     }
@@ -225,7 +228,9 @@ public class SherpaJournalDataProvider implements ExternalDataProvider {
                     total = Integer.parseInt(stotal);
                     result = new ExternalDataObject[total];
                     if (total > 0) {
-                        result[0] = new ExternalDataObject();
+                        ExternalDataObject externalDataObject = new ExternalDataObject();
+                        externalDataObject.setSource(sourceIdentifier);
+                        result[0] = externalDataObject;
                         log.debug("Got " + total + " records in results.");
                     }
                 }
@@ -238,13 +243,13 @@ public class SherpaJournalDataProvider implements ExternalDataProvider {
 
                 }
             } else if (localName.equals("jtitle") && textValue != null) {
-                result[rindex].addMetadata(new MockMetadataValue("dc", "title", null, null, textValue.trim(), null, 0));
+                result[rindex].addMetadata(new MockMetadataValue("dc", "title", null, null, textValue.trim()));
                 result[rindex].setDisplayValue(textValue.trim());
                 result[rindex].setValue(textValue.trim());
-                result[rindex].setId(textValue.trim());
             } else if ("issn" != null && localName.equals("issn") && textValue != null) {
                 result[rindex]
-                    .addMetadata(new MockMetadataValue("dc", "identifier", "issn", null, textValue.trim(), null, 0));
+                    .addMetadata(new MockMetadataValue("dc", "identifier", "issn", null, textValue.trim()));
+                result[rindex].setId(textValue.trim());
             } else if (localName.equals("message") && textValue != null) {
                 // error message
                 log.warn("SHERPA/RoMEO response error message: " + textValue.trim());

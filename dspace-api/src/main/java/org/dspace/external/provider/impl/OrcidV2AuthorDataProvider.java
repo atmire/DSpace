@@ -5,8 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -16,20 +17,20 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.dspace.authority.orcid.Orcidv2AuthorityValue;
-import org.dspace.authority.orcid.xml.XMLtoBio;
+import org.dspace.external.provider.orcid.xml.XMLtoBio;
 import org.dspace.authority.rest.RESTConnector;
 import org.dspace.external.model.ExternalDataObject;
-import org.dspace.external.model.MockMetadataValue;
 import org.dspace.external.provider.ExternalDataProvider;
+import org.dspace.mock.MockMetadataValue;
 import org.json.JSONObject;
 import org.orcid.jaxb.model.record_v2.Person;
+import org.springframework.beans.factory.annotation.Required;
 
 public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
 
     private static Logger log = LogManager.getLogger(OrcidV2AuthorDataProvider.class);
 
-    public RESTConnector restConnector;
+    public RESTConnector OrcidRestConnector;
     private String OAUTHUrl;
     private String clientId;
 
@@ -38,8 +39,12 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
     private String accessToken;
 
     private String sourceIdentifier;
+    private String orcidUrl;
+
+    public static final String ORCID_ID_SYNTAX = "\\d{4}-\\d{4}-\\d{4}-(\\d{3}X|\\d{4})";
 
     @Override
+
     public String getSourceIdentifier() {
         return sourceIdentifier;
     }
@@ -76,6 +81,8 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
                     }
                 }
             }
+            is.close();
+            streamReader.close();
 
             if (responseObject != null && responseObject.has("access_token")) {
                 accessToken = (String) responseObject.get("access_token");
@@ -88,34 +95,36 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
      * This constructor is called through the spring bean initialization
      */
     private OrcidV2AuthorDataProvider(String url) {
-        this.restConnector = new RESTConnector(url);
+        this.OrcidRestConnector = new RESTConnector(url);
     }
 
     @Override
-    public ExternalDataObject getExternalDataObject(String id) {
+    public Optional<ExternalDataObject> getExternalDataObject(String id) {
         Person person = getBio(id);
         ExternalDataObject externalDataObject = convertToExternalDataObject(person);
-        return externalDataObject;
+        return Optional.of(externalDataObject);
     }
 
-    private ExternalDataObject convertToExternalDataObject(Person person) {
-        ExternalDataObject externalDataObject = new ExternalDataObject(sourceIdentifier, new LinkedList<>(), "");
+    protected ExternalDataObject convertToExternalDataObject(Person person) {
+        ExternalDataObject externalDataObject = new ExternalDataObject(sourceIdentifier);
         String lastName = "";
         String firstName = "";
         if (person.getName().getFamilyName() != null) {
             lastName = person.getName().getFamilyName().getValue();
             externalDataObject.addMetadata(new MockMetadataValue("person", "familyName", null, null,
-                                                                 lastName, null, 0));
+                                                                 lastName));
         }
         if (person.getName().getGivenNames() != null) {
             firstName = person.getName().getGivenNames().getValue();
             externalDataObject.addMetadata(new MockMetadataValue("person", "givenName", null, null,
-                                                                 firstName, null, 0));
+                                                                 firstName));
 
         }
         externalDataObject.setId(person.getName().getPath());
-        externalDataObject.addMetadata(new MockMetadataValue("dc", "identifier", "orcid", null, person.getName().getPath(), null, 0));
-        externalDataObject.addMetadata(new MockMetadataValue("dc", "identifier", "uri", null, "https://orcid.org/" + person.getName().getPath(), null, 0));
+        externalDataObject
+            .addMetadata(new MockMetadataValue("dc", "identifier", "orcid", null, person.getName().getPath()));
+        externalDataObject
+            .addMetadata(new MockMetadataValue("dc", "identifier", "uri", null, orcidUrl + person.getName().getPath()));
         if (!StringUtils.isBlank(lastName) && !StringUtils.isBlank(firstName)) {
             externalDataObject.setDisplayValue(lastName + ", " + firstName);
             externalDataObject.setValue(lastName + ", " + firstName);
@@ -139,7 +148,7 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
         if (!isValid(id)) {
             return null;
         }
-        InputStream bioDocument = restConnector.get(id + ((id.endsWith("/person")) ? "" : "/person"), accessToken);
+        InputStream bioDocument = OrcidRestConnector.get(id + ((id.endsWith("/person")) ? "" : "/person"), accessToken);
         XMLtoBio converter = new XMLtoBio();
         Person person = converter.convertSinglePerson(bioDocument);
         return person;
@@ -151,7 +160,7 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
      * blank result anyway
      */
     private boolean isValid(String text) {
-        return StringUtils.isNotBlank(text) && text.matches(Orcidv2AuthorityValue.ORCID_ID_SYNTAX);
+        return StringUtils.isNotBlank(text) && text.matches(ORCID_ID_SYNTAX);
     }
 
     @Override
@@ -162,11 +171,11 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
 
         String searchPath = "search?q=" + URLEncoder.encode(query) + "&start=" + start + "&rows=" + limit;
         log.debug("queryBio searchPath=" + searchPath + " accessToken=" + accessToken);
-        InputStream bioDocument = restConnector.get(searchPath, accessToken);
+        InputStream bioDocument = OrcidRestConnector.get(searchPath, accessToken);
         XMLtoBio converter = new XMLtoBio();
         List<Person> bios = converter.convert(bioDocument);
         if (bios == null) {
-            return null;
+            return Collections.emptyList();
         } else {
             return bios.stream().map(bio -> convertToExternalDataObject(bio)).collect(Collectors.toList());
         }
@@ -177,7 +186,30 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
         return StringUtils.equalsIgnoreCase(sourceIdentifier, source);
     }
 
+
+    @Required
     public void setSourceIdentifier(String sourceIdentifier) {
         this.sourceIdentifier = sourceIdentifier;
+    }
+
+    public String getOrcidUrl() {
+        return orcidUrl;
+    }
+
+    @Required
+    public void setOrcidUrl(String orcidUrl) {
+        this.orcidUrl = orcidUrl;
+    }
+
+    public void setOAUTHUrl(String OAUTHUrl) {
+        this.OAUTHUrl = OAUTHUrl;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+
+    public void setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
     }
 }

@@ -14,6 +14,7 @@ public class ExternalSourceEntryRestConverter implements DSpaceConverter<Externa
     public ExternalSourceEntryRest fromModel(ExternalDataObject externalDataObject) {
         ExternalSourceEntryRest externalSourceEntryRest = new ExternalSourceEntryRest();
         externalSourceEntryRest.setId(externalDataObject.getId());
+        externalSourceEntryRest.setExternalSource(externalDataObject.getSource());
         externalSourceEntryRest.setDisplay(externalDataObject.getDisplayValue());
         externalSourceEntryRest.setValue(externalDataObject.getValue());
         externalSourceEntryRest.setExternalSource(externalDataObject.getSource());

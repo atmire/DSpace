@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -18,7 +19,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.Logger;
 import org.dspace.external.model.ExternalDataObject;
-import org.dspace.external.model.MockMetadataValue;
+import org.dspace.mock.MockMetadataValue;
 import org.dspace.external.provider.ExternalDataProvider;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -39,7 +40,7 @@ public class SherpaPublisherDataProvider implements ExternalDataProvider {
         return sourceIdentifier;
     }
 
-    public ExternalDataObject getExternalDataObject(String id) {
+    public Optional<ExternalDataObject> getExternalDataObject(String id) {
         List<BasicNameValuePair> args = new ArrayList<BasicNameValuePair>();
         args.add(new BasicNameValuePair("id", id));
         args.add(new BasicNameValuePair("ak", apiKey));
@@ -62,7 +63,7 @@ public class SherpaPublisherDataProvider implements ExternalDataProvider {
                 xr.parse(new InputSource(response.getEntity().getContent()));
                 List<ExternalDataObject> results = Arrays.asList(handler.result);
                 if (results.size() == 1) {
-                    return results.get(0);
+                    return Optional.of(results.get(0));
                 } else {
                     log.error("Something went wrong in the lookup for sherpa publishers with id:" + id);
                 }
@@ -188,7 +189,9 @@ public class SherpaPublisherDataProvider implements ExternalDataProvider {
                     total = Integer.parseInt(stotal);
                     result = new ExternalDataObject[total];
                     if (total > 0) {
-                        result[0] = new ExternalDataObject();
+                        ExternalDataObject externalDataObject = new ExternalDataObject();
+                        externalDataObject.setSource(sourceIdentifier);
+                        result[0] = externalDataObject;
                         log.debug("Got " + total + " records in results.");
                     }
                 }
@@ -197,20 +200,20 @@ public class SherpaPublisherDataProvider implements ExternalDataProvider {
                 if (++rindex < result.length) {
                     ExternalDataObject externalDataObject = new ExternalDataObject();
                     externalDataObject.setSource(sourceIdentifier);
-                    if (StringUtils.isNotBlank(currentId)) {
-                        externalDataObject.setId(currentId);
-                        externalDataObject.addMetadata(new MockMetadataValue("dc", "identifier", "sherpaPublisher", null, currentId, null, 0));
-                    }
                     result[rindex] = externalDataObject;
 
                 }
             } else if (localName.equals("name") && textValue != null) {
-                result[rindex].addMetadata(new MockMetadataValue("dc", "title", null, null, textValue.trim(), null, 0));
+                result[rindex].addMetadata(new MockMetadataValue("dc", "title", null, null, textValue.trim()));
                 result[rindex].setDisplayValue(textValue.trim());
                 result[rindex].setValue(textValue.trim());
+                if (StringUtils.isNotBlank(currentId)) {
+                    result[rindex].setId(currentId);
+                    result[rindex].addMetadata(new MockMetadataValue("dc", "identifier", "sherpaPublisher", null, currentId));
+                }
             } else if (localName.equals("homeurl") && textValue != null) {
                 result[rindex]
-                    .addMetadata(new MockMetadataValue("dc", "identifier", "other", null, textValue.trim(), null, 0));
+                    .addMetadata(new MockMetadataValue("dc", "identifier", "other", null, textValue.trim()));
             } else if (localName.equals("message") && textValue != null) {
                 // error message
                 log.warn("SHERPA/RoMEO response error message: " + textValue.trim());

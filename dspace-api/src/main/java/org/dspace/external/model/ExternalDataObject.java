@@ -3,6 +3,8 @@ package org.dspace.external.model;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.dspace.mock.MockMetadataValue;
+
 public class ExternalDataObject {
 
     private String id;
@@ -14,10 +16,8 @@ public class ExternalDataObject {
     public ExternalDataObject() {
 
     }
-    public ExternalDataObject(String source, List<MockMetadataValue> metadata, String displayValue) {
+    public ExternalDataObject(String source) {
         this.source = source;
-        this.metadata = metadata;
-        this.displayValue = displayValue;
     }
 
     public String getSource() {

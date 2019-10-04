@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.authority.orcid.xml;
+package org.dspace.external.provider.orcid.xml;
 
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.logging.log4j.Logger;
-import org.dspace.authority.orcid.Orcidv2;
+import org.dspace.external.provider.impl.OrcidV2AuthorDataProvider;
 import org.dspace.utils.DSpace;
 import org.orcid.jaxb.model.common_v2.OrcidId;
 import org.orcid.jaxb.model.record_v2.Person;
@@ -38,7 +38,7 @@ public class XMLtoBio extends Converter {
     public List<Person> convert(InputStream xml) {
         List<Person> bios = new ArrayList<>();
         try {
-            Orcidv2 connector = new DSpace().getServiceManager().getServiceByName("AuthoritySource", Orcidv2.class);
+            OrcidV2AuthorDataProvider connector = new DSpace().getServiceManager().getServicesByType(OrcidV2AuthorDataProvider.class).get(0);
 
             Search search = (Search) unmarshall(xml, Search.class);
             for (Result result : search.getResult()) {

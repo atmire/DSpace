@@ -8,14 +8,17 @@ public class ExternalSourceRest extends BaseObjectRest<String> {
     public static final String PLURAL_NAME = "externalsources";
     public static final String CATEGORY = RestAddressableModel.INTEGRATION;
 
+    @Override
     public String getCategory() {
         return CATEGORY;
     }
 
+    @Override
     public Class getController() {
         return ExternalSourcesRestController.class;
     }
 
+    @Override
     public String getType() {
         return NAME;
     }
@@ -23,7 +26,6 @@ public class ExternalSourceRest extends BaseObjectRest<String> {
     private String id;
     private String name;
     private boolean hierarchical;
-    private String type;
 
     public String getId() {
         return id;
@@ -49,7 +51,4 @@ public class ExternalSourceRest extends BaseObjectRest<String> {
         this.hierarchical = hierarchical;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
 }

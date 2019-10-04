@@ -1,7 +1,9 @@
 package org.dspace.app.rest.repository;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.apache.velocity.exception.ResourceNotFoundException;
 import org.dspace.app.rest.converter.ExternalSourceEntryRestConverter;
 import org.dspace.app.rest.converter.ExternalSourceRestConverter;
 import org.dspace.app.rest.model.ExternalSourceEntryRest;
@@ -40,8 +42,8 @@ public class ExternalSourceRestRepository extends AbstractDSpaceRestRepository {
     }
 
     public ExternalSourceEntryRest getExternalSourceEntryValue(String authorityName, String entryId) {
-        ExternalDataObject externalDataObject = externalDataService.getExternalDataObject(authorityName, entryId);
-        return externalSourceEntryRestConverter.fromModel(externalDataObject);
+        Optional<ExternalDataObject> externalDataObject = externalDataService.getExternalDataObject(authorityName, entryId);
+        return externalSourceEntryRestConverter.fromModel(externalDataObject.orElseThrow(() -> new ResourceNotFoundException("Couldn't find an ExternalSource for source: " + authorityName + " and ID: " + entryId)));
 
     }
 

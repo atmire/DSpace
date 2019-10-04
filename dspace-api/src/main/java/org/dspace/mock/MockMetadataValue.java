@@ -5,11 +5,12 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.external.model;
+package org.dspace.mock;
 
 import org.dspace.content.MetadataField;
 import org.dspace.content.MetadataSchema;
 import org.dspace.content.MetadataValue;
+import org.dspace.content.authority.Choices;
 
 /**
  * Metadata Value is bound to a database, the dissemination crosswalk require mock metadata just need for desimanation
@@ -26,7 +27,7 @@ public class MockMetadataValue {
     private String language;
     private String value;
     private String authority;
-    private int confidence;
+    private int confidence = Choices.CF_UNSET;
 
     public MockMetadataValue(MetadataValue metadataValue) {
         MetadataField metadataField = metadataValue.getMetadataField();
@@ -52,6 +53,14 @@ public class MockMetadataValue {
         this.value = value;
         this.authority = authority;
         this.confidence = confidence;
+    }
+
+    public MockMetadataValue(String schema, String element, String qualifier, String language, String value) {
+        this.schema = schema;
+        this.element = element;
+        this.qualifier = qualifier;
+        this.language = language;
+        this.value = value;
     }
 
     public String getSchema() {

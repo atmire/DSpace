@@ -15,7 +15,6 @@ import org.dspace.authority.indexer.AuthorityIndexerInterface;
 import org.dspace.authority.indexer.AuthorityIndexingService;
 import org.dspace.authority.service.AuthorityService;
 import org.dspace.authority.service.AuthorityValueService;
-import org.dspace.external.service.ExternalDataService;
 import org.dspace.services.factory.DSpaceServicesFactory;
 
 /**
@@ -36,7 +35,6 @@ public abstract class AuthorityServiceFactory {
 
     public abstract AuthorityService getAuthorityService();
 
-    public abstract ExternalDataService getExternalDataService();
 
     public abstract List<AuthorityIndexerInterface> getAuthorityIndexers();
 

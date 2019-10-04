@@ -12,7 +12,6 @@ public class ExternalSourceRestConverter implements DSpaceConverter<ExternalData
         externalSourceRest.setId(obj.getSourceIdentifier());
         externalSourceRest.setName(obj.getSourceIdentifier());
         externalSourceRest.setHierarchical(false);
-        externalSourceRest.setType("authority");
         return externalSourceRest;
     }
 
