@@ -15,7 +15,6 @@ import java.util.List;
 import org.apache.logging.log4j.Logger;
 import org.dspace.external.provider.impl.OrcidV2AuthorDataProvider;
 import org.dspace.utils.DSpace;
-import org.orcid.jaxb.model.common_v2.OrcidId;
 import org.orcid.jaxb.model.record_v2.Person;
 import org.orcid.jaxb.model.search_v2.Result;
 import org.orcid.jaxb.model.search_v2.Search;
@@ -27,7 +26,7 @@ import org.xml.sax.SAXException;
  * @author Ben Bosman (ben at atmire dot com)
  * @author Mark Diggory (markd at atmire dot com)
  */
-public class XMLtoBio extends Converter {
+public class XMLtoBio extends Converter<List<Result>> {
 
     /**
      * log4j logger
@@ -35,23 +34,13 @@ public class XMLtoBio extends Converter {
     private static Logger log = org.apache.logging.log4j.LogManager.getLogger(XMLtoBio.class);
 
     @Override
-    public List<Person> convert(InputStream xml) {
-        List<Person> bios = new ArrayList<>();
+    public List<Result> convert(InputStream xml) {
+        List<Result> bios = new ArrayList<>();
         try {
             OrcidV2AuthorDataProvider connector = new DSpace().getServiceManager().getServicesByType(OrcidV2AuthorDataProvider.class).get(0);
 
             Search search = (Search) unmarshall(xml, Search.class);
-            for (Result result : search.getResult()) {
-                OrcidId orcidIdentifier = result.getOrcidIdentifier();
-                if (orcidIdentifier != null) {
-                    log.debug("Found OrcidId=" + orcidIdentifier.toString());
-                    String orcid = orcidIdentifier.getUriPath();
-                    Person bio = connector.getBio(orcid);
-                    if (bio != null) {
-                        bios.add(bio);
-                    }
-                }
-            }
+            bios = search.getResult();
         } catch (SAXException | URISyntaxException e) {
             log.error(e);
         }

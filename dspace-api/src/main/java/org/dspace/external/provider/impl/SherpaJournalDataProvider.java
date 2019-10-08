@@ -68,8 +68,7 @@ public class SherpaJournalDataProvider implements ExternalDataProvider {
         URIBuilder uriBuilder = null;
         try {
             uriBuilder = new URIBuilder(url);
-            uriBuilder.addParameter("issn", id);
-            uriBuilder.addParameter("versions", "all");
+            uriBuilder.addParameter("jtitle", id);
             if (StringUtils.isNotBlank(apiKey)) {
                 uriBuilder.addParameter("ak", apiKey);
             }

@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -17,20 +18,22 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.dspace.external.provider.orcid.xml.XMLtoBio;
-import org.dspace.authority.rest.RESTConnector;
+import org.dspace.external.OrcidRestConnector;
 import org.dspace.external.model.ExternalDataObject;
 import org.dspace.external.provider.ExternalDataProvider;
+import org.dspace.external.provider.orcid.xml.XMLtoBio;
 import org.dspace.mock.MockMetadataValue;
 import org.json.JSONObject;
+import org.orcid.jaxb.model.common_v2.OrcidId;
 import org.orcid.jaxb.model.record_v2.Person;
+import org.orcid.jaxb.model.search_v2.Result;
 import org.springframework.beans.factory.annotation.Required;
 
 public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
 
     private static Logger log = LogManager.getLogger(OrcidV2AuthorDataProvider.class);
 
-    public RESTConnector OrcidRestConnector;
+    public OrcidRestConnector orcidRestConnector;
     private String OAUTHUrl;
     private String clientId;
 
@@ -66,24 +69,21 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
             HttpClient httpClient = HttpClientBuilder.create().build();
             HttpResponse getResponse = httpClient.execute(httpPost);
 
-            InputStream is = getResponse.getEntity().getContent();
-            BufferedReader streamReader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-
             JSONObject responseObject = null;
-            String inputStr;
-            while ((inputStr = streamReader.readLine()) != null && responseObject == null) {
-                if (inputStr.startsWith("{") && inputStr.endsWith("}") && inputStr.contains("access_token")) {
-                    try {
-                        responseObject = new JSONObject(inputStr);
-                    } catch (Exception e) {
-                        //Not as valid as I'd hoped, move along
-                        responseObject = null;
+            try (InputStream is = getResponse.getEntity().getContent();
+                 BufferedReader streamReader = new BufferedReader(new InputStreamReader(is, "UTF-8"))) {
+                String inputStr;
+                while ((inputStr = streamReader.readLine()) != null && responseObject == null) {
+                    if (inputStr.startsWith("{") && inputStr.endsWith("}") && inputStr.contains("access_token")) {
+                        try {
+                            responseObject = new JSONObject(inputStr);
+                        } catch (Exception e) {
+                            //Not as valid as I'd hoped, move along
+                            responseObject = null;
+                        }
                     }
                 }
             }
-            is.close();
-            streamReader.close();
-
             if (responseObject != null && responseObject.has("access_token")) {
                 accessToken = (String) responseObject.get("access_token");
             }
@@ -95,7 +95,7 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
      * This constructor is called through the spring bean initialization
      */
     private OrcidV2AuthorDataProvider(String url) {
-        this.OrcidRestConnector = new RESTConnector(url);
+        this.orcidRestConnector = new OrcidRestConnector(url);
     }
 
     @Override
@@ -148,7 +148,7 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
         if (!isValid(id)) {
             return null;
         }
-        InputStream bioDocument = OrcidRestConnector.get(id + ((id.endsWith("/person")) ? "" : "/person"), accessToken);
+        InputStream bioDocument = orcidRestConnector.get(id + ((id.endsWith("/person")) ? "" : "/person"), accessToken);
         XMLtoBio converter = new XMLtoBio();
         Person person = converter.convertSinglePerson(bioDocument);
         return person;
@@ -171,9 +171,21 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
 
         String searchPath = "search?q=" + URLEncoder.encode(query) + "&start=" + start + "&rows=" + limit;
         log.debug("queryBio searchPath=" + searchPath + " accessToken=" + accessToken);
-        InputStream bioDocument = OrcidRestConnector.get(searchPath, accessToken);
+        InputStream bioDocument = orcidRestConnector.get(searchPath, accessToken);
         XMLtoBio converter = new XMLtoBio();
-        List<Person> bios = converter.convert(bioDocument);
+        List<Result> results = converter.convert(bioDocument);
+        List<Person> bios = new LinkedList<>();
+        for (Result result : results) {
+            OrcidId orcidIdentifier = result.getOrcidIdentifier();
+            if (orcidIdentifier != null) {
+                log.debug("Found OrcidId=" + orcidIdentifier.toString());
+                String orcid = orcidIdentifier.getUriPath();
+                Person bio = getBio(orcid);
+                if (bio != null) {
+                    bios.add(bio);
+                }
+            }
+        }
         if (bios == null) {
             return Collections.emptyList();
         } else {

@@ -10,22 +10,25 @@
         <property name="sourceIdentifier" value="sherpaJournal"/>
         <property name="url" value="http://www.sherpa.ac.uk/romeo/api29.php"/>
         <!-- please register for a free api access key to get many benefits -->
-<!--        <property name="apiKey" value=""/>-->
-        <property name="apiKey" value="regIV5XLqKE"/>
+        <property name="apiKey" value=""/>
 
     </bean>
     <bean class="org.dspace.external.provider.impl.SherpaPublisherDataProvider">
         <property name="sourceIdentifier" value="sherpaPublisher"/>
         <property name="url" value="http://www.sherpa.ac.uk/romeo/api29.php"/>
         <!-- please register for a free api access key to get many benefits -->
-<!--        <property name="apiKey" value=""/>-->
-        <property name="apiKey" value="regIV5XLqKE"/>
+        <property name="apiKey" value=""/>
 
     </bean>
     <bean class="org.dspace.external.provider.impl.OrcidV2AuthorDataProvider" init-method="init">
         <constructor-arg value="https://pub.orcid.org/v2.1"/>
         <property name="sourceIdentifier" value="orcidV2"/>
         <property name="orcidUrl" value="https://orcid.org/" />
+
+<!--        <property name="OAUTHUrl" value="https://api.orcid.org/oauth/token"/>-->
+        <!-- Fill in these properties if you want to use them -->
+<!--        <property name="clientId" value=""/>-->
+<!--        <property name="clientSecret" value=""/>-->
     </bean>
 
 </beans>
