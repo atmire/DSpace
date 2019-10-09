@@ -18,10 +18,13 @@ import javax.servlet.http.HttpServletRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.CollectionConverter;
 import org.dspace.app.rest.converter.ItemConverter;
+import org.dspace.app.rest.converter.JsonPatchConverter;
 import org.dspace.app.rest.converter.MetadataConverter;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
@@ -30,8 +33,10 @@ import org.dspace.app.rest.model.CollectionRest;
 import org.dspace.app.rest.model.CommunityRest;
 import org.dspace.app.rest.model.ItemRest;
 import org.dspace.app.rest.model.hateoas.CollectionResource;
+import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.rest.repository.patch.DSpaceObjectPatch;
+import org.dspace.app.rest.repository.patch.ItemPatch;
 import org.dspace.app.rest.utils.CollectionRestEqualityUtils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
@@ -60,6 +65,8 @@ import org.springframework.stereotype.Component;
 @Component(CollectionRest.CATEGORY + "." + CollectionRest.NAME)
 public class CollectionRestRepository extends DSpaceObjectRestRepository<Collection, CollectionRest> {
 
+    private static final Logger log = LogManager.getLogger();
+
     private final CollectionService cs;
 
     @Autowired
@@ -83,6 +90,8 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
     @Autowired
     private ObjectMapper mapper;
 
+    @Autowired
+    private ItemPatch itemPatch;
 
     public CollectionRestRepository(CollectionService dsoService,
                                     CollectionConverter dsoConverter) {
@@ -312,9 +321,55 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
         return itemConverter.fromModel(item);
     }
 
+    public ItemRest patchTemplateItem(Context context, UUID uuid, JsonNode jsonNode)
+            throws SQLException, AuthorizeException {
+        Collection collection = getCollection(context, uuid);
+
+        Item item = collection.getTemplateItem();
+        if (item == null) {
+            throw new UnprocessableEntityException(
+                    "TemplateItem from " + CollectionRest.CATEGORY + "." + CollectionRest.NAME + " with id: "
+                            + uuid + " not found");
+        }
+
+        JsonPatchConverter patchConverter = new JsonPatchConverter(mapper);
+        Patch patch = patchConverter.convert(jsonNode);
+        for (Operation operation : patch.getOperations()) {
+            if (operation.getPath().equals("/inArchive")
+                    || operation.getPath().equals("/discoverable")
+                    || operation.getPath().equals("/withdrawn")) {
+                throw new UnprocessableEntityException(
+                        "The template item should not be archived, discoverable or withdrawn."
+                                + " Therefore editing these values is not allowed.");
+            }
+        }
+
+        ItemRest patchedItemRest = itemPatch.patch(itemConverter.fromModel(item), patch.getOperations());
+        if (!itemConverter.fromModel(item).getMetadata().equals(patchedItemRest.getMetadata())) {
+            metadataConverter.setMetadata(obtainContext(), item, patchedItemRest.getMetadata());
+        }
+        context.commit();
+
+        return itemConverter.fromModel(item);
+    }
+
+    public void removeTemplateItem(Context context, UUID uuid) throws SQLException, IOException, AuthorizeException {
+        Collection collection = getCollection(context, uuid);
+
+        Item item = collection.getTemplateItem();
+        if (item == null) {
+            throw new UnprocessableEntityException(
+                    "TemplateItem from " + CollectionRest.CATEGORY + "." + CollectionRest.NAME + " with id: "
+                            + uuid + " not found");
+        }
+
+        cs.removeTemplateItem(context, collection);
+        cs.update(context, collection);
+        context.commit();
+    }
+
     private Collection getCollection(Context context, UUID uuid) throws SQLException {
-        Collection collection = null;
-        collection = cs.find(context, uuid);
+        Collection collection = cs.find(context, uuid);
         if (collection == null) {
             throw new ResourceNotFoundException(
                     CollectionRest.CATEGORY + "." + CollectionRest.NAME + " with id: " + uuid + " not found");
