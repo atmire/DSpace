@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.logging.log4j.Logger;
-import org.dspace.external.provider.impl.OrcidV2AuthorDataProvider;
-import org.dspace.utils.DSpace;
 import org.orcid.jaxb.model.record_v2.Person;
 import org.orcid.jaxb.model.search_v2.Result;
 import org.orcid.jaxb.model.search_v2.Search;
@@ -37,8 +35,6 @@ public class XMLtoBio extends Converter<List<Result>> {
     public List<Result> convert(InputStream xml) {
         List<Result> bios = new ArrayList<>();
         try {
-            OrcidV2AuthorDataProvider connector = new DSpace().getServiceManager().getServicesByType(OrcidV2AuthorDataProvider.class).get(0);
-
             Search search = (Search) unmarshall(xml, Search.class);
             bios = search.getResult();
         } catch (SAXException | URISyntaxException e) {

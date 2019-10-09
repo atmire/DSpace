@@ -15,7 +15,6 @@ import org.dspace.authority.indexer.AuthorityIndexerInterface;
 import org.dspace.authority.indexer.AuthorityIndexingService;
 import org.dspace.authority.service.AuthorityService;
 import org.dspace.authority.service.AuthorityValueService;
-import org.dspace.external.service.ExternalDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -40,9 +39,6 @@ public class AuthorityServiceFactoryImpl extends AuthorityServiceFactory {
 
     @Autowired(required = true)
     private AuthoritySearchService authoritySearchService;
-
-    @Autowired(required = true)
-    private ExternalDataService externalDataService;
 
     @Autowired(required = true)
     private List<AuthorityIndexerInterface> authorityIndexerInterfaces;
@@ -70,10 +66,6 @@ public class AuthorityServiceFactoryImpl extends AuthorityServiceFactory {
     @Override
     public AuthorityService getAuthorityService() {
         return authorityService;
-    }
-
-    public ExternalDataService getExternalDataService() {
-        return externalDataService;
     }
 
     @Override

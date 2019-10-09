@@ -1,3 +1,10 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.external.provider.impl;
 
 import java.io.IOException;
@@ -5,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -19,8 +25,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.Logger;
 import org.dspace.external.model.ExternalDataObject;
-import org.dspace.mock.MockMetadataValue;
 import org.dspace.external.provider.ExternalDataProvider;
+import org.dspace.mock.MockMetadataValue;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -28,6 +34,10 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
+/**
+ * This class is the implementation of the ExternalDataProvider interface that will deal with SherpaPublisher External
+ * data lookups
+ */
 public class SherpaPublisherDataProvider implements ExternalDataProvider {
 
     private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(SherpaPublisherDataProvider.class);
@@ -36,10 +46,12 @@ public class SherpaPublisherDataProvider implements ExternalDataProvider {
     private String url;
     private String apiKey;
 
+    @Override
     public String getSourceIdentifier() {
         return sourceIdentifier;
     }
 
+    @Override
     public Optional<ExternalDataObject> getExternalDataObject(String id) {
         List<BasicNameValuePair> args = new ArrayList<BasicNameValuePair>();
         args.add(new BasicNameValuePair("id", id));
@@ -83,6 +95,7 @@ public class SherpaPublisherDataProvider implements ExternalDataProvider {
         return null;
     }
 
+    @Override
     public List<ExternalDataObject> searchExternalDataObjects(String query, int start, int limit) {
         List<BasicNameValuePair> args = new ArrayList<BasicNameValuePair>();
         args.add(new BasicNameValuePair("pub", query));
@@ -122,28 +135,49 @@ public class SherpaPublisherDataProvider implements ExternalDataProvider {
         return null;
     }
 
+    @Override
     public boolean supports(String source) {
         return StringUtils.equalsIgnoreCase(sourceIdentifier, source);
     }
 
+    /**
+     * Generic setter for the sourceIdentifier
+     * @param sourceIdentifier   The sourceIdentifier to be set on this SherpaPublisherDataProvider
+     */
     public void setSourceIdentifier(String sourceIdentifier) {
         this.sourceIdentifier = sourceIdentifier;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
+    /**
+     * Generic getter for the url
+     * @return the url value of this SherpaPublisherDataProvider
+     */
     public String getUrl() {
         return url;
     }
 
-    public void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
+    /**
+     * Generic setter for the url
+     * @param url   The url to be set on this SherpaPublisherDataProvider
+     */
+    public void setUrl(String url) {
+        this.url = url;
     }
 
+    /**
+     * Generic getter for the apiKey
+     * @return the apiKey value of this SherpaPublisherDataProvider
+     */
     public String getApiKey() {
         return apiKey;
+    }
+
+    /**
+     * Generic setter for the apiKey
+     * @param apiKey   The apiKey to be set on this SherpaPublisherDataProvider
+     */
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
     }
 
     // SAX handler to grab SHERPA/RoMEO (and eventually other details) from result
@@ -209,7 +243,8 @@ public class SherpaPublisherDataProvider implements ExternalDataProvider {
                 result[rindex].setValue(textValue.trim());
                 if (StringUtils.isNotBlank(currentId)) {
                     result[rindex].setId(currentId);
-                    result[rindex].addMetadata(new MockMetadataValue("dc", "identifier", "sherpaPublisher", null, currentId));
+                    result[rindex]
+                        .addMetadata(new MockMetadataValue("dc", "identifier", "sherpaPublisher", null, currentId));
                 }
             } else if (localName.equals("homeurl") && textValue != null) {
                 result[rindex]

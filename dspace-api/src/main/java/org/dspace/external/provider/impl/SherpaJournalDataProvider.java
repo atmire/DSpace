@@ -1,3 +1,10 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.external.provider.impl;
 
 import java.io.IOException;
@@ -27,8 +34,8 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.sherpa.SHERPAJournal;
 import org.dspace.app.sherpa.SHERPAResponse;
 import org.dspace.external.model.ExternalDataObject;
-import org.dspace.mock.MockMetadataValue;
 import org.dspace.external.provider.ExternalDataProvider;
+import org.dspace.mock.MockMetadataValue;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -36,6 +43,10 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
+/**
+ * This class is the implementation of the ExternalDataProvider interface that will deal with SherpaJournal External
+ * data lookups
+ */
 public class SherpaJournalDataProvider implements ExternalDataProvider {
 
     private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(SherpaJournalDataProvider.class);
@@ -46,10 +57,15 @@ public class SherpaJournalDataProvider implements ExternalDataProvider {
 
     private CloseableHttpClient client = null;
 
+    @Override
     public String getSourceIdentifier() {
         return sourceIdentifier;
     }
 
+    /**
+     * Initialise the client that we need to call the endpoint
+     * @throws IOException  If something goes wrong
+     */
     public void init() throws IOException {
         HttpClientBuilder builder = HttpClientBuilder.create();
         // httpclient 4.3+ doesn't appear to have any sensible defaults any more. Setting conservative defaults as
@@ -60,6 +76,7 @@ public class SherpaJournalDataProvider implements ExternalDataProvider {
             .build();
     }
 
+    @Override
     public Optional<ExternalDataObject> getExternalDataObject(String id) {
 
         HttpGet method = null;
@@ -121,6 +138,7 @@ public class SherpaJournalDataProvider implements ExternalDataProvider {
         return null;
     }
 
+    @Override
     public List<ExternalDataObject> searchExternalDataObjects(String query, int start, int limit) {
         // query args to add to SHERPA/RoMEO request URL
         List<BasicNameValuePair> args = new ArrayList<BasicNameValuePair>();
@@ -161,28 +179,49 @@ public class SherpaJournalDataProvider implements ExternalDataProvider {
         return null;
     }
 
+    @Override
     public boolean supports(String source) {
         return StringUtils.equalsIgnoreCase(sourceIdentifier, source);
     }
 
+    /**
+     * Generic setter for the sourceIdentifier
+     * @param sourceIdentifier   The sourceIdentifier to be set on this SherpaJournalDataProvider
+     */
     public void setSourceIdentifier(String sourceIdentifier) {
         this.sourceIdentifier = sourceIdentifier;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
+    /**
+     * Generic getter for the url
+     * @return the url value of this SherpaJournalDataProvider
+     */
     public String getUrl() {
         return url;
     }
 
-    public void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
+    /**
+     * Generic setter for the url
+     * @param url   The url to be set on this SherpaJournalDataProvider
+     */
+    public void setUrl(String url) {
+        this.url = url;
     }
 
+    /**
+     * Generic getter for the apiKey
+     * @return the apiKey value of this SherpaJournalDataProvider
+     */
     public String getApiKey() {
         return apiKey;
+    }
+
+    /**
+     * Generic setter for the apiKey
+     * @param apiKey   The apiKey to be set on this SherpaJournalDataProvider
+     */
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
     }
 
     // SAX handler to grab SHERPA/RoMEO (and eventually other details) from result

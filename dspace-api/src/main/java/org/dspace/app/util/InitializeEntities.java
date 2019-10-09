@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -26,7 +25,6 @@ import org.apache.commons.cli.PosixParser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.dspace.authority.factory.AuthorityServiceFactory;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.EntityType;
 import org.dspace.content.RelationshipType;
@@ -35,9 +33,6 @@ import org.dspace.content.service.EntityTypeService;
 import org.dspace.content.service.RelationshipService;
 import org.dspace.content.service.RelationshipTypeService;
 import org.dspace.core.Context;
-import org.dspace.external.factory.ExternalServiceFactory;
-import org.dspace.external.model.ExternalDataObject;
-import org.dspace.external.service.ExternalDataService;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -56,17 +51,12 @@ public class InitializeEntities {
     private RelationshipTypeService relationshipTypeService;
     private RelationshipService relationshipService;
     private EntityTypeService entityTypeService;
-    //TODO Remove this, testing purposes
-    private ExternalDataService externalDataService;
 
 
     private InitializeEntities() {
         relationshipTypeService = ContentServiceFactory.getInstance().getRelationshipTypeService();
         relationshipService = ContentServiceFactory.getInstance().getRelationshipService();
         entityTypeService = ContentServiceFactory.getInstance().getEntityTypeService();
-        externalDataService = ExternalServiceFactory.getInstance().getExternalDataService();
-       Optional<ExternalDataObject> externalDataObject = externalDataService.getExternalDataObject("sherpaJournal", "Journal of Geology");
-        String t = "";
     }
 
     /**

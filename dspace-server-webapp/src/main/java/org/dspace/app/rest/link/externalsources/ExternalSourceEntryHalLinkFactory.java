@@ -1,3 +1,10 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.app.rest.link.externalsources;
 
 import java.util.LinkedList;
@@ -9,9 +16,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Component;
 
+/**
+ * This HalLinkFactory adds links to the ExternalSourceEntryResource object
+ */
 @Component
 public class ExternalSourceEntryHalLinkFactory
     extends HalLinkFactory<ExternalSourceEntryResource, ExternalSourcesRestController> {
+
+    @Override
     protected void addLinks(ExternalSourceEntryResource halResource, Pageable pageable, LinkedList<Link> list)
         throws Exception {
 
@@ -21,6 +33,7 @@ public class ExternalSourceEntryHalLinkFactory
 
     }
 
+    @Override
     protected Class<ExternalSourcesRestController> getControllerClass() {
         return ExternalSourcesRestController.class;
     }

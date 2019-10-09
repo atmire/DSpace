@@ -44,6 +44,16 @@ public class MockMetadataValue {
     public MockMetadataValue() {
     }
 
+    /**
+     * Constructor for the MockMetadataValue class
+     * @param schema        The schema to be assigned to this MockMetadataValue object
+     * @param element       The element to be assigned to this MockMetadataValue object
+     * @param qualifier     The qualifier to be assigned to this MockMetadataValue object
+     * @param language      The language to be assigend to this MockMetadataValue object
+     * @param value         The value to be assigned to this MockMetadataValue object
+     * @param authority     The authority to be assigned to this MockMetadataValue object
+     * @param confidence    The confidence to be assigned to this MockMetadataValue object
+     */
     public MockMetadataValue(String schema, String element, String qualifier, String language, String value,
                              String authority, int confidence) {
         this.schema = schema;
@@ -54,7 +64,14 @@ public class MockMetadataValue {
         this.authority = authority;
         this.confidence = confidence;
     }
-
+    /**
+     * Constructor for the MockMetadataValue class
+     * @param schema        The schema to be assigned to this MockMetadataValue object
+     * @param element       The element to be assigned to this MockMetadataValue object
+     * @param qualifier     The qualifier to be assigned to this MockMetadataValue object
+     * @param language      The language to be assigend to this MockMetadataValue object
+     * @param value         The value to be assigned to this MockMetadataValue object
+     */
     public MockMetadataValue(String schema, String element, String qualifier, String language, String value) {
         this.schema = schema;
         this.element = element;

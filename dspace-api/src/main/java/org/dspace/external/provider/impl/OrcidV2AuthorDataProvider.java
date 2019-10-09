@@ -1,3 +1,10 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.external.provider.impl;
 
 import java.io.BufferedReader;
@@ -29,11 +36,15 @@ import org.orcid.jaxb.model.record_v2.Person;
 import org.orcid.jaxb.model.search_v2.Result;
 import org.springframework.beans.factory.annotation.Required;
 
+/**
+ * This class is the implementation of the ExternalDataProvider interface that will deal with the OrcidV2 External
+ * Data lookup
+ */
 public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
 
     private static Logger log = LogManager.getLogger(OrcidV2AuthorDataProvider.class);
 
-    public OrcidRestConnector orcidRestConnector;
+    private OrcidRestConnector orcidRestConnector;
     private String OAUTHUrl;
     private String clientId;
 
@@ -47,7 +58,6 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
     public static final String ORCID_ID_SYNTAX = "\\d{4}-\\d{4}-\\d{4}-(\\d{3}X|\\d{4})";
 
     @Override
-
     public String getSourceIdentifier() {
         return sourceIdentifier;
     }
@@ -199,28 +209,52 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
     }
 
 
+    /**
+     * Generic setter for the sourceIdentifier
+     * @param sourceIdentifier   The sourceIdentifier to be set on this OrcidV2AuthorDataProvider
+     */
     @Required
     public void setSourceIdentifier(String sourceIdentifier) {
         this.sourceIdentifier = sourceIdentifier;
     }
 
+    /**
+     * Generic getter for the orcidUrl
+     * @return the orcidUrl value of this OrcidV2AuthorDataProvider
+     */
     public String getOrcidUrl() {
         return orcidUrl;
     }
 
+    /**
+     * Generic setter for the orcidUrl
+     * @param orcidUrl   The orcidUrl to be set on this OrcidV2AuthorDataProvider
+     */
     @Required
     public void setOrcidUrl(String orcidUrl) {
         this.orcidUrl = orcidUrl;
     }
 
+    /**
+     * Generic setter for the OAUTHUrl
+     * @param OAUTHUrl   The OAUTHUrl to be set on this OrcidV2AuthorDataProvider
+     */
     public void setOAUTHUrl(String OAUTHUrl) {
         this.OAUTHUrl = OAUTHUrl;
     }
 
+    /**
+     * Generic setter for the clientId
+     * @param clientId   The clientId to be set on this OrcidV2AuthorDataProvider
+     */
     public void setClientId(String clientId) {
         this.clientId = clientId;
     }
 
+    /**
+     * Generic setter for the clientSecret
+     * @param clientSecret   The clientSecret to be set on this OrcidV2AuthorDataProvider
+     */
     public void setClientSecret(String clientSecret) {
         this.clientSecret = clientSecret;
     }

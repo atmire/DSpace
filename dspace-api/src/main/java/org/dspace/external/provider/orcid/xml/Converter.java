@@ -9,13 +9,11 @@ package org.dspace.external.provider.orcid.xml;
 
 import java.io.InputStream;
 import java.net.URISyntaxException;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.logging.log4j.Logger;
-import org.dspace.external.OrcidRestConnector;
 import org.xml.sax.SAXException;
 
 /**
