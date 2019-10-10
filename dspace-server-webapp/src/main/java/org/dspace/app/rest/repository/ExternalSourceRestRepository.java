@@ -10,7 +10,6 @@ package org.dspace.app.rest.repository;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.velocity.exception.ResourceNotFoundException;
 import org.dspace.app.rest.converter.ExternalSourceEntryRestConverter;
 import org.dspace.app.rest.converter.ExternalSourceRestConverter;
 import org.dspace.app.rest.model.ExternalSourceEntryRest;
@@ -21,6 +20,7 @@ import org.dspace.external.service.ExternalDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -59,6 +59,9 @@ public class ExternalSourceRestRepository extends AbstractDSpaceRestRepository {
      */
     public ExternalSourceRest getExternalSource(String authorityName) {
         ExternalDataProvider externalDataProvider = externalDataService.getExternalDataProvider(authorityName);
+        if (externalDataProvider == null) {
+            throw new ResourceNotFoundException("ExternalDataProvider for: " + authorityName + " couldn't be found");
+        }
         return externalSourceRestConverter.fromModel(externalDataProvider);
 
     }
@@ -71,6 +74,9 @@ public class ExternalSourceRestRepository extends AbstractDSpaceRestRepository {
      * @return              An ExternalSourceEntryRest object that complies with the above params
      */
     public ExternalSourceEntryRest getExternalSourceEntryValue(String authorityName, String entryId) {
+        if (getExternalSource(authorityName) == null) {
+            throw new ResourceNotFoundException("The externalSource for: " + authorityName + " couldn't be found");
+        }
         Optional<ExternalDataObject> externalDataObject = externalDataService.getExternalDataObject(authorityName,
                                                                                                     entryId);
         ExternalDataObject dataObject = externalDataObject.orElseThrow(() -> new ResourceNotFoundException(
@@ -89,6 +95,9 @@ public class ExternalSourceRestRepository extends AbstractDSpaceRestRepository {
      */
     public Page<ExternalSourceEntryRest> getExternalSourceEntries(String authorityName, String query, String parent,
                                                                   Pageable pageable) {
+        if (getExternalSource(authorityName) == null) {
+            throw new ResourceNotFoundException("The externalSource for: " + authorityName + " couldn't be found");
+        }
         List<ExternalDataObject> externalDataObjects = externalDataService
             .searchExternalDataObjects(authorityName, query, pageable.getOffset(), pageable.getPageSize());
         Page<ExternalSourceEntryRest> page = utils.getPage(externalDataObjects, pageable)

@@ -32,7 +32,7 @@ public class ExternalDataObject {
     /**
      * The list of Metadata values. These our MockMetadataValues because they won't exist in the DB
      */
-    private List<MockMetadataValue> metadata;
+    private List<MockMetadataValue> metadata = new LinkedList<>();
     /**
      * The display value of the ExternalDataObject
      */
