@@ -161,6 +161,11 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
         InputStream bioDocument = orcidRestConnector.get(id + ((id.endsWith("/person")) ? "" : "/person"), accessToken);
         XMLtoBio converter = new XMLtoBio();
         Person person = converter.convertSinglePerson(bioDocument);
+        try {
+            bioDocument.close();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
         return person;
     }
 
@@ -195,6 +200,11 @@ public class OrcidV2AuthorDataProvider implements ExternalDataProvider {
                     bios.add(bio);
                 }
             }
+        }
+        try {
+            bioDocument.close();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
         }
         if (bios == null) {
             return Collections.emptyList();
