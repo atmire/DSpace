@@ -10,7 +10,6 @@ package org.dspace.authority.factory;
 import java.util.List;
 
 import org.dspace.authority.AuthoritySearchService;
-import org.dspace.authority.AuthorityTypes;
 import org.dspace.authority.indexer.AuthorityIndexerInterface;
 import org.dspace.authority.indexer.AuthorityIndexingService;
 import org.dspace.authority.service.AuthorityService;
@@ -29,9 +28,6 @@ public class AuthorityServiceFactoryImpl extends AuthorityServiceFactory {
     private AuthorityValueService authorityValueService;
 
     @Autowired(required = true)
-    private AuthorityTypes authorityTypes;
-
-    @Autowired(required = true)
     private AuthorityService authorityService;
 
     @Autowired(required = true)
@@ -46,11 +42,6 @@ public class AuthorityServiceFactoryImpl extends AuthorityServiceFactory {
     @Override
     public AuthorityValueService getAuthorityValueService() {
         return authorityValueService;
-    }
-
-    @Override
-    public AuthorityTypes getAuthorTypes() {
-        return authorityTypes;
     }
 
     @Override

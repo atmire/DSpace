@@ -31,7 +31,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.dspace.authority.AuthorityValue;
+import org.dspace.content.authority.AuthorityValue;
 import org.dspace.authority.factory.AuthorityServiceFactory;
 import org.dspace.authority.service.AuthorityValueService;
 import org.dspace.authorize.AuthorizeException;
@@ -1142,10 +1142,11 @@ public class MetadataImport {
             List<AuthorityValue> byValue = authorityValueService.findByValue(c, schema, element, qualifier, value);
             AuthorityValue authorityValue = null;
             if (byValue.isEmpty()) {
-                String toGenerate = fromAuthority.generateString() + value;
-                String field = schema + "_" + element + (StringUtils.isNotBlank(qualifier) ? "_" + qualifier : "");
-                authorityValue = authorityValueService.generate(c, toGenerate, value, field);
-                dcv.setAuthority(toGenerate);
+                //TODO Kevin
+//                String toGenerate = fromAuthority.generateString() + value;
+//                String field = schema + "_" + element + (StringUtils.isNotBlank(qualifier) ? "_" + qualifier : "");
+//                authorityValue = authorityValueService.generate(c, toGenerate, value, field);
+//                dcv.setAuthority(toGenerate);
             } else {
                 authorityValue = byValue.get(0);
                 dcv.setAuthority(authorityValue.getId());

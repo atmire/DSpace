@@ -29,7 +29,6 @@
     <bean class="org.dspace.authorize.AuthorizeServiceImpl"/>
     <bean class="org.dspace.authorize.ResourcePolicyServiceImpl"/>
 
-    <bean class="org.dspace.authority.AuthorityValueServiceImpl"/>
     <bean class="org.dspace.authority.AuthorityServiceImpl"/>
 
     <bean class="org.dspace.checker.ChecksumHistoryServiceImpl"/>

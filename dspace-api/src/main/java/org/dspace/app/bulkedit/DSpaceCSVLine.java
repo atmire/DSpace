@@ -16,8 +16,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import org.dspace.authority.AuthorityValue;
 import org.dspace.authority.factory.AuthorityServiceFactory;
+import org.dspace.content.authority.AuthorityValue;
 import org.dspace.authority.service.AuthorityValueService;
 
 /**

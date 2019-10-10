@@ -8,7 +8,7 @@
 
 package org.dspace.authority.indexer;
 
-import org.dspace.authority.AuthorityValue;
+import org.dspace.content.authority.AuthorityValue;
 
 /**
  * @author Antoine Snyers (antoine at atmire.com)

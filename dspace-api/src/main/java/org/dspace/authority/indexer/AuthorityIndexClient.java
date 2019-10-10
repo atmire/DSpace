@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.Logger;
-import org.dspace.authority.AuthorityValue;
+import org.dspace.content.authority.AuthorityValue;
 import org.dspace.authority.factory.AuthorityServiceFactory;
 import org.dspace.authority.service.AuthorityService;
 import org.dspace.content.Item;

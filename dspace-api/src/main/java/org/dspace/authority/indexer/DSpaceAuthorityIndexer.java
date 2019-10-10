@@ -15,7 +15,7 @@ import java.util.Map;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.dspace.authority.AuthorityValue;
+import org.dspace.content.authority.AuthorityValue;
 import org.dspace.authority.service.AuthorityValueService;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Item;
@@ -99,7 +99,8 @@ public class DSpaceAuthorityIndexer implements AuthorityIndexerInterface, Initia
                 }
                 if (value != null) {
                     if (requiresItemUpdate) {
-                        value.updateItem(context, item, metadataValue);
+                        //TODO Kevin
+//                        value.updateItem(context, item, metadataValue);
                         try {
                             itemService.update(context, item);
                         } catch (Exception e) {

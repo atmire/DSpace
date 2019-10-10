@@ -10,7 +10,7 @@ package org.dspace.authority.service;
 import java.util.List;
 
 import org.apache.solr.common.SolrDocument;
-import org.dspace.authority.AuthorityValue;
+import org.dspace.content.authority.AuthorityValue;
 import org.dspace.core.Context;
 
 /**

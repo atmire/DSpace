@@ -28,7 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
-import org.dspace.authority.AuthorityValue;
+import org.dspace.content.authority.AuthorityValue;
 import org.dspace.authority.factory.AuthorityServiceFactory;
 import org.dspace.authority.service.AuthorityValueService;
 import org.dspace.content.Collection;
@@ -180,7 +180,8 @@ public class DSpaceCSV implements Serializable {
                     String authorityPrefix = "";
                     AuthorityValue authorityValueType = authorityValueService.getAuthorityValueType(element);
                     if (authorityValueType != null) {
-                        String authorityType = authorityValueType.getAuthorityType();
+                        //TODO Kevin
+                        String authorityType = null;
                         authorityPrefix = element.substring(0, authorityType.length() + 1);
                         element = element.substring(authorityPrefix.length());
                     }

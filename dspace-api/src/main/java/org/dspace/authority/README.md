@@ -27,7 +27,7 @@ solr/authority/conf/schema.xml
 ```
 The title and the internal ID find their places in the already existing "value" and "id" fields.
 
-## Extend org.dspace.authority.AuthorityValue, add the fields and implement the methods
+## Extend org.dspace.content.authority.AuthorityValue, add the fields and implement the methods
 ```
 public class JournalAuthorityValue extends AuthorityValue {
 

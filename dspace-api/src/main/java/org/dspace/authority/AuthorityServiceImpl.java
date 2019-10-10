@@ -15,6 +15,7 @@ import org.dspace.authority.indexer.AuthorityIndexingService;
 import org.dspace.authority.service.AuthorityService;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Item;
+import org.dspace.content.authority.AuthorityValue;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 

@@ -7,26 +7,31 @@
  */
 package org.dspace.content.authority;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CommonParams;
 import org.dspace.authority.AuthoritySearchService;
-import org.dspace.authority.AuthorityValue;
-import org.dspace.authority.SolrAuthorityInterface;
-import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.authority.service.AuthorityValueService;
 import org.dspace.content.Collection;
+import org.dspace.content.authority.converter.AuthorityConverter;
+import org.dspace.content.authority.service.CacheableChoiceAuthority;
 import org.dspace.core.ConfigurationManager;
+import org.dspace.external.model.ExternalDataObject;
 import org.dspace.services.factory.DSpaceServicesFactory;
+import org.dspace.utils.DSpace;
+import org.springframework.beans.factory.InitializingBean;
 
 /**
  * @author Antoine Snyers (antoine at atmire.com)
@@ -34,17 +39,40 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  * @author Ben Bosman (ben at atmire dot com)
  * @author Mark Diggory (markd at atmire dot com)
  */
-public class SolrAuthority implements ChoiceAuthority {
+public class CacheableChoiceAuthorityImpl implements CacheableChoiceAuthority, InitializingBean {
 
-    protected SolrAuthorityInterface source =
-        DSpaceServicesFactory.getInstance().getServiceManager()
-                             .getServiceByName("AuthoritySource", SolrAuthorityInterface.class);
+    private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(CacheableChoiceAuthorityImpl.class);
 
-    private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(SolrAuthority.class);
+    private AuthorityConverter authorityConverter = new DSpace().getServiceManager()
+                                                                .getServiceByName("authorityConverter",
+                                                                                  AuthorityConverter.class);
 
-    protected boolean externalResults = false;
-    protected final AuthorityValueService authorityValueService = AuthorityServiceFactory.getInstance()
-                                                                                         .getAuthorityValueService();
+    private Map<String, String> metadataToCategoryMap = new HashMap<>();
+
+
+    /**
+     * Non-Static CommonsHttpSolrServer for processing indexing events.
+     */
+    protected HttpSolrClient solr = null;
+
+    protected HttpSolrClient getSolr()
+        throws MalformedURLException, SolrServerException, IOException {
+        if (solr == null) {
+
+            String solrService = ConfigurationManager.getProperty("solr.authority.server");
+
+            log.debug("Solr authority URL: " + solrService);
+
+            solr = new HttpSolrClient.Builder(solrService).build();
+            solr.setBaseURL(solrService);
+
+            SolrQuery solrQuery = new SolrQuery().setQuery("*:*");
+
+            solr.query(solrQuery);
+        }
+
+        return solr;
+    }
 
     public Choices getMatches(String field, String text, Collection collection, int start, int limit, String locale,
                               boolean bestMatch) {
@@ -80,9 +108,6 @@ public class SolrAuthority implements ChoiceAuthority {
         queryArgs.set(CommonParams.START, start);
         //We add one to our facet limit so that we know if there are more matches
         int maxNumberOfSolrResults = limit + 1;
-        if (externalResults) {
-            maxNumberOfSolrResults = ConfigurationManager.getIntProperty("xmlui.lookup.select.size", 12);
-        }
         queryArgs.set(CommonParams.ROWS, maxNumberOfSolrResults);
 
         String sortField = "value";
@@ -111,20 +136,16 @@ public class SolrAuthority implements ChoiceAuthority {
                 for (int i = 0; i < maxDocs; i++) {
                     SolrDocument solrDocument = authDocs.get(i);
                     if (solrDocument != null) {
-                        AuthorityValue val = authorityValueService.fromSolr(solrDocument);
+                        //TODO converter
 
-                        Map<String, String> extras = val.choiceSelectMap();
-                        extras.put("insolr", val.getId());
-                        choices.add(new Choice(val.getId(), val.getValue(), val.getValue(), extras));
-                        alreadyPresent.add(val);
+//                        AuthorityValue val = authorityValueService.fromSolr(solrDocument);
+
+                        //TODO Extras
+//                        Map<String, String> extras = val.choiceSelectMap();
+//                        extras.put("insolr", val.getId());
+//                        choices.add(new Choice(val.getId(), val.getValue(), val.getValue(), extras));
+//                        alreadyPresent.add(val);
                     }
-                }
-
-                if (externalResults && StringUtils.isNotBlank(text)) {
-                    int sizeFromSolr = alreadyPresent.size();
-                    int maxExternalResults = limit <= 10 ? Math.max(limit - sizeFromSolr, 2) : Math
-                        .max(limit - 10 - sizeFromSolr, 2) + limit - 10;
-                    addExternalResults(text, choices, alreadyPresent, maxExternalResults);
                 }
 
 
@@ -150,41 +171,6 @@ public class SolrAuthority implements ChoiceAuthority {
         }
 
         return result;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    protected void addExternalResults(String text, ArrayList<Choice> choices, List<AuthorityValue> alreadyPresent,
-                                      int max) {
-        if (source != null) {
-            try {
-                List<AuthorityValue> values = source
-                    .queryAuthorities(text, max * 2); // max*2 because results get filtered
-
-                // filtering loop
-                Iterator<AuthorityValue> iterator = values.iterator();
-                while (iterator.hasNext()) {
-                    AuthorityValue next = iterator.next();
-                    if (alreadyPresent.contains(next)) {
-                        iterator.remove();
-                    }
-                }
-
-                // adding choices loop
-                int added = 0;
-                iterator = values.iterator();
-                while (iterator.hasNext() && added < max) {
-                    AuthorityValue val = iterator.next();
-                    Map<String, String> extras = val.choiceSelectMap();
-                    extras.put("insolr", "false");
-                    choices.add(new Choice(val.generateString(), val.getValue(), val.getValue(), extras));
-                    added++;
-                }
-            } catch (Exception e) {
-                log.error("Error", e);
-            }
-            this.externalResults = false;
-        } else {
-            log.warn("external source for authority not configured");
-        }
     }
 
     private String toQuery(String searchField, String text) {
@@ -273,7 +259,31 @@ public class SolrAuthority implements ChoiceAuthority {
         return manager.getServiceByName(AuthoritySearchService.class.getName(), AuthoritySearchService.class);
     }
 
-    public void addExternalResultsInNextMatches() {
-        this.externalResults = true;
+    public void cacheAuthorityValue(String metadataField, ExternalDataObject externalDataObject) {
+
+        //Call Converter -> Get authority value -> parse authorityValue to solrInputdoc -> add input doc
+        authorityConverter.createFromExternalData(metadataToCategoryMap.get(metadataField), externalDataObject);
+
+        //TODO Make InputDoc + ADD
+    }
+
+    /**
+     * Generic getter for the metadataToCategoryMap
+     * @return the metadataToCategoryMap value of this CacheableChoiceAuthorityImpl
+     */
+    public Map<String, String> getMetadataToCategoryMap() {
+        return metadataToCategoryMap;
+    }
+
+    /**
+     * Generic setter for the metadataToCategoryMap
+     * @param metadataToCategoryMap   The metadataToCategoryMap to be set on this CacheableChoiceAuthorityImpl
+     */
+    public void setMetadataToCategoryMap(Map<String, String> metadataToCategoryMap) {
+        this.metadataToCategoryMap = metadataToCategoryMap;
+    }
+
+    public void afterPropertiesSet() throws Exception {
+        //TODO Fill up map
     }
 }

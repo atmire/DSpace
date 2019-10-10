@@ -9,7 +9,7 @@ package org.dspace.app.rest.converter;
 
 import org.dspace.app.rest.model.SearchResultsRest;
 import org.dspace.app.rest.parameter.SearchFilter;
-import org.dspace.authority.AuthorityValue;
+import org.dspace.content.authority.AuthorityValue;
 import org.dspace.authority.service.AuthorityValueService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +21,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class SearchFilterToAppliedFilterConverter {
 
-    @Autowired
-    private AuthorityValueService authorityValueService;
 
     public SearchResultsRest.AppliedFilter convertSearchFilter(Context context, SearchFilter searchFilter) {
 
@@ -35,7 +33,8 @@ public class SearchFilterToAppliedFilterConverter {
             // facet as the authority is bind at the metadata level and so a facet could contains values from multiple
             // authorities
             // https://jira.duraspace.org/browse/DS-4209
-            authorityValue = authorityValueService.findByUID(context, searchFilter.getValue());
+            //TODO KEvin
+//            authorityValue = authorityValueService.findByUID(context, searchFilter.getValue());
         }
 
         SearchResultsRest.AppliedFilter appliedFilter;

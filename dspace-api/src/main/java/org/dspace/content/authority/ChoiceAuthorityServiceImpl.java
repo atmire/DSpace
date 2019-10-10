@@ -130,9 +130,6 @@ public final class ChoiceAuthorityServiceImpl implements ChoiceAuthorityService 
                 "No choices plugin was configured for  field \"" + fieldKey
                     + "\".");
         }
-        if (externalInput && ma instanceof SolrAuthority) {
-            ((SolrAuthority) ma).addExternalResultsInNextMatches();
-        }
         return ma.getMatches(fieldKey, query, collection, start, limit, locale);
     }
 
