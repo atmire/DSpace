@@ -10,9 +10,7 @@ package org.dspace.app.rest.converter;
 import org.dspace.app.rest.model.SearchResultsRest;
 import org.dspace.app.rest.parameter.SearchFilter;
 import org.dspace.content.authority.AuthorityValue;
-import org.dspace.authority.service.AuthorityValueService;
 import org.dspace.core.Context;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**

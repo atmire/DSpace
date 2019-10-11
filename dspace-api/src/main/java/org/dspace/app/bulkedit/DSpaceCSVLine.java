@@ -17,8 +17,8 @@ import java.util.TreeMap;
 import java.util.UUID;
 
 import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.content.authority.AuthorityValue;
 import org.dspace.authority.service.AuthorityValueService;
+import org.dspace.content.authority.AuthorityValue;
 
 /**
  * Utility class to store a line from a CSV file

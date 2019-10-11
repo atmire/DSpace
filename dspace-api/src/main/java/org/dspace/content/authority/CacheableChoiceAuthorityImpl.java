@@ -8,7 +8,6 @@
 package org.dspace.content.authority;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +44,13 @@ public class CacheableChoiceAuthorityImpl implements CacheableAuthority, ChoiceA
 
     private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(CacheableChoiceAuthorityImpl.class);
 
+    /**
+     * This converter deals with the conversion from ExternalDataObjects and SolrDocs to AuthorityValue objects
+     */
     private AuthorityConverter authorityConverter;
+    /**
+     * This map contains the metadata field to category mapping for the AuthorityValue objects
+     */
     private Map<String, String> metadataToCategoryMap;
 
 
@@ -54,6 +59,13 @@ public class CacheableChoiceAuthorityImpl implements CacheableAuthority, ChoiceA
      */
     protected HttpSolrClient solr = null;
 
+    /**
+     * This method will check if the local solr variable is null. If it is, we'll retrieve the Solr server from the
+     * solr.authority.server property and initiate this
+     * @return A properly configured solr server
+     * @throws SolrServerException  If something goes wrong
+     * @throws IOException          If something goes wrong
+     */
     protected HttpSolrClient getSolr()
         throws SolrServerException, IOException {
         if (solr == null) {
@@ -258,6 +270,7 @@ public class CacheableChoiceAuthorityImpl implements CacheableAuthority, ChoiceA
         return manager.getServiceByName(AuthoritySearchService.class.getName(), AuthoritySearchService.class);
     }
 
+    @Override
     public void cacheAuthorityValue(String metadataField, ExternalDataObject externalDataObject)
         throws IOException, SolrServerException {
 

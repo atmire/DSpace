@@ -136,6 +136,12 @@ public class MockMetadataValue {
         this.confidence = confidence;
     }
 
+    /**
+     * This method will parse the schema.element.qualifier into a string with the given separator. It will not include
+     * the qualifier incase this is null
+     * @param separator     The separator to be used
+     * @return              The parsed metadataField String
+     */
     public String getFieldString(char separator) {
         if (qualifier == null) {
             return schema + separator + element;

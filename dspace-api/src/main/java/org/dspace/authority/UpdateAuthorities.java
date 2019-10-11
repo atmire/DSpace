@@ -9,8 +9,6 @@ package org.dspace.authority;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
@@ -22,8 +20,6 @@ import org.apache.commons.cli.PosixParser;
 import org.apache.logging.log4j.Logger;
 import org.dspace.authority.factory.AuthorityServiceFactory;
 import org.dspace.authority.service.AuthorityValueService;
-import org.dspace.content.Item;
-import org.dspace.content.MetadataValue;
 import org.dspace.content.authority.AuthorityValue;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.ItemService;
