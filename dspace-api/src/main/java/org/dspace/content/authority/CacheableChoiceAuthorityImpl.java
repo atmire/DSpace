@@ -22,16 +22,18 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.CommonParams;
 import org.dspace.authority.AuthoritySearchService;
 import org.dspace.content.Collection;
 import org.dspace.content.authority.converter.AuthorityConverter;
-import org.dspace.content.authority.service.CacheableChoiceAuthority;
+import org.dspace.content.authority.service.CacheableAuthority;
 import org.dspace.core.ConfigurationManager;
 import org.dspace.external.model.ExternalDataObject;
+import org.dspace.mock.MockMetadataValue;
+import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
 import org.dspace.utils.DSpace;
-import org.springframework.beans.factory.InitializingBean;
 
 /**
  * @author Antoine Snyers (antoine at atmire.com)
@@ -39,15 +41,12 @@ import org.springframework.beans.factory.InitializingBean;
  * @author Ben Bosman (ben at atmire dot com)
  * @author Mark Diggory (markd at atmire dot com)
  */
-public class CacheableChoiceAuthorityImpl implements CacheableChoiceAuthority, InitializingBean {
+public class CacheableChoiceAuthorityImpl implements CacheableAuthority, ChoiceAuthority {
 
     private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(CacheableChoiceAuthorityImpl.class);
 
-    private AuthorityConverter authorityConverter = new DSpace().getServiceManager()
-                                                                .getServiceByName("authorityConverter",
-                                                                                  AuthorityConverter.class);
-
-    private Map<String, String> metadataToCategoryMap = new HashMap<>();
+    private AuthorityConverter authorityConverter;
+    private Map<String, String> metadataToCategoryMap;
 
 
     /**
@@ -56,7 +55,7 @@ public class CacheableChoiceAuthorityImpl implements CacheableChoiceAuthority, I
     protected HttpSolrClient solr = null;
 
     protected HttpSolrClient getSolr()
-        throws MalformedURLException, SolrServerException, IOException {
+        throws SolrServerException, IOException {
         if (solr == null) {
 
             String solrService = ConfigurationManager.getProperty("solr.authority.server");
@@ -253,37 +252,58 @@ public class CacheableChoiceAuthorityImpl implements CacheableChoiceAuthority, I
     }
 
 
-    public static AuthoritySearchService getSearchService() {
+    private static AuthoritySearchService getSearchService() {
         org.dspace.kernel.ServiceManager manager = DSpaceServicesFactory.getInstance().getServiceManager();
 
         return manager.getServiceByName(AuthoritySearchService.class.getName(), AuthoritySearchService.class);
     }
 
-    public void cacheAuthorityValue(String metadataField, ExternalDataObject externalDataObject) {
+    public void cacheAuthorityValue(String metadataField, ExternalDataObject externalDataObject)
+        throws IOException, SolrServerException {
 
-        //Call Converter -> Get authority value -> parse authorityValue to solrInputdoc -> add input doc
-        authorityConverter.createFromExternalData(metadataToCategoryMap.get(metadataField), externalDataObject);
-
-        //TODO Make InputDoc + ADD
+        AuthorityValue authorityValue = getAuthorityConverter()
+            .createFromExternalData(getMetadataToCategoryMap().get(metadataField), externalDataObject);
+        SolrInputDocument solrInputDocument = parseAuthorityValueToInputDoc(authorityValue);
+        getSolr().add(solrInputDocument);
     }
 
-    /**
-     * Generic getter for the metadataToCategoryMap
-     * @return the metadataToCategoryMap value of this CacheableChoiceAuthorityImpl
-     */
-    public Map<String, String> getMetadataToCategoryMap() {
+    private SolrInputDocument parseAuthorityValueToInputDoc(AuthorityValue authorityValue) {
+        SolrInputDocument solrInputDocument = new SolrInputDocument();
+        solrInputDocument.addField("id", authorityValue.getId());
+        solrInputDocument.addField("category", authorityValue.getCategory());
+        solrInputDocument.addField("value", authorityValue.getValue());
+        solrInputDocument.addField("last_modified_date", authorityValue.getLastModified());
+        solrInputDocument.addField("creation_date", authorityValue.getCreationDate());
+        solrInputDocument.addField("source", authorityValue.getSource());
+        solrInputDocument.addField("external_source_identifier", authorityValue.getExternalSourceIdentifier());
+        for (MockMetadataValue mockMetadataValue : authorityValue.getMetadata()) {
+            solrInputDocument.addField("metadata_" + mockMetadataValue.getFieldString('_'),
+                                       mockMetadataValue.getValue());
+        }
+        return solrInputDocument;
+    }
+
+    private AuthorityConverter getAuthorityConverter() {
+        if (authorityConverter == null) {
+            authorityConverter = new DSpace().getServiceManager()
+                                             .getServiceByName("authorityConverter", AuthorityConverter.class);
+        }
+        return authorityConverter;
+    }
+
+    private Map<String, String> getMetadataToCategoryMap() {
+        if (metadataToCategoryMap == null) {
+            metadataToCategoryMap = new HashMap<>();
+            String prefix = "authority.category.";
+            ConfigurationService configurationService = DSpaceServicesFactory.getInstance().getConfigurationService();
+            List<String> propKeys = configurationService.getPropertyKeys(prefix);
+            for (String key : propKeys) {
+                String category = configurationService.getProperty(key);
+                String field = StringUtils.substringAfter(key, prefix);
+                metadataToCategoryMap.put(field, category);
+            }
+        }
         return metadataToCategoryMap;
-    }
 
-    /**
-     * Generic setter for the metadataToCategoryMap
-     * @param metadataToCategoryMap   The metadataToCategoryMap to be set on this CacheableChoiceAuthorityImpl
-     */
-    public void setMetadataToCategoryMap(Map<String, String> metadataToCategoryMap) {
-        this.metadataToCategoryMap = metadataToCategoryMap;
-    }
-
-    public void afterPropertiesSet() throws Exception {
-        //TODO Fill up map
     }
 }

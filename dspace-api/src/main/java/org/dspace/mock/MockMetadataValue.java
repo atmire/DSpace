@@ -135,4 +135,12 @@ public class MockMetadataValue {
     public void setConfidence(int confidence) {
         this.confidence = confidence;
     }
+
+    public String getFieldString(char separator) {
+        if (qualifier == null) {
+            return schema + separator + element;
+        } else {
+            return schema + separator + element + separator + qualifier;
+        }
+    }
 }

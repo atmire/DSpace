@@ -92,7 +92,7 @@
  <fields>
      <field name="id" type="string" multiValued="false" indexed="true" stored="true" required="true"/>
      <field name="category" type="string" multiValued="false" indexed="true" stored="true" required="true" />
-     <field name="value" type="text" multiValued="false" indexed="true" stored="true" required="false"/>
+     <field name="value" type="text" multiValued="false" indexed="true" stored="true" required="true"/>
      <copyField source="value" dest="value_keyword"/>
      <field name="value_keyword" type="text" multiValued="false" indexed="true" stored="true" required="false"/>
 
@@ -103,8 +103,8 @@
 
      <field name="last_modified_date" type="date" indexed="true" stored="true" required="true" />
      <field name="creation_date" type="date" indexed="true" stored="true" required="true" />
-     <field name="source" type="string" multiValued="false" indexed="true" stored="true" required="false"/>
-     <field name="external_source_identifier" type="string" multiValued="false" indexed="true" stored="true" required="false"/>
+     <field name="source" type="string" multiValued="false" indexed="true" stored="true" required="true"/>
+     <field name="external_source_identifier" type="string" multiValued="false" indexed="true" stored="true" required="true"/>
  </fields>
 
  <uniqueKey>id</uniqueKey>
