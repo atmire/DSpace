@@ -58,23 +58,23 @@
                 <entry key="workspace" value-ref="workspaceConfiguration" />
                 <entry key="workflow" value-ref="workflowConfiguration" />
 
-                <entry key="publicationConfiguration" value-ref="publicationConfiguration"/>
+                <entry key="publicationConfiguration" value-ref="publication"/>
 
-                <entry key="personConfiguration" value-ref="personConfiguration"/>
-                <entry key="123456789/6" value-ref="personConfiguration"/>
-                <entry key="123456789/279" value-ref="personConfiguration"/>
+                <entry key="personConfiguration" value-ref="person"/>
+                <entry key="123456789/6" value-ref="person"/>
+                <entry key="123456789/279" value-ref="person"/>
 
-                <entry key="organizationConfiguration" value-ref="organizationConfiguration"/>
-                <entry key="123456789/8" value-ref="organizationConfiguration"/>
+                <entry key="organizationConfiguration" value-ref="organization"/>
+                <entry key="123456789/8" value-ref="organization"/>
 
-                <entry key="publicationIssueConfiguration" value-ref="publicationIssueConfiguration"/>
-                <entry key="123456789/30" value-ref="publicationIssueConfiguration"/>
+                <entry key="publicationIssueConfiguration" value-ref="publicationIssue"/>
+                <entry key="123456789/30" value-ref="publicationIssue"/>
 
-                <entry key="publicationVolumeConfiguration" value-ref="publicationVolumeConfiguration"/>
-                <entry key="123456789/29" value-ref="publicationVolumeConfiguration"/>
+                <entry key="publicationVolumeConfiguration" value-ref="publicationVolume"/>
+                <entry key="123456789/29" value-ref="publicationVolume"/>
 
-                <entry key="periodicalConfiguration" value-ref="periodicalConfiguration"/>
-                <entry key="123456789/28" value-ref="periodicalConfiguration"/>
+                <entry key="periodicalConfiguration" value-ref="periodical"/>
+                <entry key="123456789/28" value-ref="periodical"/>
             </map>
         </property>
         <property name="toIgnoreMetadataFields">
