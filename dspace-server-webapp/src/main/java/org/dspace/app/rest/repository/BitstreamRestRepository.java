@@ -7,24 +7,34 @@
  */
 package org.dspace.app.rest.repository;
 
+import static org.dspace.core.Constants.ADD;
+import static org.dspace.core.Constants.REMOVE;
+import static org.dspace.core.Constants.WRITE;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
 import org.dspace.app.rest.converter.BitstreamConverter;
+import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.BitstreamRest;
 import org.dspace.app.rest.model.hateoas.BitstreamResource;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.rest.repository.patch.DSpaceObjectPatch;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.Bitstream;
+import org.dspace.content.Bundle;
+import org.dspace.content.Item;
 import org.dspace.content.service.BitstreamService;
+import org.dspace.content.service.BundleService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -45,6 +55,12 @@ import org.springframework.stereotype.Component;
 public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstream, BitstreamRest> {
 
     private final BitstreamService bs;
+
+    @Autowired
+    BundleService bundleService;
+
+    @Autowired
+    AuthorizeService authorizeService;
 
     @Autowired
     public BitstreamRestRepository(BitstreamService dsoService,
@@ -148,5 +164,70 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
         }
         context.abort();
         return is;
+    }
+
+    /**
+     * Method that will move the bitsream corresponding to the uuid to the target bundle
+     *
+     * @param context      The context
+     * @param bitstream    The bitstream to be moved
+     * @param targetBundle The target bundle
+     * @return The target bundle with the bitstream attached
+     */
+    public Bundle performBitstreamMove(Context context, Bitstream bitstream, Bundle targetBundle)
+            throws SQLException, IOException, AuthorizeException {
+
+        if (bitstream.getBundles().contains(targetBundle)) {
+            throw new DSpaceBadRequestException("The provided bitstream is already in the target bundle");
+        }
+
+        List<Bundle> bundles = new LinkedList<>();
+        bundles.addAll(bitstream.getBundles());
+
+        if (hasSufficientMovePermissions(context, bundles, targetBundle)) {
+            bundleService.addBitstream(context, targetBundle, bitstream);
+            bundleService.update(context, targetBundle);
+            for (Bundle bundle : bundles) {
+                bundleService.removeBitstream(context, bundle, bitstream);
+                bundleService.update(context, bundle);
+            }
+        }
+
+
+        return targetBundle;
+    }
+
+    /**
+     * Verifies if the context (user) has sufficient rights to the bundles in order to move a bitstream
+     *
+     * @param context      The context
+     * @param bundles      The current bundles in which the bitstream resides
+     * @param targetBundle The target bundle
+     * @return true when the context has sufficient rights
+     * @throws AuthorizeException When one of the necessary rights is not present
+     */
+    private boolean hasSufficientMovePermissions(final Context context, final List<Bundle> bundles,
+                                                 final Bundle targetBundle) throws SQLException, AuthorizeException {
+        for (Bundle bundle : bundles) {
+            if (!authorizeService.authorizeActionBoolean(context, bundle, WRITE) || !authorizeService
+                    .authorizeActionBoolean(context, bundle, REMOVE)) {
+                throw new AuthorizeException(
+                        "The current user does not have WRITE and REMOVE access to the current bundle: " + bundle
+                                .getID());
+            }
+        }
+        if (!authorizeService.authorizeActionBoolean(context, targetBundle, WRITE) || !authorizeService
+                .authorizeActionBoolean(context, targetBundle, ADD)) {
+            throw new AuthorizeException(
+                    "The current user does not have WRITE and ADD access to the target bundle: " + targetBundle
+                            .getID());
+        }
+        for (Item item : targetBundle.getItems()) {
+            if (!authorizeService.authorizeActionBoolean(context, item, WRITE)) {
+                throw new AuthorizeException(
+                        "The current user does not have WRITE access to the target bundle's item: " + item.getID());
+            }
+        }
+        return true;
     }
 }
