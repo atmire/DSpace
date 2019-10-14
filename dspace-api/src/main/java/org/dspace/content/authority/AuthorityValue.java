@@ -120,9 +120,9 @@ public class AuthorityValue {
      */
     public String getId() {
         String nonDigestedIdentifier;
-        nonDigestedIdentifier = AuthorityValue.class.toString() + "field: " + category + "source: " + source
+        nonDigestedIdentifier = AuthorityValue.class.toString() + "category: " + category + "source: " + source
             + "externalSourceIdentifier: " + externalSourceIdentifier;
-        // We return an md5 digest of the toString, this will ensure a unique identifier for the same value each time
+        // We return an sha1 digest of the toString, this will ensure a unique identifier for the same value each time
         return DigestUtils.sha1Hex(nonDigestedIdentifier);
     }
 

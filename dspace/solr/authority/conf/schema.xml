@@ -94,11 +94,11 @@
      <field name="category" type="string" multiValued="false" indexed="true" stored="true" required="true" />
      <field name="value" type="text" multiValued="false" indexed="true" stored="true" required="true"/>
      <copyField source="value" dest="value_keyword"/>
-     <field name="value_keyword" type="text" multiValued="false" indexed="true" stored="true" required="false"/>
+     <field name="value_keyword" type="keyword" multiValued="false" indexed="true" stored="true" required="false"/>
 
      <dynamicField name="metadata_*" type="text" multiValued="true" indexed="true" stored="true" required="false"/>
      <copyField source="metadata_*" dest="metadata_keyword_*"/>
-     <field name="metadata_keyword_*" type="text" multiValued="false" indexed="true" stored="true" required="false"/>
+     <field name="metadata_keyword_*" type="keyword" multiValued="false" indexed="true" stored="true" required="false"/>
 
 
      <field name="last_modified_date" type="date" indexed="true" stored="true" required="true" />

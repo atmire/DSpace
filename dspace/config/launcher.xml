@@ -380,11 +380,4 @@
             <class>org.dspace.app.util.InitializeEntities</class>
         </step>
     </command>
-    <command>
-        <name>authority-test-script</name>
-        <description>authoritytest</description>
-        <step>
-            <class>org.dspace.content.authority.script.AuthorityTestScript</class>
-        </step>
-    </command>
 </commands>
