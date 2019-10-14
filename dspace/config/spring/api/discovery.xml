@@ -536,7 +536,8 @@
         <property name="spellCheckEnabled" value="true"/>
     </bean>
 
-    <bean id="publicationConfiguration" class="org.dspace.discovery.configuration.DiscoveryConfiguration" scope="prototype">
+    <bean id="publication" class="org.dspace.discovery.configuration.DiscoveryConfiguration" scope="prototype">
+        <property name="id" value="publication"/>
         <!--Which sidebar facets are to be displayed-->
         <property name="sidebarFacets">
             <list>
@@ -587,7 +588,7 @@
         <property name="defaultFilterQueries">
             <list>
                 <!--Only find items, communities and collections-->
-                <value>search.resourcetype:2 AND relationship.type:Publication</value>
+                <value>search.resourcetype:2 AND entityType_keyword:Publication</value>
             </list>
         </property>
         <!--The configuration for the recent submissions-->
@@ -605,7 +606,8 @@
         <property name="spellCheckEnabled" value="true"/>
     </bean>
 
-    <bean id="personConfiguration" class="org.dspace.discovery.configuration.DiscoveryConfiguration" scope="prototype">
+    <bean id="person" class="org.dspace.discovery.configuration.DiscoveryConfiguration" scope="prototype">
+        <property name="id" value="person"/>
         <!--Which sidebar facets are to be displayed-->
         <property name="sidebarFacets">
             <list>
@@ -648,7 +650,7 @@
         <property name="defaultFilterQueries">
             <list>
                 <!--Only find items, communities and collections-->
-                <value>search.resourcetype:2 AND relationship.type:Person</value>
+                <value>search.resourcetype:2 AND entityType_keyword:Person</value>
             </list>
         </property>
         <!--Default result per page  -->
@@ -666,8 +668,9 @@
         <property name="spellCheckEnabled" value="true"/>
     </bean>
 
-    <bean id="organizationConfiguration" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
+    <bean id="organization" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
           scope="prototype">
+        <property name="id" value="organization"/>
         <!--Which sidebar facets are to be displayed-->
         <property name="sidebarFacets">
             <list>
@@ -710,7 +713,7 @@
         <property name="defaultFilterQueries">
             <list>
                 <!--Only find items, communities and collections-->
-                <value>search.resourcetype:2 AND relationship.type:OrgUnit</value>
+                <value>search.resourcetype:2 AND entityType_keyword:OrgUnit</value>
             </list>
         </property>
         <!--The configuration for the recent submissions-->
@@ -729,8 +732,9 @@
         <property name="spellCheckEnabled" value="true"/>
     </bean>
 
-    <bean id="publicationIssueConfiguration" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
+    <bean id="publicationIssue" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
           scope="prototype">
+        <property name="id" value="publicationIssue"/>
         <!--Which sidebar facets are to be displayed-->
         <property name="sidebarFacets">
             <list>
@@ -769,7 +773,7 @@
         <property name="defaultFilterQueries">
             <list>
                 <!--Only find items, communities and collections-->
-                <value>search.resourcetype:2 AND relationship.type:JournalIssue</value>
+                <value>search.resourcetype:2 AND entityType_keyword:JournalIssue</value>
             </list>
         </property>
         <!--The configuration for the recent submissions-->
@@ -788,8 +792,9 @@
         <property name="spellCheckEnabled" value="true"/>
     </bean>
 
-    <bean id="publicationVolumeConfiguration" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
+    <bean id="publicationVolume" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
           scope="prototype">
+        <property name="id" value="publicationVolume"/>
         <!--Which sidebar facets are to be displayed-->
         <property name="sidebarFacets">
             <list>
@@ -827,7 +832,7 @@
         <property name="defaultFilterQueries">
             <list>
                 <!--Only find items, communities and collections-->
-                <value>search.resourcetype:2 AND relationship.type:JournalVolume</value>
+                <value>search.resourcetype:2 AND entityType_keyword:JournalVolume</value>
             </list>
         </property>
         <!--The configuration for the recent submissions-->
@@ -846,8 +851,9 @@
         <property name="spellCheckEnabled" value="true"/>
     </bean>
 
-    <bean id="periodicalConfiguration" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
+    <bean id="periodical" class="org.dspace.discovery.configuration.DiscoveryConfiguration"
           scope="prototype">
+        <property name="id" value="periodical"/>
         <!--Which sidebar facets are to be displayed-->
         <property name="sidebarFacets">
             <list>
@@ -885,7 +891,7 @@
         <property name="defaultFilterQueries">
             <list>
                 <!--Only find items, communities and collections-->
-                <value>search.resourcetype:2 AND relationship.type:Journal</value>
+                <value>search.resourcetype:2 AND entityType_keyword:Journal</value>
             </list>
         </property>
         <!--The configuration for the recent submissions-->
