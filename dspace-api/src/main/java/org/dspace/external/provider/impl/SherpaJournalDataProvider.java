@@ -284,10 +284,10 @@ public class SherpaJournalDataProvider implements ExternalDataProvider {
                 result[rindex].addMetadata(new MockMetadataValue("dc", "title", null, null, textValue.trim()));
                 result[rindex].setDisplayValue(textValue.trim());
                 result[rindex].setValue(textValue.trim());
+                result[rindex].setId(textValue.trim());
             } else if ("issn" != null && localName.equals("issn") && textValue != null) {
                 result[rindex]
                     .addMetadata(new MockMetadataValue("dc", "identifier", "issn", null, textValue.trim()));
-                result[rindex].setId(textValue.trim());
             } else if (localName.equals("message") && textValue != null) {
                 // error message
                 log.warn("SHERPA/RoMEO response error message: " + textValue.trim());

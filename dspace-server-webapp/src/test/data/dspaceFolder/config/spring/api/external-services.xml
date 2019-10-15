@@ -8,9 +8,6 @@
 
     <bean class="org.dspace.external.provider.impl.MockDataProvider" init-method="init">
         <property name="sourceIdentifier" value="mock"/>
-        <property name="url" value="mock.com"/>
-        <!-- please register for a free api access key to get many benefits -->
-        <property name="apiKey" value=""/>
 
     </bean>
 </beans>

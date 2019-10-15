@@ -22,9 +22,7 @@ import org.dspace.mock.MockMetadataValue;
 public class MockDataProvider implements ExternalDataProvider {
 
     private Map<String, ExternalDataObject> mockLookupMap;
-    private String url;
     private String sourceIdentifier;
-    private String apiKey;
 
     /**
      * Generic getter for the sourceIdentifier
@@ -60,43 +58,11 @@ public class MockDataProvider implements ExternalDataProvider {
     }
 
     /**
-     * Generic getter for the url
-     * @return the url value of this MockDataProvider
-     */
-    public String getUrl() {
-        return url;
-    }
-
-    /**
-     * Generic setter for the url
-     * @param url   The url to be set on this MockDataProvider
-     */
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    /**
      * Generic setter for the sourceIdentifier
      * @param sourceIdentifier   The sourceIdentifier to be set on this MockDataProvider
      */
     public void setSourceIdentifier(String sourceIdentifier) {
         this.sourceIdentifier = sourceIdentifier;
-    }
-
-    /**
-     * Generic getter for the apiKey
-     * @return the apiKey value of this MockDataProvider
-     */
-    public String getApiKey() {
-        return apiKey;
-    }
-
-    /**
-     * Generic setter for the apiKey
-     * @param apiKey   The apiKey to be set on this MockDataProvider
-     */
-    public void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
     }
 
     public void init() throws IOException {

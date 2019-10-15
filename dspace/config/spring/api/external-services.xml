@@ -10,14 +10,14 @@
         <property name="sourceIdentifier" value="sherpaJournal"/>
         <property name="url" value="http://www.sherpa.ac.uk/romeo/api29.php"/>
         <!-- please register for a free api access key to get many benefits -->
-        <property name="apiKey" value=""/>
+        <property name="apiKey" value="regIV5XLqKE"/>
 
     </bean>
     <bean class="org.dspace.external.provider.impl.SherpaPublisherDataProvider">
         <property name="sourceIdentifier" value="sherpaPublisher"/>
         <property name="url" value="http://www.sherpa.ac.uk/romeo/api29.php"/>
         <!-- please register for a free api access key to get many benefits -->
-        <property name="apiKey" value=""/>
+        <property name="apiKey" value="regIV5XLqKE"/>
 
     </bean>
     <bean class="org.dspace.external.provider.impl.OrcidV2AuthorDataProvider" init-method="init">
@@ -31,5 +31,9 @@
 <!--        <property name="clientSecret" value=""/>-->
     </bean>
 
+    <bean class="org.dspace.external.provider.impl.LCNameDataProvider">
+        <property name="url" value="http://alcme.oclc.org/srw/search/lcnaf"/>
+        <property name="sourceIdentifier" value="lcname"/>
+    </bean>
 </beans>
 
