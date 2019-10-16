@@ -8,7 +8,11 @@
 package org.dspace.content.authority;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+
+import org.dspace.mock.MockMetadataValue;
 
 /**
  * Record class to hold the data describing one option, or choice, for an
@@ -33,7 +37,24 @@ public class Choice {
      */
     public String value = null;
 
+    /**
+     * Generic getter for the metadata
+     * @return the metadata value of this Choice
+     */
+    public List<MockMetadataValue> getMetadata() {
+        return metadata;
+    }
+
+    /**
+     * Generic setter for the metadata
+     * @param metadata   The metadata to be set on this Choice
+     */
+    public void setMetadata(List<MockMetadataValue> metadata) {
+        this.metadata = metadata;
+    }
+
     public Map<String, String> extras = new HashMap<String, String>();
+    public List<MockMetadataValue> metadata = new LinkedList<MockMetadataValue>();
 
     public Choice() {
     }
@@ -50,4 +71,5 @@ public class Choice {
         this.value = value;
         this.extras = extras;
     }
+
 }

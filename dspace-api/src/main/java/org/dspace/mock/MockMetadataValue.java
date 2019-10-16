@@ -80,6 +80,19 @@ public class MockMetadataValue {
         this.value = value;
     }
 
+    public MockMetadataValue(String metadataField, String value) {
+        String[] metadataFieldParts = metadataField.split("_");
+        this.schema = metadataFieldParts[0];
+        this.element = metadataFieldParts[1];
+        if (metadataFieldParts.length > 2) {
+            this.qualifier = metadataFieldParts[2];
+        }
+        if (metadataFieldParts.length > 3) {
+            this.language = metadataFieldParts[3];
+        }
+        this.value = value;
+    }
+
     public String getSchema() {
         return schema;
     }

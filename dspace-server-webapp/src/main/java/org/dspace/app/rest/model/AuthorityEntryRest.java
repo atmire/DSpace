@@ -23,6 +23,7 @@ public class AuthorityEntryRest implements RestAddressableModel {
     private String display;
     private String value;
     private Map<String, String> otherInformation;
+    private MetadataRest metadataRest;
 
     @JsonIgnore
     private String authorityName;
@@ -69,6 +70,22 @@ public class AuthorityEntryRest implements RestAddressableModel {
 
     public void setAuthorityName(String authorityName) {
         this.authorityName = authorityName;
+    }
+
+    /**
+     * Generic getter for the metadataRest
+     * @return the metadataRest value of this AuthorityEntryRest
+     */
+    public MetadataRest getMetadataRest() {
+        return metadataRest;
+    }
+
+    /**
+     * Generic setter for the metadataRest
+     * @param metadataRest   The metadataRest to be set on this AuthorityEntryRest
+     */
+    public void setMetadataRest(MetadataRest metadataRest) {
+        this.metadataRest = metadataRest;
     }
 
     @Override

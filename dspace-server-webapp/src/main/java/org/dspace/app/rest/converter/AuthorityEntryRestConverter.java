@@ -11,6 +11,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.dspace.app.rest.model.AuthorityEntryRest;
 import org.dspace.app.rest.utils.AuthorityUtils;
 import org.dspace.content.authority.Choice;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -24,6 +25,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class AuthorityEntryRestConverter implements DSpaceConverter<Choice, AuthorityEntryRest> {
 
+    @Autowired
+    private MockMetadataConverter mockMetadataConverter;
     @Override
     public AuthorityEntryRest fromModel(Choice choice) {
         AuthorityEntryRest entry = new AuthorityEntryRest();
@@ -31,6 +34,7 @@ public class AuthorityEntryRestConverter implements DSpaceConverter<Choice, Auth
         entry.setDisplay(choice.label);
         entry.setId(choice.authority);
         entry.setOtherInformation(choice.extras);
+        entry.setMetadataRest(mockMetadataConverter.convert(choice.metadata));
         return entry;
     }
 
