@@ -23,7 +23,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.dspace.app.rest.converter.BitstreamConverter;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
-import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.BitstreamRest;
 import org.dspace.app.rest.model.hateoas.BitstreamResource;
 import org.dspace.app.rest.model.patch.Patch;
