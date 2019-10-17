@@ -32,9 +32,13 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
+import org.dspace.content.Collection;
+import org.dspace.content.Community;
 import org.dspace.content.Item;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.BundleService;
+import org.dspace.content.service.CollectionService;
+import org.dspace.content.service.CommunityService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -61,6 +65,12 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
 
     @Autowired
     AuthorizeService authorizeService;
+
+    @Autowired
+    private CollectionService collectionService;
+
+    @Autowired
+    private CommunityService communityService;
 
     @Autowired
     public BitstreamRestRepository(BitstreamService dsoService,
@@ -132,10 +142,21 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
         Bitstream bit = null;
         try {
             bit = bs.find(context, id);
-            if (bit.getCommunity() != null | bit.getCollection() != null) {
-                throw new UnprocessableEntityException("The bitstream cannot be deleted it is a logo");
+            if (bit == null) {
+                throw new ResourceNotFoundException("The bitstream with uuid " + id + " could not be found");
             }
-        } catch (SQLException e) {
+            if (bit.isDeleted()) {
+                throw new ResourceNotFoundException("The bitstream with uuid " + id + " was already deleted");
+            }
+            Community community = bit.getCommunity();
+            if (community != null) {
+                communityService.setLogo(context, community, null);
+            }
+            Collection collection = bit.getCollection();
+            if (collection != null) {
+                collectionService.setLogo(context, collection, null);
+            }
+        } catch (SQLException | IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
         try {
