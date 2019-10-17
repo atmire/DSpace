@@ -101,22 +101,26 @@ public class CacheableChoiceAuthorityImpl implements CacheableAuthority, ChoiceA
         //We add one to our facet limit so that we know if there are more matches
         int maxNumberOfSolrResults = limit + 1;
         queryArgs.set(CommonParams.ROWS, maxNumberOfSolrResults);
-
-        return resolveResults(field, text, start, limit, queryArgs);
+        try {
+            QueryResponse searchResponse = getSolr().query(queryArgs);
+            return resolveResults(searchResponse, field, text, start, limit);
+        } catch (SolrServerException | IOException e) {
+            log.error(e.getMessage(), e);
+        }
+        return null;
     }
 
-    private Choices resolveResults(String field, String text, int start, int limit, SolrQuery queryArgs) {
+    private Choices resolveResults(QueryResponse searchResponse, String field,
+                                   String text, int start, int limit) {
         Choices result;
         try {
             int max = 0;
             boolean hasMore = false;
-            QueryResponse searchResponse = getSolr().query(queryArgs);
             SolrDocumentList authDocs = searchResponse.getResults();
             ArrayList<Choice> choices = new ArrayList<>();
             if (authDocs != null) {
                 max = (int) searchResponse.getResults().getNumFound();
                 int maxDocs = Math.min(limit, max);
-                List<AuthorityValue> alreadyPresent = new ArrayList<>();
                 for (int i = 0; i < maxDocs; i++) {
                     SolrDocument solrDocument = authDocs.get(i);
                     if (solrDocument != null) {
@@ -124,7 +128,6 @@ public class CacheableChoiceAuthorityImpl implements CacheableAuthority, ChoiceA
                         Choice choice = new Choice(val.getId(), val.getValue(), val.getValue());
                         choice.setMetadata(val.getMetadata());
                         choices.add(choice);
-                        alreadyPresent.add(val);
                     }
                 }
 
