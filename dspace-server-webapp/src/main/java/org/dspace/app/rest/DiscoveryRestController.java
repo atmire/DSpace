@@ -35,17 +35,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.ResourceSupport;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * The controller for the api/discover endpoint
  */
-@RestController
-@RequestMapping("/api/" + SearchResultsRest.CATEGORY)
-public class DiscoveryRestController implements InitializingBean {
+public abstract class DiscoveryRestController implements InitializingBean, DiscoveryRestControllerInterface {
 
     private static final Logger log = LogManager.getLogger();
 
@@ -67,7 +63,7 @@ public class DiscoveryRestController implements InitializingBean {
             .register(this, Arrays.asList(new Link("/api/" + SearchResultsRest.CATEGORY, SearchResultsRest.CATEGORY)));
     }
 
-    @RequestMapping(method = RequestMethod.GET)
+    @Override
     public SearchSupportResource getSearchSupport(@RequestParam(name = "scope", required = false) String dsoScope,
                                                   @RequestParam(name = "configuration", required = false) String
                                                   configuration)
@@ -79,7 +75,6 @@ public class DiscoveryRestController implements InitializingBean {
         return searchSupportResource;
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/search")
     public SearchConfigurationResource getSearchConfiguration(
         @RequestParam(name = "scope", required = false) String dsoScope,
         @RequestParam(name = "configuration", required = false) String configuration) throws Exception {
@@ -97,7 +92,6 @@ public class DiscoveryRestController implements InitializingBean {
         return searchConfigurationResource;
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/search/facets")
     public FacetsResource getFacets(@RequestParam(name = "query", required = false) String query,
                                     @RequestParam(name = "dsoType", required = false) String dsoType,
                                     @RequestParam(name = "scope", required = false) String dsoScope,
@@ -124,7 +118,6 @@ public class DiscoveryRestController implements InitializingBean {
 
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/search/objects")
     public SearchResultsResource getSearchObjects(@RequestParam(name = "query", required = false) String query,
                                                   @RequestParam(name = "dsoType", required = false) String dsoType,
                                                   @RequestParam(name = "scope", required = false) String dsoScope,
@@ -152,7 +145,6 @@ public class DiscoveryRestController implements InitializingBean {
         return searchResultsResource;
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/facets")
     public FacetConfigurationResource getFacetsConfiguration(
         @RequestParam(name = "scope", required = false) String dsoScope,
         @RequestParam(name = "configuration", required = false) String configuration,
@@ -170,7 +162,6 @@ public class DiscoveryRestController implements InitializingBean {
         return facetConfigurationResource;
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/facets/{name}")
     public ResourceSupport getFacetValues(@PathVariable("name") String facetName,
                                           @RequestParam(name = "prefix", required = false) String prefix,
                                           @RequestParam(name = "query", required = false) String query,
