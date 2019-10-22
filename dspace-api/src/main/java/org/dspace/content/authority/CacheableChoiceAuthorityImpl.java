@@ -107,7 +107,7 @@ public class CacheableChoiceAuthorityImpl implements CacheableAuthority, ChoiceA
         } catch (SolrServerException | IOException e) {
             log.error(e.getMessage(), e);
         }
-        return null;
+        return new Choices(false);
     }
 
     private Choices resolveResults(QueryResponse searchResponse, String field,
@@ -175,7 +175,7 @@ public class CacheableChoiceAuthorityImpl implements CacheableAuthority, ChoiceA
 
     @Override
     public Choices getMatches(String field, String text, Collection collection, int start, int limit, String locale) {
-        return getMatches(field, text, collection, start, limit, locale, true);
+        return getMatches(field, text, collection, start, limit, locale, false);
     }
 
     @Override

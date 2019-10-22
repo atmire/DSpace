@@ -57,7 +57,7 @@ public class AuthorityConverterImpl implements AuthorityConverter {
         authorityValue.setLastModified(new Date());
         authorityValue.setCreationDate(new Date());
         authorityValue.setSource(externalDataObject.getSource());
-        authorityValue.setExternalSourceIdentifier(externalDataObject.getSource());
+        authorityValue.setExternalSourceIdentifier(externalDataObject.getId());
         authorityValue.setCategory(category);
         authorityValue.setValue(externalDataObject.getValue());
         authorityValue.setMetadata(externalDataObject.getMetadata());
