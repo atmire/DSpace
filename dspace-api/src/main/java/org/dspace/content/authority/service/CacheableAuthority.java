@@ -10,6 +10,7 @@ package org.dspace.content.authority.service;
 import java.io.IOException;
 
 import org.apache.solr.client.solrj.SolrServerException;
+import org.dspace.content.authority.AuthorityValue;
 import org.dspace.external.model.ExternalDataObject;
 
 /**
@@ -27,6 +28,9 @@ public interface CacheableAuthority {
      * @throws SolrServerException  If something goes wrong
      */
     void cacheAuthorityValue(String metadataField, ExternalDataObject externalDataObject)
+        throws IOException, SolrServerException;
+
+    public void cacheAuthorityValue(AuthorityValue authorityValue)
         throws IOException, SolrServerException;
 
 }

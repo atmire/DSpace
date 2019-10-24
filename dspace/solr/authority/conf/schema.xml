@@ -100,7 +100,8 @@
 
  <fields>
      <field name="id" type="string" multiValued="false" indexed="true" stored="true" required="true"/>
-     <field name="category" type="string" multiValued="false" indexed="true" stored="true" required="true" />
+     <!--TODO Make required once we have a better migration -->
+     <field name="category" type="string" multiValued="false" indexed="true" stored="true" required="false" />
      <field name="value" type="text" multiValued="false" indexed="true" stored="true" required="true"/>
      <copyField source="value" dest="value_keyword"/>
      <field name="value_keyword" type="keywordFilter" multiValued="false" indexed="true" stored="true" required="false"/>
@@ -112,8 +113,25 @@
 
      <field name="last_modified_date" type="date" indexed="true" stored="true" required="true" />
      <field name="creation_date" type="date" indexed="true" stored="true" required="true" />
-     <field name="source" type="string" multiValued="false" indexed="true" stored="true" required="true"/>
-     <field name="external_source_identifier" type="string" multiValued="false" indexed="true" stored="true" required="true"/>
+     <!--TODO Make required once we have a better migration -->
+     <field name="source" type="string" multiValued="false" indexed="true" stored="true" required="false"/>
+     <!--TODO Make required once we have a better migration -->
+     <field name="external_source_identifier" type="string" multiValued="false" indexed="true" stored="true" required="false"/>
+
+
+     <field name="field" type="string" multiValued="false" indexed="true" stored="true" required="false" />
+     <field name="email" type="string" multiValued="true" indexed="true" stored="true" required="false"/>
+     <field name="institution" type="string" multiValued="false" indexed="true" stored="true" required="false"/>
+
+     <field name="orcid_id" type="string" multiValued="false" indexed="true" stored="true" required="false"/>
+     <field name="first_name" type="text" multiValued="false" indexed="true" stored="true" required="false"/>
+     <field name="last_name" type="text" multiValued="false" indexed="true" stored="true" required="false"/>
+     <field name="name_variant" type="text" multiValued="true" indexed="true" stored="true" required="false"/>
+     <dynamicField name="label_*" type="text" multiValued="true" indexed="true" stored="true" required="false"/>
+     <dynamicField name="value_*" type="text" multiValued="false" indexed="true" stored="true" required="false"/>
+     <field name="all_labels" type="text" multiValued="true" indexed="true" stored="true" required="false"/>
+     <field name="deleted" type="boolean" multiValued="false" indexed="true" stored="true" required="false"/>
+     <field name="authority_type" type="string" multiValued="false" indexed="true" stored="true" required="false"/>
  </fields>
 
  <uniqueKey>id</uniqueKey>

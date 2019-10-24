@@ -380,4 +380,11 @@
             <class>org.dspace.app.util.InitializeEntities</class>
         </step>
     </command>
+    <command>
+        <name>authority-control-migration</name>
+        <description>Migrate the authorities</description>
+        <step>
+            <class>org.dspace.content.authority.scripts.AuthorityControlMigrationScript</class>
+        </step>
+    </command>
 </commands>

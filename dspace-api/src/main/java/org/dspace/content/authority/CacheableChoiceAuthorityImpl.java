@@ -67,7 +67,7 @@ public class CacheableChoiceAuthorityImpl implements CacheableAuthority, ChoiceA
      * @throws SolrServerException  If something goes wrong
      * @throws IOException          If something goes wrong
      */
-    protected HttpSolrClient getSolr()
+    public HttpSolrClient getSolr()
         throws SolrServerException, IOException {
         if (solr == null) {
 
@@ -215,6 +215,12 @@ public class CacheableChoiceAuthorityImpl implements CacheableAuthority, ChoiceA
 
         AuthorityValue authorityValue = getAuthorityConverter()
             .createFromExternalData(getMetadataToCategoryMap().get(metadataField), externalDataObject);
+        cacheAuthorityValue(authorityValue);
+    }
+
+    @Override
+    public void cacheAuthorityValue(AuthorityValue authorityValue)
+        throws IOException, SolrServerException {
         SolrInputDocument solrInputDocument = parseAuthorityValueToInputDoc(authorityValue);
         getSolr().add(solrInputDocument);
     }
