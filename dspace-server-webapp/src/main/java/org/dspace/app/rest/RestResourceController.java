@@ -54,6 +54,7 @@ import org.dspace.app.rest.repository.LinkRestRepository;
 import org.dspace.app.rest.utils.RestRepositoryUtils;
 import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.util.UUIDUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -376,14 +377,17 @@ public class RestResourceController implements InitializingBean {
      * @param request       The relevant request
      * @param apiCategory   The apiCategory to be used
      * @param model         The model to be used
+     * @param parent        Optional parent identifier
      * @return              The relevant ResponseEntity for this request
      * @throws HttpRequestMethodNotSupportedException   If something goes wrong
      */
     @RequestMapping(method = RequestMethod.POST, consumes = {"application/json", "application/hal+json"})
-    public ResponseEntity<ResourceSupport> post(HttpServletRequest request, @PathVariable String apiCategory,
-                                                @PathVariable String model)
+    public ResponseEntity<ResourceSupport> post(HttpServletRequest request,
+                                                @PathVariable String apiCategory,
+                                                @PathVariable String model,
+                                                @RequestParam(required = false) String parent)
         throws HttpRequestMethodNotSupportedException {
-        return postJsonInternal(request, apiCategory, model);
+        return postJsonInternal(request, apiCategory, model, parent);
     }
 
     /**
@@ -418,16 +422,24 @@ public class RestResourceController implements InitializingBean {
      * @param request       The relevant request
      * @param apiCategory   The apiCategory to be used
      * @param model         The model to be used
+     * @param parent        The parent object id (optional)
      * @return              The relevant ResponseEntity for this request
      * @throws HttpRequestMethodNotSupportedException   If something goes wrong
      */
     public <ID extends Serializable> ResponseEntity<ResourceSupport> postJsonInternal(HttpServletRequest request,
                                                                                   String apiCategory,
-                                                                                  String model)
+                                                                                  String model, String parent)
         throws HttpRequestMethodNotSupportedException {
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
-        RestAddressableModel modelObject = repository.createAndReturn();
+
+        RestAddressableModel modelObject;
+        if (parent != null) {
+            UUID parentUuid = UUIDUtils.fromString(parent);
+            modelObject = repository.createAndReturn(parentUuid);
+        } else {
+            modelObject = repository.createAndReturn();
+        }
         if (modelObject == null) {
             return ControllerUtils.toEmptyResponse(HttpStatus.CREATED);
         }
@@ -859,8 +871,8 @@ public class RestResourceController implements InitializingBean {
 
             try {
                 Object object = linkMethod.invoke(linkRepository, request, id, relid, page, projection);
-                Link link = linkTo(this.getClass(), apiCategory, English.plural(model)).slash(id)
-                                                                                       .slash(rel).withSelfRel();
+                Link link = linkTo(this.getClass(), apiCategory, model).slash(id).slash(rel).slash(relid).withSelfRel();
+
                 List result = new ArrayList();
                 result.add(object);
                 PageImpl<RestAddressableModel> pageResult = new PageImpl(result, page, 1);
@@ -1187,12 +1199,12 @@ public class RestResourceController implements InitializingBean {
     /**
      * Execute a PUT request for an entity with id of type UUID;
      *
-     * curl -X PUT http://<dspace.restUrl>/api/{apiCategory}/{model}/{uuid}
+     * curl -X PUT http://<dspace.baseUrl>/api/{apiCategory}/{model}/{uuid}
      *
      * Example:
      * <pre>
      * {@code
-     *      curl -X PUT http://<dspace.restUrl>/api/core/collection/8b632938-77c2-487c-81f0-e804f63e68e6
+     *      curl -X PUT http://<dspace.baseUrl>/api/core/collection/8b632938-77c2-487c-81f0-e804f63e68e6
      * }
      * </pre>
      *

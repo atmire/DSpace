@@ -81,7 +81,7 @@ public class RelationshipDeleteRestRepositoryIT extends AbstractEntityIntegratio
             .withPersonIdentifierLastName("familyName")
             .build();
         relationshipType = relationshipTypeService
-            .findbyTypesAndLabels(context, entityTypeService.findByEntityType(context, "Publication"),
+            .findbyTypesAndTypeName(context, entityTypeService.findByEntityType(context, "Publication"),
                 entityTypeService.findByEntityType(context, "Person"),
                 "isAuthorOfPublication", "isPublicationOfAuthor");
         relationship = RelationshipBuilder.createRelationshipBuilder(context, leftItem, rightItem, relationshipType)
@@ -105,7 +105,7 @@ public class RelationshipDeleteRestRepositoryIT extends AbstractEntityIntegratio
             .withPublicationVolumeNumber("30")
             .build();
         relationshipType = relationshipTypeService
-            .findbyTypesAndLabels(context, entityTypeService.findByEntityType(context, "JournalIssue"),
+            .findbyTypesAndTypeName(context, entityTypeService.findByEntityType(context, "JournalIssue"),
                 entityTypeService.findByEntityType(context, "JournalVolume"),
                 "isJournalVolumeOfIssue", "isIssueOfJournalVolume");
         relationship = RelationshipBuilder.createRelationshipBuilder(context, leftItem, rightItem, relationshipType)

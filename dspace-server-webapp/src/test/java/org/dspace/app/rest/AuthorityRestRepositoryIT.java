@@ -11,12 +11,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Date;
+import java.util.UUID;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.dspace.app.rest.matcher.AuthorityEntryMatcher;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
 import org.dspace.authority.PersonAuthorityValue;
 import org.dspace.authority.factory.AuthorityServiceFactory;
+import org.dspace.content.authority.service.ChoiceAuthorityService;
+import org.dspace.core.service.PluginService;
 import org.dspace.services.ConfigurationService;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -24,10 +28,20 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * This class handles all Authority related IT. It alters some config to run the tests, but it gets cleared again
+ * after every test
+ */
 public class AuthorityRestRepositoryIT extends AbstractControllerIntegrationTest {
 
     @Autowired
     ConfigurationService configurationService;
+
+    @Autowired
+    private PluginService pluginService;
+
+    @Autowired
+    private ChoiceAuthorityService cas;
 
     @Before
     public void setup() throws Exception {
@@ -47,19 +61,33 @@ public class AuthorityRestRepositoryIT extends AbstractControllerIntegrationTest
         configurationService.setProperty("authority.author.indexer.field.1",
                 "dc.contributor.author");
 
+
+        // These clears have to happen so that the config is actually reloaded in those classes. This is needed for
+        // the properties that we're altering above and this is only used within the tests
+        pluginService.clearNamedPluginClasses();
+        cas.clearCache();
+
         PersonAuthorityValue person1 = new PersonAuthorityValue();
+        person1.setId(String.valueOf(UUID.randomUUID()));
         person1.setLastName("Shirasaka");
         person1.setFirstName("Seiko");
         person1.setValue("Shirasaka, Seiko");
         person1.setField("dc_contributor_author");
+        person1.setLastModified(new Date());
+        person1.setCreationDate(new Date());
         AuthorityServiceFactory.getInstance().getAuthorityIndexingService().indexContent(person1);
 
         PersonAuthorityValue person2 = new PersonAuthorityValue();
+        person2.setId(String.valueOf(UUID.randomUUID()));
         person2.setLastName("Miller");
         person2.setFirstName("Tyler E");
         person2.setValue("Miller, Tyler E");
         person2.setField("dc_contributor_author");
+        person2.setLastModified(new Date());
+        person2.setCreationDate(new Date());
         AuthorityServiceFactory.getInstance().getAuthorityIndexingService().indexContent(person2);
+
+        AuthorityServiceFactory.getInstance().getAuthorityIndexingService().commit();
     }
 
     @Test

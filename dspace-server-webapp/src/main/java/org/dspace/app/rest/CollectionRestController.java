@@ -18,10 +18,6 @@ import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.CollectionRest;
 import org.dspace.app.rest.model.ItemRest;
 import org.dspace.app.rest.model.hateoas.BitstreamResource;
-import com.fasterxml.jackson.databind.JsonNode;
-import org.dspace.app.rest.model.CollectionRest;
-import org.dspace.app.rest.model.ItemRest;
-import org.dspace.app.rest.model.hateoas.ItemResource;
 import org.dspace.app.rest.model.hateoas.ItemResource;
 import org.dspace.app.rest.repository.CollectionRestRepository;
 import org.dspace.app.rest.utils.ContextUtil;
@@ -38,12 +34,13 @@ import org.springframework.hateoas.ResourceSupport;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * This RestController takes care of the creation and deletion of Collection's nested objects

@@ -25,13 +25,15 @@ public class HarvestedCollectionResource extends HALResource<HarvestedCollection
 
     public HarvestedCollectionResource(HarvestedCollectionRest data) {
         super(data);
-        embedResource("metadata_configs", data.getMetadataConfigs());
+        embedResource("harvestermetadata", data.getMetadataConfigs());
     }
 
     private void embedResource(String relationship, HarvesterMetadataRest harvesterMetadataRest) {
-        HarvesterMetadataResource harvesterMetadataResource =
-            new HarvesterMetadataResource(harvesterMetadataRest, utils);
-        embedResource(relationship, harvesterMetadataResource);
+        if (harvesterMetadataRest != null) {
+            HarvesterMetadataResource harvesterMetadataResource =
+                new HarvesterMetadataResource(harvesterMetadataRest, utils);
+            embedResource(relationship, harvesterMetadataResource);
+        }
     }
 
 }

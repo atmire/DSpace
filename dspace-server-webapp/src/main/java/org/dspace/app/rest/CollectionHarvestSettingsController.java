@@ -8,8 +8,6 @@
 package org.dspace.app.rest;
 
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,8 +22,6 @@ import org.dspace.app.rest.utils.Utils;
 import org.dspace.content.Collection;
 import org.dspace.content.service.CollectionService;
 import org.dspace.core.Context;
-import org.dspace.harvest.HarvestedCollection;
-import org.dspace.harvest.OAIHarvester;
 import org.dspace.harvest.service.HarvestedCollectionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
@@ -113,14 +109,11 @@ public class CollectionHarvestSettingsController {
             throw new ResourceNotFoundException("Collection with uuid: " + collectionUuid + " not found");
         }
 
-        HarvestedCollection harvestedCollection =
+        HarvestedCollectionRest harvestedCollectionRest =
             harvestedCollectionRestRepository.update(context, request, collection);
 
         // Return a harvestedCollectionResource only if a new harvestedCollection was created
-        if (harvestedCollection != null) {
-            List<Map<String,String>> configs = OAIHarvester.getAvailableMetadataFormats();
-            HarvestedCollectionRest harvestedCollectionRest =
-                harvestedCollectionConverter.fromModel(harvestedCollection, collection, configs);
+        if (harvestedCollectionRest != null) {
             harvestedCollectionResource = new HarvestedCollectionResource(harvestedCollectionRest);
             halLinkService.addLinks(harvestedCollectionResource);
         }
