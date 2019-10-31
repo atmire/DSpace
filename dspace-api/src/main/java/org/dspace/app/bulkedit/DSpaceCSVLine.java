@@ -12,13 +12,15 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.authority.service.AuthorityValueService;
-import org.dspace.content.authority.AuthorityValue;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.dspace.external.provider.ExternalDataProvider;
 
 /**
  * Utility class to store a line from a CSV file
@@ -26,6 +28,9 @@ import org.dspace.content.authority.AuthorityValue;
  * @author Stuart Lewis
  */
 public class DSpaceCSVLine implements Serializable {
+
+    private static final Logger log = LogManager.getLogger(DSpaceCSVLine.class);
+
     /**
      * The item id of the item represented by this line. -1 is for a new item
      */
@@ -36,8 +41,6 @@ public class DSpaceCSVLine implements Serializable {
      */
     private final Map<String, ArrayList> items;
 
-    protected transient final AuthorityValueService authorityValueService
-        = AuthorityServiceFactory.getInstance().getAuthorityValueService();
 
     /**
      * ensuring that the order-sensible columns of the csv are processed in the correct order
@@ -46,8 +49,22 @@ public class DSpaceCSVLine implements Serializable {
         @Override
         public int compare(String md1, String md2) {
             // The metadata coming from an external source should be processed after the others
-            AuthorityValue source1 = authorityValueService.getAuthorityValueType(md1);
-            AuthorityValue source2 = authorityValueService.getAuthorityValueType(md2);
+            ExternalDataProvider source1 = null;
+            ExternalDataProvider source2 = null;
+            if (BulkEditUtils.containsExternalProvider(md1)) {
+                Optional<Pair<String, ExternalDataProvider>> pair = BulkEditUtils
+                    .getExternalDataProviderFromMdHeader(md1);
+                if (pair.isPresent()) {
+                    source1 = pair.get().getRight();
+                }
+            }
+            if (BulkEditUtils.containsExternalProvider(md2)) {
+                Optional<Pair<String, ExternalDataProvider>> pair = BulkEditUtils
+                    .getExternalDataProviderFromMdHeader(md2);
+                if (pair.isPresent()) {
+                    source2 = pair.get().getRight();
+                }
+            }
 
             int compare;
             if (source1 == null && source2 != null) {

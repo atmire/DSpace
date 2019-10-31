@@ -1,3 +1,10 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.content.authority.scripts;
 
 import java.io.IOException;
@@ -47,8 +54,8 @@ public class AuthorityControlMigrationScript {
         itemService = ContentServiceFactory.getInstance().getItemService();
         metadataValueService = ContentServiceFactory.getInstance().getMetadataValueService();
         configurationService = DSpaceServicesFactory.getInstance().getConfigurationService();
-        cacheableChoiceAuthority = new DSpace().getServiceManager().getServiceByName("cacheableChoiceAuthority",
-                                                                                     CacheableChoiceAuthorityImpl.class);
+        cacheableChoiceAuthority = new DSpace().getServiceManager()
+                               .getServiceByName("cacheableChoiceAuthority", CacheableChoiceAuthorityImpl.class);
         solr = cacheableChoiceAuthority.getSolr();
     }
 

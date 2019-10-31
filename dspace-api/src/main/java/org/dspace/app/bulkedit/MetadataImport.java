@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -30,9 +31,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
-import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.authority.service.AuthorityValueService;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
 import org.dspace.content.DSpaceObject;
@@ -64,6 +64,8 @@ import org.dspace.core.Context;
 import org.dspace.core.LogManager;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.factory.EPersonServiceFactory;
+import org.dspace.external.model.ExternalDataObject;
+import org.dspace.external.provider.ExternalDataProvider;
 import org.dspace.handle.factory.HandleServiceFactory;
 import org.dspace.handle.service.HandleService;
 import org.dspace.workflow.WorkflowItem;
@@ -124,8 +126,6 @@ public class MetadataImport {
      */
     protected static final Logger log = org.apache.logging.log4j.LogManager.getLogger(MetadataImport.class);
 
-    protected final AuthorityValueService authorityValueService;
-
     protected final ItemService itemService;
     protected final InstallItemService installItemService;
     protected final CollectionService collectionService;
@@ -152,7 +152,6 @@ public class MetadataImport {
         itemService = ContentServiceFactory.getInstance().getItemService();
         collectionService = ContentServiceFactory.getInstance().getCollectionService();
         handleService = HandleServiceFactory.getInstance().getHandleService();
-        authorityValueService = AuthorityServiceFactory.getInstance().getAuthorityValueService();
         workspaceItemService = ContentServiceFactory.getInstance().getWorkspaceItemService();
         relationshipService = ContentServiceFactory.getInstance().getRelationshipService();
         relationshipTypeService = ContentServiceFactory.getInstance().getRelationshipTypeService();
@@ -513,7 +512,12 @@ public class MetadataImport {
             language = bits[1].substring(0, bits[1].length() - 1);
         }
 
-        AuthorityValue fromAuthority = authorityValueService.getAuthorityValueType(md);
+        Optional<Pair<String, ExternalDataProvider>> externalDataProviderFromMdHeader = BulkEditUtils
+            .getExternalDataProviderFromMdHeader(md);
+        ExternalDataProvider externalDataProvider = null;
+        if (externalDataProviderFromMdHeader.isPresent()) {
+            externalDataProvider = externalDataProviderFromMdHeader.get().getRight();
+        }
         if (md.indexOf(':') > 0) {
             md = md.substring(md.indexOf(':') + 1);
         }
@@ -541,7 +545,7 @@ public class MetadataImport {
                                            ",looking_for_qualifier=" + qualifier +
                                            ",looking_for_language=" + language));
         String[] dcvalues;
-        if (fromAuthority == null) {
+        if (externalDataProvider == null) {
             List<MetadataValue> current = itemService.getMetadata(item, schema, element, qualifier, language);
             dcvalues = new String[current.size()];
             int i = 0;
@@ -559,7 +563,8 @@ public class MetadataImport {
                                                    ",found=" + dcv.getValue()));
             }
         } else {
-            dcvalues = line.get(md).toArray(new String[line.get(md).size()]);
+            String key = externalDataProvider.getSourceIdentifier() + ":" + md;
+            dcvalues = line.get(key).toArray(new String[line.get(key).size()]);
         }
 
 
@@ -567,8 +572,8 @@ public class MetadataImport {
         for (int v = 0; v < fromCSV.length; v++) {
             String value = fromCSV[v];
             BulkEditMetadataValue dcv = getBulkEditValueFromCSV(language, schema, element, qualifier, value,
-                                                                fromAuthority);
-            if (fromAuthority != null) {
+                                                                externalDataProvider);
+            if (externalDataProvider != null) {
                 value = dcv.getValue() + csv.getAuthoritySeparator() + dcv.getAuthority() + csv
                     .getAuthoritySeparator() + dcv.getConfidence();
                 fromCSV[v] = value;
@@ -603,7 +608,7 @@ public class MetadataImport {
             // can only be used to add metadata, not to change or remove them
             // because e.g. an author that is not in the column "ORCID:dc.contributor.author" could still be in the
             // column "dc.contributor.author" so don't remove it
-            if ((value != null) && (!"".equals(value)) && (!contains(value, fromCSV)) && fromAuthority == null) {
+            if ((value != null) && (!"".equals(value)) && (!contains(value, fromCSV)) && externalDataProvider == null) {
                 // Remove it
                 log.debug(LogManager.getHeader(c, "metadata_import",
                                                "item_id=" + item.getID() + ",fromCSV=" + all +
@@ -1086,7 +1091,12 @@ public class MetadataImport {
             String[] bits = md.split("\\[");
             language = bits[1].substring(0, bits[1].length() - 1);
         }
-        AuthorityValue fromAuthority = authorityValueService.getAuthorityValueType(md);
+        Optional<Pair<String, ExternalDataProvider>> externalDataProviderFromMdHeader = BulkEditUtils
+            .getExternalDataProviderFromMdHeader(md);
+        ExternalDataProvider externalDataProvider = null;
+        if (externalDataProviderFromMdHeader.isPresent()) {
+            externalDataProvider = externalDataProviderFromMdHeader.get().getRight();
+        }
         if (md.indexOf(':') > 0) {
             md = md.substring(md.indexOf(':') + 1);
         }
@@ -1111,8 +1121,8 @@ public class MetadataImport {
         // Add all the values
         for (String value : fromCSV) {
             BulkEditMetadataValue dcv = getBulkEditValueFromCSV(language, schema, element, qualifier, value,
-                                                                fromAuthority);
-            if (fromAuthority != null) {
+                                                                externalDataProvider);
+            if (externalDataProvider != null) {
                 value = dcv.getValue() + csv.getAuthoritySeparator() + dcv.getAuthority() + csv
                     .getAuthoritySeparator() + dcv.getConfidence();
             }
@@ -1126,33 +1136,27 @@ public class MetadataImport {
 
     protected BulkEditMetadataValue getBulkEditValueFromCSV(String language, String schema, String element,
                                                             String qualifier, String value,
-                                                            AuthorityValue fromAuthority) {
+                                                            ExternalDataProvider externalDataProvider) {
         // Look to see if it should be removed
         BulkEditMetadataValue dcv = new BulkEditMetadataValue();
         dcv.setSchema(schema);
         dcv.setElement(element);
         dcv.setQualifier(qualifier);
         dcv.setLanguage(language);
-        if (fromAuthority != null) {
+        if (externalDataProvider != null) {
             if (value.indexOf(':') > 0) {
                 value = value.substring(0, value.indexOf(':'));
             }
 
             // look up the value and authority in solr
-            List<AuthorityValue> byValue = authorityValueService.findByValue(c, schema, element, qualifier, value);
             AuthorityValue authorityValue = null;
-            if (byValue.isEmpty()) {
-                //TODO Kevin
-//                String toGenerate = fromAuthority.generateString() + value;
-//                String field = schema + "_" + element + (StringUtils.isNotBlank(qualifier) ? "_" + qualifier : "");
-//                authorityValue = authorityValueService.generate(c, toGenerate, value, field);
-//                dcv.setAuthority(toGenerate);
+            Optional<ExternalDataObject> externalDataObject = externalDataProvider.getExternalDataObject(value);
+            if (externalDataObject.isPresent()) {
+                dcv.setAuthority(externalDataObject.get().getId());
             } else {
-                authorityValue = byValue.get(0);
-                dcv.setAuthority(authorityValue.getId());
+                dcv.setAuthority(value);
             }
 
-            dcv.setValue(authorityValue.getValue());
             dcv.setConfidence(Choices.CF_ACCEPTED);
         } else if (value == null || !value.contains(csv.getAuthoritySeparator())) {
             simplyCopyValue(value, dcv);

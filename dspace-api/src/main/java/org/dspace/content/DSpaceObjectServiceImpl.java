@@ -194,11 +194,11 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
                                            String authority) {
         List<MetadataValue> metadata = getMetadata(dso, schema, element, qualifier, lang);
         List<MetadataValue> result = new ArrayList<>(metadata);
-        if (!authority.equals(Item.ANY)) {
+        if (!StringUtils.equals(authority, Item.ANY)) {
             Iterator<MetadataValue> iterator = result.iterator();
             while (iterator.hasNext()) {
                 MetadataValue metadataValue = iterator.next();
-                if (!authority.equals(metadataValue.getAuthority())) {
+                if (!StringUtils.equals(authority, metadataValue.getAuthority())) {
                     iterator.remove();
                 }
             }

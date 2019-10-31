@@ -58,10 +58,9 @@ public class ExternalSourceRestRepository extends AbstractDSpaceRestRepository {
      * @return              The ExternalSourceRest object corresponding with the AuthorityName
      */
     public ExternalSourceRest getExternalSource(String authorityName) {
-        ExternalDataProvider externalDataProvider = externalDataService.getExternalDataProvider(authorityName);
-        if (externalDataProvider == null) {
-            throw new ResourceNotFoundException("ExternalDataProvider for: " + authorityName + " couldn't be found");
-        }
+        ExternalDataProvider externalDataProvider = externalDataService.getExternalDataProvider(authorityName)
+            .orElseThrow(() -> new ResourceNotFoundException("ExternalDataProvider for: " +
+                                                                authorityName + " couldn't be found"));
         return externalSourceRestConverter.fromModel(externalDataProvider);
 
     }

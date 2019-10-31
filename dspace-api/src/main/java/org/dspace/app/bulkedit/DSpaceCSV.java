@@ -23,26 +23,26 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
-import org.dspace.authority.factory.AuthorityServiceFactory;
-import org.dspace.authority.service.AuthorityValueService;
+import org.apache.commons.lang3.tuple.Pair;
 import org.dspace.content.Collection;
 import org.dspace.content.Item;
 import org.dspace.content.MetadataField;
 import org.dspace.content.MetadataSchema;
 import org.dspace.content.MetadataSchemaEnum;
 import org.dspace.content.MetadataValue;
-import org.dspace.content.authority.AuthorityValue;
 import org.dspace.content.authority.Choices;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.MetadataFieldService;
 import org.dspace.content.service.MetadataSchemaService;
 import org.dspace.core.Context;
+import org.dspace.external.provider.ExternalDataProvider;
 import org.dspace.services.factory.DSpaceServicesFactory;
 
 /**
@@ -110,8 +110,6 @@ public class DSpaceCSV implements Serializable {
         ContentServiceFactory.getInstance().getMetadataSchemaService();
     protected transient final MetadataFieldService metadataFieldService =
         ContentServiceFactory.getInstance().getMetadataFieldService();
-    protected transient final AuthorityValueService authorityValueService =
-        AuthorityServiceFactory.getInstance().getAuthorityValueService();
 
 
     /**
@@ -178,12 +176,17 @@ public class DSpaceCSV implements Serializable {
                     headings.add(element);
                 } else if (!"id".equals(element)) {
                     String authorityPrefix = "";
-                    AuthorityValue authorityValueType = authorityValueService.getAuthorityValueType(element);
-                    if (authorityValueType != null) {
-                        //TODO Kevin
-                        String authorityType = null;
-                        authorityPrefix = element.substring(0, authorityType.length() + 1);
-                        element = element.substring(authorityPrefix.length());
+                    if (BulkEditUtils.containsExternalProvider(element)) {
+                        Optional<Pair<String, ExternalDataProvider>> pair = BulkEditUtils
+                            .getExternalDataProviderFromMdHeader(element);
+                        if (pair.isPresent()) {
+                            element = pair.get().getLeft();
+                            authorityPrefix = pair.get().getRight().getSourceIdentifier();
+                        } else {
+                            throw new MetadataImportInvalidHeadingException("The authority type in the heading for: " +
+                                element + " is not valid", MetadataImportInvalidHeadingException.ELEMENT,
+                                                                            columnCounter);
+                        }
                     }
 
                     // Verify that the heading is valid in the metadata registry
@@ -225,7 +228,11 @@ public class DSpaceCSV implements Serializable {
                     }
 
                     // Store the heading
-                    headings.add(authorityPrefix + element);
+                    if (StringUtils.isBlank(authorityPrefix)) {
+                        headings.add(element);
+                    } else {
+                        headings.add(authorityPrefix + ":" + element);
+                    }
                 }
             }
 

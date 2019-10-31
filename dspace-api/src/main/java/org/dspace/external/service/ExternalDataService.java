@@ -30,7 +30,7 @@ public interface ExternalDataService {
      *                          method has to support
      * @return                  The ExternalDataProvider that supports the given source identifier
      */
-    public ExternalDataProvider getExternalDataProvider(String sourceIdentifier);
+    public Optional<ExternalDataProvider> getExternalDataProvider(String sourceIdentifier);
 
     /**
      * This method will return an Optional instance of ExternalDataObject for the given source and identifier

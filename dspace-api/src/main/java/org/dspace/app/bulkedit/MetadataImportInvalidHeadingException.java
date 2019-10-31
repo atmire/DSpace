@@ -63,6 +63,10 @@ public class MetadataImportInvalidHeadingException extends Exception {
         column = theColumn;
     }
 
+    public MetadataImportInvalidHeadingException(String message) {
+        this(message, 0, 0);
+    }
+
     /**
      * Get the type of the exception
      *
