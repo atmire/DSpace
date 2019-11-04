@@ -77,6 +77,10 @@ public class MetadataImportTest extends AbstractIntegrationTest {
         } catch (SQLException | IOException | AuthorizeException e) {
             log.error(e.getMessage(), e);
         }
+        File file = new File("testing");
+        if (file.exists()) {
+            file.delete();
+        }
         context.restoreAuthSystemState();
         super.destroy();
     }
