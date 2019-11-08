@@ -21,12 +21,14 @@ import org.apache.logging.log4j.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
+import org.dspace.app.rest.converter.BitstreamConverter;
 import org.dspace.app.rest.converter.CollectionConverter;
 import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.converter.MetadataConverter;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
+import org.dspace.app.rest.model.BitstreamRest;
 import org.dspace.app.rest.model.CollectionRest;
 import org.dspace.app.rest.model.CommunityRest;
 import org.dspace.app.rest.model.ItemRest;
@@ -71,6 +73,9 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
 
     @Autowired
     CollectionConverter converter;
+
+    @Autowired
+    BitstreamConverter bitstreamConverter;
 
     @Autowired
     MetadataConverter metadataConverter;
@@ -271,7 +276,7 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
 
     /**
      * Method to install a logo on a Collection which doesn't have a logo
-     * Called by request mappings in CollectionRestController
+     * Called by request mappings in CollectionLogoController
      * @param context
      * @param collection    The collection on which to install the logo
      * @param uploadfile    The new logo
@@ -280,7 +285,7 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
      * @throws AuthorizeException
      * @throws SQLException
      */
-    public Bitstream setLogo(Context context, Collection collection, MultipartFile uploadfile)
+    public BitstreamRest setLogo(Context context, Collection collection, MultipartFile uploadfile)
             throws IOException, AuthorizeException, SQLException {
 
         if (collection.getLogo() != null) {
@@ -290,7 +295,7 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
         Bitstream bitstream = cs.setLogo(context, collection, uploadfile.getInputStream());
         cs.update(context, collection);
         bitstreamService.update(context, bitstream);
-        return bitstream;
+        return bitstreamConverter.fromModel(context.reloadEntity(bitstream));
     }
 
     /**

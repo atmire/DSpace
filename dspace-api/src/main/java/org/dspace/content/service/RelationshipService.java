@@ -226,7 +226,7 @@ public interface RelationshipService extends DSpaceCRUDService<Relationship> {
      */
     Relationship create(Context c, Item leftItem, Item rightItem, RelationshipType relationshipType,
                         int leftPlace, int rightPlace)
-            throws AuthorizeException, SQLException;
+        throws AuthorizeException, SQLException;
 
     /**
      * This method is used to delete a Relationship whilst given the possibility to copy the Virtual Metadata created

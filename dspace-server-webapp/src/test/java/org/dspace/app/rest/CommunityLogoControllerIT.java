@@ -23,7 +23,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-public class CommunityRestControllerIT extends AbstractControllerIntegrationTest {
+public class CommunityLogoControllerIT extends AbstractControllerIntegrationTest {
 
     private ObjectMapper mapper;
     private String adminAuthToken;
