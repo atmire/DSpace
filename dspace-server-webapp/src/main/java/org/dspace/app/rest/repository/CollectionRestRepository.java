@@ -17,8 +17,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.logging.log4j.Logger;
-import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.BitstreamConverter;
@@ -65,9 +63,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Component(CollectionRest.CATEGORY + "." + CollectionRest.NAME)
 public class CollectionRestRepository extends DSpaceObjectRestRepository<Collection, CollectionRest> {
 
-    private static final Logger log = org.apache.logging.log4j.LogManager
-            .getLogger(CollectionRestRepository.class);
-
     @Autowired
     CommunityService communityService;
 
@@ -87,13 +82,13 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
     private CollectionService cs;
 
     @Autowired
+    private BitstreamService bitstreamService;
+
+    @Autowired
     private ItemConverter itemConverter;
 
     @Autowired
     private ItemService itemService;
-
-    @Autowired
-    private BitstreamService bitstreamService;
 
     public CollectionRestRepository(CollectionService dsoService,
                                     CollectionConverter dsoConverter) {
@@ -286,11 +281,11 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
      * @throws SQLException
      */
     public BitstreamRest setLogo(Context context, Collection collection, MultipartFile uploadfile)
-            throws IOException, AuthorizeException, SQLException {
+        throws IOException, AuthorizeException, SQLException {
 
         if (collection.getLogo() != null) {
             throw new UnprocessableEntityException(
-                    "The collection with the given uuid already has a logo: " + collection.getID());
+                "The collection with the given uuid already has a logo: " + collection.getID());
         }
         Bitstream bitstream = cs.setLogo(context, collection, uploadfile.getInputStream());
         cs.update(context, collection);
