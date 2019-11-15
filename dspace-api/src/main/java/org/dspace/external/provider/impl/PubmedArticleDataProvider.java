@@ -245,7 +245,10 @@ public class PubmedArticleDataProvider implements ExternalDataProvider {
         invocationBuilder = getRecordsTarget.request(MediaType.TEXT_PLAIN_TYPE);
         response = invocationBuilder.get();
 
-        List<OMElement> omElements = splitToRecords(response.readEntity(String.class));
+        if (response.getStatus() != 200) {
+            throw new RuntimeException("The server responded with an error code different than 200");
+        }
+        List<OMElement> omElements = parseMetadata(response.readEntity(String.class));
 
         for (OMElement record : omElements) {
             List<MockMetadataValue> metadataValues = constructMetadataValueListFromOMElement(record);
@@ -260,7 +263,7 @@ public class PubmedArticleDataProvider implements ExternalDataProvider {
      * @param recordsSrc    The source String representation to be parsed
      * @return              The list of parsed OMElement objects
      */
-    private List<OMElement> splitToRecords(String recordsSrc) {
+    private List<OMElement> parseMetadata(String recordsSrc) {
         OMXMLParserWrapper records = OMXMLBuilderFactory.createOMBuilder(new StringReader(recordsSrc));
         OMElement element = records.getDocumentElement();
         AXIOMXPath xpath = null;
@@ -269,7 +272,8 @@ public class PubmedArticleDataProvider implements ExternalDataProvider {
             List<OMElement> recordsList = xpath.selectNodes(element);
             return recordsList;
         } catch (JaxenException e) {
-            return null;
+            log.error(e.getMessage(), e);
+            throw new RuntimeException("There was an issue with parsing the response from Pubmed");
         }
     }
 
@@ -289,10 +293,14 @@ public class PubmedArticleDataProvider implements ExternalDataProvider {
 
         Response response = invocationBuilder.get();
 
-        List<OMElement> omElements = splitToRecords(response.readEntity(String.class));
+        if (response.getStatus() != 200) {
+            throw new RuntimeException("The server responded with an error code different than 200");
+        }
+
+        List<OMElement> omElements = parseMetadata(response.readEntity(String.class));
 
         if (omElements.size() == 0) {
-            return null;
+            throw new RuntimeException("Couldn't parse the given result from Pubmed for ID: " + id);
         }
 
         return constructMetadataValueListFromOMElement(omElements.get(0));
