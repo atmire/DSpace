@@ -46,4 +46,8 @@ public class DateUntilFilter extends DSpaceFilter {
                                         + ClientUtils.escapeQueryChars(format) + "]");
     }
 
+    public Date getDate() {
+        return date;
+    }
+
 }

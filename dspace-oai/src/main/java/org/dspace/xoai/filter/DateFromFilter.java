@@ -43,4 +43,8 @@ public class DateFromFilter extends DSpaceFilter {
                                         + " TO *]");
     }
 
+    public Date getDate() {
+        return date;
+    }
+
 }

@@ -1,13 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration indented="false" maxListIdentifiersSize="100" maxListRecordsSize="100"
-               maxListSetsSize="100" stylesheet="static/style.xsl"
-               xmlns="http://www.lyncode.com/XOAIConfiguration">
+<!--
+
+    The contents of this file are subject to the license and copyright
+    detailed in the LICENSE and NOTICE files at the root of the source
+    tree and available online at
+
+    http://www.dspace.org/license/
+
+	Developed by DSpace @ Lyncode <dspace@lyncode.com>
+ -->
+<Configuration xmlns="http://www.lyncode.com/XOAIConfiguration" indented="false" maxListIdentifiersSize="100" maxListRecordsSize="100" maxListSetsSize="100" stylesheet="static/style.xsl">
 
     <Contexts>
         <Context baseurl="request" name="Default Context">
             <!-- Restrict access to hidden items by default -->
-            <Filter ref="defaultFilter"/>
-
+            <Filter red="defaultFilter"/>
+            <Set isVirtual="true" ref="rural_roads"/>
+            <Set isVirtual="true" ref="africa_health"/>
+            <Set isVirtual="true" ref="china_research"/>
+            <Set isVirtual="true" ref="china_energy"/>
+            <Set isVirtual="true" ref="india_energy"/>
+            <Set isVirtual="true" ref="bangladesh_microfinance"/>
+            <Set isVirtual="true" ref="tanzania_agribusiness"/>
+            <Set isVirtual="true" ref="climate_change"/>
+            <Set isVirtual="true" ref="innovation_policy"/>
+            <Set isVirtual="true" ref="LACEA"/>
+            <Set isVirtual="true" ref="trade"/>
+            <Set isVirtual="true" ref="AgroKnow"/>
+            <Set isVirtual="true" ref="trade_isbn"/>
+            <Set isVirtual="true" ref="intelligo_health"/>
+            <Set isVirtual="true" ref="intelligo_poverty"/>
+            <Set isVirtual="true" ref="external_journal_articles_dec"/>
+            <Set isVirtual="true" ref="dec_external_journal_articles"/>
+            <Set isVirtual="true" ref="test_new_filter"/>
+            <Set isVirtual="true" ref="rural_roads_2"/>
+            <Set isVirtual="true" ref="cct"/>
+            <Set isVirtual="true" ref="land"/>
+            <Set isVirtual="true" ref="demo_austria"/>
+            <Set isVirtual="true" ref="philippines"/>
+            <Set isVirtual="true" ref="Nigeria"/>
+            <Set isVirtual="true" ref="AfricaRegion"/>
+            <Set isVirtual="true" ref="Carbon_Pricing_and_Emission_Trading"/>
+            <Set isVirtual="true" ref="Labor_Law_Brazil"/>
+            <Set isVirtual="true" ref="Africa_All"/>
+            <Set isVirtual="true" ref="porewopa"/>
+            <Set isVirtual="true" ref="Aptara"/>
+            <Set isVirtual="true" ref="Legal"/>
+            <Set isVirtual="true" ref="transport"/>
+            <Set isVirtual="true" ref="31989"/>
+            <Set isVirtual="true" ref="32367"/>
+            <Set isVirtual="true" ref="SURGP"/>
             <Format ref="oaidc"/>
             <Format ref="mets"/>
             <Format ref="xoai"/>
@@ -22,20 +64,22 @@
             <Format ref="uketd_dc"/>
             <!--<Format ref="junii2" />-->
             <Description>
-                This is the default context of the DSpace OAI-PMH data provider.
+                This is the default context of the DSpace data provider.
             </Description>
         </Context>
 
         <!--
             Driver Guidelines:
 
-            - https://guidelines.openaire.eu/en/latest/literature/use_of_oai_pmh.html
+            - http://www.driver-support.eu/documents/DRIVER_Guidelines_v2_Final_2008-11-13.pdf
+
+            Page 57 - 58
          -->
         <Context baseurl="driver" name="Driver Context">
             <!-- Date format, field prefixes, etc are ensured by the transformer -->
             <Transformer ref="driverTransformer"/>
             <!-- The driver filter -->
-            <Filter ref="driverFilter"/>
+            <Filter red="driverFilter"/>
             <!-- Just an alias, in fact it returns all items within the driver context -->
             <Set ref="driverSet"/>
             <!-- Metadata Formats -->
@@ -48,9 +92,9 @@
         </Context>
 
         <!--
-            OpenAIRE Guidelines 3.0:
+            OpenAIRE Guidelines 1.1:
 
-            - https://guidelines.openaire.eu/
+            - http://www.openaire.eu/en/component/attachments/download/79%E2%8C%A9=en
 
             There is a limitation over the embargoedEndDate parameter:
 
@@ -60,14 +104,14 @@
             <!-- Date format, field prefixes, etc are ensured by the transformer -->
             <Transformer ref="openaireTransformer"/>
             <!-- OpenAIRE filter -->
-            <Filter ref="openAireFilter"/>
+            <Filter red="openAireFilter"/>
             <!-- Just an alias, in fact it returns all items within the driver context -->
             <Set ref="openaireSet"/>
             <!-- Metadata Formats -->
             <Format ref="oaidc"/>
             <Format ref="mets"/>
             <Description>
-                This contexts complies with OpenAIRE Guidelines for Literature Repositories v3.0.
+                This context complies with OpenAIRE rules.
             </Description>
         </Context>
     </Contexts>
@@ -168,14 +212,6 @@
 
 
     <Filters>
-        <!-- DRIVER filter for records returned by OAI-PMH.
-             By default, return an Item record:
-               * If a Title & Author field both exist
-               * AND a valid DRIVER Document Type exists
-               * AND Item is either publicly accessible OR Withdrawn (for tombstones)
-               * AND Driver "open access" condition is specified
-             This filter is only used in the DRIVER context ([oai]/driver)
-        -->
         <Filter id="driverFilter">
             <Definition>
                 <And>
@@ -197,14 +233,7 @@
                             <RightCondition>
                                 <And>
                                     <LeftCondition>
-                                        <Or>
-                                            <LeftCondition>
-                                                <Custom ref="itemAccessCondition"/>
-                                            </LeftCondition>
-                                            <RightCondition>
-                                                <Custom ref="itemWithdrawnCondition"/>
-                                            </RightCondition>
-                                        </Or>
+                                        <Custom ref="bitstreamAccessCondition"/>
                                     </LeftCondition>
                                     <RightCondition>
                                         <Custom ref="driverAccessCondition"/>
@@ -216,97 +245,42 @@
                 </And>
             </Definition>
         </Filter>
-
-        <!-- OpenAIRE filter for records returned by OAI-PMH.
-             By default, return an Item record:
-               * If a Title & Author field both exist
-               * AND a valid DRIVER Document Type exists
-               * AND Item is either publicly accessible OR Withdrawn (for tombstones)
-               * AND the OpenAIRE "dc.relation" is specified
-             This filter is only used in the OpenAIRE context ([oai]/openaire).
-        -->
         <Filter id="openAireFilter">
             <Definition>
                 <And>
                     <LeftCondition>
                         <And>
                             <LeftCondition>
-                                <And>
-                                    <LeftCondition>
-                                        <Custom ref="titleExistsCondition"/>
-                                    </LeftCondition>
-                                    <RightCondition>
-                                        <Custom ref="authorExistsCondition"/>
-                                    </RightCondition>
-                                </And>
+                                <Custom ref="titleExistsCondition"/>
                             </LeftCondition>
                             <RightCondition>
-                                <Custom ref="driverDocumentTypeCondition"/>
+                                <Custom ref="authorExistsCondition"/>
                             </RightCondition>
                         </And>
                     </LeftCondition>
                     <RightCondition>
-                        <Or>
+                        <And>
                             <LeftCondition>
-                                <And>
-                                    <LeftCondition>
-                                        <Or>
-                                            <LeftCondition>
-                                                <Custom ref="itemAccessCondition"/>
-                                            </LeftCondition>
-                                            <RightCondition>
-                                                <Custom ref="itemWithdrawnCondition"/>
-                                            </RightCondition>
-                                        </Or>
-                                    </LeftCondition>
-                                    <RightCondition>
-                                        <Custom ref="driverAccessCondition"/>
-                                    </RightCondition>
-                                </And>
+                                <Custom ref="driverDocumentTypeCondition"/>
                             </LeftCondition>
                             <RightCondition>
                                 <Custom ref="openaireRelationCondition"/>
                             </RightCondition>
-                        </Or>
+                        </And>
                     </RightCondition>
                 </And>
             </Definition>
         </Filter>
-
-        <!-- UKETD Filter for records returned by OAI-PMH.
-             By default, return an Item record:
-                * If it is a "thesis"
-
-             This filter is appended to any existing filter
-             when "metadataPrefix=uketd_dc" is specified.
-        -->
         <Filter id="uketdDcFilter">
             <Definition>
                 <Custom ref="thesisDocumentTypeCondition"/>
             </Definition>
         </Filter>
-
-        <!-- Default filter for records returned by OAI-PMH. 
-             By default, return an Item record:
-                * If it is publicly accessible
-                * OR it has been withdrawn (in order to display a tombstone record).
-             This filter is used by the default context ([oai]/request).
-        -->
         <Filter id="defaultFilter">
             <Definition>
-                <Or>
-                    <LeftCondition>
-                        <Custom ref="itemAccessCondition"/>
-                    </LeftCondition>
-                    <RightCondition>
-                        <Custom ref="itemWithdrawnCondition"/>
-                    </RightCondition>
-                </Or>
+                <Custom ref="bitstreamAccessCondition"/>
             </Definition>
         </Filter>
-
-        <!-- This condition determines if an Item has a "dc.type" field
-             which contains "Thesis". -->
         <CustomCondition id="thesisDocumentTypeCondition">
             <Class>org.dspace.xoai.filter.DSpaceAtLeastOneMetadataFilter</Class>
             <Configuration>
@@ -315,25 +289,18 @@
                 <string name="value">Thesis</string>
             </Configuration>
         </CustomCondition>
-
-        <!-- This condition determines if an Item has a "dc.contributor.author" -->
         <CustomCondition id="authorExistsCondition">
             <Class>org.dspace.xoai.filter.DSpaceMetadataExistsFilter</Class>
             <Configuration>
                 <string name="field">dc.contributor.author</string>
             </Configuration>
         </CustomCondition>
-
-        <!-- This condition determines if an Item has a "dc.title" -->
         <CustomCondition id="titleExistsCondition">
             <Class>org.dspace.xoai.filter.DSpaceMetadataExistsFilter</Class>
             <Configuration>
                 <string name="field">dc.title</string>
             </Configuration>
         </CustomCondition>
-
-        <!-- This condition determines if an Item has a "dc.type" field
-             specifying one of the valid DRIVER document types. -->
         <CustomCondition id="driverDocumentTypeCondition">
             <Class>org.dspace.xoai.filter.DSpaceAtLeastOneMetadataFilter</Class>
             <Configuration>
@@ -355,47 +322,496 @@
                     <string>annotation</string>
                     <string>contributionToPeriodical</string>
                     <string>patent</string>
-                    <string>dataset</string>
                     <string>other</string>
                 </list>
             </Configuration>
         </CustomCondition>
-
-        <!-- This condition determines if an Item has a "dc.rights" field
-             specifying "open access", which is required for DRIVER
-             OR "openAccess", which is required by OpenAIRE. -->
         <CustomCondition id="driverAccessCondition">
             <Class>org.dspace.xoai.filter.DSpaceAtLeastOneMetadataFilter</Class>
             <Configuration>
                 <string name="field">dc.rights</string>
                 <string name="operator">contains</string>
-                <list name="values">
+                <list>
+                    <string>open access</string>
                     <string>openAccess</string>
                 </list>
             </Configuration>
         </CustomCondition>
-
-        <!-- This condition determines if an Item is publicly accessible. -->
-        <CustomCondition id="itemAccessCondition">
+        <CustomCondition id="bitstreamAccessCondition">
             <Class>org.dspace.xoai.filter.DSpaceAuthorizationFilter</Class>
         </CustomCondition>
-
-        <!-- This condition determines if an Item is withdrawn. This condition
-             ensures a basic "tombstone" record is shown for withdrawn items,
-             as recommended by OAI-PMH spec. This "tombstone" doesn't display
-             any metadata or content files.  -->
-        <CustomCondition id="itemWithdrawnCondition">
-            <Class>org.dspace.xoai.filter.DSpaceWithdrawnFilter</Class>
-        </CustomCondition>
-
-        <!-- This condition determines if an Item has a "dc.relation" field
-             which specifies the openAIRE project ID. -->
         <CustomCondition id="openaireRelationCondition">
             <Class>org.dspace.xoai.filter.DSpaceAtLeastOneMetadataFilter</Class>
             <Configuration>
                 <string name="field">dc.relation</string>
                 <string name="operator">starts_with</string>
-                <string name="value">info:eu-repo/grantAgreement/</string>
+                <string name="value">info:eu-repo/grantAgreement/EC/FP</string>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="rural_roads_filter">
+            <Definition>
+                <Custom ref="rural_roads_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="rural_roads_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">rural roads</string>
+                <list name="filterQueries"/>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="africa_health_filter">
+            <Definition>
+                <Custom ref="africa_health_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="africa_health_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query"> </string>
+                <list name="filterQueries">
+                    <string>topic_keyword:Health,\ Nutrition\ and\ Population</string>
+                    <string>region_keyword:Africa</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="china_research_filter">
+            <Definition>
+                <Custom ref="china_research_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="china_research_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query"> </string>
+                <list name="filterQueries">
+                    <string>doctype_keyword:Publications\ \&amp;\ Research</string>
+                    <string>country_keyword:China</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="china_energy_filter">
+            <Definition>
+                <Custom ref="china_energy_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="china_energy_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query"> </string>
+                <list name="filterQueries">
+                    <string>country_keyword:China</string>
+                    <string>topic_keyword:Energy</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="india_energy_filter">
+            <Definition>
+                <Custom ref="india_energy_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="india_energy_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query"> </string>
+                <list name="filterQueries">
+                    <string>country_keyword:India</string>
+                    <string>topic_keyword:Energy</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="bangladesh_microfinance_filter">
+            <Definition>
+                <Custom ref="bangladesh_microfinance_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="bangladesh_microfinance_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">microfinance</string>
+                <list name="filterQueries">
+                    <string>country_keyword:Bangladesh</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="tanzania_agribusiness_filter">
+            <Definition>
+                <Custom ref="tanzania_agribusiness_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="tanzania_agribusiness_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">agribusiness</string>
+                <list name="filterQueries">
+                    <string>country:(Tanzania)</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="climate_change_filter">
+            <Definition>
+                <Custom ref="climate_change_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="climate_change_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query"> </string>
+                <list name="filterQueries">
+                    <string>subject_keyword:CLIMATE\ CHANGE</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="innovation_policy_filter">
+            <Definition>
+                <Custom ref="innovation_policy_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="innovation_policy_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">innovation</string>
+                <list name="filterQueries"/>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="LACEA_filter">
+            <Definition>
+                <Custom ref="LACEA_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="LACEA_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">okr.region.administrative:"Latin America" OR okr.region.geographical:"Latin America" OR okr.region.administrative:"Caribbean" OR okr.region.geographical:"Caribbean"</string>
+                <list name="filterQueries"/>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="trade_filter">
+            <Definition>
+                <Custom ref="trade_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="trade_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query"> </string>
+                <list name="filterQueries">
+                    <string>title:(trade)</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="AgroKnow_filter">
+            <Definition>
+                <Custom ref="AgroKnow_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="AgroKnow_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">agriculture OR forestry OR husbandry OR aquatic OR fisheries OR nutrition</string>
+                <list name="filterQueries"/>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="trade_isbn_filter">
+            <Definition>
+                <Custom ref="trade_isbn_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="trade_isbn_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">9781464801433 OR 9781464800573 OR 9781464801051 OR 9780821399866  OR 9780821399156  OR 9780821389379 OR 9780821386439 OR 9780821385968 OR 9780821386316 OR 9780821398937  OR 9780821384992 OR 9780821387481 OR 9780821388167 OR 9780821384916  OR 9780821395103 OR 9780821387634 OR 9780821386385 OR 9780821384329 OR 9780821384107 OR 9780821382738 OR 9780821384084 OR 9780821394861 OR 9780821394717 OR 9780821384169 OR 9780821380741 OR 9780821386361 OR 9780821383537 OR 9780821384121 OR 9780821381847 OR 9780821375679 OR 9780821386262 OR 9780821395592 OR 9780821394991 OR 9780821397268</string>
+                <list name="filterQueries"/>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="intelligo_health_filter">
+            <Definition>
+                <Custom ref="intelligo_health_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="intelligo_health_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query"> </string>
+                <list name="filterQueries">
+                    <string>topic_keyword:Health,\ Nutrition\ and\ Population</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="intelligo_poverty_filter">
+            <Definition>
+                <Custom ref="intelligo_poverty_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="intelligo_poverty_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query"> </string>
+                <list name="filterQueries">
+                    <string>topic:(Poverty)</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="external_journal_articles_dec_filter">
+            <Definition>
+                <Custom ref="external_journal_articles_dec_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="external_journal_articles_dec_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="dec_external_journal_articles_filter">
+            <Definition>
+                <Custom ref="dec_external_journal_articles_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="dec_external_journal_articles_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <list name="filterQueries">
+                    <string>doctype:(Journal\ Article)</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="test_new_filter_filter">
+            <Definition>
+                <Custom ref="test_new_filter_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="test_new_filter_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">test new filter</string>
+                <list name="filterQueries"/>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="rural_roads_2_filter">
+            <Definition>
+                <Custom ref="rural_roads_2_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="rural_roads_2_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">rural roads</string>
+                <list name="filterQueries"/>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="cct_filter">
+            <Definition>
+                <Custom ref="cct_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="cct_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query"> </string>
+                <list name="filterQueries">
+                    <string>title:(Conditional\ Cash\ Transfer)</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="land_filter">
+            <Definition>
+                <Custom ref="land_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="land_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">land</string>
+                <list name="filterQueries"/>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="demo_austria_filter">
+            <Definition>
+                <Custom ref="demo_austria_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="demo_austria_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">austria</string>
+                <list name="filterQueries"/>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="philippines_filter">
+            <Definition>
+                <Custom ref="philippines_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="philippines_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">philippines</string>
+                <list name="filterQueries"/>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="Nigeria_filter">
+            <Definition>
+                <Custom ref="Nigeria_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="Nigeria_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query"> </string>
+                <list name="filterQueries">
+                    <string>country_keyword:Nigeria</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="AfricaRegion_filter">
+            <Definition>
+                <Custom ref="AfricaRegion_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="AfricaRegion_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query"> </string>
+                <list name="filterQueries">
+                    <string>region_keyword:Africa</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="Carbon_Pricing_and_Emission_Trading_filter">
+            <Definition>
+                <Custom ref="Carbon_Pricing_and_Emission_Trading_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="Carbon_Pricing_and_Emission_Trading_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">carbon emissions</string>
+                <list name="filterQueries">
+                    <string>subject:(markets)</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="Labor_Law_Brazil_filter">
+            <Definition>
+                <Custom ref="Labor_Law_Brazil_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="Labor_Law_Brazil_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">(Labor OR Labour) AND Brazil</string>
+                <list name="filterQueries"/>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="Africa_All_filter">
+            <Definition>
+                <Custom ref="Africa_All_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="Africa_All_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">Africa</string>
+                <list name="filterQueries">
+                    <string>region:(Africa)</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="porewopa_filter">
+            <Definition>
+                <Custom ref="porewopa_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="porewopa_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query"> </string>
+                <list name="filterQueries"/>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="Aptara_filter">
+            <Definition>
+                <Custom ref="Aptara_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="Aptara_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">Policy Research Working Papers</string>
+                <list name="filterQueries">
+                    <string>dateIssued:(2019)</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="Legal_filter">
+            <Definition>
+                <Custom ref="Legal_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="Legal_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query"> </string>
+                <list name="filterQueries">
+                    <string>subject:(law)</string>
+                    <string>subject:(legal)</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="transport_filter">
+            <Definition>
+                <Custom ref="transport_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="transport_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query"> </string>
+                <list name="filterQueries">
+                    <string>subject:(TRANSPORT)</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+
+        <Filter id="31989_filter">
+            <Definition>
+                <Custom ref="31989_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="31989_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">mexico policy notes</string>
+                <list name="filterQueries">
+                    <string>title_keyword:Mexico\ Policy\ Notes</string>
+                    <string>dateIssued_keyword:2019</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="32367_filter">
+            <Definition>
+                <Custom ref="32367_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="32367_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">ten-year</string>
+                <list name="filterQueries">
+                    <string>title_keyword:The\ World\ Bank\ as\ Lender\ and\ Borrower</string>
+                </list>
+            </Configuration>
+        </CustomCondition>
+        <Filter id="SURGP_filter">
+            <Definition>
+                <Custom ref="SURGP_condition"/>
+            </Definition>
+        </Filter>
+        <CustomCondition id="SURGP_condition">
+            <Class>org.dspace.xoai.filter.DSpaceDiscoveryFilter</Class>
+            <Configuration>
+                <string name="query">Geospatial OR "Poverty Map" OR "Satellite Imagery" OR "Site Selection" OR "National Spatial Data Infrastructure" OR "Spatial Analysis" OR "Remote Sensing" OR "Rural Accessibility" OR "Location Allocation" OR "Spatial Database Management" OR "Geographic Allocation" OR "Economic Geography" OR Cartography OR Arcgis OR "Geospatial Strategy" OR "Spatial Planning" OR "Land Use Planning" OR "Regional planning" OR "Geographic Information Systems" OR "Geodetic network" OR "Infrustructure Mapping" OR "Disaster Risk Modeling" OR "disaster risk mapping" OR "Political boundaries" OR "Administrative Boundaries" OR "human geography" OR "agglomeration" OR "normalized difference vegetation index" OR "moderate-resolution imaging spectroradiometer" OR landsat OR "land cadastre" OR "geodetic survey" OR "network analysis" OR "digital elevation model" OR geocoding OR topography OR "land dispute resolution" OR "land acquisition" OR "land expropriation" OR "land governance" OR "land administration" OR "land tenure" OR "tenure security" OR "property rights" OR "land registration" OR "land titling" OR "title registry" OR "deeds registry" OR demarcation OR "land value capture" OR "land valuation" OR "property valuation" OR "property taxation" OR "cadastral survey" OR "land market" OR "land reform" OR "land redistribution" OR "land register"</string>
+                <list name="filterQueries"/>
             </Configuration>
         </CustomCondition>
     </Filters>
@@ -407,9 +823,188 @@
             <!-- Just an alias -->
         </Set>
         <Set id="openaireSet">
-            <Spec>openaire</Spec>
-            <Name>OpenAIRE</Name>
+            <Spec>ec_fundedresources</Spec>
+            <Name>EC_fundedresources set</Name>
             <!-- Just an alias -->
+        </Set>
+        <Set id="ec_fundedresources">
+            <Pattern>ec_fundedresources</Pattern>
+            <Name>ec_fundedresources</Name>
+        </Set>
+        <Set id="rural_roads" isVirtual="true">
+            <Spec>rural_roads</Spec>
+            <Name>rural_roads</Name>
+            <Filter ref="rural_roads_filter"/>
+        </Set>
+        <Set id="africa_health" isVirtual="true">
+            <Spec>africa_health</Spec>
+            <Name>africa_health</Name>
+            <Filter ref="africa_health_filter"/>
+        </Set>
+        <Set id="china_research" isVirtual="true">
+            <Spec>china_research</Spec>
+            <Name>china_research</Name>
+            <Filter ref="china_research_filter"/>
+        </Set>
+        <Set id="china_energy" isVirtual="true">
+            <Spec>china_energy</Spec>
+            <Name>china_energy</Name>
+            <Filter ref="china_energy_filter"/>
+        </Set>
+        <Set id="india_energy" isVirtual="true">
+            <Spec>india_energy</Spec>
+            <Name>india_energy</Name>
+            <Filter ref="india_energy_filter"/>
+        </Set>
+        <Set id="bangladesh_microfinance" isVirtual="true">
+            <Spec>bangladesh_microfinance</Spec>
+            <Name>bangladesh_microfinance</Name>
+            <Filter ref="bangladesh_microfinance_filter"/>
+        </Set>
+        <Set id="tanzania_agribusiness" isVirtual="true">
+            <Spec>tanzania_agribusiness</Spec>
+            <Name>tanzania_agribusiness</Name>
+            <Filter ref="tanzania_agribusiness_filter"/>
+        </Set>
+        <Set id="climate_change" isVirtual="true">
+            <Spec>climate_change</Spec>
+            <Name>climate_change</Name>
+            <Filter ref="climate_change_filter"/>
+        </Set>
+        <Set id="innovation_policy" isVirtual="true">
+            <Spec>innovation_policy</Spec>
+            <Name>innovation_policy</Name>
+            <Filter ref="innovation_policy_filter"/>
+        </Set>
+        <Set id="LACEA" isVirtual="true">
+            <Spec>LACEA</Spec>
+            <Name>LACEA</Name>
+            <Filter ref="LACEA_filter"/>
+        </Set>
+        <Set id="trade" isVirtual="true">
+            <Spec>trade</Spec>
+            <Name>trade</Name>
+            <Filter ref="trade_filter"/>
+        </Set>
+        <Set id="AgroKnow" isVirtual="true">
+            <Spec>AgroKnow</Spec>
+            <Name>AgroKnow</Name>
+            <Filter ref="AgroKnow_filter"/>
+        </Set>
+        <Set id="trade_isbn" isVirtual="true">
+            <Spec>trade_isbn</Spec>
+            <Name>trade_isbn</Name>
+            <Filter ref="trade_isbn_filter"/>
+        </Set>
+        <Set id="intelligo_health" isVirtual="true">
+            <Spec>intelligo_health</Spec>
+            <Name>intelligo_health</Name>
+            <Filter ref="intelligo_health_filter"/>
+        </Set>
+        <Set id="intelligo_poverty" isVirtual="true">
+            <Spec>intelligo_poverty</Spec>
+            <Name>intelligo_poverty</Name>
+            <Filter ref="intelligo_poverty_filter"/>
+        </Set>
+        <Set id="external_journal_articles_dec" isVirtual="true">
+            <Spec>external_journal_articles_dec</Spec>
+            <Name>external_journal_articles_dec</Name>
+            <Filter ref="external_journal_articles_dec_filter"/>
+        </Set>
+        <Set id="dec_external_journal_articles" isVirtual="true">
+            <Spec>dec_external_journal_articles</Spec>
+            <Name>dec_external_journal_articles</Name>
+            <Filter ref="dec_external_journal_articles_filter"/>
+        </Set>
+        <Set id="test_new_filter" isVirtual="true">
+            <Spec>test_new_filter</Spec>
+            <Name>test new filter</Name>
+            <Filter ref="test_new_filter_filter"/>
+        </Set>
+        <Set id="rural_roads_2" isVirtual="true">
+            <Spec>rural_roads_2</Spec>
+            <Name>rural_roads_2</Name>
+            <Filter ref="rural_roads_2_filter"/>
+        </Set>
+        <Set id="cct" isVirtual="true">
+            <Spec>cct</Spec>
+            <Name>cct</Name>
+            <Filter ref="cct_filter"/>
+        </Set>
+        <Set id="land" isVirtual="true">
+            <Spec>land</Spec>
+            <Name>land</Name>
+            <Filter ref="land_filter"/>
+        </Set>
+        <Set id="demo_austria" isVirtual="true">
+            <Spec>demo_austria</Spec>
+            <Name>demo-austria</Name>
+            <Filter ref="demo_austria_filter"/>
+        </Set>
+        <Set id="philippines" isVirtual="true">
+            <Spec>philippines</Spec>
+            <Name>philippines</Name>
+            <Filter ref="philippines_filter"/>
+        </Set>
+        <Set id="Nigeria" isVirtual="true">
+            <Spec>Nigeria</Spec>
+            <Name>Nigeria</Name>
+            <Filter ref="Nigeria_filter"/>
+        </Set>
+        <Set id="AfricaRegion" isVirtual="true">
+            <Spec>AfricaRegion</Spec>
+            <Name>AfricaRegion</Name>
+            <Filter ref="AfricaRegion_filter"/>
+        </Set>
+        <Set id="Carbon_Pricing_and_Emission_Trading" isVirtual="true">
+            <Spec>Carbon_Pricing_and_Emission_Trading</Spec>
+            <Name>Carbon Pricing and Emission Trading</Name>
+            <Filter ref="Carbon_Pricing_and_Emission_Trading_filter"/>
+        </Set>
+        <Set id="Labor_Law_Brazil" isVirtual="true">
+            <Spec>Labor_Law_Brazil</Spec>
+            <Name>Labor_Law_Brazil</Name>
+            <Filter ref="Labor_Law_Brazil_filter"/>
+        </Set>
+        <Set id="Africa_All" isVirtual="true">
+            <Spec>Africa_All</Spec>
+            <Name>Africa_All</Name>
+            <Filter ref="Africa_All_filter"/>
+        </Set>
+        <Set id="porewopa" isVirtual="true">
+            <Spec>porewopa</Spec>
+            <Name>porewopa</Name>
+            <Filter ref="porewopa_filter"/>
+        </Set>
+        <Set id="Aptara" isVirtual="true">
+            <Spec>Aptara</Spec>
+            <Name>Aptara</Name>
+            <Filter ref="Aptara_filter"/>
+        </Set>
+        <Set id="Legal" isVirtual="true">
+            <Spec>Legal</Spec>
+            <Name>Legal</Name>
+            <Filter ref="Legal_filter"/>
+        </Set>
+        <Set id="transport" isVirtual="true">
+            <Spec>transport</Spec>
+            <Name>transport</Name>
+            <Filter ref="transport_filter"/>
+        </Set>
+        <Set id="31989" isVirtual="true">
+            <Spec>31989</Spec>
+            <Name>31989</Name>
+            <Filter ref="31989_filter"/>
+        </Set>
+        <Set id="32367" isVirtual="true">
+            <Spec>32367</Spec>
+            <Name>32367</Name>
+            <Filter ref="32367_filter"/>
+        </Set>
+        <Set id="SURGP" isVirtual="true">
+            <Spec>SURGP</Spec>
+            <Name>SURGP</Name>
+            <Filter ref="SURGP_filter"/>
         </Set>
     </Sets>
 </Configuration>
