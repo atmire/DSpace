@@ -315,7 +315,7 @@ public class DSpaceItemSolrRepository extends DSpaceItemRepository {
         }
 
         if(startDate!=null || endDate!=null) {
-            filterQuery.append("SolrIndexer.lastIndexed:([");
+            filterQuery.append("lastModified:([");
             if (startDate != null) {
                 filterQuery.append(ClientUtils.escapeQueryChars(formatDate.format(startDate)));
             } else {
