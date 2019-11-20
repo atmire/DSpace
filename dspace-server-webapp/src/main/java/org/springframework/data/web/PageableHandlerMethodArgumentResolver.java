@@ -36,7 +36,7 @@ import static org.springframework.data.web.SpringDataAnnotationUtils.getSpecific
  * Extracts paging information from web requests and thus allows injecting {@link Pageable} instances into controller
  * methods. Request properties to be parsed can be configured. Default configuration uses request parameters beginning
  * with {@link #DEFAULT_PAGE_PARAMETER}{@link #DEFAULT_QUALIFIER_DELIMITER}.
- * 
+ *
  * @since 1.6
  * @author Oliver Gierke
  * @author Nick Williams
@@ -70,7 +70,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 
 	/**
 	 * Constructs an instance of this resolver with the specified {@link SortHandlerMethodArgumentResolver}.
-	 * 
+	 *
 	 * @param sortResolver The sort resolver to use
 	 */
 	public PageableHandlerMethodArgumentResolver(SortHandlerMethodArgumentResolver sortResolver) {
@@ -86,7 +86,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 	 * in case no {@link Pageable} data can be found in the request. Note, that doing so will require you supply bot the
 	 * page <em>and</em> the size parameter with the requests as there will be no default for any of the parameters
 	 * available.
-	 * 
+	 *
 	 * @param fallbackPageable the {@link Pageable} to be used as general fallback.
 	 */
 	public void setFallbackPageable(Pageable fallbackPageable) {
@@ -95,7 +95,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 
 	/**
 	 * Returns whether the given {@link Pageable} is the fallback one.
-	 * 
+	 *
 	 * @param pageable can be {@literal null}.
 	 * @since 1.9
 	 * @return
@@ -107,7 +107,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 	/**
 	 * Configures the maximum page size to be accepted. This allows to put an upper boundary of the page size to prevent
 	 * potential attacks trying to issue an {@link OutOfMemoryError}. Defaults to {@link #DEFAULT_MAX_PAGE_SIZE}.
-	 * 
+	 *
 	 * @param maxPageSize the maxPageSize to set
 	 */
 	public void setMaxPageSize(int maxPageSize) {
@@ -117,7 +117,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 	/**
 	 * Retrieves the maximum page size to be accepted. This allows to put an upper boundary of the page size to prevent
 	 * potential attacks trying to issue an {@link OutOfMemoryError}. Defaults to {@link #DEFAULT_MAX_PAGE_SIZE}.
-	 * 
+	 *
 	 * @return the maximum page size allowed.
 	 */
 	protected int getMaxPageSize() {
@@ -126,7 +126,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 
 	/**
 	 * Configures the parameter name to be used to find the page number in the request. Defaults to {@code page}.
-	 * 
+	 *
 	 * @param pageParameterName the parameter name to be used, must not be {@literal null} or empty.
 	 */
 	public void setPageParameterName(String pageParameterName) {
@@ -137,7 +137,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 
 	/**
 	 * Retrieves the parameter name to be used to find the page number in the request. Defaults to {@code page}.
-	 * 
+	 *
 	 * @return the parameter name to be used, never {@literal null} or empty.
 	 */
 	protected String getPageParameterName() {
@@ -146,7 +146,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 
 	/**
 	 * Configures the parameter name to be used to find the page size in the request. Defaults to {@code size}.
-	 * 
+	 *
 	 * @param sizeParameterName the parameter name to be used, must not be {@literal null} or empty.
 	 */
 	public void setSizeParameterName(String sizeParameterName) {
@@ -157,7 +157,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 
 	/**
 	 * Retrieves the parameter name to be used to find the page size in the request. Defaults to {@code size}.
-	 * 
+	 *
 	 * @return the parameter name to be used, never {@literal null} or empty.
 	 */
 	protected String getSizeParameterName() {
@@ -167,7 +167,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 	/**
 	 * Configures a general prefix to be prepended to the page number and page size parameters. Useful to namespace the
 	 * property names used in case they are clashing with ones used by your application. By default, no prefix is used.
-	 * 
+	 *
 	 * @param prefix the prefix to be used or {@literal null} to reset to the default.
 	 */
 	public void setPrefix(String prefix) {
@@ -177,7 +177,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 	/**
 	 * The delimiter to be used between the qualifier and the actual page number and size properties. Defaults to
 	 * {@code _}. So a qualifier of {@code foo} will result in a page number parameter of {@code foo_page}.
-	 * 
+	 *
 	 * @param qualifierDelimiter the delimter to be used or {@literal null} to reset to the default.
 	 */
 	public void setQualifierDelimiter(String qualifierDelimiter) {
@@ -188,7 +188,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 	 * Configures whether to expose and assume 1-based page number indexes in the request parameters. Defaults to
 	 * {@literal false}, meaning a page number of 0 in the request equals the first page. If this is set to
 	 * {@literal true}, a page number of 1 in the request will be considered the first page.
-	 * 
+	 *
 	 * @param oneIndexedParameters the oneIndexedParameters to set
 	 */
 	public void setOneIndexedParameters(boolean oneIndexedParameters) {
@@ -199,14 +199,14 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 	 * Indicates whether to expose and assume 1-based page number indexes in the request parameters. Defaults to
 	 * {@literal false}, meaning a page number of 0 in the request equals the first page. If this is set to
 	 * {@literal true}, a page number of 1 in the request will be considered the first page.
-	 * 
+	 *
 	 * @return whether to assume 1-based page number indexes in the request parameters.
 	 */
 	protected boolean isOneIndexedParameters() {
 		return this.oneIndexedParameters;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.web.method.support.HandlerMethodArgumentResolver#supportsParameter(org.springframework.core.MethodParameter)
 	 */
@@ -242,7 +242,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 				: defaultOrFallback.getPageSize();
 
 		// Limit lower bound
-		pageSize = pageSize < 1 ? defaultOrFallback.getPageSize() : pageSize;
+		pageSize = pageSize < 0 ? defaultOrFallback.getPageSize() : pageSize;
 		// Limit upper bound
 		pageSize = pageSize > maxPageSize ? maxPageSize : pageSize;
 
@@ -257,7 +257,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 	/**
 	 * Returns the name of the request parameter to find the {@link Pageable} information in. Inspects the given
 	 * {@link MethodParameter} for {@link Qualifier} present and prefixes the given source parameter name with it.
-	 * 
+	 *
 	 * @param source the basic parameter name.
 	 * @param parameter the {@link MethodParameter} potentially qualified.
 	 * @return the name of the request parameter.
@@ -305,7 +305,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 	/**
 	 * Tries to parse the given {@link String} into an integer and applies the given boundaries. Will return 0 if the
 	 * {@link String} cannot be parsed.
-	 * 
+	 *
 	 * @param parameter the parameter value.
 	 * @param upper the upper bound to be applied.
 	 * @param shiftIndex whether to shift the index if {@link #oneIndexedParameters} is set to true.
