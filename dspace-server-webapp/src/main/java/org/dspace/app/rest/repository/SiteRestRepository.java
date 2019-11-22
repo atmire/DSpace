@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.repository;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,7 @@ import org.dspace.app.rest.converter.SiteConverter;
 import org.dspace.app.rest.model.SiteRest;
 import org.dspace.app.rest.model.hateoas.SiteResource;
 import org.dspace.app.rest.model.patch.Patch;
+import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Site;
 import org.dspace.content.service.SiteService;
@@ -76,7 +78,7 @@ public class SiteRestRepository extends DSpaceObjectRestRepository<Site, SiteRes
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
-                         Patch patch) throws AuthorizeException, SQLException {
+                         Patch patch) throws AuthorizeException, SQLException, IllegalAccessException, IOException, DCInputsReaderException {
         patchDSpaceObject(apiCategory, model, id, patch);
     }
 

@@ -10,8 +10,11 @@ package org.dspace.app.rest.submit.factory.impl;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.model.MetadataValueRest;
 import org.dspace.app.rest.model.patch.LateObjectEvaluator;
+import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
 import org.dspace.content.InProgressSubmission;
@@ -21,8 +24,8 @@ import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
-import org.dspace.services.model.Request;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 /**
@@ -30,7 +33,8 @@ import org.springframework.util.Assert;
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
-public class BitstreamMetadataValueReplacePatchOperation extends MetadataValueReplacePatchOperation<Bitstream> {
+@Component
+public class BitstreamMetadataValueReplacePatchOperation<R extends InProgressSubmission> extends PatchOperation<R> {
 
     @Autowired
     BitstreamService bitstreamService;
@@ -38,12 +42,29 @@ public class BitstreamMetadataValueReplacePatchOperation extends MetadataValueRe
     @Autowired
     ItemService itemService;
 
+    @Autowired
+    SubmitPatchUtils submitPatchUtils;
+
     @Override
-    void replace(Context context, Request currentRequest, InProgressSubmission source, String path, Object value)
-        throws Exception {
+    public R perform(Context context, R resource, Operation operation) throws SQLException, IllegalAccessException {
+        this.replace(context, resource, operation.getPath(), operation.getValue());
+        return resource;
+    }
+
+    /**
+     * TODO
+     * @param context
+     * @param source
+     * @param path
+     * @param value
+     * @throws SQLException
+     * @throws IllegalAccessException
+     */
+    private void replace(Context context, InProgressSubmission source, String path, Object value)
+            throws SQLException, IllegalAccessException {
         //"path": "/sections/upload/files/0/metadata/dc.title/2"
         //"abspath": "/files/0/metadata/dc.title/2"
-        String[] split = getAbsolutePath(path).split("/");
+        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
         Item item = source.getItem();
         List<Bundle> bundle = itemService.getBundles(item, Constants.CONTENT_BUNDLE_NAME);
         for (Bundle bb : bundle) {
@@ -57,27 +78,38 @@ public class BitstreamMetadataValueReplacePatchOperation extends MetadataValueRe
         }
     }
 
-    private void replace(Context context, Bitstream b, String[] split, Object value)
-        throws SQLException, IllegalArgumentException, IllegalAccessException {
+    /**
+     * TODO
+     * @param context
+     * @param bitstream
+     * @param split
+     * @param value
+     * @throws SQLException
+     * @throws IllegalAccessException
+     */
+    private void replace(Context context, Bitstream bitstream, String[] split, Object value)
+            throws SQLException, IllegalAccessException {
         String mdString = split[3];
-        List<MetadataValue> metadataByMetadataString = bitstreamService.getMetadataByMetadataString(b, mdString);
+        List<MetadataValue> metadataByMetadataString = bitstreamService.getMetadataByMetadataString(bitstream, mdString);
         Assert.notEmpty(metadataByMetadataString);
 
         int index = Integer.parseInt(split[4]);
         // if split size is one so we have a call to initialize or replace
         if (split.length == 5) {
-            MetadataValueRest obj = evaluateSingleObject((LateObjectEvaluator) value);
-            replaceValue(context, b, mdString, metadataByMetadataString, obj, index);
+            MetadataValueRest obj = (MetadataValueRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value, MetadataValueRest.class);
+            submitPatchUtils.replaceValue(context, bitstream, mdString, obj, index, bitstreamService);
         } else {
             //"path": "/sections/upload/files/0/metadata/dc.title/2/language"
             if (split.length > 5) {
-                setDeclaredField(context, b, value, mdString, split[5], metadataByMetadataString, index);
+                submitPatchUtils.setDeclaredField(context, bitstream, value, mdString, split[5], metadataByMetadataString, index, bitstreamService);
             }
         }
     }
 
     @Override
-    protected BitstreamService getDSpaceObjectService() {
-        return bitstreamService;
+    public boolean supports(Object objectToMatch, Operation operation) {
+        return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && operation.getPath().contains("files")
+                && operation.getOp().trim().equalsIgnoreCase(OPERATION_REPLACE));
     }
 }

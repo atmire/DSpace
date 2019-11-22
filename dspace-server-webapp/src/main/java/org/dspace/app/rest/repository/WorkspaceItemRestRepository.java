@@ -32,14 +32,12 @@ import org.dspace.app.rest.model.WorkspaceItemRest;
 import org.dspace.app.rest.model.hateoas.WorkspaceItemResource;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.model.patch.Patch;
+import org.dspace.app.rest.repository.patch.ResourcePatch;
 import org.dspace.app.rest.submit.AbstractRestProcessingStep;
 import org.dspace.app.rest.submit.SubmissionService;
 import org.dspace.app.rest.submit.UploadableStep;
 import org.dspace.app.rest.utils.Utils;
-import org.dspace.app.util.SubmissionConfig;
-import org.dspace.app.util.SubmissionConfigReader;
-import org.dspace.app.util.SubmissionConfigReaderException;
-import org.dspace.app.util.SubmissionStepConfig;
+import org.dspace.app.util.*;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
 import org.dspace.content.WorkspaceItem;
@@ -65,6 +63,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.data.rest.webmvc.json.patch.PatchException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -105,6 +104,9 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
 
     @Autowired
     CollectionService collectionService;
+
+    @Autowired
+    ResourcePatch resourcePatch;
 
     private SubmissionConfigReader submissionConfigReader;
 
@@ -269,64 +271,14 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
     //TODO @PreAuthorize("hasPermission(#id, 'WORKSPACEITEM', 'WRITE')")
     @Override
     public void patch(Context context, HttpServletRequest request, String apiCategory, String model, Integer id,
-                      Patch patch) throws SQLException, AuthorizeException {
-        List<Operation> operations = patch.getOperations();
-        WorkspaceItemRest wsi = findOne(id);
+                      Patch patch)
+            throws SQLException, AuthorizeException, IllegalAccessException, DCInputsReaderException, IOException {
         WorkspaceItem source = wis.find(context, id);
-        for (Operation op : operations) {
-            //the value in the position 0 is a null value
-            String[] path = op.getPath().substring(1).split("/", 3);
-            if (OPERATION_PATH_SECTIONS.equals(path[0])) {
-                String section = path[1];
-                evaluatePatch(context, request, source, wsi, section, op);
-            } else {
-                throw new DSpaceBadRequestException(
-                    "Patch path operation need to starts with '" + OPERATION_PATH_SECTIONS + "'");
-            }
+        if (source == null) {
+            throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");
         }
+        resourcePatch.patch(context, source, patch.getOperations());
         wis.update(context, source);
-    }
-
-    private void evaluatePatch(Context context, HttpServletRequest request, WorkspaceItem source, WorkspaceItemRest wsi,
-                               String section, Operation op) {
-        SubmissionConfig submissionConfig = submissionConfigReader
-            .getSubmissionConfigByName(wsi.getSubmissionDefinition().getName());
-        for (int stepNum = 0; stepNum < submissionConfig.getNumberOfSteps(); stepNum++) {
-
-            SubmissionStepConfig stepConfig = submissionConfig.getStep(stepNum);
-
-            if (section.equals(stepConfig.getId())) {
-                /*
-                 * First, load the step processing class (using the current
-                 * class loader)
-                 */
-                ClassLoader loader = this.getClass().getClassLoader();
-                Class stepClass;
-                try {
-                    stepClass = loader.loadClass(stepConfig.getProcessingClassName());
-
-                    Object stepInstance = stepClass.newInstance();
-
-                    if (stepInstance instanceof AbstractRestProcessingStep) {
-                        // load the JSPStep interface for this step
-                        AbstractRestProcessingStep stepProcessing =
-                            (AbstractRestProcessingStep) stepClass.newInstance();
-                        stepProcessing.doPreProcessing(context, source);
-                        stepProcessing.doPatchProcessing(context, getRequestService().getCurrentRequest(), source, op);
-                        stepProcessing.doPostProcessing(context, source);
-                    } else {
-                        throw new DSpaceBadRequestException(
-                            "The submission step class specified by '" + stepConfig.getProcessingClassName() +
-                            "' does not extend the class org.dspace.submit.AbstractProcessingStep!" +
-                            " Therefore it cannot be used by the Configurable Submission as the <processing-class>!");
-                    }
-
-                } catch (Exception e) {
-                    log.error(e.getMessage(), e);
-                    throw new PatchException("Error processing the patch request", e);
-                }
-            }
-        }
     }
 
     //TODO @PreAuthorize("hasPermission(#id, 'WORKSPACEITEM', 'DELETE')")

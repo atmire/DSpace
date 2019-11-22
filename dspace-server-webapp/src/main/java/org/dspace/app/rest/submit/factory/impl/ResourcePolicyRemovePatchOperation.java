@@ -7,9 +7,12 @@
  */
 package org.dspace.app.rest.submit.factory.impl;
 
+import java.sql.SQLException;
 import java.util.List;
 
-import org.dspace.app.rest.model.ResourcePolicyRest;
+import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.ResourcePolicy;
 import org.dspace.authorize.service.ResourcePolicyService;
 import org.dspace.content.Bitstream;
@@ -20,15 +23,16 @@ import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
-import org.dspace.services.model.Request;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * Submission "remove" operation to remove resource policies from the Bitstream
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
-public class ResourcePolicyRemovePatchOperation extends RemovePatchOperation<ResourcePolicyRest> {
+@Component
+public class ResourcePolicyRemovePatchOperation<R extends InProgressSubmission> extends PatchOperation<R> {
 
     @Autowired
     ItemService itemService;
@@ -39,12 +43,27 @@ public class ResourcePolicyRemovePatchOperation extends RemovePatchOperation<Res
     @Autowired
     BitstreamService bitstreamService;
 
+    @Autowired
+    SubmitPatchUtils submitPatchUtils;
+
     @Override
-    void remove(Context context, Request currentRequest, InProgressSubmission source, String path, Object value)
-        throws Exception {
+    public R perform(Context context, R resource, Operation operation) throws SQLException, AuthorizeException {
+        this.remove(context, resource, operation.getPath());
+        return resource;
+    }
+
+    /**
+     * TODO
+     * @param context
+     * @param source
+     * @param path
+     * @throws SQLException
+     * @throws AuthorizeException
+     */
+    private void remove(Context context, InProgressSubmission source, String path) throws SQLException, AuthorizeException {
         // "path" : "/sections/upload/files/0/accessConditions/0"
         // "abspath" : "/files/0/accessConditions/0"
-        String[] split = getAbsolutePath(path).split("/");
+        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
         String bitstreamIdx = split[1];
 
         Item item = source.getItem();
@@ -83,12 +102,9 @@ public class ResourcePolicyRemovePatchOperation extends RemovePatchOperation<Res
     }
 
     @Override
-    protected Class<ResourcePolicyRest[]> getArrayClassForEvaluation() {
-        return ResourcePolicyRest[].class;
-    }
-
-    @Override
-    protected Class<ResourcePolicyRest> getClassForEvaluation() {
-        return ResourcePolicyRest.class;
+    public boolean supports(Object objectToMatch, Operation operation) {
+        // TODO add unique path check
+        return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && operation.getOp().trim().equalsIgnoreCase(OPERATION_REMOVE));
     }
 }

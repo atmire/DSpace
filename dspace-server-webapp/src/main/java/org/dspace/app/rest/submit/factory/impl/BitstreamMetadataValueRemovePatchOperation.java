@@ -7,8 +7,11 @@
  */
 package org.dspace.app.rest.submit.factory.impl;
 
+import java.sql.SQLException;
 import java.util.List;
 
+import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
 import org.dspace.content.InProgressSubmission;
@@ -17,17 +20,34 @@ import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
-import org.dspace.services.model.Request;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * Submission "remove" PATCH operation at metadata Bitstream level.
  *
- * See {@link ItemMetadataValueRemovePatchOperation}
+ * Path used to remove a <b>specific metadata value</b> using index:
+ * "/sections/<:name-of-the-form>/<:metadata>/<:idx-zero-based>"
+ *
+ * Example: <code>
+ * curl -X PATCH http://${dspace.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
+ * Content-Type: application/json" -d '[{ "op": "remove", "path": "
+ * /sections/traditionalpageone/dc.title/1"}]'
+ * </code>
+ *
+ * Path used to remove <b>all the metadata values</b> for a specific metadata key:
+ * "/sections/<:name-of-the-form>/<:metadata>"
+ *
+ * Example: <code>
+ * curl -X PATCH http://${dspace.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
+ * Content-Type: application/json" -d '[{ "op": "remove", "path": "
+ * /sections/traditionalpageone/dc.title"}]'
+ * </code>
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
-public class BitstreamMetadataValueRemovePatchOperation extends MetadataValueRemovePatchOperation<Bitstream> {
+@Component
+public class BitstreamMetadataValueRemovePatchOperation<R extends InProgressSubmission> extends PatchOperation<R> {
 
     @Autowired
     BitstreamService bitstreamService;
@@ -35,25 +55,38 @@ public class BitstreamMetadataValueRemovePatchOperation extends MetadataValueRem
     @Autowired
     ItemService itemService;
 
+    @Autowired
+    SubmitPatchUtils submitPatchUtils;
+
     @Override
-    void remove(Context context, Request currentRequest, InProgressSubmission source, String path, Object value)
-        throws Exception {
+    public R perform(Context context, R resource, Operation operation) throws SQLException {
+        this.remove(context, resource, operation.getPath());
+        return resource;
+    }
+
+    /**
+     * TODO
+     * @param context
+     * @param source
+     * @param path
+     * @throws Exception
+     */
+    private void remove(Context context, InProgressSubmission source, String path) throws SQLException {
         //"path": "/sections/upload/files/0/metadata/dc.title/2"
         //"abspath": "/files/0/metadata/dc.title/2"
-        String[] split = getAbsolutePath(path).split("/");
+        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
         Item item = source.getItem();
         List<Bundle> bundle = itemService.getBundles(item, Constants.CONTENT_BUNDLE_NAME);
-        ;
         for (Bundle bb : bundle) {
             int idx = 0;
             for (Bitstream b : bb.getBitstreams()) {
                 if (idx == Integer.parseInt(split[1])) {
 
                     if (split.length == 4) {
-                        deleteValue(context, b, split[3], -1);
+                        submitPatchUtils.deleteValue(context, b, split[3], -1, bitstreamService);
                     } else {
                         Integer toDelete = Integer.parseInt(split[4]);
-                        deleteValue(context, b, split[3], toDelete);
+                        submitPatchUtils.deleteValue(context, b, split[3], toDelete, bitstreamService);
                     }
                 }
                 idx++;
@@ -63,8 +96,9 @@ public class BitstreamMetadataValueRemovePatchOperation extends MetadataValueRem
     }
 
     @Override
-    protected BitstreamService getDSpaceObjectService() {
-        return bitstreamService;
+    public boolean supports(Object objectToMatch, Operation operation) {
+        return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && operation.getPath().contains("files")
+                && operation.getOp().trim().equalsIgnoreCase(OPERATION_REMOVE));
     }
-
 }

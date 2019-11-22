@@ -8,14 +8,22 @@
 package org.dspace.app.rest.submit.factory.impl;
 
 import org.apache.commons.lang3.BooleanUtils;
+import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.content.Item;
 import org.dspace.content.LicenseUtils;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
-import org.dspace.services.model.Request;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.sql.SQLException;
+
+import static org.dspace.app.rest.submit.AbstractRestProcessingStep.LICENSE_STEP_OPERATION_ENTRY;
 
 /**
  * Submission "replace" patch operation
@@ -24,15 +32,31 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
-public class LicenseReplacePatchOperation extends ReplacePatchOperation<String> {
+@Component
+public class LicenseReplacePatchOperation<R extends InProgressSubmission> extends PatchOperation<R> {
 
     @Autowired
     ItemService itemService;
 
-    @Override
-    void replace(Context context, Request currentRequest, InProgressSubmission source, String path, Object value)
-        throws Exception {
+    @Autowired
+    SubmitPatchUtils submitPatchUtils;
 
+    @Override
+    public R perform(Context context, R resource, Operation operation) throws SQLException, IOException, AuthorizeException {
+        this.replace(context, resource, operation.getValue());
+        return resource;
+    }
+
+    /**
+     * TODO
+     * @param context
+     * @param source
+     * @param value
+     * @throws SQLException
+     * @throws IOException
+     * @throws AuthorizeException
+     */
+    private void replace(Context context, InProgressSubmission source, Object value) throws SQLException, IOException, AuthorizeException {
         Boolean grant = null;
         // we are friendly with the client and accept also a string representation for the boolean
         if (value instanceof String) {
@@ -62,13 +86,9 @@ public class LicenseReplacePatchOperation extends ReplacePatchOperation<String> 
     }
 
     @Override
-    protected Class<String[]> getArrayClassForEvaluation() {
-        return String[].class;
+    public boolean supports(Object objectToMatch, Operation operation) {
+        return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && operation.getPath().trim().endsWith(LICENSE_STEP_OPERATION_ENTRY)
+                && operation.getOp().trim().equalsIgnoreCase(OPERATION_REPLACE));
     }
-
-    @Override
-    protected Class<String> getClassForEvaluation() {
-        return String.class;
-    }
-
 }

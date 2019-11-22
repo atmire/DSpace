@@ -7,12 +7,15 @@
  */
 package org.dspace.app.rest.submit.factory.impl;
 
+import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
 import org.dspace.content.InProgressSubmission;
-import org.dspace.content.Item;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
-import org.dspace.services.model.Request;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.sql.SQLException;
 
 /**
  * Submission "remove" PATCH operation.
@@ -37,26 +40,44 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
-public class ItemMetadataValueRemovePatchOperation extends MetadataValueRemovePatchOperation<Item> {
+@Component
+public class ItemMetadataValueRemovePatchOperation<R extends InProgressSubmission> extends PatchOperation<R> {
 
     @Autowired
     ItemService itemService;
 
+    @Autowired
+    SubmitPatchUtils submitPatchUtils;
+
     @Override
-    void remove(Context context, Request currentRequest, InProgressSubmission source, String path, Object value)
-        throws Exception {
-        String[] split = getAbsolutePath(path).split("/");
+    public R perform(Context context, R resource, Operation operation) throws SQLException {
+        this.remove(context, resource, operation.getPath());
+        return resource;
+    }
+
+    /**
+     * TODO
+     * @param context
+     * @param source
+     * @param path
+     * @throws SQLException
+     */
+    private void remove(Context context, InProgressSubmission source, String path) throws SQLException {
+        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
         if (split.length == 1) {
-            deleteValue(context, source.getItem(), split[0], -1);
+            submitPatchUtils.deleteValue(context, source.getItem(), split[0], -1, itemService);
         } else {
             Integer toDelete = Integer.parseInt(split[1]);
-            deleteValue(context, source.getItem(), split[0], toDelete);
+            submitPatchUtils.deleteValue(context, source.getItem(), split[0], toDelete, itemService);
         }
     }
 
     @Override
-    protected ItemService getDSpaceObjectService() {
-        return itemService;
+    public boolean supports(Object objectToMatch, Operation operation) {
+        // TODO not hardcoded form name
+        return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && (operation.getPath().contains("traditionalpageone")
+                || operation.getPath().contains("traditionalpagetwo"))
+                && operation.getOp().trim().equalsIgnoreCase(OPERATION_REMOVE));
     }
-
 }

@@ -7,17 +7,19 @@
  */
 package org.dspace.app.rest.submit.factory.impl;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import org.dspace.app.rest.model.MetadataValueRest;
 import org.dspace.app.rest.model.patch.LateObjectEvaluator;
+import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
 import org.dspace.content.InProgressSubmission;
-import org.dspace.content.Item;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
-import org.dspace.services.model.Request;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 /**
@@ -44,15 +46,32 @@ import org.springframework.util.Assert;
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
-public class ItemMetadataValueReplacePatchOperation extends MetadataValueReplacePatchOperation<Item> {
+@Component
+public class ItemMetadataValueReplacePatchOperation<R extends InProgressSubmission> extends PatchOperation<R> {
 
     @Autowired
     ItemService itemService;
 
+    @Autowired
+    SubmitPatchUtils submitPatchUtils;
+
     @Override
-    void replace(Context context, Request currentRequest, InProgressSubmission source, String path, Object value)
-        throws Exception {
-        String[] split = getAbsolutePath(path).split("/");
+    public R perform(Context context, R resource, Operation operation) throws SQLException, IllegalAccessException {
+        this.replace(context, resource, operation.getPath(), operation.getValue());
+        return resource;
+    }
+
+    /**
+     * TODO
+     * @param context
+     * @param source
+     * @param path
+     * @param value
+     * @throws SQLException
+     * @throws IllegalAccessException
+     */
+    private void replace(Context context, InProgressSubmission source, String path, Object value) throws SQLException, IllegalAccessException {
+        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
 
         List<MetadataValue> metadataByMetadataString = itemService.getMetadataByMetadataString(source.getItem(),
                                                                                                split[0]);
@@ -61,17 +80,21 @@ public class ItemMetadataValueReplacePatchOperation extends MetadataValueReplace
         int index = Integer.parseInt(split[1]);
         // if split size is one so we have a call to initialize or replace
         if (split.length == 2) {
-            MetadataValueRest obj = evaluateSingleObject((LateObjectEvaluator) value);
-            replaceValue(context, source.getItem(), split[0], metadataByMetadataString, obj, index);
+            MetadataValueRest obj = (MetadataValueRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value, MetadataValueRest.class);
+            submitPatchUtils.replaceValue(context, source.getItem(), split[0], obj, index, itemService);
         } else {
             if (split.length == 3) {
-                setDeclaredField(context, source.getItem(), value, split[0], split[2], metadataByMetadataString, index);
+                submitPatchUtils.setDeclaredField(context, source.getItem(), value, split[0], split[2], metadataByMetadataString, index, itemService);
             }
         }
     }
 
     @Override
-    protected ItemService getDSpaceObjectService() {
-        return itemService;
+    public boolean supports(Object objectToMatch, Operation operation) {
+        // TODO not hardcoded form name
+        return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && (operation.getPath().contains("traditionalpageone")
+                || operation.getPath().contains("traditionalpagetwo"))
+                && operation.getOp().trim().equalsIgnoreCase(OPERATION_REPLACE));
     }
 }

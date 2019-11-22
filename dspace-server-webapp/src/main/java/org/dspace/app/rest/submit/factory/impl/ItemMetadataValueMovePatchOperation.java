@@ -7,12 +7,16 @@
  */
 package org.dspace.app.rest.submit.factory.impl;
 
+import org.dspace.app.rest.model.patch.MoveOperation;
+import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
 import org.dspace.content.InProgressSubmission;
-import org.dspace.content.Item;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
-import org.dspace.services.model.Request;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.sql.SQLException;
 
 /**
  * Submission "move" PATCH operation.
@@ -29,17 +33,33 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
-public class ItemMetadataValueMovePatchOperation extends MetadataValueMovePatchOperation<Item> {
+@Component
+public class ItemMetadataValueMovePatchOperation<R extends InProgressSubmission> extends PatchOperation<R> {
 
     @Autowired
     ItemService itemService;
 
-    @Override
-    void move(Context context, Request currentRequest, InProgressSubmission source, String path, String from)
-        throws Exception {
-        String[] splitTo = getAbsolutePath(path).split("/");
+    @Autowired
+    SubmitPatchUtils submitPatchUtils;
 
-        String evalFrom = getAbsolutePath(from);
+    @Override
+    public R perform(Context context, R resource, Operation operation) throws SQLException {
+        this.move(context, resource, operation.getPath(), ((MoveOperation) operation).getFrom());
+        return resource;
+    }
+
+    /**
+     * TODO
+     * @param context
+     * @param source
+     * @param path
+     * @param from
+     * @throws SQLException
+     */
+    private void move(Context context, InProgressSubmission source, String path, String from) throws SQLException {
+        String[] splitTo = submitPatchUtils.getAbsolutePath(path).split("/");
+
+        String evalFrom = submitPatchUtils.getAbsolutePath(from);
         String[] splitFrom = evalFrom.split("/");
         String metadata = splitFrom[0];
 
@@ -50,15 +70,18 @@ public class ItemMetadataValueMovePatchOperation extends MetadataValueMovePatchO
 
                 int intTo = Integer.parseInt(stringTo);
                 int intFrom = Integer.parseInt(stringFrom);
-                moveValue(context, source.getItem(), metadata, intFrom, intTo);
+                submitPatchUtils.moveValue(context, source.getItem(), metadata, intFrom, intTo, itemService);
             }
         }
 
     }
 
     @Override
-    protected ItemService getDSpaceObjectService() {
-        return itemService;
+    public boolean supports(Object objectToMatch, Operation operation) {
+        // TODO not hardcoded form name
+        return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && (operation.getPath().contains("traditionalpageone")
+                || operation.getPath().contains("traditionalpagetwo"))
+                && operation.getOp().trim().equalsIgnoreCase(OPERATION_MOVE));
     }
-
 }

@@ -12,6 +12,8 @@ import java.util.List;
 
 import org.dspace.app.rest.model.MetadataValueRest;
 import org.dspace.app.rest.model.patch.LateObjectEvaluator;
+import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.content.Item;
 import org.dspace.content.MetadataValue;
@@ -19,6 +21,7 @@ import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
 import org.dspace.services.model.Request;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 /**
@@ -64,24 +67,41 @@ import org.springframework.util.Assert;
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
-public class ItemMetadataValueAddPatchOperation extends MetadataValueAddPatchOperation<Item> {
+@Component
+public class ItemMetadataValueAddPatchOperation<R extends InProgressSubmission> extends PatchOperation<R> {
 
     @Autowired
     ItemService itemService;
 
+    @Autowired
+    SubmitPatchUtils submitPatchUtils;
+
     @Override
-    void add(Context context, Request currentRequest, InProgressSubmission source, String path, Object value)
+    public R perform(Context context, R resource, Operation operation) throws SQLException {
+        this.add(context, resource, operation.getPath(), operation.getValue());
+        return resource;
+    }
+
+    /**
+     * TODO
+     * @param context
+     * @param source
+     * @param path
+     * @param value
+     * @throws SQLException
+     */
+    private void add(Context context, InProgressSubmission source, String path, Object value)
         throws SQLException {
-        String[] split = getAbsolutePath(path).split("/");
+        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
         // if split size is one so we have a call to initialize or replace
         if (split.length == 1) {
-            List<MetadataValueRest> list = evaluateArrayObject((LateObjectEvaluator) value);
-            replaceValue(context, source.getItem(), split[0], list);
+            List<MetadataValueRest> list = submitPatchUtils.evaluateArrayObject((LateObjectEvaluator) value, MetadataValueRest[].class);
+            submitPatchUtils.replaceValue(context, source.getItem(), split[0], list, itemService);
 
         } else {
             // call with "-" or "index-based" we should receive only single
             // object member
-            MetadataValueRest object = evaluateSingleObject((LateObjectEvaluator) value);
+            MetadataValueRest object = (MetadataValueRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value, MetadataValueRest.class);
             // check if is not empty
             List<MetadataValue> metadataByMetadataString = itemService.getMetadataByMetadataString(source.getItem(),
                                                                                                    split[0]);
@@ -90,7 +110,7 @@ public class ItemMetadataValueAddPatchOperation extends MetadataValueAddPatchOpe
                 String controlChar = split[1];
                 switch (controlChar) {
                     case "-":
-                        addValue(context, source.getItem(), split[0], object, -1);
+                        submitPatchUtils.addValue(context, source.getItem(), split[0], object, -1, itemService);
                         break;
                     default:
                         // index based
@@ -100,7 +120,7 @@ public class ItemMetadataValueAddPatchOperation extends MetadataValueAddPatchOpe
                             throw new IllegalArgumentException(
                                 "The specified index MUST NOT be greater than the number of elements in the array");
                         }
-                        addValue(context, source.getItem(), split[0], object, index);
+                        submitPatchUtils.addValue(context, source.getItem(), split[0], object, index, itemService);
 
                         break;
                 }
@@ -110,7 +130,11 @@ public class ItemMetadataValueAddPatchOperation extends MetadataValueAddPatchOpe
     }
 
     @Override
-    protected ItemService getDSpaceObjectService() {
-        return itemService;
+    public boolean supports(Object objectToMatch, Operation operation) {
+        // TODO not hardcoded form name
+        return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && (operation.getPath().contains("traditionalpageone")
+                    || operation.getPath().contains("traditionalpagetwo"))
+                && operation.getOp().trim().equalsIgnoreCase(OPERATION_ADD));
     }
 }

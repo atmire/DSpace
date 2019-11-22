@@ -11,16 +11,22 @@ import org.atteo.evo.inflector.English;
 import org.dspace.app.rest.model.BitstreamRest;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.model.step.DataLicense;
+import org.dspace.app.rest.repository.patch.ResourcePatch;
 import org.dspace.app.rest.submit.AbstractRestProcessingStep;
 import org.dspace.app.rest.submit.SubmissionService;
-import org.dspace.app.rest.submit.factory.PatchOperationFactory;
-import org.dspace.app.rest.submit.factory.impl.PatchOperation;
+import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.app.util.SubmissionStepConfig;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Bitstream;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.services.model.Request;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Arrays;
 
 /**
  * License step for DSpace Spring Rest. Expose the license information about the in progress submission.
@@ -30,6 +36,9 @@ import org.dspace.services.model.Request;
 public class LicenseStep extends org.dspace.submit.step.LicenseStep implements AbstractRestProcessingStep {
 
     private static final String DCTERMS_RIGHTSDATE = "dcterms.accessRights";
+
+    @Autowired
+    ResourcePatch resourcePatch;
 
     @Override
     public DataLicense getData(SubmissionService submissionService, InProgressSubmission obj,
@@ -51,14 +60,7 @@ public class LicenseStep extends org.dspace.submit.step.LicenseStep implements A
 
     @Override
     public void doPatchProcessing(Context context, Request currentRequest, InProgressSubmission source, Operation op)
-        throws Exception {
-
-        if (op.getPath().endsWith(LICENSE_STEP_OPERATION_ENTRY)) {
-
-            PatchOperation<String> patchOperation = new PatchOperationFactory()
-                .instanceOf(LICENSE_STEP_OPERATION_ENTRY, op.getOp());
-            patchOperation.perform(context, currentRequest, source, op);
-
-        }
+            throws SQLException, DCInputsReaderException, IOException, AuthorizeException, IllegalAccessException {
+        resourcePatch.patch(context, source, Arrays.asList(op));
     }
 }

@@ -739,6 +739,10 @@ public class RestResourceController implements InitializingBean {
             DSpaceBadRequestException | ResourceNotFoundException e) {
             log.error(e.getMessage(), e);
             throw e;
+        } catch (IllegalAccessException e) {
+            log.error(e.getMessage(), e);
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
         }
         DSpaceResource result = repository.wrapResource(modelObject);
         linkService.addLinks(result);

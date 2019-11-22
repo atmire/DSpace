@@ -7,12 +7,16 @@
  */
 package org.dspace.app.rest.submit.factory.impl;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.dspace.app.rest.model.ResourcePolicyRest;
 import org.dspace.app.rest.model.patch.LateObjectEvaluator;
+import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.ResourcePolicy;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.Bitstream;
@@ -27,15 +31,16 @@ import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
 import org.dspace.eperson.service.EPersonService;
 import org.dspace.eperson.service.GroupService;
-import org.dspace.services.model.Request;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * Submission "add" operation to add resource policies in the Bitstream
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
-public class ResourcePolicyAddPatchOperation extends AddPatchOperation<ResourcePolicyRest> {
+@Component
+public class ResourcePolicyAddPatchOperation<R extends InProgressSubmission> extends PatchOperation<R> {
 
     @Autowired
     BitstreamService bitstreamService;
@@ -51,15 +56,30 @@ public class ResourcePolicyAddPatchOperation extends AddPatchOperation<ResourceP
     @Autowired
     EPersonService epersonService;
 
+    @Autowired
+    SubmitPatchUtils submitPatchUtils;
+
     @Override
-    void add(Context context, Request currentRequest, InProgressSubmission source, String path, Object value)
-        throws Exception {
+    public R perform(Context context, R resource, Operation operation) throws SQLException, AuthorizeException {
+        this.add(context, resource, operation.getPath(), operation.getValue());
+        return resource;
+    }
+
+    /**
+     * TODO
+     * @param context
+     * @param source
+     * @param path
+     * @param value
+     * @throws SQLException
+     * @throws AuthorizeException
+     */
+    private void add(Context context, InProgressSubmission source, String path, Object value) throws SQLException, AuthorizeException {
         //"path": "/sections/upload/files/0/accessConditions"
-        String[] split = getAbsolutePath(path).split("/");
+        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
         Item item = source.getItem();
 
         List<Bundle> bundle = itemService.getBundles(item, Constants.CONTENT_BUNDLE_NAME);
-        ;
         for (Bundle bb : bundle) {
             int idx = 0;
             for (Bitstream b : bb.getBitstreams()) {
@@ -68,10 +88,10 @@ public class ResourcePolicyAddPatchOperation extends AddPatchOperation<ResourceP
                     List<ResourcePolicyRest> newAccessConditions = new ArrayList<ResourcePolicyRest>();
                     if (split.length == 3) {
                         authorizeService.removePoliciesActionFilter(context, b, Constants.READ);
-                        newAccessConditions = evaluateArrayObject((LateObjectEvaluator) value);
+                        newAccessConditions = submitPatchUtils.evaluateArrayObject((LateObjectEvaluator) value, ResourcePolicyRest[].class);
                     } else if (split.length == 4) {
                         // contains "-", call index-based accessConditions it make not sense
-                        newAccessConditions.add(evaluateSingleObject((LateObjectEvaluator) value));
+                        newAccessConditions.add((ResourcePolicyRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value, ResourcePolicyRest.class));
                     }
 
                     for (ResourcePolicyRest newAccessCondition : newAccessConditions) {
@@ -102,12 +122,9 @@ public class ResourcePolicyAddPatchOperation extends AddPatchOperation<ResourceP
     }
 
     @Override
-    protected Class<ResourcePolicyRest[]> getArrayClassForEvaluation() {
-        return ResourcePolicyRest[].class;
-    }
-
-    @Override
-    protected Class<ResourcePolicyRest> getClassForEvaluation() {
-        return ResourcePolicyRest.class;
+    public boolean supports(Object objectToMatch, Operation operation) {
+        // TODO add unique path check
+        return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && operation.getOp().trim().equalsIgnoreCase(OPERATION_ADD));
     }
 }

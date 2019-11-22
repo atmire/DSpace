@@ -7,27 +7,31 @@
  */
 package org.dspace.app.rest.submit.step;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.model.MetadataValueRest;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.model.step.DataDescribe;
+import org.dspace.app.rest.repository.patch.ResourcePatch;
 import org.dspace.app.rest.submit.AbstractRestProcessingStep;
 import org.dspace.app.rest.submit.SubmissionService;
-import org.dspace.app.rest.submit.factory.PatchOperationFactory;
-import org.dspace.app.rest.submit.factory.impl.PatchOperation;
 import org.dspace.app.util.DCInput;
 import org.dspace.app.util.DCInputSet;
 import org.dspace.app.util.DCInputsReader;
 import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.app.util.SubmissionStepConfig;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.content.MetadataValue;
 import org.dspace.core.Context;
 import org.dspace.core.Utils;
 import org.dspace.services.model.Request;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Describe step for DSpace Spring Rest. Expose and allow patching of the in progress submission metadata. It is
@@ -41,6 +45,9 @@ public class DescribeStep extends org.dspace.submit.step.DescribeStep implements
     private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(DescribeStep.class);
 
     private DCInputsReader inputReader;
+
+    @Autowired
+    ResourcePatch resourcePatch;
 
     public DescribeStep() throws DCInputsReaderException {
         inputReader = new DCInputsReader();
@@ -111,12 +118,8 @@ public class DescribeStep extends org.dspace.submit.step.DescribeStep implements
 
     @Override
     public void doPatchProcessing(Context context, Request currentRequest, InProgressSubmission source, Operation op)
-        throws Exception {
-
-        PatchOperation<MetadataValueRest> patchOperation = new PatchOperationFactory()
-            .instanceOf(DESCRIBE_STEP_METADATA_OPERATION_ENTRY, op.getOp());
-        patchOperation.perform(context, currentRequest, source, op);
-
+            throws SQLException, DCInputsReaderException, IOException, AuthorizeException, IllegalAccessException {
+        resourcePatch.patch(context, source, Arrays.asList(op));
     }
 
 }

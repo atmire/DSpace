@@ -7,12 +7,20 @@
  */
 package org.dspace.app.rest.submit.factory.impl;
 
+import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.content.Item;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
-import org.dspace.services.model.Request;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.sql.SQLException;
+
+import static org.dspace.app.rest.submit.AbstractRestProcessingStep.LICENSE_STEP_OPERATION_ENTRY;
 
 /**
  * Submission License "remove" patch operation.
@@ -26,25 +34,38 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
-public class LicenseRemovePatchOperation extends RemovePatchOperation<String> {
+@Component
+public class LicenseRemovePatchOperation<R extends InProgressSubmission> extends PatchOperation<R> {
 
     @Autowired
     ItemService itemService;
 
+    @Autowired
+    SubmitPatchUtils submitPatchUtils;
+
     @Override
-    void remove(Context context, Request currentRequest, InProgressSubmission source, String path, Object value)
-        throws Exception {
+    public R perform(Context context, R resource, Operation operation) throws SQLException, IOException, AuthorizeException {
+        this.remove(context, resource);
+        return resource;
+    }
+
+    /**
+     * TODO
+     * @param context
+     * @param source
+     * @throws SQLException
+     * @throws IOException
+     * @throws AuthorizeException
+     */
+    private void remove(Context context, InProgressSubmission source) throws SQLException, IOException, AuthorizeException {
         Item item = source.getItem();
         itemService.removeDSpaceLicense(context, item);
     }
 
     @Override
-    protected Class<String[]> getArrayClassForEvaluation() {
-        return String[].class;
-    }
-
-    @Override
-    protected Class<String> getClassForEvaluation() {
-        return String.class;
+    public boolean supports(Object objectToMatch, Operation operation) {
+        return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && operation.getPath().endsWith(LICENSE_STEP_OPERATION_ENTRY)
+                && operation.getOp().trim().equalsIgnoreCase(OPERATION_REMOVE));
     }
 }
