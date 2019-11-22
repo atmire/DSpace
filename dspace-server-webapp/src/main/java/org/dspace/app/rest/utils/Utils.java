@@ -192,7 +192,7 @@ public class Utils {
 
     /**
      * Create a temporary file from a multipart file upload
-     * 
+     *
      * @param multipartFile
      *            the multipartFile representing the uploaded file. Please note that it is a complex object including
      *            additional information other than the binary like the orginal file name and the mimetype
@@ -205,11 +205,11 @@ public class Utils {
      * @throws FileNotFoundException
      */
     public static File getFile(MultipartFile multipartFile, String prefixTempName, String suffixTempName)
-            throws IOException, FileNotFoundException {
+        throws IOException, FileNotFoundException {
         // TODO after change item-submission into
         String tempDir = (ConfigurationManager.getProperty("upload.temp.dir") != null)
-                ? ConfigurationManager.getProperty("upload.temp.dir")
-                : System.getProperty("java.io.tmpdir");
+            ? ConfigurationManager.getProperty("upload.temp.dir")
+            : System.getProperty("java.io.tmpdir");
         File uploadDir = new File(tempDir);
         if (!uploadDir.exists()) {
             if (!uploadDir.mkdir()) {
@@ -226,7 +226,7 @@ public class Utils {
     /**
      * Return the filename part from a multipartFile upload that could eventually contains the fullpath on the client
      * filesystem
-     * 
+     *
      * @param multipartFile
      *            the file uploaded
      * @return the filename part of the file on the client filesystem
@@ -234,7 +234,7 @@ public class Utils {
      * @throws FileNotFoundException
      */
     public static String getFileName(MultipartFile multipartFile)
-            throws IOException, FileNotFoundException {
+        throws IOException, FileNotFoundException {
         String originalFilename = multipartFile.getOriginalFilename();
         if (originalFilename != null) {
             // split by \ or / as we don't know the client OS (Win, Linux)
@@ -249,9 +249,9 @@ public class Utils {
      * This method will construct a List of BitstreamFormats out of a request.
      * It will call the {@link Utils#getStringListFromRequest(HttpServletRequest)} method to retrieve a list of links
      * out of the request.
-     * The method will iterate over this list of links and parse the links to retrieve the UUID from it.
-     * It will then look through all the DSpaceObjectServices to try and match this UUID to a DSpaceObject.
-     * If one is found, this DSpaceObject is added to the List of DSpaceObjects that we will return.
+     * The method will iterate over this list of links and parse the links to retrieve the integer ID from it.
+     * It will then retrieve the BitstreamFormat corresponding to this ID.
+     * If one is found, this BitstreamFormat is added to the List of BitstreamFormats that we will return.
      *
      * @param request   The request out of which we'll create the List of BitstreamFormats
      * @param context   The relevant DSpace context
@@ -260,22 +260,22 @@ public class Utils {
     public List<BitstreamFormat> constructBitstreamFormatList(HttpServletRequest request, Context context) {
 
         return getStringListFromRequest(request).stream()
-                .map(link -> {
-                    if (link.endsWith("/")) {
-                        link = link.substring(0, link.length() - 1);
-                    }
-                    return link.substring(link.lastIndexOf('/') + 1);
-                })
-                .map(id -> {
-                    try {
-                        return bitstreamFormatService.find(context, parseInt(id));
-                    } catch (SQLException e) {
-                        log.error(e.getMessage(), e);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(toList());
+                                                .map(link -> {
+                                                    if (link.endsWith("/")) {
+                                                        link = link.substring(0, link.length() - 1);
+                                                    }
+                                                    return link.substring(link.lastIndexOf('/') + 1);
+                                                })
+                                                .map(id -> {
+                                                    try {
+                                                        return bitstreamFormatService.find(context, parseInt(id));
+                                                    } catch (SQLException | NumberFormatException e) {
+                                                        log.error("Could not find bitstream format for id: " + id, e);
+                                                        return null;
+                                                    }
+                                                })
+                                                .filter(Objects::nonNull)
+                                                .collect(toList());
     }
 
     /**

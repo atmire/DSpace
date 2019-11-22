@@ -25,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.converter.BitstreamConverter;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.model.BitstreamRest;
+import org.dspace.app.rest.model.hateoas.BitstreamResource;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.MultipartFileSender;
 import org.dspace.app.rest.utils.Utils;
@@ -68,7 +69,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class BitstreamRestController {
 
     private static final Logger log = org.apache.logging.log4j.LogManager
-            .getLogger(BitstreamRestController.class);
+        .getLogger(BitstreamRestController.class);
 
     //Most file systems are configured to use block sizes of 4096 or 8192 and our buffer should be a multiple of that.
     private static final int BUFFER_SIZE = 4096 * 10;
@@ -118,15 +119,15 @@ public class BitstreamRestController {
         // Pipe the bits
         try (InputStream is = bitstreamTuple.getLeft()) {
             MultipartFileSender sender = MultipartFileSender
-                    .fromInputStream(is)
-                    .withBufferSize(BUFFER_SIZE)
-                    .withFileName(name)
-                    .withLength(bitstreamTuple.getRight())
-                    .withChecksum(bit.getChecksum())
-                    .withMimetype(mimetype)
-                    .withLastModified(lastModified)
-                    .with(request)
-                    .with(response);
+                .fromInputStream(is)
+                .withBufferSize(BUFFER_SIZE)
+                .withFileName(name)
+                .withLength(bitstreamTuple.getRight())
+                .withChecksum(bit.getChecksum())
+                .withMimetype(mimetype)
+                .withLastModified(lastModified)
+                .with(request)
+                .with(response);
 
             //Determine if we need to send the file as a download or if the browser can open it inline
             long dispositionThreshold = configurationService.getLongProperty("webui.content_disposition_threshold");
@@ -138,11 +139,11 @@ public class BitstreamRestController {
                 //We only log a download request when serving a request without Range header. This is because
                 //a browser always sends a regular request first to check for Range support.
                 eventService.fireEvent(
-                        new UsageEvent(
-                                UsageEvent.Action.VIEW,
-                                request,
-                                context,
-                                bit));
+                    new UsageEvent(
+                        UsageEvent.Action.VIEW,
+                        request,
+                        context,
+                        bit));
             }
 
             //We have all the data we need, close the connection to the database so that it doesn't stay open during
@@ -207,14 +208,14 @@ public class BitstreamRestController {
      *
      * @param uuid The UUID of the bitstream for which to update the bitstream format
      * @param request  The request object
-     * @return The wrapped resource containing the new bitstream format or null when the bitstream format wasn't changed
+     * @return The wrapped resource containing the bitstream which in turn contains the bitstream format
      * @throws SQLException       If something goes wrong in the database
      */
     @RequestMapping(method = PUT, consumes = {"text/uri-list"}, value = "format")
     @PreAuthorize("hasPermission(#uuid, 'BITSTREAM','WRITE')")
     @PostAuthorize("returnObject != null")
-    public BitstreamRest updateBitstreamFormat(@PathVariable UUID uuid,
-                                                     HttpServletRequest request) throws SQLException {
+    public BitstreamResource updateBitstreamFormat(@PathVariable UUID uuid,
+                                                   HttpServletRequest request) throws SQLException {
 
         Context context = obtainContext(request);
 
@@ -225,22 +226,19 @@ public class BitstreamRestController {
         }
 
         BitstreamFormat bitstreamFormat = bitstreamFormats.stream().findFirst()
-                .orElseThrow(() -> new DSpaceBadRequestException("The bitstream format doesn't exist " +
-                        "or the data cannot be resolved to a bitstream format."));
+                                                          .orElseThrow(() -> new DSpaceBadRequestException("No valid bitstream format was provided"));
 
         Bitstream bitstream = bitstreamService.find(context, uuid);
 
         if (bitstream == null) {
             throw new ResourceNotFoundException("Bitstream with id: " + uuid + " not found");
         }
-        if (bitstreamFormat.equals(bitstream.getFormat(context))) {
-            throw new DSpaceBadRequestException("The provided bitstream format is already the bitstream format");
-        }
 
         bitstream.setFormat(context, bitstreamFormat);
 
         context.commit();
 
-        return converter.fromModel(context.reloadEntity(bitstream));
+        return (BitstreamResource) utils.getResourceRepository(BitstreamRest.CATEGORY, BitstreamRest.NAME)
+                                        .wrapResource(converter.fromModel(context.reloadEntity(bitstream)));
     }
 }
