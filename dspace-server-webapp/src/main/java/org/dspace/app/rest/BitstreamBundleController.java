@@ -27,12 +27,10 @@ import org.dspace.app.rest.repository.BitstreamRestRepository;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
-import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.service.BitstreamService;
-import org.dspace.content.service.BundleService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ControllerUtils;
@@ -47,34 +45,34 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+
 /**
- * This controller is responsible for managing the bundles of a bitstream
+ * Controller to access bitstreams and the bundles they're in
+ * Endpoint: /api/core/bitstreams/{uuid}
+ * This controller can:
+ *     - request bundle a bitstream is in (GET /api/core/bitstreams/{uuid}/bundle)
+ *     - move bitstreams between bundles (POST /api/core/bitstreams/{uuid}/bundle (text/uri-list) -d link-to-new-bundle)
+ *
  */
 @RestController
 @RequestMapping("/api/" + BitstreamRest.CATEGORY + "/" + BitstreamRest.PLURAL_NAME
         + REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID + "/" + BundleRest.NAME)
-public class BitstreamController {
+public class BitstreamBundleController {
 
     @Autowired
-    BitstreamService bitstreamService;
-
-    @Autowired
-    BundleService bundleService;
-
-    @Autowired
-    AuthorizeService authorizeService;
-
-    @Autowired
-    BitstreamRestRepository bitstreamRestRepository;
+    private BitstreamService bitstreamService;
 
     @Autowired
     DSpaceObjectConverter<Bundle, BundleRest> dsoConverter;
 
     @Autowired
+    HalLinkService halLinkService;
+
+    @Autowired
     Utils utils;
 
     @Autowired
-    HalLinkService halLinkService;
+    BitstreamRestRepository bitstreamRestRepository;
 
     /**
      * This method gets the bundle of the bitstream that corresponds to to the provided bitstream uuid. When multiple
@@ -137,7 +135,7 @@ public class BitstreamController {
 
         if (dsoList.size() != 1 || dsoList.get(0).getType() != BUNDLE) {
             throw new UnprocessableEntityException("No bundle has been specified " +
-                                                           "or the data cannot be resolved to a bundle.");
+                    "or the data cannot be resolved to a bundle.");
         }
 
         Bitstream bitstream = bitstreamService.find(context, uuid);
@@ -158,5 +156,4 @@ public class BitstreamController {
         return bundleResource;
 
     }
-
 }

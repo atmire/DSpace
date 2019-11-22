@@ -7,6 +7,8 @@
  */
 package org.dspace.app.rest;
 
+import static org.dspace.app.rest.utils.RegexUtils.REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -17,6 +19,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.converter.BitstreamConverter;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
+import org.dspace.app.rest.model.BitstreamRest;
+import org.dspace.app.rest.model.BundleRest;
 import org.dspace.app.rest.model.hateoas.BitstreamResource;
 import org.dspace.app.rest.repository.BundleRestRepository;
 import org.dspace.app.rest.utils.ContextUtil;
@@ -39,9 +43,25 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * Controller to upload bitstreams to a certain bundle, indicated by a uuid in the request
+ * Usage: POST /api/core/bundles/{uuid}/bitstreams (with file and properties of file in request)
+ * Example:
+ * <pre>
+ * {@code
+ * curl https://<dspace.server.url>/api/core/bundles/d3599177-0408-403b-9f8d-d300edd79edb/bitstreams
+ *  -XPOST -H 'Content-Type: multipart/form-data' \
+ *  -H 'Authorization: Bearer eyJhbGciOiJI...' \
+ *  -F "file=@Downloads/test.html" \
+ *  -F 'properties={ "name": "test.html", "metadata": { "dc.description": [ { "value": "example file", "language": null,
+ *          "authority": null, "confidence": -1, "place": 0 } ]}, "bundleName": "ORIGINAL" };type=application/json'
+ * }
+ * </pre>
+ */
 @RestController
-@RequestMapping("/api/core/bundles/{uuid}")
-public class BundleController {
+@RequestMapping("/api/" + BundleRest.CATEGORY + "/" + BundleRest.PLURAL_NAME + "/"
+        + REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID + "/" + BitstreamRest.PLURAL_NAME)
+public class BundleUploadBitstreamController {
 
     private static final Logger log = LogManager.getLogger();
 
@@ -64,7 +84,7 @@ public class BundleController {
      *
      * @return The created BitstreamResource
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/bitstreams", headers = "content-type=multipart/form-data")
+    @RequestMapping(method = RequestMethod.POST, headers = "content-type=multipart/form-data")
     @PreAuthorize("hasPermission(#uuid, 'BUNDLE', 'ADD') && hasPermission(#uuid, 'BUNDLE', 'WRITE')")
     public ResponseEntity<ResourceSupport> uploadBitstream(HttpServletRequest request, @PathVariable UUID uuid,
                                            @RequestParam("file") MultipartFile uploadfile,

@@ -23,6 +23,7 @@
     <bean id="checkerServiceFactory" class="org.dspace.checker.factory.CheckerServiceFactoryImpl"/>
     <bean id="contentServiceFactory" class="org.dspace.content.factory.ContentServiceFactoryImpl"/>
     <bean id="pagesServiceFactory" class="org.dspace.pages.factory.PagesServiceFactoryImpl"/>
+    <bean id="processServiceFactory" class="org.dspace.content.factory.impl.ProcessServiceFactoryImpl"/>
     <bean id="coreServiceFactory" class="org.dspace.core.factory.CoreServiceFactoryImpl"/>
     <bean id="curateServiceFactory" class="org.dspace.curate.factory.CurateServiceFactoryImpl"/>
 
