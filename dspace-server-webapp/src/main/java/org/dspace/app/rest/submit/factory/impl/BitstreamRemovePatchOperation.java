@@ -43,7 +43,8 @@ public class BitstreamRemovePatchOperation<R extends InProgressSubmission> exten
     SubmitPatchUtils submitPatchUtils;
 
     @Override
-    public R perform(Context context, R resource, Operation operation) throws SQLException, IOException, AuthorizeException {
+    public R perform(Context context, R resource, Operation operation)
+            throws SQLException, IOException, AuthorizeException {
         this.remove(context, resource, operation.getPath());
         return resource;
     }

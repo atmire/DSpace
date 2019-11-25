@@ -106,7 +106,8 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
     @Override
     @PreAuthorize("hasPermission(#id, 'BITSTREAM', 'WRITE')")
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
-                         Patch patch) throws AuthorizeException, SQLException, IllegalAccessException, IOException, DCInputsReaderException {
+                         Patch patch)
+            throws AuthorizeException, SQLException, IllegalAccessException, IOException, DCInputsReaderException {
         patchDSpaceObject(apiCategory, model, id, patch);
     }
 

@@ -7,6 +7,10 @@
  */
 package org.dspace.app.rest.submit.step;
 
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Arrays;
+
 import org.atteo.evo.inflector.English;
 import org.dspace.app.rest.model.BitstreamRest;
 import org.dspace.app.rest.model.patch.Operation;
@@ -23,11 +27,6 @@ import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.services.model.Request;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Arrays;
-
 /**
  * License step for DSpace Spring Rest. Expose the license information about the in progress submission.
  *

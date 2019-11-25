@@ -166,7 +166,8 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
     @Override
     @PreAuthorize("hasPermission(#id, 'COLLECTION', 'WRITE')")
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
-                         Patch patch) throws AuthorizeException, SQLException, IllegalAccessException, IOException, DCInputsReaderException {
+                         Patch patch)
+            throws AuthorizeException, SQLException, IllegalAccessException, IOException, DCInputsReaderException {
         patchDSpaceObject(apiCategory, model, id, patch);
     }
 

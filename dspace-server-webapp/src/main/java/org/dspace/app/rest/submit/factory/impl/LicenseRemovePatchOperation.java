@@ -7,6 +7,11 @@
  */
 package org.dspace.app.rest.submit.factory.impl;
 
+import static org.dspace.app.rest.submit.AbstractRestProcessingStep.LICENSE_STEP_OPERATION_ENTRY;
+
+import java.io.IOException;
+import java.sql.SQLException;
+
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
 import org.dspace.authorize.AuthorizeException;
@@ -16,11 +21,6 @@ import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.sql.SQLException;
-
-import static org.dspace.app.rest.submit.AbstractRestProcessingStep.LICENSE_STEP_OPERATION_ENTRY;
 
 /**
  * Submission License "remove" patch operation.
@@ -44,7 +44,8 @@ public class LicenseRemovePatchOperation<R extends InProgressSubmission> extends
     SubmitPatchUtils submitPatchUtils;
 
     @Override
-    public R perform(Context context, R resource, Operation operation) throws SQLException, IOException, AuthorizeException {
+    public R perform(Context context, R resource, Operation operation)
+            throws SQLException, IOException, AuthorizeException {
         this.remove(context, resource);
         return resource;
     }
@@ -57,7 +58,8 @@ public class LicenseRemovePatchOperation<R extends InProgressSubmission> extends
      * @throws IOException
      * @throws AuthorizeException
      */
-    private void remove(Context context, InProgressSubmission source) throws SQLException, IOException, AuthorizeException {
+    private void remove(Context context, InProgressSubmission source)
+            throws SQLException, IOException, AuthorizeException {
         Item item = source.getItem();
         itemService.removeDSpaceLicense(context, item);
     }

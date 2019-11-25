@@ -413,7 +413,8 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
      * @throws DSpaceBadRequestException
      */
     public T patch(HttpServletRequest request, String apiCategory, String model, ID id, Patch patch)
-            throws HttpRequestMethodNotSupportedException, UnprocessableEntityException, DSpaceBadRequestException, IOException, IllegalAccessException {
+            throws HttpRequestMethodNotSupportedException, UnprocessableEntityException, DSpaceBadRequestException,
+            IOException, IllegalAccessException {
         Context context = obtainContext();
 
         try {
@@ -452,7 +453,8 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
      */
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, ID id,
                          Patch patch)
-        throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException, DCInputsReaderException, IllegalAccessException, IOException {
+        throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException, DCInputsReaderException,
+            IllegalAccessException, IOException {
         throw new RepositoryMethodNotImplementedException(apiCategory, model);
     }
 

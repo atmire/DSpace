@@ -14,7 +14,11 @@ import org.dspace.app.rest.model.MetadataValueRest;
 import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
-import org.dspace.content.*;
+import org.dspace.content.Bitstream;
+import org.dspace.content.Bundle;
+import org.dspace.content.InProgressSubmission;
+import org.dspace.content.Item;
+import org.dspace.content.MetadataValue;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Constants;
@@ -105,13 +109,16 @@ public class BitstreamMetadataValueAddPatchOperation<R extends InProgressSubmiss
                 if (idx == Integer.parseInt(split[1])) {
 
                     if (split.length == 4) {
-                        List<MetadataValueRest> list = submitPatchUtils.evaluateArrayObject((LateObjectEvaluator) value, MetadataValueRest[].class);
+                        List<MetadataValueRest> list = submitPatchUtils.evaluateArrayObject((LateObjectEvaluator) value,
+                                MetadataValueRest[].class);
                         submitPatchUtils.replaceValue(context, b, split[3], list, bitstreamService);
 
                     } else {
                         // call with "-" or "index-based" we should receive only single
                         // object member
-                        MetadataValueRest object = (MetadataValueRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value, MetadataValueRest.class);
+                        MetadataValueRest object =
+                                (MetadataValueRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value,
+                                        MetadataValueRest.class);
                         // check if is not empty
                         List<MetadataValue> metadataByMetadataString =
                                 bitstreamService.getMetadataByMetadataString(b, split[3]);
@@ -128,8 +135,8 @@ public class BitstreamMetadataValueAddPatchOperation<R extends InProgressSubmiss
                                     int index = Integer.parseInt(controlChar);
                                     if (index > metadataByMetadataString.size()) {
                                         throw new IllegalArgumentException(
-                                                "The specified index MUST NOT be greater than the number of elements in " +
-                                                        "the array");
+                                                "The specified index MUST NOT be greater than the number of " +
+                                                        "elements in the array");
                                     }
                                     submitPatchUtils.addValue(context, b, split[3], object, index, bitstreamService);
                                     break;

@@ -9,6 +9,9 @@ package org.dspace.app.rest.submit.factory.impl;
 
 import static org.dspace.app.rest.submit.AbstractRestProcessingStep.LICENSE_STEP_OPERATION_ENTRY;
 
+import java.io.IOException;
+import java.sql.SQLException;
+
 import org.apache.commons.lang3.BooleanUtils;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
@@ -21,9 +24,6 @@ import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.sql.SQLException;
 
 /**
  * Submission "add" PATCH operation
@@ -51,12 +51,14 @@ public class LicenseAddPatchOperation<R extends InProgressSubmission> extends Pa
     SubmitPatchUtils submitPatchUtils;
 
     @Override
-    public R perform(Context context, R resource, Operation operation) throws SQLException, IOException, AuthorizeException {
+    public R perform(Context context, R resource, Operation operation)
+            throws SQLException, IOException, AuthorizeException {
         this.add(context, resource, operation.getValue());
         return resource;
     }
 
-    private void add(Context context, InProgressSubmission source, Object value) throws SQLException, IOException, AuthorizeException {
+    private void add(Context context, InProgressSubmission source, Object value)
+            throws SQLException, IOException, AuthorizeException {
         Boolean grant = null;
         // we are friendly with the client and accept also a string representation for the boolean
         if (value instanceof String) {

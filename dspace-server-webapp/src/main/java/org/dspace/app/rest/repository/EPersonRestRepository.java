@@ -183,7 +183,8 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     @Override
     @PreAuthorize("hasPermission(#uuid, 'EPERSON', #patch)")
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
-                         Patch patch) throws AuthorizeException, SQLException, IllegalAccessException, IOException, DCInputsReaderException {
+                         Patch patch)
+            throws AuthorizeException, SQLException, IllegalAccessException, IOException, DCInputsReaderException {
         patchDSpaceObject(apiCategory, model, uuid, patch);
     }
 

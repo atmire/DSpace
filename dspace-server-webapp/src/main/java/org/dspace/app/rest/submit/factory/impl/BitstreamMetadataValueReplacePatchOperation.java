@@ -10,7 +10,6 @@ package org.dspace.app.rest.submit.factory.impl;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.model.MetadataValueRest;
 import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
@@ -90,18 +89,22 @@ public class BitstreamMetadataValueReplacePatchOperation<R extends InProgressSub
     private void replace(Context context, Bitstream bitstream, String[] split, Object value)
             throws SQLException, IllegalAccessException {
         String mdString = split[3];
-        List<MetadataValue> metadataByMetadataString = bitstreamService.getMetadataByMetadataString(bitstream, mdString);
+        List<MetadataValue> metadataByMetadataString
+                = bitstreamService.getMetadataByMetadataString(bitstream, mdString);
         Assert.notEmpty(metadataByMetadataString);
 
         int index = Integer.parseInt(split[4]);
         // if split size is one so we have a call to initialize or replace
         if (split.length == 5) {
-            MetadataValueRest obj = (MetadataValueRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value, MetadataValueRest.class);
+            MetadataValueRest obj =
+                    (MetadataValueRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value,
+                            MetadataValueRest.class);
             submitPatchUtils.replaceValue(context, bitstream, mdString, obj, index, bitstreamService);
         } else {
             //"path": "/sections/upload/files/0/metadata/dc.title/2/language"
             if (split.length > 5) {
-                submitPatchUtils.setDeclaredField(context, bitstream, value, mdString, split[5], metadataByMetadataString, index, bitstreamService);
+                submitPatchUtils.setDeclaredField(context, bitstream, value, mdString, split[5],
+                        metadataByMetadataString, index, bitstreamService);
             }
         }
     }

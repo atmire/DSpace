@@ -37,7 +37,8 @@ public abstract class PatchOperation<M> {
      * @param operation the patch operation.
      * @return the patched dso
      */
-    public abstract M perform(Context context, M resource, Operation operation) throws SQLException, IllegalAccessException, IOException, AuthorizeException, DCInputsReaderException;
+    public abstract M perform(Context context, M resource, Operation operation)
+            throws SQLException, IllegalAccessException, IOException, AuthorizeException, DCInputsReaderException;
 
     /**
      * Throws PatchBadRequestException for missing operation value.

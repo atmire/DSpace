@@ -216,7 +216,8 @@ public class CommunityRestRepository extends DSpaceObjectRestRepository<Communit
     @Override
     @PreAuthorize("hasPermission(#id, 'COMMUNITY', 'WRITE')")
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
-                         Patch patch) throws AuthorizeException, SQLException, IllegalAccessException, IOException, DCInputsReaderException {
+                         Patch patch)
+            throws AuthorizeException, SQLException, IllegalAccessException, IOException, DCInputsReaderException {
         patchDSpaceObject(apiCategory, model, id, patch);
     }
 

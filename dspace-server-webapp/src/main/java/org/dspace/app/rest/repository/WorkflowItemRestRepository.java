@@ -19,19 +19,20 @@ import org.apache.log4j.Logger;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.WorkflowItemConverter;
-import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.RESTAuthorizationException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.ErrorRest;
 import org.dspace.app.rest.model.WorkflowItemRest;
 import org.dspace.app.rest.model.hateoas.WorkflowItemResource;
-import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.rest.repository.patch.ResourcePatch;
-import org.dspace.app.rest.submit.AbstractRestProcessingStep;
 import org.dspace.app.rest.submit.SubmissionService;
 import org.dspace.app.rest.submit.UploadableStep;
-import org.dspace.app.util.*;
+import org.dspace.app.util.DCInputsReaderException;
+import org.dspace.app.util.SubmissionConfig;
+import org.dspace.app.util.SubmissionConfigReader;
+import org.dspace.app.util.SubmissionConfigReaderException;
+import org.dspace.app.util.SubmissionStepConfig;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.service.BitstreamFormatService;
 import org.dspace.content.service.BitstreamService;
@@ -228,7 +229,8 @@ public class WorkflowItemRestRepository extends DSpaceRestRepository<WorkflowIte
 
     @Override
     public void patch(Context context, HttpServletRequest request, String apiCategory, String model, Integer id,
-                      Patch patch) throws SQLException, AuthorizeException, IllegalAccessException, DCInputsReaderException, IOException {
+                      Patch patch)
+            throws SQLException, AuthorizeException, IllegalAccessException, DCInputsReaderException, IOException {
         XmlWorkflowItem source = wis.find(context, id);
         if (source == null) {
             throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");

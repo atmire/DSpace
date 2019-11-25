@@ -74,7 +74,8 @@ public class ResourcePolicyAddPatchOperation<R extends InProgressSubmission> ext
      * @throws SQLException
      * @throws AuthorizeException
      */
-    private void add(Context context, InProgressSubmission source, String path, Object value) throws SQLException, AuthorizeException {
+    private void add(Context context, InProgressSubmission source, String path, Object value)
+            throws SQLException, AuthorizeException {
         //"path": "/sections/upload/files/0/accessConditions"
         String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
         Item item = source.getItem();
@@ -88,10 +89,13 @@ public class ResourcePolicyAddPatchOperation<R extends InProgressSubmission> ext
                     List<ResourcePolicyRest> newAccessConditions = new ArrayList<ResourcePolicyRest>();
                     if (split.length == 3) {
                         authorizeService.removePoliciesActionFilter(context, b, Constants.READ);
-                        newAccessConditions = submitPatchUtils.evaluateArrayObject((LateObjectEvaluator) value, ResourcePolicyRest[].class);
+                        newAccessConditions = submitPatchUtils.evaluateArrayObject((LateObjectEvaluator) value,
+                                ResourcePolicyRest[].class);
                     } else if (split.length == 4) {
                         // contains "-", call index-based accessConditions it make not sense
-                        newAccessConditions.add((ResourcePolicyRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value, ResourcePolicyRest.class));
+                        newAccessConditions.add(
+                                (ResourcePolicyRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value,
+                                        ResourcePolicyRest.class));
                     }
 
                     for (ResourcePolicyRest newAccessCondition : newAccessConditions) {

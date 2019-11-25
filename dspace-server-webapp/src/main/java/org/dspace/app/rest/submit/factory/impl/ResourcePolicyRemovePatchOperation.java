@@ -60,7 +60,8 @@ public class ResourcePolicyRemovePatchOperation<R extends InProgressSubmission> 
      * @throws SQLException
      * @throws AuthorizeException
      */
-    private void remove(Context context, InProgressSubmission source, String path) throws SQLException, AuthorizeException {
+    private void remove(Context context, InProgressSubmission source, String path)
+            throws SQLException, AuthorizeException {
         // "path" : "/sections/upload/files/0/accessConditions/0"
         // "abspath" : "/files/0/accessConditions/0"
         String[] split = submitPatchUtils.getAbsolutePath(path).split("/");

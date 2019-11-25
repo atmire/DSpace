@@ -60,7 +60,8 @@ public abstract class DSpaceObjectRestRepository<M extends DSpaceObject, R exten
      * @throws UnprocessableEntityException if the patch attempts to modify an unmodifiable attribute of the object.
      */
     protected void patchDSpaceObject(String apiCategory, String model, UUID id, Patch patch)
-            throws AuthorizeException, ResourceNotFoundException, SQLException, UnprocessableEntityException, IllegalAccessException, DCInputsReaderException, IOException {
+            throws AuthorizeException, ResourceNotFoundException, SQLException, UnprocessableEntityException,
+            IllegalAccessException, DCInputsReaderException, IOException {
         M dso = dsoService.find(obtainContext(), id);
         if (dso == null) {
             throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");

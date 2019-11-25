@@ -70,7 +70,8 @@ public class ItemMetadataValueReplacePatchOperation<R extends InProgressSubmissi
      * @throws SQLException
      * @throws IllegalAccessException
      */
-    private void replace(Context context, InProgressSubmission source, String path, Object value) throws SQLException, IllegalAccessException {
+    private void replace(Context context, InProgressSubmission source, String path, Object value)
+            throws SQLException, IllegalAccessException {
         String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
 
         List<MetadataValue> metadataByMetadataString = itemService.getMetadataByMetadataString(source.getItem(),
@@ -80,11 +81,14 @@ public class ItemMetadataValueReplacePatchOperation<R extends InProgressSubmissi
         int index = Integer.parseInt(split[1]);
         // if split size is one so we have a call to initialize or replace
         if (split.length == 2) {
-            MetadataValueRest obj = (MetadataValueRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value, MetadataValueRest.class);
+            MetadataValueRest obj =
+                    (MetadataValueRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value,
+                            MetadataValueRest.class);
             submitPatchUtils.replaceValue(context, source.getItem(), split[0], obj, index, itemService);
         } else {
             if (split.length == 3) {
-                submitPatchUtils.setDeclaredField(context, source.getItem(), value, split[0], split[2], metadataByMetadataString, index, itemService);
+                submitPatchUtils.setDeclaredField(context, source.getItem(), value, split[0], split[2],
+                        metadataByMetadataString, index, itemService);
             }
         }
     }

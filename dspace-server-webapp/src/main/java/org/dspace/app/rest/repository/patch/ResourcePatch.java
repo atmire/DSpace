@@ -40,7 +40,8 @@ public class ResourcePatch<M> {
      * @throws UnprocessableEntityException
      * @throws DSpaceBadRequestException
      */
-    public void patch(Context context, M dso, List<Operation> operations) throws SQLException, IllegalAccessException, IOException, AuthorizeException, DCInputsReaderException {
+    public void patch(Context context, M dso, List<Operation> operations)
+            throws SQLException, IllegalAccessException, IOException, AuthorizeException, DCInputsReaderException {
         for (Operation operation: operations) {
             performPatchOperation(context, dso, operation);
         }
@@ -54,7 +55,8 @@ public class ResourcePatch<M> {
      * @param operation     the patch operation
      * @throws DSpaceBadRequestException
      */
-    protected void performPatchOperation(Context context, M dso, Operation operation) throws SQLException, DCInputsReaderException, IOException, AuthorizeException, IllegalAccessException {
+    protected void performPatchOperation(Context context, M dso, Operation operation)
+            throws SQLException, DCInputsReaderException, IOException, AuthorizeException, IllegalAccessException {
         for (PatchOperation patchOperation: patchOperations) {
             if (patchOperation.supports(dso, operation)) {
                 patchOperation.perform(context, dso, operation);

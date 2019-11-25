@@ -76,7 +76,8 @@ public class ResourcePolicyReplacePatchOperation<R extends InProgressSubmission>
      * @throws SQLException
      * @throws AuthorizeException
      */
-    private void replace(Context context, InProgressSubmission source, String path, Object value) throws SQLException, AuthorizeException {
+    private void replace(Context context, InProgressSubmission source, String path, Object value)
+            throws SQLException, AuthorizeException {
         // "path": "/sections/upload/files/0/accessConditions/0"
         // "abspath": "/files/0/accessConditions/0"
         String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
@@ -102,7 +103,9 @@ public class ResourcePolicyReplacePatchOperation<R extends InProgressSubmission>
                     }
 
                     if (split.length == 4) {
-                        ResourcePolicyRest newAccessCondition = (ResourcePolicyRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value, ResourcePolicyRest.class);
+                        ResourcePolicyRest newAccessCondition =
+                                (ResourcePolicyRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value,
+                                        ResourcePolicyRest.class);
                         String name = newAccessCondition.getName();
                         String description = newAccessCondition.getDescription();
 
