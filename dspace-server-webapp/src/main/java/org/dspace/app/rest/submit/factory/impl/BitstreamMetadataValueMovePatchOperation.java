@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.dspace.app.rest.model.patch.MoveOperation;
 import org.dspace.app.rest.model.patch.Operation;
-import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
+import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
 import org.dspace.content.InProgressSubmission;

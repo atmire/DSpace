@@ -14,7 +14,7 @@ import java.sql.SQLException;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.dspace.app.rest.model.patch.Operation;
-import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
+import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.content.Item;

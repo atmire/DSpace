@@ -15,7 +15,7 @@ import java.util.List;
 import org.dspace.app.rest.model.ResourcePolicyRest;
 import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
-import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
+import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.ResourcePolicy;
 import org.dspace.authorize.service.AuthorizeService;

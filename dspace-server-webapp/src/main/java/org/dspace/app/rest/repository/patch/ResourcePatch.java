@@ -14,7 +14,7 @@ import java.util.List;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.patch.Operation;
-import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
+import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;

@@ -10,7 +10,7 @@ package org.dspace.app.rest.submit.factory.impl;
 import java.sql.SQLException;
 
 import org.dspace.app.rest.model.patch.Operation;
-import org.dspace.app.rest.repository.patch.factories.impl.PatchOperation;
+import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.content.Collection;
 import org.dspace.content.InProgressSubmission;
