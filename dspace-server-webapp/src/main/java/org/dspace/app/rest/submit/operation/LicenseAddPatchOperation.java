@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import static org.dspace.app.rest.submit.AbstractRestProcessingStep.LICENSE_STEP_OPERATION_ENTRY;
 
@@ -53,37 +53,28 @@ public class LicenseAddPatchOperation<R extends InProgressSubmission> extends Pa
     @Override
     public R perform(Context context, R resource, Operation operation)
             throws SQLException, IOException, AuthorizeException {
-        this.add(context, resource, operation.getValue());
-        return resource;
-    }
-
-    private void add(Context context, InProgressSubmission source, Object value)
-            throws SQLException, IOException, AuthorizeException {
         Boolean grant = null;
         // we are friendly with the client and accept also a string representation for the boolean
-        if (value instanceof String) {
-            grant = BooleanUtils.toBooleanObject((String) value);
+        if (operation.getValue() instanceof String) {
+            grant = BooleanUtils.toBooleanObject((String) operation.getValue());
         } else {
-            grant = (Boolean) value;
+            grant = (Boolean) operation.getValue();
         }
-
         if (grant == null) {
             throw new IllegalArgumentException(
                     "Value is not a valid boolean expression (permitted value: on/off, true/false and yes/no");
         }
-
-        Item item = source.getItem();
+        Item item = resource.getItem();
         EPerson submitter = context.getCurrentUser();
-
         // remove any existing DSpace license (just in case the user
         // accepted it previously)
         itemService.removeDSpaceLicense(context, item);
-
         if (grant) {
-            String license = LicenseUtils.getLicenseText(context.getCurrentLocale(), source.getCollection(), item,
+            String license = LicenseUtils.getLicenseText(context.getCurrentLocale(), resource.getCollection(), item,
                     submitter);
             LicenseUtils.grantLicense(context, item, license, null);
         }
+        return resource;
     }
 
     @Override

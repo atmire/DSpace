@@ -89,7 +89,7 @@ public class WorkflowItemRestRepository extends DSpaceRestRepository<WorkflowIte
     WorkflowService<XmlWorkflowItem> wfs;
 
     @Autowired
-    ResourcePatch resourcePatch;
+    ResourcePatch<XmlWorkflowItem> resourcePatch;
 
     private final SubmissionConfigReader submissionConfigReader;
 

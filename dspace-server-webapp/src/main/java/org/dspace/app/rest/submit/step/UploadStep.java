@@ -8,26 +8,19 @@
 package org.dspace.app.rest.submit.step;
 
 import java.io.BufferedInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.model.ErrorRest;
-import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.model.step.DataUpload;
 import org.dspace.app.rest.model.step.UploadBitstreamRest;
 import org.dspace.app.rest.repository.WorkspaceItemRestRepository;
-import org.dspace.app.rest.repository.patch.ResourcePatch;
 import org.dspace.app.rest.submit.AbstractRestProcessingStep;
 import org.dspace.app.rest.submit.SubmissionService;
 import org.dspace.app.rest.submit.UploadableStep;
 import org.dspace.app.rest.utils.Utils;
-import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.app.util.SubmissionStepConfig;
-import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Bitstream;
 import org.dspace.content.BitstreamFormat;
 import org.dspace.content.Bundle;
@@ -35,8 +28,6 @@ import org.dspace.content.InProgressSubmission;
 import org.dspace.content.Item;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
-import org.dspace.services.model.Request;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -49,9 +40,6 @@ public class UploadStep extends org.dspace.submit.step.UploadStep
         implements AbstractRestProcessingStep, UploadableStep {
 
     private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(UploadStep.class);
-
-    @Autowired
-    ResourcePatch resourcePatch;
 
     @Override
     public DataUpload getData(SubmissionService submissionService, InProgressSubmission obj,
@@ -66,12 +54,6 @@ public class UploadStep extends org.dspace.submit.step.UploadStep
             }
         }
         return result;
-    }
-
-    @Override
-    public void doPatchProcessing(Context context, Request currentRequest, InProgressSubmission source, Operation op)
-            throws SQLException, DCInputsReaderException, IOException, AuthorizeException, IllegalAccessException {
-        resourcePatch.patch(context, source, Arrays.asList(op));
     }
 
     @Override

@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import java.sql.SQLException;
 import java.util.Date;
@@ -63,26 +63,10 @@ public class ResourcePolicyReplacePatchOperation<R extends InProgressSubmission>
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException, AuthorizeException {
-        this.replace(context, resource, operation.getPath(), operation.getValue());
-        return resource;
-    }
-
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param path
-     * @param value
-     * @throws SQLException
-     * @throws AuthorizeException
-     */
-    private void replace(Context context, InProgressSubmission source, String path, Object value)
-            throws SQLException, AuthorizeException {
         // "path": "/sections/upload/files/0/accessConditions/0"
         // "abspath": "/files/0/accessConditions/0"
-        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
-        Item item = source.getItem();
-
+        String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
+        Item item = resource.getItem();
         List<Bundle> bundle = itemService.getBundles(item, Constants.CONTENT_BUNDLE_NAME);
         for (Bundle bb : bundle) {
             int idx = 0;
@@ -91,7 +75,6 @@ public class ResourcePolicyReplacePatchOperation<R extends InProgressSubmission>
                     List<ResourcePolicy> policies = authorizeService.findPoliciesByDSOAndType(context, b,
                             ResourcePolicy.TYPE_CUSTOM);
                     String rpIdx = split[3];
-
                     int index = 0;
                     for (ResourcePolicy policy : policies) {
                         Integer toReplace = Integer.parseInt(rpIdx);
@@ -101,11 +84,10 @@ public class ResourcePolicyReplacePatchOperation<R extends InProgressSubmission>
                         }
                         index++;
                     }
-
                     if (split.length == 4) {
                         ResourcePolicyRest newAccessCondition =
-                                (ResourcePolicyRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value,
-                                        ResourcePolicyRest.class);
+                                (ResourcePolicyRest) submitPatchUtils.evaluateSingleObject(
+                                        (LateObjectEvaluator) operation.getValue(), ResourcePolicyRest.class);
                         String name = newAccessCondition.getName();
                         String description = newAccessCondition.getDescription();
 
@@ -133,12 +115,13 @@ public class ResourcePolicyReplacePatchOperation<R extends InProgressSubmission>
                 idx++;
             }
         }
+        return resource;
     }
 
     @Override
     public boolean supports(Object objectToMatch, Operation operation) {
-        // TODO add unique path check
         return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && operation.getPath().contains("accessConditions")
                 && operation.getOp().trim().equalsIgnoreCase(OPERATION_REPLACE));
     }
 }

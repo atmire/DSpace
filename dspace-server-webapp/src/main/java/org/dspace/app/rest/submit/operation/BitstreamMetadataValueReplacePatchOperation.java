@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -46,35 +46,21 @@ public class BitstreamMetadataValueReplacePatchOperation<R extends InProgressSub
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException, IllegalAccessException {
-        this.replace(context, resource, operation.getPath(), operation.getValue());
-        return resource;
-    }
-
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param path
-     * @param value
-     * @throws SQLException
-     * @throws IllegalAccessException
-     */
-    private void replace(Context context, InProgressSubmission source, String path, Object value)
-            throws SQLException, IllegalAccessException {
         //"path": "/sections/upload/files/0/metadata/dc.title/2"
         //"abspath": "/files/0/metadata/dc.title/2"
-        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
-        Item item = source.getItem();
+        String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
+        Item item = resource.getItem();
         List<Bundle> bundle = itemService.getBundles(item, Constants.CONTENT_BUNDLE_NAME);
         for (Bundle bb : bundle) {
             int idx = 0;
             for (Bitstream b : bb.getBitstreams()) {
                 if (idx == Integer.parseInt(split[1])) {
-                    replace(context, b, split, value);
+                    replace(context, b, split, operation.getValue());
                 }
                 idx++;
             }
         }
+        return resource;
     }
 
     /**

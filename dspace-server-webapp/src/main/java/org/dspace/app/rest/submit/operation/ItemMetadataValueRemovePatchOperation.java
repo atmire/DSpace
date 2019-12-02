@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import java.sql.SQLException;
 
@@ -51,25 +51,14 @@ public class ItemMetadataValueRemovePatchOperation<R extends InProgressSubmissio
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {
-        this.remove(context, resource, operation.getPath());
-        return resource;
-    }
-
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param path
-     * @throws SQLException
-     */
-    private void remove(Context context, InProgressSubmission source, String path) throws SQLException {
-        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
+        String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
         if (split.length == 1) {
-            submitPatchUtils.deleteValue(context, source.getItem(), split[0], -1, itemService);
+            submitPatchUtils.deleteValue(context, resource.getItem(), split[0], -1, itemService);
         } else {
             Integer toDelete = Integer.parseInt(split[1]);
-            submitPatchUtils.deleteValue(context, source.getItem(), split[0], toDelete, itemService);
+            submitPatchUtils.deleteValue(context, resource.getItem(), split[0], toDelete, itemService);
         }
+        return resource;
     }
 
     @Override

@@ -12,13 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.dspace.app.rest.model.ErrorRest;
-import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.submit.step.validation.Validation;
 import org.dspace.app.util.SubmissionStepConfig;
 import org.dspace.content.InProgressSubmission;
-import org.dspace.core.Context;
 import org.dspace.services.factory.DSpaceServicesFactory;
-import org.dspace.services.model.Request;
 
 /**
  * Interface for the submission steps to populate sections in the in progress submission and react to patch requests.
@@ -80,21 +77,5 @@ public interface AbstractRestProcessingStep extends ListenerProcessingStep {
         }
         return errors;
     }
-
-    /**
-     * Method to react to a patch request against the step managed section data
-     * 
-     * @param context
-     *            the DSpace context
-     * @param currentRequest
-     *            the http request
-     * @param source
-     *            the in progress submission
-     * @param op
-     *            the json patch operation
-     * @throws Exception
-     */
-    public void doPatchProcessing(Context context, Request currentRequest, InProgressSubmission source, Operation op)
-        throws Exception;
 
 }

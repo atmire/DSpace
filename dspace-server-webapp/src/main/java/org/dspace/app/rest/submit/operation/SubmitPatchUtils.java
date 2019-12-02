@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import java.lang.reflect.Field;
 import java.sql.SQLException;
@@ -33,6 +33,7 @@ import org.springframework.stereotype.Component;
 public class SubmitPatchUtils<M extends Object> {
 
     private static final String SUBMIT_SECTIONS_PATH = "/sections";
+
     /**
      * Return part of the path needed for the patch operation (ex dc.title/2 => the md being changed and the index)
      * @param fullpath      Full path of the patch
@@ -47,15 +48,6 @@ public class SubmitPatchUtils<M extends Object> {
         return absolutePath;
     }
 
-    /**
-     * Replaces all values of metadata at the given target string with the metadata values in the given list
-     * @param context               Context of the patch
-     * @param source                DSO whose md is being replaced
-     * @param target                Target string of the metadata field whose value are being replaced
-     * @param list                  Replacement metadata values
-     * @param dSpaceObjectService   DSO service doing the metadata replacement
-     * @throws SQLException         If database error during the metadata replacement
-     */
     protected void replaceValue(Context context, DSpaceObject source, String target, List<MetadataValueRest> list,
                              DSpaceObjectService dSpaceObjectService)
             throws SQLException {
@@ -69,16 +61,6 @@ public class SubmitPatchUtils<M extends Object> {
         }
     }
 
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param target
-     * @param object
-     * @param index
-     * @param dSpaceObjectService
-     * @throws SQLException
-     */
     protected void replaceValue(Context context, DSpaceObject source, String target, MetadataValueRest object,
                                 int index, DSpaceObjectService dSpaceObjectService)
             throws SQLException {
@@ -88,18 +70,47 @@ public class SubmitPatchUtils<M extends Object> {
                 object.getConfidence(), index);
     }
 
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param value
-     * @param metadata
-     * @param namedField
-     * @param metadataByMetadataString
-     * @param index
-     * @throws IllegalAccessException
-     * @throws SQLException
-     */
+    protected void addValue(Context context, DSpaceObject source, String target, MetadataValueRest object, int index,
+                         DSpaceObjectService dSpaceObjectService)
+            throws SQLException {
+        String[] metadata = Utils.tokenize(target);
+        if (index == -1) {
+            dSpaceObjectService.addMetadata(context, source, metadata[0], metadata[1], metadata[2],
+                    object.getLanguage(), object.getValue(), object.getAuthority(),
+                    object.getConfidence());
+        } else {
+            dSpaceObjectService.addAndShiftRightMetadata(context, source, metadata[0], metadata[1], metadata[2],
+                    object.getLanguage(), object.getValue(),
+                    object.getAuthority(), object.getConfidence(), index);
+        }
+    }
+
+    protected void moveValue(Context context, DSpaceObject source, String target, int from, int to,
+                             DSpaceObjectService dSpaceObjectService) throws SQLException {
+        String[] metadata = Utils.tokenize(target);
+        dSpaceObjectService.moveMetadata(context, source, metadata[0], metadata[1], metadata[2],
+                from, to);
+    }
+
+    protected void deleteValue(Context context, DSpaceObject source, String target, int index,
+                               DSpaceObjectService dSpaceObjectService) throws SQLException {
+        String[] metadata = Utils.tokenize(target);
+        List<MetadataValue> mm = dSpaceObjectService.getMetadata(source, metadata[0], metadata[1], metadata[2],
+                Item.ANY);
+        dSpaceObjectService.clearMetadata(context, source, metadata[0], metadata[1], metadata[2], Item.ANY);
+        if (index != -1) {
+            int idx = 0;
+            for (MetadataValue m : mm) {
+                if (idx != index) {
+                    dSpaceObjectService.addMetadata(context, source, metadata[0], metadata[1], metadata[2],
+                            m.getLanguage(), m.getValue(), m.getAuthority(),
+                            m.getConfidence());
+                }
+                idx++;
+            }
+        }
+    }
+
     protected void setDeclaredField(Context context, DSpaceObject source, Object value, String metadata,
                                     String namedField, List<MetadataValue> metadataByMetadataString, int index,
                                     DSpaceObjectService dSpaceObjectService)
@@ -140,80 +151,6 @@ public class SubmitPatchUtils<M extends Object> {
         }
     }
 
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param target
-     * @param object
-     * @param index
-     * @param dSpaceObjectService
-     * @throws SQLException
-     */
-    protected void addValue(Context context, DSpaceObject source, String target, MetadataValueRest object, int index,
-                         DSpaceObjectService dSpaceObjectService)
-            throws SQLException {
-        String[] metadata = Utils.tokenize(target);
-        if (index == -1) {
-            dSpaceObjectService.addMetadata(context, source, metadata[0], metadata[1], metadata[2],
-                    object.getLanguage(), object.getValue(), object.getAuthority(),
-                    object.getConfidence());
-        } else {
-            dSpaceObjectService.addAndShiftRightMetadata(context, source, metadata[0], metadata[1], metadata[2],
-                    object.getLanguage(), object.getValue(),
-                    object.getAuthority(), object.getConfidence(), index);
-        }
-    }
-
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param target
-     * @param from
-     * @param to
-     * @throws SQLException
-     */
-    protected void moveValue(Context context, DSpaceObject source, String target, int from, int to,
-                             DSpaceObjectService dSpaceObjectService) throws SQLException {
-        String[] metadata = Utils.tokenize(target);
-        dSpaceObjectService.moveMetadata(context, source, metadata[0], metadata[1], metadata[2],
-                from, to);
-    }
-
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param target
-     * @param index
-     * @throws SQLException
-     */
-    protected void deleteValue(Context context, DSpaceObject source, String target, int index,
-                               DSpaceObjectService dSpaceObjectService) throws SQLException {
-        String[] metadata = Utils.tokenize(target);
-        List<MetadataValue> mm = dSpaceObjectService.getMetadata(source, metadata[0], metadata[1], metadata[2],
-                Item.ANY);
-        dSpaceObjectService.clearMetadata(context, source, metadata[0], metadata[1], metadata[2], Item.ANY);
-        if (index != -1) {
-            int idx = 0;
-            for (MetadataValue m : mm) {
-                if (idx != index) {
-                    dSpaceObjectService.addMetadata(context, source, metadata[0], metadata[1], metadata[2],
-                            m.getLanguage(), m.getValue(), m.getAuthority(),
-                            m.getConfidence());
-                }
-                idx++;
-            }
-        }
-    }
-
-    /**
-     * TODO
-     * @param value
-     * @param arrayClassForEvaluation
-     * @return
-     */
     protected List<M> evaluateArrayObject(LateObjectEvaluator value, Class arrayClassForEvaluation) {
         List<M> results = new ArrayList<M>();
         M[] list = null;
@@ -228,12 +165,6 @@ public class SubmitPatchUtils<M extends Object> {
         return results;
     }
 
-    /**
-     * TODO
-     * @param value
-     * @param classForEvaluation
-     * @return
-     */
     protected M evaluateSingleObject(LateObjectEvaluator value, Class classForEvaluation) {
         M single = null;
         if (value != null) {

@@ -7,21 +7,13 @@
  */
 package org.dspace.app.rest.submit.step;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.UUID;
 
-import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.repository.patch.ResourcePatch;
 import org.dspace.app.rest.submit.AbstractRestProcessingStep;
 import org.dspace.app.rest.submit.SubmissionService;
-import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.app.util.SubmissionStepConfig;
-import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.InProgressSubmission;
-import org.dspace.core.Context;
-import org.dspace.services.model.Request;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -33,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class CollectionStep extends org.dspace.submit.step.SelectCollectionStep implements AbstractRestProcessingStep {
 
     @Autowired
-    ResourcePatch resourcePatch;
+    ResourcePatch<InProgressSubmission> resourcePatch;
 
     @Override
     public UUID getData(SubmissionService submissionService, InProgressSubmission obj, SubmissionStepConfig config) {
@@ -41,11 +33,5 @@ public class CollectionStep extends org.dspace.submit.step.SelectCollectionStep 
             return obj.getCollection().getID();
         }
         return null;
-    }
-
-    @Override
-    public void doPatchProcessing(Context context, Request currentRequest, InProgressSubmission source, Operation op)
-            throws SQLException, DCInputsReaderException, IOException, AuthorizeException, IllegalAccessException {
-        resourcePatch.patch(context, source, Arrays.asList(op));
     }
 }

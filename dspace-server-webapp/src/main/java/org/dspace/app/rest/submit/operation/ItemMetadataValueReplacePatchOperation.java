@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -57,40 +57,24 @@ public class ItemMetadataValueReplacePatchOperation<R extends InProgressSubmissi
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException, IllegalAccessException {
-        this.replace(context, resource, operation.getPath(), operation.getValue());
-        return resource;
-    }
-
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param path
-     * @param value
-     * @throws SQLException
-     * @throws IllegalAccessException
-     */
-    private void replace(Context context, InProgressSubmission source, String path, Object value)
-            throws SQLException, IllegalAccessException {
-        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
-
-        List<MetadataValue> metadataByMetadataString = itemService.getMetadataByMetadataString(source.getItem(),
-                                                                                               split[0]);
+        String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
+        List<MetadataValue> metadataByMetadataString = itemService.getMetadataByMetadataString(resource.getItem(),
+                split[0]);
         Assert.notEmpty(metadataByMetadataString);
-
         int index = Integer.parseInt(split[1]);
         // if split size is one so we have a call to initialize or replace
         if (split.length == 2) {
             MetadataValueRest obj =
-                    (MetadataValueRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value,
-                            MetadataValueRest.class);
-            submitPatchUtils.replaceValue(context, source.getItem(), split[0], obj, index, itemService);
+                    (MetadataValueRest) submitPatchUtils.evaluateSingleObject(
+                            (LateObjectEvaluator) operation.getValue(), MetadataValueRest.class);
+            submitPatchUtils.replaceValue(context, resource.getItem(), split[0], obj, index, itemService);
         } else {
             if (split.length == 3) {
-                submitPatchUtils.setDeclaredField(context, source.getItem(), value, split[0], split[2],
+                submitPatchUtils.setDeclaredField(context, resource.getItem(), operation.getValue(), split[0], split[2],
                         metadataByMetadataString, index, itemService);
             }
         }
+        return resource;
     }
 
     @Override

@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -45,27 +45,11 @@ public class BitstreamRemovePatchOperation<R extends InProgressSubmission> exten
     @Override
     public R perform(Context context, R resource, Operation operation)
             throws SQLException, IOException, AuthorizeException {
-        this.remove(context, resource, operation.getPath());
-        return resource;
-    }
-
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param path
-     * @throws SQLException
-     * @throws IOException
-     * @throws AuthorizeException
-     */
-    private void remove(Context context, InProgressSubmission source, String path)
-            throws SQLException, IOException, AuthorizeException {
-
-        String absPath = submitPatchUtils.getAbsolutePath(path);
+        String absPath = submitPatchUtils.getAbsolutePath(operation.getPath());
         String[] split = absPath.split("/");
         int index = Integer.parseInt(split[1]);
 
-        Item item = source.getItem();
+        Item item = resource.getItem();
         List<Bundle> bbb = itemService.getBundles(item, Constants.CONTENT_BUNDLE_NAME);
         Bitstream bitstream = null;
         external:
@@ -91,7 +75,7 @@ public class BitstreamRemovePatchOperation<R extends InProgressSubmission> exten
         if (bitstreams.size() < 1) {
             itemService.removeBundle(context, item, bundle);
         }
-
+        return resource;
     }
 
     @Override

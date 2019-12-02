@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import java.sql.SQLException;
 
@@ -44,22 +44,9 @@ public class ItemMetadataValueMovePatchOperation<R extends InProgressSubmission>
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {
-        this.move(context, resource, operation.getPath(), ((MoveOperation) operation).getFrom());
-        return resource;
-    }
+        String[] splitTo = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
 
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param path
-     * @param from
-     * @throws SQLException
-     */
-    private void move(Context context, InProgressSubmission source, String path, String from) throws SQLException {
-        String[] splitTo = submitPatchUtils.getAbsolutePath(path).split("/");
-
-        String evalFrom = submitPatchUtils.getAbsolutePath(from);
+        String evalFrom = submitPatchUtils.getAbsolutePath(((MoveOperation) operation).getFrom());
         String[] splitFrom = evalFrom.split("/");
         String metadata = splitFrom[0];
 
@@ -70,10 +57,10 @@ public class ItemMetadataValueMovePatchOperation<R extends InProgressSubmission>
 
                 int intTo = Integer.parseInt(stringTo);
                 int intFrom = Integer.parseInt(stringFrom);
-                submitPatchUtils.moveValue(context, source.getItem(), metadata, intFrom, intTo, itemService);
+                submitPatchUtils.moveValue(context, resource.getItem(), metadata, intFrom, intTo, itemService);
             }
         }
-
+        return resource;
     }
 
     @Override

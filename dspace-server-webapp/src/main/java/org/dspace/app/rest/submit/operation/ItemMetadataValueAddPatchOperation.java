@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -76,42 +76,28 @@ public class ItemMetadataValueAddPatchOperation<R extends InProgressSubmission> 
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {
-        this.add(context, resource, operation.getPath(), operation.getValue());
-        return resource;
-    }
-
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param path
-     * @param value
-     * @throws SQLException
-     */
-    private void add(Context context, InProgressSubmission source, String path, Object value)
-        throws SQLException {
-        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
+        String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
         // if split size is one so we have a call to initialize or replace
         if (split.length == 1) {
-            List<MetadataValueRest> list = submitPatchUtils.evaluateArrayObject((LateObjectEvaluator) value,
-                    MetadataValueRest[].class);
-            submitPatchUtils.replaceValue(context, source.getItem(), split[0], list, itemService);
+            List<MetadataValueRest> list = submitPatchUtils.evaluateArrayObject(
+                    (LateObjectEvaluator) operation.getValue(), MetadataValueRest[].class);
+            submitPatchUtils.replaceValue(context, resource.getItem(), split[0], list, itemService);
 
         } else {
             // call with "-" or "index-based" we should receive only single
             // object member
             MetadataValueRest object =
-                    (MetadataValueRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value,
-                            MetadataValueRest.class);
+                    (MetadataValueRest) submitPatchUtils.evaluateSingleObject(
+                            (LateObjectEvaluator) operation.getValue(), MetadataValueRest.class);
             // check if is not empty
-            List<MetadataValue> metadataByMetadataString = itemService.getMetadataByMetadataString(source.getItem(),
-                                                                                                   split[0]);
+            List<MetadataValue> metadataByMetadataString = itemService.getMetadataByMetadataString(resource.getItem(),
+                    split[0]);
             Assert.notEmpty(metadataByMetadataString);
             if (split.length > 1) {
                 String controlChar = split[1];
                 switch (controlChar) {
                     case "-":
-                        submitPatchUtils.addValue(context, source.getItem(), split[0], object, -1, itemService);
+                        submitPatchUtils.addValue(context, resource.getItem(), split[0], object, -1, itemService);
                         break;
                     default:
                         // index based
@@ -119,15 +105,15 @@ public class ItemMetadataValueAddPatchOperation<R extends InProgressSubmission> 
                         int index = Integer.parseInt(controlChar);
                         if (index > metadataByMetadataString.size()) {
                             throw new IllegalArgumentException(
-                                "The specified index MUST NOT be greater than the number of elements in the array");
+                                    "The specified index MUST NOT be greater than the number of elements in the array");
                         }
-                        submitPatchUtils.addValue(context, source.getItem(), split[0], object, index, itemService);
+                        submitPatchUtils.addValue(context, resource.getItem(), split[0], object, index, itemService);
 
                         break;
                 }
             }
         }
-
+        return resource;
     }
 
     @Override

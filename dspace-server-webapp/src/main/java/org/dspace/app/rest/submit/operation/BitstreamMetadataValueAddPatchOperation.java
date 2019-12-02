@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -13,6 +13,7 @@ import java.util.List;
 import org.dspace.app.rest.model.MetadataValueRest;
 import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.operation.DspaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
@@ -82,26 +83,15 @@ public class BitstreamMetadataValueAddPatchOperation<R extends InProgressSubmiss
     @Autowired
     SubmitPatchUtils submitPatchUtils;
 
+    @Autowired
+    DspaceObjectMetadataPatchUtils metadataPatchUtils;
+
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {
-        this.add(context, resource, operation.getPath(), operation.getValue());
-        return resource;
-    }
-
-    /**
-     * TODO
-     *
-     * @param context
-     * @param source
-     * @param path
-     * @param value
-     * @throws Exception
-     */
-    private void add(Context context, InProgressSubmission source, String path, Object value) throws SQLException {
         //"path": "/sections/upload/files/0/metadata/dc.title/2"
         //"abspath": "/files/0/metadata/dc.title/2"
-        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
-        Item item = source.getItem();
+        String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
+        Item item = resource.getItem();
         List<Bundle> bundle = itemService.getBundles(item, Constants.CONTENT_BUNDLE_NAME);
         for (Bundle bb : bundle) {
             int idx = 0;
@@ -109,16 +99,16 @@ public class BitstreamMetadataValueAddPatchOperation<R extends InProgressSubmiss
                 if (idx == Integer.parseInt(split[1])) {
 
                     if (split.length == 4) {
-                        List<MetadataValueRest> list = submitPatchUtils.evaluateArrayObject((LateObjectEvaluator) value,
-                                MetadataValueRest[].class);
+                        List<MetadataValueRest> list = submitPatchUtils.evaluateArrayObject(
+                                (LateObjectEvaluator) operation.getValue(), MetadataValueRest[].class);
                         submitPatchUtils.replaceValue(context, b, split[3], list, bitstreamService);
 
                     } else {
                         // call with "-" or "index-based" we should receive only single
                         // object member
                         MetadataValueRest object =
-                                (MetadataValueRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value,
-                                        MetadataValueRest.class);
+                                (MetadataValueRest) submitPatchUtils.evaluateSingleObject(
+                                        (LateObjectEvaluator) operation.getValue(), MetadataValueRest.class);
                         // check if is not empty
                         List<MetadataValue> metadataByMetadataString =
                                 bitstreamService.getMetadataByMetadataString(b, split[3]);
@@ -147,6 +137,7 @@ public class BitstreamMetadataValueAddPatchOperation<R extends InProgressSubmiss
                 idx++;
             }
         }
+        return resource;
     }
 
     @Override

@@ -9,7 +9,6 @@ package org.dspace.app.rest.repository.patch.operation;
 
 import java.sql.SQLException;
 
-import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.model.patch.MoveOperation;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.content.DSpaceObject;
@@ -47,31 +46,8 @@ public class DspaceObjectMetadataMoveOperation<R extends DSpaceObject> extends P
         String indexInPath = metadataPatchUtils.getIndexFromPath(operation.getPath());
         String indexToMoveFrom = metadataPatchUtils.getIndexFromPath(((MoveOperation) operation).getFrom());
 
-        move(context, resource, dsoService, metadataField, indexInPath, indexToMoveFrom);
+        metadataPatchUtils.moveValue(context, resource, dsoService, metadataField, indexInPath, indexToMoveFrom);
         return resource;
-    }
-
-    /**
-     * Moves metadata of the dso from indexFrom to indexTo
-     *
-     * @param context       context patch is being performed in
-     * @param dso           dso being patched
-     * @param dsoService    service doing the patch in db
-     * @param metadataField md field being patched
-     * @param indexFrom     index we're moving metadata from
-     * @param indexTo       index we're moving metadata to
-     */
-    private void move(Context context, DSpaceObject dso,
-                      DSpaceObjectService dsoService, MetadataField metadataField, String indexFrom, String indexTo) {
-        metadataPatchUtils.checkMetadataFieldNotNull(metadataField);
-        try {
-            dsoService.moveMetadata(context, dso, metadataField.getMetadataSchema().getName(),
-                    metadataField.getElement(), metadataField.getQualifier(), Integer.parseInt(indexFrom),
-                    Integer.parseInt(indexTo));
-        } catch (SQLException e) {
-            throw new DSpaceBadRequestException("SQLException in DspaceObjectMetadataMoveOperation.move trying to " +
-                    "move metadata in dso.", e);
-        }
     }
 
     @Override

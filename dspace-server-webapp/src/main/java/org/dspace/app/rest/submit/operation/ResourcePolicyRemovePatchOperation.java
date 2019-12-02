@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -48,27 +48,11 @@ public class ResourcePolicyRemovePatchOperation<R extends InProgressSubmission> 
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException, AuthorizeException {
-        this.remove(context, resource, operation.getPath());
-        return resource;
-    }
-
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param path
-     * @throws SQLException
-     * @throws AuthorizeException
-     */
-    private void remove(Context context, InProgressSubmission source, String path)
-            throws SQLException, AuthorizeException {
         // "path" : "/sections/upload/files/0/accessConditions/0"
         // "abspath" : "/files/0/accessConditions/0"
-        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
+        String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
         String bitstreamIdx = split[1];
-
-        Item item = source.getItem();
-
+        Item item = resource.getItem();
         List<Bundle> bundle = itemService.getBundles(item, Constants.CONTENT_BUNDLE_NAME);
         Bitstream bitstream = null;
         for (Bundle bb : bundle) {
@@ -77,11 +61,11 @@ public class ResourcePolicyRemovePatchOperation<R extends InProgressSubmission> 
                 if (idx == Integer.parseInt(bitstreamIdx)) {
                     if (split.length == 3) {
                         resourcePolicyService.removePolicies(context, b,
-                                                             ResourcePolicy.TYPE_CUSTOM);
+                                ResourcePolicy.TYPE_CUSTOM);
                     } else {
                         String rpIdx = split[3];
                         List<ResourcePolicy> policies = resourcePolicyService.find(context, b,
-                                                                                   ResourcePolicy.TYPE_CUSTOM);
+                                ResourcePolicy.TYPE_CUSTOM);
                         int index = 0;
                         for (ResourcePolicy policy : policies) {
                             Integer toDelete = Integer.parseInt(rpIdx);
@@ -100,12 +84,13 @@ public class ResourcePolicyRemovePatchOperation<R extends InProgressSubmission> 
         if (bitstream != null) {
             bitstreamService.update(context, bitstream);
         }
+        return resource;
     }
 
     @Override
     public boolean supports(Object objectToMatch, Operation operation) {
-        // TODO add unique path check
         return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && operation.getPath().contains("accessConditions")
                 && operation.getOp().trim().equalsIgnoreCase(OPERATION_REMOVE));
     }
 }

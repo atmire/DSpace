@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -60,22 +60,10 @@ public class BitstreamMetadataValueRemovePatchOperation<R extends InProgressSubm
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {
-        this.remove(context, resource, operation.getPath());
-        return resource;
-    }
-
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param path
-     * @throws Exception
-     */
-    private void remove(Context context, InProgressSubmission source, String path) throws SQLException {
         //"path": "/sections/upload/files/0/metadata/dc.title/2"
         //"abspath": "/files/0/metadata/dc.title/2"
-        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
-        Item item = source.getItem();
+        String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
+        Item item = resource.getItem();
         List<Bundle> bundle = itemService.getBundles(item, Constants.CONTENT_BUNDLE_NAME);
         for (Bundle bb : bundle) {
             int idx = 0;
@@ -92,7 +80,7 @@ public class BitstreamMetadataValueRemovePatchOperation<R extends InProgressSubm
                 idx++;
             }
         }
-
+        return resource;
     }
 
     @Override

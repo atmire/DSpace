@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import static org.dspace.app.rest.submit.AbstractRestProcessingStep.LICENSE_STEP_OPERATION_ENTRY;
 
@@ -46,22 +46,9 @@ public class LicenseRemovePatchOperation<R extends InProgressSubmission> extends
     @Override
     public R perform(Context context, R resource, Operation operation)
             throws SQLException, IOException, AuthorizeException {
-        this.remove(context, resource);
-        return resource;
-    }
-
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @throws SQLException
-     * @throws IOException
-     * @throws AuthorizeException
-     */
-    private void remove(Context context, InProgressSubmission source)
-            throws SQLException, IOException, AuthorizeException {
-        Item item = source.getItem();
+        Item item = resource.getItem();
         itemService.removeDSpaceLicense(context, item);
+        return resource;
     }
 
     @Override

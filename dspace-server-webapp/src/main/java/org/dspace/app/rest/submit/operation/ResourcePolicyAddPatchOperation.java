@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -61,25 +61,9 @@ public class ResourcePolicyAddPatchOperation<R extends InProgressSubmission> ext
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException, AuthorizeException {
-        this.add(context, resource, operation.getPath(), operation.getValue());
-        return resource;
-    }
-
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param path
-     * @param value
-     * @throws SQLException
-     * @throws AuthorizeException
-     */
-    private void add(Context context, InProgressSubmission source, String path, Object value)
-            throws SQLException, AuthorizeException {
         //"path": "/sections/upload/files/0/accessConditions"
-        String[] split = submitPatchUtils.getAbsolutePath(path).split("/");
-        Item item = source.getItem();
-
+        String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
+        Item item = resource.getItem();
         List<Bundle> bundle = itemService.getBundles(item, Constants.CONTENT_BUNDLE_NAME);
         for (Bundle bb : bundle) {
             int idx = 0;
@@ -89,15 +73,14 @@ public class ResourcePolicyAddPatchOperation<R extends InProgressSubmission> ext
                     List<ResourcePolicyRest> newAccessConditions = new ArrayList<ResourcePolicyRest>();
                     if (split.length == 3) {
                         authorizeService.removePoliciesActionFilter(context, b, Constants.READ);
-                        newAccessConditions = submitPatchUtils.evaluateArrayObject((LateObjectEvaluator) value,
-                                ResourcePolicyRest[].class);
+                        newAccessConditions = submitPatchUtils.evaluateArrayObject(
+                                (LateObjectEvaluator) operation.getValue(), ResourcePolicyRest[].class);
                     } else if (split.length == 4) {
                         // contains "-", call index-based accessConditions it make not sense
                         newAccessConditions.add(
-                                (ResourcePolicyRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value,
-                                        ResourcePolicyRest.class));
+                                (ResourcePolicyRest) submitPatchUtils.evaluateSingleObject(
+                                        (LateObjectEvaluator) operation.getValue(), ResourcePolicyRest.class));
                     }
-
                     for (ResourcePolicyRest newAccessCondition : newAccessConditions) {
                         String name = newAccessCondition.getName();
                         String description = newAccessCondition.getDescription();
@@ -115,20 +98,21 @@ public class ResourcePolicyAddPatchOperation<R extends InProgressSubmission> ext
                         Date startDate = newAccessCondition.getStartDate();
                         Date endDate = newAccessCondition.getEndDate();
                         authorizeService.createResourcePolicy(context, b, group, eperson, Constants.READ,
-                                                              ResourcePolicy.TYPE_CUSTOM, name, description, startDate,
-                                                              endDate);
+                                ResourcePolicy.TYPE_CUSTOM, name, description, startDate,
+                                endDate);
                         // TODO manage duplicate policy
                     }
                 }
                 idx++;
             }
         }
+        return resource;
     }
 
     @Override
     public boolean supports(Object objectToMatch, Operation operation) {
-        // TODO add unique path check
         return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && operation.getPath().contains("accessConditions")
                 && operation.getOp().trim().equalsIgnoreCase(OPERATION_ADD));
     }
 }

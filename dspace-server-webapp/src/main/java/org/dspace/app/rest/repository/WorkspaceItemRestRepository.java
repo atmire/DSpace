@@ -27,11 +27,9 @@ import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.WorkspaceItemConverter;
 import org.dspace.app.rest.model.ErrorRest;
 import org.dspace.app.rest.model.WorkspaceItemRest;
-import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.model.patch.Patch;
-import org.dspace.app.rest.repository.patch.ResourcePatch;
 import org.dspace.app.rest.projection.Projection;
-import org.dspace.app.rest.submit.AbstractRestProcessingStep;
+import org.dspace.app.rest.repository.patch.ResourcePatch;
 import org.dspace.app.rest.submit.SubmissionService;
 import org.dspace.app.rest.submit.UploadableStep;
 import org.dspace.app.rest.utils.Utils;
@@ -111,7 +109,7 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
     CollectionService collectionService;
 
     @Autowired
-    ResourcePatch resourcePatch;
+    ResourcePatch<WorkspaceItem> resourcePatch;
 
     private SubmissionConfigReader submissionConfigReader;
 

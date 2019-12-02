@@ -22,6 +22,7 @@ import org.dspace.app.rest.model.hateoas.ItemResource;
 import org.dspace.app.rest.repository.ItemRestRepository;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.Utils;
+import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Item;
 import org.dspace.content.service.ItemService;
@@ -118,7 +119,7 @@ public class ItemtemplateRestController {
     @RequestMapping(method = RequestMethod.PATCH)
     public ResponseEntity<ResourceSupport> replaceTemplateItem(HttpServletRequest request, @PathVariable UUID uuid,
                                                                @RequestBody(required = true) JsonNode jsonNode)
-        throws SQLException, AuthorizeException {
+            throws SQLException, AuthorizeException, IllegalAccessException, DCInputsReaderException, IOException {
 
         Context context = ContextUtil.obtainContext(request);
         Item item = getTemplateItem(context, uuid);

@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -53,30 +53,17 @@ public class BitstreamMetadataValueMovePatchOperation<R extends InProgressSubmis
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {
-        this.move(context, resource, operation.getPath(), ((MoveOperation) operation).getFrom());
-        return resource;
-    }
-
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param path
-     * @param from
-     * @throws SQLException
-     */
-    private void move(Context context, InProgressSubmission source, String path, String from) throws SQLException {
         //"path": "/sections/upload/files/0/metadata/dc.title/2"
         //"abspath": "/files/0/metadata/dc.title/2"
-        String[] splitTo = submitPatchUtils.getAbsolutePath(path).split("/");
-        Item item = source.getItem();
+        String[] splitTo = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
+        Item item = resource.getItem();
         List<Bundle> bundle = itemService.getBundles(item, Constants.CONTENT_BUNDLE_NAME);
         for (Bundle bb : bundle) {
             int idx = 0;
             for (Bitstream b : bb.getBitstreams()) {
                 if (idx == Integer.parseInt(splitTo[1])) {
 
-                    String evalFrom = submitPatchUtils.getAbsolutePath(from);
+                    String evalFrom = submitPatchUtils.getAbsolutePath(((MoveOperation) operation).getFrom());
                     String[] splitFrom = evalFrom.split("/");
                     String metadata = splitFrom[3];
 
@@ -93,6 +80,7 @@ public class BitstreamMetadataValueMovePatchOperation<R extends InProgressSubmis
                 }
             }
         }
+        return resource;
     }
 
     @Override

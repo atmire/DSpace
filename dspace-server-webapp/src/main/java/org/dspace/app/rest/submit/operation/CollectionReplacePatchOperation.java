@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.factory.impl;
+package org.dspace.app.rest.submit.operation;
 
 import java.sql.SQLException;
 
@@ -33,8 +33,10 @@ public class CollectionReplacePatchOperation<R extends InProgressSubmission> ext
 
     @Autowired
     CollectionService collectionService;
+
     @Autowired
     ItemService itemService;
+
     @Autowired
     WorkspaceItemService workspaceItemService;
 
@@ -43,35 +45,21 @@ public class CollectionReplacePatchOperation<R extends InProgressSubmission> ext
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException, DCInputsReaderException {
-        this.replace(context, resource, operation.getValue());
-        return resource;
-    }
-
-    /**
-     * TODO
-     * @param context
-     * @param source
-     * @param value
-     * @throws SQLException
-     * @throws DCInputsReaderException
-     */
-    private void replace(Context context, InProgressSubmission source, Object value)
-            throws SQLException, DCInputsReaderException {
-        if (!(source instanceof WorkspaceItem)) {
+        if (!(resource instanceof WorkspaceItem)) {
             throw new IllegalArgumentException("the replace operation is only supported on workspaceitem");
         }
-        WorkspaceItem wsi = (WorkspaceItem) source;
-        String uuid = (String) value;
-        Collection fromCollection = source.getCollection();
+        WorkspaceItem wsi = (WorkspaceItem) resource;
+        String uuid = (String) operation.getValue();
+        Collection fromCollection = resource.getCollection();
         Collection toCollection = collectionService.find(context, UUIDUtils.fromString(uuid));
         workspaceItemService.move(context, wsi, fromCollection, toCollection);
+        return resource;
     }
 
     @Override
     public boolean supports(Object objectToMatch, Operation operation) {
-        return false;
-        // TODO
-//        return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
-//                && operation.getOp().trim().equalsIgnoreCase(OPERATION_REPLACE));
+        return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && operation.getPath().contains("collection")
+                && operation.getOp().trim().equalsIgnoreCase(OPERATION_REPLACE));
     }
 }
