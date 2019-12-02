@@ -11,11 +11,13 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.operation.DspaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.content.Item;
+import org.dspace.content.MetadataField;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Constants;
@@ -58,6 +60,9 @@ public class BitstreamMetadataValueRemovePatchOperation<R extends InProgressSubm
     @Autowired
     SubmitPatchUtils submitPatchUtils;
 
+    @Autowired
+    DspaceObjectMetadataPatchUtils metadataPatchUtils;
+
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {
         //"path": "/sections/upload/files/0/metadata/dc.title/2"
@@ -69,12 +74,12 @@ public class BitstreamMetadataValueRemovePatchOperation<R extends InProgressSubm
             int idx = 0;
             for (Bitstream b : bb.getBitstreams()) {
                 if (idx == Integer.parseInt(split[1])) {
-
+                    MetadataField metadataField = metadataPatchUtils.getMetadataField(context, split[3]);
                     if (split.length == 4) {
-                        submitPatchUtils.deleteValue(context, b, split[3], -1, bitstreamService);
+                        metadataPatchUtils.removeValue(context, b, bitstreamService, metadataField, null);
                     } else {
-                        Integer toDelete = Integer.parseInt(split[4]);
-                        submitPatchUtils.deleteValue(context, b, split[3], toDelete, bitstreamService);
+                        String indexToDelete = split[4];
+                        metadataPatchUtils.removeValue(context, b, bitstreamService, metadataField, indexToDelete);
                     }
                 }
                 idx++;

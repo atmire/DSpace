@@ -11,8 +11,10 @@ import java.sql.SQLException;
 
 import org.dspace.app.rest.model.patch.MoveOperation;
 import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.operation.DspaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.content.InProgressSubmission;
+import org.dspace.content.MetadataField;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,22 +44,23 @@ public class ItemMetadataValueMovePatchOperation<R extends InProgressSubmission>
     @Autowired
     SubmitPatchUtils submitPatchUtils;
 
+    @Autowired
+    DspaceObjectMetadataPatchUtils metadataPatchUtils;
+
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {
         String[] splitTo = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
 
         String evalFrom = submitPatchUtils.getAbsolutePath(((MoveOperation) operation).getFrom());
         String[] splitFrom = evalFrom.split("/");
-        String metadata = splitFrom[0];
+        MetadataField metadataField = metadataPatchUtils.getMetadataField(context, splitFrom[0]);
 
         if (splitTo.length > 1) {
             String stringTo = splitTo[1];
             if (splitFrom.length > 1) {
                 String stringFrom = splitFrom[1];
-
-                int intTo = Integer.parseInt(stringTo);
-                int intFrom = Integer.parseInt(stringFrom);
-                submitPatchUtils.moveValue(context, resource.getItem(), metadata, intFrom, intTo, itemService);
+                metadataPatchUtils.moveValue(context, resource.getItem(), itemService, metadataField, stringFrom,
+                        stringTo);
             }
         }
         return resource;

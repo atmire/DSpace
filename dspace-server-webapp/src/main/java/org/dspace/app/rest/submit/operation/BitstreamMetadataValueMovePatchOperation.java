@@ -12,11 +12,13 @@ import java.util.List;
 
 import org.dspace.app.rest.model.patch.MoveOperation;
 import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.operation.DspaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.content.Item;
+import org.dspace.content.MetadataField;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Constants;
@@ -51,6 +53,9 @@ public class BitstreamMetadataValueMovePatchOperation<R extends InProgressSubmis
     @Autowired
     SubmitPatchUtils submitPatchUtils;
 
+    @Autowired
+    DspaceObjectMetadataPatchUtils metadataPatchUtils;
+
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {
         //"path": "/sections/upload/files/0/metadata/dc.title/2"
@@ -65,16 +70,14 @@ public class BitstreamMetadataValueMovePatchOperation<R extends InProgressSubmis
 
                     String evalFrom = submitPatchUtils.getAbsolutePath(((MoveOperation) operation).getFrom());
                     String[] splitFrom = evalFrom.split("/");
-                    String metadata = splitFrom[3];
+                    MetadataField metadataField = metadataPatchUtils.getMetadataField(context, splitFrom[3]);
 
                     if (splitTo.length > 4) {
                         String stringTo = splitTo[4];
                         if (splitFrom.length > 4) {
                             String stringFrom = splitFrom[4];
-
-                            int intTo = Integer.parseInt(stringTo);
-                            int intFrom = Integer.parseInt(stringFrom);
-                            submitPatchUtils.moveValue(context, b, metadata, intFrom, intTo, bitstreamService);
+                            metadataPatchUtils.moveValue(context, b, bitstreamService, metadataField, stringFrom,
+                                    stringTo);
                         }
                     }
                 }

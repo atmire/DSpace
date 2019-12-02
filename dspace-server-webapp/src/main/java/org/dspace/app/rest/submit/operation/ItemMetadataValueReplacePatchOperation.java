@@ -13,8 +13,10 @@ import java.util.List;
 import org.dspace.app.rest.model.MetadataValueRest;
 import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.operation.DspaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.content.InProgressSubmission;
+import org.dspace.content.MetadataField;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
@@ -55,23 +57,28 @@ public class ItemMetadataValueReplacePatchOperation<R extends InProgressSubmissi
     @Autowired
     SubmitPatchUtils submitPatchUtils;
 
+    @Autowired
+    DspaceObjectMetadataPatchUtils metadataPatchUtils;
+
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException, IllegalAccessException {
         String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
         List<MetadataValue> metadataByMetadataString = itemService.getMetadataByMetadataString(resource.getItem(),
                 split[0]);
         Assert.notEmpty(metadataByMetadataString);
-        int index = Integer.parseInt(split[1]);
+        String indexString = split[1];
         // if split size is one so we have a call to initialize or replace
+        MetadataField metadataField = metadataPatchUtils.getMetadataField(context, split[0]);
         if (split.length == 2) {
             MetadataValueRest obj =
                     (MetadataValueRest) submitPatchUtils.evaluateSingleObject(
                             (LateObjectEvaluator) operation.getValue(), MetadataValueRest.class);
-            submitPatchUtils.replaceValue(context, resource.getItem(), split[0], obj, index, itemService);
+            metadataPatchUtils.replaceValue(context, resource.getItem(), itemService, metadataField, obj,
+                    indexString, null, null);
         } else {
             if (split.length == 3) {
-                submitPatchUtils.setDeclaredField(context, resource.getItem(), operation.getValue(), split[0], split[2],
-                        metadataByMetadataString, index, itemService);
+                submitPatchUtils.setDeclaredField(context, resource.getItem(), operation.getValue(), metadataField,
+                        split[2], metadataByMetadataString, indexString, itemService);
             }
         }
         return resource;

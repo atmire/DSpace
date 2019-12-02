@@ -10,8 +10,10 @@ package org.dspace.app.rest.submit.operation;
 import java.sql.SQLException;
 
 import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.operation.DspaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.content.InProgressSubmission;
+import org.dspace.content.MetadataField;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,14 +51,18 @@ public class ItemMetadataValueRemovePatchOperation<R extends InProgressSubmissio
     @Autowired
     SubmitPatchUtils submitPatchUtils;
 
+    @Autowired
+    DspaceObjectMetadataPatchUtils metadataPatchUtils;
+
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {
         String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
+        MetadataField metadataField = metadataPatchUtils.getMetadataField(context, split[0]);
         if (split.length == 1) {
-            submitPatchUtils.deleteValue(context, resource.getItem(), split[0], -1, itemService);
+            metadataPatchUtils.removeValue(context, resource.getItem(), itemService, metadataField, null);
         } else {
-            Integer toDelete = Integer.parseInt(split[1]);
-            submitPatchUtils.deleteValue(context, resource.getItem(), split[0], toDelete, itemService);
+            String indexToDelete = split[1];
+            metadataPatchUtils.removeValue(context, resource.getItem(), itemService, metadataField, indexToDelete);
         }
         return resource;
     }

@@ -13,8 +13,10 @@ import java.util.List;
 import org.dspace.app.rest.model.MetadataValueRest;
 import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.operation.DspaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.content.InProgressSubmission;
+import org.dspace.content.MetadataField;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
@@ -74,6 +76,9 @@ public class ItemMetadataValueAddPatchOperation<R extends InProgressSubmission> 
     @Autowired
     SubmitPatchUtils submitPatchUtils;
 
+    @Autowired
+    DspaceObjectMetadataPatchUtils metadataPatchUtils;
+
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {
         String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
@@ -81,7 +86,9 @@ public class ItemMetadataValueAddPatchOperation<R extends InProgressSubmission> 
         if (split.length == 1) {
             List<MetadataValueRest> list = submitPatchUtils.evaluateArrayObject(
                     (LateObjectEvaluator) operation.getValue(), MetadataValueRest[].class);
-            submitPatchUtils.replaceValue(context, resource.getItem(), split[0], list, itemService);
+            MetadataField metadataField = metadataPatchUtils.getMetadataField(context, split[0]);
+            metadataPatchUtils.replaceMetadataFieldMetadata(context, resource.getItem(), itemService, metadataField,
+                    list);
 
         } else {
             // call with "-" or "index-based" we should receive only single
@@ -95,22 +102,9 @@ public class ItemMetadataValueAddPatchOperation<R extends InProgressSubmission> 
             Assert.notEmpty(metadataByMetadataString);
             if (split.length > 1) {
                 String controlChar = split[1];
-                switch (controlChar) {
-                    case "-":
-                        submitPatchUtils.addValue(context, resource.getItem(), split[0], object, -1, itemService);
-                        break;
-                    default:
-                        // index based
-
-                        int index = Integer.parseInt(controlChar);
-                        if (index > metadataByMetadataString.size()) {
-                            throw new IllegalArgumentException(
-                                    "The specified index MUST NOT be greater than the number of elements in the array");
-                        }
-                        submitPatchUtils.addValue(context, resource.getItem(), split[0], object, index, itemService);
-
-                        break;
-                }
+                MetadataField metadataField = metadataPatchUtils.getMetadataField(context, split[0]);
+                metadataPatchUtils.addValue(context, resource.getItem(), itemService, metadataField, object,
+                        controlChar);
             }
         }
         return resource;

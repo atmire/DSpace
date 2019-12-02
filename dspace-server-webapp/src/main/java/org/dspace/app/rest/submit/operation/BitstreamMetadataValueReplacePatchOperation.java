@@ -13,11 +13,13 @@ import java.util.List;
 import org.dspace.app.rest.model.MetadataValueRest;
 import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.repository.patch.operation.DspaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.content.Item;
+import org.dspace.content.MetadataField;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.ItemService;
@@ -44,6 +46,9 @@ public class BitstreamMetadataValueReplacePatchOperation<R extends InProgressSub
     @Autowired
     SubmitPatchUtils submitPatchUtils;
 
+    @Autowired
+    DspaceObjectMetadataPatchUtils metadataPatchUtils;
+
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException, IllegalAccessException {
         //"path": "/sections/upload/files/0/metadata/dc.title/2"
@@ -64,11 +69,11 @@ public class BitstreamMetadataValueReplacePatchOperation<R extends InProgressSub
     }
 
     /**
-     * TODO
-     * @param context
-     * @param bitstream
-     * @param split
-     * @param value
+     * Replace md at index determined by last section of path on this specific given bitstream
+     * @param context       Context of patch
+     * @param bitstream     Bitstream whose md is being replaced
+     * @param split         All sections of the operation path (/ seperator)
+     * @param value         Value the md is being replaced with
      * @throws SQLException
      * @throws IllegalAccessException
      */
@@ -79,18 +84,20 @@ public class BitstreamMetadataValueReplacePatchOperation<R extends InProgressSub
                 = bitstreamService.getMetadataByMetadataString(bitstream, mdString);
         Assert.notEmpty(metadataByMetadataString);
 
-        int index = Integer.parseInt(split[4]);
+        String indexString = split[4];
         // if split size is one so we have a call to initialize or replace
+        MetadataField metadataField = metadataPatchUtils.getMetadataField(context, mdString);
         if (split.length == 5) {
             MetadataValueRest obj =
                     (MetadataValueRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value,
                             MetadataValueRest.class);
-            submitPatchUtils.replaceValue(context, bitstream, mdString, obj, index, bitstreamService);
+            metadataPatchUtils.replaceValue(context, bitstream, bitstreamService, metadataField, obj, indexString,
+                    null, null);
         } else {
             //"path": "/sections/upload/files/0/metadata/dc.title/2/language"
             if (split.length > 5) {
-                submitPatchUtils.setDeclaredField(context, bitstream, value, mdString, split[5],
-                        metadataByMetadataString, index, bitstreamService);
+                submitPatchUtils.setDeclaredField(context, bitstream, value, metadataField, split[5],
+                        metadataByMetadataString, indexString, bitstreamService);
             }
         }
     }

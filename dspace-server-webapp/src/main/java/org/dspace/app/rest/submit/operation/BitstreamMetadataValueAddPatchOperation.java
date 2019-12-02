@@ -19,6 +19,7 @@ import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.content.Item;
+import org.dspace.content.MetadataField;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.ItemService;
@@ -99,10 +100,11 @@ public class BitstreamMetadataValueAddPatchOperation<R extends InProgressSubmiss
                 if (idx == Integer.parseInt(split[1])) {
 
                     if (split.length == 4) {
+                        MetadataField metadataField = metadataPatchUtils.getMetadataField(context, split[3]);
                         List<MetadataValueRest> list = submitPatchUtils.evaluateArrayObject(
                                 (LateObjectEvaluator) operation.getValue(), MetadataValueRest[].class);
-                        submitPatchUtils.replaceValue(context, b, split[3], list, bitstreamService);
-
+                        metadataPatchUtils.replaceMetadataFieldMetadata(context, b, bitstreamService, metadataField,
+                                list);
                     } else {
                         // call with "-" or "index-based" we should receive only single
                         // object member
@@ -115,22 +117,9 @@ public class BitstreamMetadataValueAddPatchOperation<R extends InProgressSubmiss
                         Assert.notEmpty(metadataByMetadataString);
                         if (split.length > 4) {
                             String controlChar = split[4];
-                            switch (controlChar) {
-                                case "-":
-                                    submitPatchUtils.addValue(context, b, split[3], object, -1, bitstreamService);
-                                    break;
-                                default:
-                                    // index based
-
-                                    int index = Integer.parseInt(controlChar);
-                                    if (index > metadataByMetadataString.size()) {
-                                        throw new IllegalArgumentException(
-                                                "The specified index MUST NOT be greater than the number of " +
-                                                        "elements in the array");
-                                    }
-                                    submitPatchUtils.addValue(context, b, split[3], object, index, bitstreamService);
-                                    break;
-                            }
+                            MetadataField metadataField = metadataPatchUtils.getMetadataField(context, split[3]);
+                            metadataPatchUtils.addValue(context, b, bitstreamService, metadataField, object,
+                                    controlChar);
                         }
                     }
                 }

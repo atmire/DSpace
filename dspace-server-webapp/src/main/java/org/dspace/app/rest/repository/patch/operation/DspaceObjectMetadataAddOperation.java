@@ -20,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- Class for PATCH ADD operations on Dspace Objects' metadata
+ * Class for PATCH ADD operations on Dspace Objects' metadata
  * Usage: (can be done on other dso than Item also):
  * - ADD metadata (with schema.identifier.qualifier) value of a dso (here: Item) to end of list of md
  * <code>
@@ -28,6 +28,7 @@ import org.springframework.stereotype.Component;
  * Content-Type: application/json" -d '[{ "op": "add", "path": "
  * /metadata/schema.identifier.qualifier(/0|-)}", "value": "metadataValue"]'
  * </code>
+ *
  * @author Maria Verdonck (Atmire) on 18/11/2019
  */
 @Component
