@@ -7,6 +7,32 @@
  */
 package com.atmire.dspace.statistics;
 
+import org.apache.commons.cli.*;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
+import org.dspace.core.Context;
+import org.dspace.services.ConfigurationService;
+import org.dspace.services.factory.DSpaceServicesFactory;
+import org.dspace.statistics.factory.StatisticsServiceFactory;
+import org.dspace.statistics.service.SolrLoggerService;
+
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import static java.lang.Integer.parseInt;
 import static java.lang.Thread.currentThread;
 import static java.lang.Thread.sleep;
@@ -48,6 +74,8 @@ public class AnonymizeStatistics {
 
     private static final String HELP_OPTION = "h";
     private static final String SLEEP_OPTION = "s";
+    private static final String BATCH_SIZE_OPTION = "b";
+    private static final String THREADS_OPTION = "t";
 
     private static int sleep;
 
@@ -55,7 +83,8 @@ public class AnonymizeStatistics {
     private static ConfigurationService configurationService =
             DSpaceServicesFactory.getInstance().getConfigurationService();
 
-    private static final int BATCH_SIZE = 100;
+    private static int batchSize = 100;
+    private static int threads = 2;
 
     private static final String IP_V4_REGEX = "^((?:\\d{1,3}\\.){3})\\d{1,3}$";
     private static final String IP_V6_REGEX = "^(.*):.*:.*$";
@@ -106,6 +135,22 @@ public class AnonymizeStatistics {
                         .build()
         );
 
+        options.addOption(
+            builder(BATCH_SIZE_OPTION)
+                .longOpt("batch")
+                .desc("The amount of Solr records to be processed per batch (defaults to 100)")
+                .hasArg(true)
+                .build()
+        );
+
+        options.addOption(
+            builder(THREADS_OPTION)
+                .longOpt("threads")
+                .desc("The amount of threads used by the script (defaults to 2")
+                .hasArg(true)
+                .build()
+        );
+
         return options;
     }
 
@@ -120,6 +165,14 @@ public class AnonymizeStatistics {
 
         if (commandLine.hasOption(SLEEP_OPTION)) {
             sleep = parseInt(commandLine.getOptionValue(SLEEP_OPTION));
+        }
+
+        if (commandLine.hasOption(BATCH_SIZE_OPTION)) {
+            batchSize = parseInt(commandLine.getOptionValue(BATCH_SIZE_OPTION));
+        }
+
+        if (commandLine.hasOption(THREADS_OPTION)) {
+            threads = parseInt(commandLine.getOptionValue(THREADS_OPTION));
         }
     }
 
@@ -144,37 +197,40 @@ public class AnonymizeStatistics {
 
 
     private static void anonymiseStatistics() {
-
         try {
-
             long updated = 0;
             long total = getDocuments().getResults().getNumFound();
             printInfo(total + " documents to update");
+
+            ExecutorService executorService = Executors.newFixedThreadPool(threads);
 
             QueryResponse documents;
             do {
                 documents = getDocuments();
 
+                Collection<Callable<Boolean>> callables = new ArrayList<>();
+                Set<String> shards = new HashSet<>();
+
                 for (SolrDocument document : documents.getResults()) {
-                    try {
-                        solrLoggerService.update(
-                                "uid:" + document.getFieldValue("uid"),
-                                "replace",
-                                asList(
-                                        "ip",
-                                        "dns"
-                                ),
-                                asList(
-                                        singletonList(anonymise(document.getFieldValue("ip").toString())),
-                                        singletonList(ANONYMISED)
-                                )
-                        );
-                        updated++;
-                        printInfo("updated document with uid " + document.getFieldValue("uid"));
-                    } catch (Exception e) {
-                        printError(e);
+                    updated++;
+                    callables.add(new DoProcessing(document, updated));
+
+                    String shard = (String) document.getFieldValue("[shard]");
+
+                    if(StringUtils.isNotBlank(shard)){
+                        shards.add(shard);
                     }
                 }
+
+                executorService.invokeAll(callables);
+
+                solrLoggerService.commit();
+
+                for (String shard : shards) {
+                    solrLoggerService.commitShard(shard);
+                }
+
+                System.out.println("processed " + updated + " records");
             } while (documents.getResults().getNumFound() > 0);
 
             printInfo(updated + " documents updated");
@@ -204,7 +260,7 @@ public class AnonymizeStatistics {
         return solrLoggerService.query(
                 "ip:*",
                 "time:[* TO " + TIME_LIMIT + "] AND -dns:" + ANONYMISED,
-                null, BATCH_SIZE, -1, null, null, null, null, null, false, false
+                null, batchSize, -1, null, null, null, null, null, false, false
         );
     }
 
@@ -218,5 +274,39 @@ public class AnonymizeStatistics {
         }
 
         throw new UnknownHostException("unknown ip format: " + ip);
+    }
+
+    public static class DoProcessing implements Callable<Boolean> {
+        private final SolrDocument document;
+        private final long updated;
+
+        public DoProcessing(SolrDocument document, long updated) {
+            this.document = document;
+            this.updated = updated;
+        }
+
+        @Override
+        public Boolean call() {
+            try {
+                solrLoggerService.update(
+                    "uid:" + document.getFieldValue("uid"),
+                    "replace",
+                    asList(
+                        "ip",
+                        "dns"
+                    ),
+                    asList(
+                        singletonList(anonymise(document.getFieldValue("ip").toString())),
+                        singletonList(ANONYMISED)
+                    ),
+                    false
+                );
+                printInfo(updated + ": updated document with uid " + document.getFieldValue("uid") + " " + new Date());
+                return true;
+            } catch (Exception e) {
+                printError(e);
+                return false;
+            }
+        }
     }
 }

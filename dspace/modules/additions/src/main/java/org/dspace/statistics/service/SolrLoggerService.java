@@ -117,6 +117,10 @@ public interface SolrLoggerService {
                        List<String> fieldNames, List<List<Object>> fieldValuesList)
             throws SolrServerException, IOException;
 
+    public void update(String query, String action,
+                       List<String> fieldNames, List<List<Object>> fieldValuesList, boolean commit)
+        throws SolrServerException, IOException;
+
     public void query(String query, int max) throws SolrServerException;
 
     /**
@@ -209,5 +213,9 @@ public interface SolrLoggerService {
      * @throws Exception if error
      */
     public void exportHits() throws Exception;
+
+    public void commit() throws Exception;
+
+    public void commitShard(String shard) throws Exception;
 
 }

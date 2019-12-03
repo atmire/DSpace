@@ -780,7 +780,15 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
 
     @Override
     public void update(String query, String action,
-            List<String> fieldNames, List<List<Object>> fieldValuesList)
+                       List<String> fieldNames, List<List<Object>> fieldValuesList)
+        throws SolrServerException, IOException
+    {
+        update(query, action, fieldNames, fieldValuesList, true);
+    }
+
+    @Override
+    public void update(String query, String action,
+            List<String> fieldNames, List<List<Object>> fieldValuesList, boolean commit)
             throws SolrServerException, IOException
     {
         // Since there is NO update
@@ -849,8 +857,10 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
                     .toSolrInputDocument(solrDocument);
             solr.add(newInput);
 
-            shard.commit();
-            solr.commit();
+            if(commit) {
+                shard.commit();
+                solr.commit();
+            }
         }
         // System.out.println("SolrLogger.update(\""+query+"\"):"+(new
         // Date().getTime() - start)+"ms,"+numbFound+"records");
@@ -1524,6 +1534,17 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
         } finally {
             context.abort();
         }
+    }
+
+    @Override
+    public void commit() throws Exception {
+        solr.commit();
+    }
+
+    @Override
+    public void commitShard(String shard) throws Exception {
+        HttpSolrServer shardSolr = new HttpSolrServer("http://" + shard);
+        shardSolr.commit();
     }
 
     protected void addDocumentsToFile(Context context, SolrDocumentList docs, File exportOutput) throws SQLException, ParseException, IOException {
