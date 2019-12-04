@@ -55,8 +55,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.URLEncoder;
+import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -90,7 +93,10 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
 
     private static List<String> statisticYearCores = new ArrayList<String>();
     private static boolean statisticYearCoresInit = false;
-    
+
+    private static final String IP_V4_REGEX = "^((?:\\d{1,3}\\.){3})\\d{1,3}$";
+    private static final String IP_V6_REGEX = "^(.*):.*:.*$";
+
     @Autowired(required = true)
     protected BitstreamService bitstreamService;
     @Autowired(required = true)
@@ -291,7 +297,16 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
                 }
             }
 
-            doc1.addField("ip", ip);
+            if(configurationService.getBooleanProperty("anonymise_statistics.anonymise_on_log", false)) {
+                try {
+                    doc1.addField("ip", anonymiseIp(ip));
+                } catch (UnknownHostException e) {
+                    log.warn(e.getMessage(), e);
+                }
+            }
+            else {
+                doc1.addField("ip", ip);
+            }
 
             //Also store the referrer
             if(request.getHeader("referer") != null){
@@ -300,7 +315,11 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
 
             try
             {
-                String dns = DnsLookup.reverseDns(ip);
+                String dns = configurationService.getProperty("anonymise_statistics.dns_mask", "anonymised");
+                if(!configurationService.getBooleanProperty("anonymise_statistics.anonymise_on_log", false)){
+                    dns = DnsLookup.reverseDns(ip);
+                }
+
                 doc1.addField("dns", dns.toLowerCase());
             }
             catch (Exception e)
@@ -384,11 +403,24 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
                     }
                 }
 
-            doc1.addField("ip", ip);
+                if(configurationService.getBooleanProperty("anonymise_statistics.anonymise_on_log", false)) {
+                    try {
+                        doc1.addField("ip", anonymiseIp(ip));
+                    } catch (UnknownHostException e) {
+                        log.warn(e.getMessage(), e);
+                    }
+                }
+                else {
+                    doc1.addField("ip", ip);
+                }
 
             try
             {
-                String dns = DnsLookup.reverseDns(ip);
+                String dns = configurationService.getProperty("anonymise_statistics.dns_mask", "anonymised");
+                if(!configurationService.getBooleanProperty("anonymise_statistics.anonymise_on_log", false)){
+                    dns = DnsLookup.reverseDns(ip);
+                }
+
                 doc1.addField("dns", dns.toLowerCase());
             }
             catch (Exception e)
@@ -1646,5 +1678,16 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
             log.error(e.getMessage(), e);
         }
         statisticYearCoresInit = true;
+    }
+
+    public Object anonymiseIp(String ip) throws UnknownHostException {
+        InetAddress address = InetAddress.getByName(ip);
+        if (address instanceof Inet4Address) {
+            return ip.replaceFirst(IP_V4_REGEX, "$1" + configurationService.getProperty("anonymise_statistics.ip_v4_mask", "255"));
+        } else if (address instanceof Inet6Address) {
+            return ip.replaceFirst(IP_V6_REGEX, "$1:" + configurationService.getProperty("anonymise_statistics.ip_v6_mask", "FFFF:FFFF"));
+        }
+
+        throw new UnknownHostException("unknown ip format");
     }
 }

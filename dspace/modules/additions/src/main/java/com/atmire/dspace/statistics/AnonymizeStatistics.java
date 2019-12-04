@@ -7,7 +7,6 @@
  */
 package com.atmire.dspace.statistics;
 
-import org.apache.commons.cli.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -19,10 +18,6 @@ import org.dspace.services.factory.DSpaceServicesFactory;
 import org.dspace.statistics.factory.StatisticsServiceFactory;
 import org.dspace.statistics.service.SolrLoggerService;
 
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -45,26 +40,11 @@ import static org.apache.log4j.Logger.getLogger;
 import static org.dspace.core.LogManager.getHeader;
 import static org.dspace.statistics.SolrLoggerServiceImpl.DATE_FORMAT_8601;
 
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Calendar;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
-import org.dspace.core.Context;
-import org.dspace.services.ConfigurationService;
-import org.dspace.services.factory.DSpaceServicesFactory;
-import org.dspace.statistics.factory.StatisticsServiceFactory;
-import org.dspace.statistics.service.SolrLoggerService;
 
 public class AnonymizeStatistics {
 
@@ -86,15 +66,7 @@ public class AnonymizeStatistics {
     private static int batchSize = 100;
     private static int threads = 2;
 
-    private static final String IP_V4_REGEX = "^((?:\\d{1,3}\\.){3})\\d{1,3}$";
-    private static final String IP_V6_REGEX = "^(.*):.*:.*$";
-
-    private static final String IP_V4_MASK =
-            configurationService.getProperty("anonymise_statistics.ip_v4_mask", "255");
-    private static final String IP_V6_MASK =
-            configurationService.getProperty("anonymise_statistics.ip_v6_mask", "FFFF:FFFF");
-
-    private static final Object ANONYMISED = configurationService.getProperty("anonymise_statistics.dns_mask", "anonymised");;
+    private static final Object ANONYMISED = configurationService.getProperty("anonymise_statistics.dns_mask", "anonymised");
 
     private static final String TIME_LIMIT;
 
@@ -118,7 +90,6 @@ public class AnonymizeStatistics {
     private static Options createCommandLineOptions() {
 
         Options options = new Options();
-
         options.addOption(
                 builder(HELP_OPTION)
                         .longOpt("help")
@@ -264,18 +235,6 @@ public class AnonymizeStatistics {
         );
     }
 
-    private static Object anonymise(String ip) throws UnknownHostException {
-
-        InetAddress address = InetAddress.getByName(ip);
-        if (address instanceof Inet4Address) {
-            return ip.replaceFirst(IP_V4_REGEX, "$1" + IP_V4_MASK);
-        } else if (address instanceof Inet6Address) {
-            return ip.replaceFirst(IP_V6_REGEX, "$1:" + IP_V6_MASK);
-        }
-
-        throw new UnknownHostException("unknown ip format: " + ip);
-    }
-
     public static class DoProcessing implements Callable<Boolean> {
         private final SolrDocument document;
         private final long updated;
@@ -296,7 +255,7 @@ public class AnonymizeStatistics {
                         "dns"
                     ),
                     asList(
-                        singletonList(anonymise(document.getFieldValue("ip").toString())),
+                        singletonList(solrLoggerService.anonymiseIp(document.getFieldValue("ip").toString())),
                         singletonList(ANONYMISED)
                     ),
                     false

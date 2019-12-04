@@ -18,6 +18,7 @@ import org.dspace.usage.UsageWorkflowEvent;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -217,5 +218,7 @@ public interface SolrLoggerService {
     public void commit() throws Exception;
 
     public void commitShard(String shard) throws Exception;
+
+    public Object anonymiseIp(String ip) throws UnknownHostException;
 
 }
