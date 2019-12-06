@@ -20,6 +20,7 @@ import org.dspace.content.Item;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.webmvc.json.patch.PatchException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -44,10 +45,14 @@ public class LicenseRemovePatchOperation<R extends InProgressSubmission> extends
     SubmitPatchUtils submitPatchUtils;
 
     @Override
-    public R perform(Context context, R resource, Operation operation)
-            throws SQLException, IOException, AuthorizeException {
+    public R perform(Context context, R resource, Operation operation) throws SQLException, AuthorizeException {
         Item item = resource.getItem();
-        itemService.removeDSpaceLicense(context, item);
+        try {
+            itemService.removeDSpaceLicense(context, item);
+        } catch (IOException e) {
+            throw new PatchException("IOException in LicenseRemovePatchOperation#perform trying to remove a DSpace " +
+                    "license from an item", e);
+        }
         return resource;
     }
 

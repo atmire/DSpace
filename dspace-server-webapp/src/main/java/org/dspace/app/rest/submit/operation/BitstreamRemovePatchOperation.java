@@ -23,6 +23,7 @@ import org.dspace.content.service.ItemService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.webmvc.json.patch.PatchException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -44,7 +45,7 @@ public class BitstreamRemovePatchOperation<R extends InProgressSubmission> exten
 
     @Override
     public R perform(Context context, R resource, Operation operation)
-            throws SQLException, IOException, AuthorizeException {
+            throws SQLException, AuthorizeException, PatchException {
         String absPath = submitPatchUtils.getAbsolutePath(operation.getPath());
         String[] split = absPath.split("/");
         int index = Integer.parseInt(split[1]);
@@ -67,13 +68,23 @@ public class BitstreamRemovePatchOperation<R extends InProgressSubmission> exten
         // delete bundle if it's now empty
         List<Bundle> bundles = bitstream.getBundles();
         Bundle bundle = bundles.get(0);
-        bundleService.removeBitstream(context, bundle, bitstream);
+        try {
+            bundleService.removeBitstream(context, bundle, bitstream);
+        } catch (IOException e) {
+            throw new PatchException("IOException in BitstreamRemovePatchOperation.perform trying to remove " +
+                    "a bitstream", e);
+        }
 
         List<Bitstream> bitstreams = bundle.getBitstreams();
 
         // remove bundle if it's now empty
         if (bitstreams.size() < 1) {
-            itemService.removeBundle(context, item, bundle);
+            try {
+                itemService.removeBundle(context, item, bundle);
+            } catch (IOException e) {
+                throw new PatchException("IOException in BitstreamRemovePatchOperation.perform trying to " +
+                        "remove a bundle", e);
+            }
         }
         return resource;
     }

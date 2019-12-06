@@ -28,7 +28,6 @@ import org.dspace.app.rest.model.ItemRest;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.rest.projection.Projection;
 import org.dspace.app.rest.utils.CollectionRestEqualityUtils;
-import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Collection;
@@ -134,8 +133,7 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
     @Override
     @PreAuthorize("hasPermission(#id, 'COLLECTION', 'WRITE')")
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
-                         Patch patch)
-            throws AuthorizeException, SQLException, IllegalAccessException, IOException, DCInputsReaderException {
+                         Patch patch) throws AuthorizeException, SQLException {
         patchDSpaceObject(apiCategory, model, id, patch);
     }
 

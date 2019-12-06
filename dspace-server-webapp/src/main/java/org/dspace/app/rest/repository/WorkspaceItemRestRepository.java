@@ -33,7 +33,6 @@ import org.dspace.app.rest.repository.patch.ResourcePatch;
 import org.dspace.app.rest.submit.SubmissionService;
 import org.dspace.app.rest.submit.UploadableStep;
 import org.dspace.app.rest.utils.Utils;
-import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.app.util.SubmissionConfig;
 import org.dspace.app.util.SubmissionConfigReader;
 import org.dspace.app.util.SubmissionConfigReaderException;
@@ -262,8 +261,7 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
     //TODO @PreAuthorize("hasPermission(#id, 'WORKSPACEITEM', 'WRITE')")
     @Override
     public void patch(Context context, HttpServletRequest request, String apiCategory, String model, Integer id,
-                      Patch patch)
-            throws SQLException, AuthorizeException, IllegalAccessException, DCInputsReaderException, IOException {
+                      Patch patch) throws SQLException, AuthorizeException {
         WorkspaceItem source = wis.find(context, id);
         if (source == null) {
             throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");

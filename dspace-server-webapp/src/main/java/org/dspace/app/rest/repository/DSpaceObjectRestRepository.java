@@ -7,7 +7,6 @@
  */
 package org.dspace.app.rest.repository;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.UUID;
 
@@ -16,7 +15,6 @@ import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.DSpaceObjectRest;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.rest.repository.patch.ResourcePatch;
-import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.service.DSpaceObjectService;
@@ -56,8 +54,7 @@ public abstract class DSpaceObjectRestRepository<M extends DSpaceObject, R exten
      * @throws UnprocessableEntityException if the patch attempts to modify an unmodifiable attribute of the object.
      */
     protected void patchDSpaceObject(String apiCategory, String model, UUID id, Patch patch)
-            throws AuthorizeException, ResourceNotFoundException, SQLException, UnprocessableEntityException,
-            IllegalAccessException, DCInputsReaderException, IOException {
+            throws AuthorizeException, ResourceNotFoundException, SQLException, UnprocessableEntityException {
         M dso = dsoService.find(obtainContext(), id);
         if (dso == null) {
             throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");

@@ -647,7 +647,7 @@ public class RestResourceController implements InitializingBean {
     public ResponseEntity<ResourceSupport> patch(HttpServletRequest request, @PathVariable String apiCategory,
                                                  @PathVariable String model, @PathVariable Integer id,
                                                  @RequestBody(required = true) JsonNode jsonNode)
-            throws HttpRequestMethodNotSupportedException, IOException, IllegalAccessException {
+            throws HttpRequestMethodNotSupportedException {
         return patchInternal(request, apiCategory, model, id, jsonNode);
     }
 
@@ -689,7 +689,7 @@ public class RestResourceController implements InitializingBean {
                                                                                    String apiCategory,
                                                                                    String model, ID id,
                                                                                    JsonNode jsonNode)
-            throws HttpRequestMethodNotSupportedException, IOException, IllegalAccessException {
+            throws HttpRequestMethodNotSupportedException {
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
         RestAddressableModel modelObject = null;
@@ -698,7 +698,7 @@ public class RestResourceController implements InitializingBean {
             Patch patch = patchConverter.convert(jsonNode);
             modelObject = repository.patch(request, apiCategory, model, id, patch);
         } catch (RepositoryMethodNotImplementedException | UnprocessableEntityException |
-            DSpaceBadRequestException | ResourceNotFoundException | IllegalAccessException | IOException e) {
+            DSpaceBadRequestException | ResourceNotFoundException e) {
             log.error(e.getMessage(), e);
             throw e;
         }

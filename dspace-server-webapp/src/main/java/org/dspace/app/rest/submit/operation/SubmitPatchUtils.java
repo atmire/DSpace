@@ -23,6 +23,7 @@ import org.dspace.content.MetadataValue;
 import org.dspace.content.service.DSpaceObjectService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.webmvc.json.patch.PatchException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -53,8 +54,7 @@ public class SubmitPatchUtils<M extends Object> {
 
     protected void setDeclaredField(Context context, DSpaceObject source, Object value, MetadataField metadataField,
                                     String namedField, List<MetadataValue> metadataByMetadataString, String index,
-                                    DSpaceObjectService dSpaceObjectService)
-            throws IllegalAccessException {
+                                    DSpaceObjectService dSpaceObjectService) throws PatchException {
         int indexInt = Integer.parseInt(index);
         // check field
         String raw = (String) value;
@@ -78,7 +78,12 @@ public class SubmitPatchUtils<M extends Object> {
                             } else {
                                 boolean accessible = field.isAccessible();
                                 field.setAccessible(true);
-                                field.set(obj, raw);
+                                try {
+                                    field.set(obj, raw);
+                                } catch (IllegalAccessException e) {
+                                    throw new PatchException("IllegalAccessException in " +
+                                            "SubmitPatchUtils#setDeclaredField", e);
+                                }
                                 field.setAccessible(accessible);
                             }
                             break;

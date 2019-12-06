@@ -61,7 +61,7 @@ public class ItemMetadataValueReplacePatchOperation<R extends InProgressSubmissi
     DspaceObjectMetadataPatchUtils metadataPatchUtils;
 
     @Override
-    public R perform(Context context, R resource, Operation operation) throws SQLException, IllegalAccessException {
+    public R perform(Context context, R resource, Operation operation) throws SQLException {
         String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
         List<MetadataValue> metadataByMetadataString = itemService.getMetadataByMetadataString(resource.getItem(),
                 split[0]);

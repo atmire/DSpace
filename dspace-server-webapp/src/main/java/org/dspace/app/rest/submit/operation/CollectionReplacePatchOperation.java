@@ -21,6 +21,7 @@ import org.dspace.content.service.WorkspaceItemService;
 import org.dspace.core.Context;
 import org.dspace.util.UUIDUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.webmvc.json.patch.PatchException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -44,15 +45,20 @@ public class CollectionReplacePatchOperation<R extends InProgressSubmission> ext
     SubmitPatchUtils submitPatchUtils;
 
     @Override
-    public R perform(Context context, R resource, Operation operation) throws SQLException, DCInputsReaderException {
+    public R perform(Context context, R resource, Operation operation) throws SQLException, PatchException {
         if (!(resource instanceof WorkspaceItem)) {
-            throw new IllegalArgumentException("the replace operation is only supported on workspaceitem");
+            throw new IllegalArgumentException("the replace operation is only supported on workspaceItem");
         }
         WorkspaceItem wsi = (WorkspaceItem) resource;
         String uuid = (String) operation.getValue();
         Collection fromCollection = resource.getCollection();
         Collection toCollection = collectionService.find(context, UUIDUtils.fromString(uuid));
-        workspaceItemService.move(context, wsi, fromCollection, toCollection);
+        try {
+            workspaceItemService.move(context, wsi, fromCollection, toCollection);
+        } catch (DCInputsReaderException e) {
+            throw new PatchException("DCInputsReaderException in CollectionReplacePatchOperation.perform trying to " +
+                    "move a workspaceItem between collections", e);
+        }
         return resource;
     }
 

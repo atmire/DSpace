@@ -50,7 +50,7 @@ public class BitstreamMetadataValueReplacePatchOperation<R extends InProgressSub
     DspaceObjectMetadataPatchUtils metadataPatchUtils;
 
     @Override
-    public R perform(Context context, R resource, Operation operation) throws SQLException, IllegalAccessException {
+    public R perform(Context context, R resource, Operation operation) throws SQLException {
         //"path": "/sections/upload/files/0/metadata/dc.title/2"
         //"abspath": "/files/0/metadata/dc.title/2"
         String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
@@ -74,11 +74,10 @@ public class BitstreamMetadataValueReplacePatchOperation<R extends InProgressSub
      * @param bitstream     Bitstream whose md is being replaced
      * @param split         All sections of the operation path (/ seperator)
      * @param value         Value the md is being replaced with
-     * @throws SQLException
-     * @throws IllegalAccessException
+     * @throws SQLException if db error
      */
     private void replace(Context context, Bitstream bitstream, String[] split, Object value)
-            throws SQLException, IllegalAccessException {
+            throws SQLException {
         String mdString = split[3];
         List<MetadataValue> metadataByMetadataString
                 = bitstreamService.getMetadataByMetadataString(bitstream, mdString);

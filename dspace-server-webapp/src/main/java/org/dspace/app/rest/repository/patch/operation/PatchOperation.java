@@ -7,15 +7,14 @@
  */
 package org.dspace.app.rest.repository.patch.operation;
 
-import java.io.IOException;
 import java.sql.SQLException;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.model.patch.Operation;
-import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
+import org.springframework.data.rest.webmvc.json.patch.PatchException;
 
 /**
  * Base class for all resource patch operations.
@@ -38,7 +37,7 @@ public abstract class PatchOperation<M> {
      * @return the patched dso
      */
     public abstract M perform(Context context, M resource, Operation operation)
-            throws SQLException, IllegalAccessException, IOException, AuthorizeException, DCInputsReaderException;
+            throws SQLException, AuthorizeException, PatchException;
 
     /**
      * Throws PatchBadRequestException for missing operation value.

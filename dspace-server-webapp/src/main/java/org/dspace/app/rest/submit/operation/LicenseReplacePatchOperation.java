@@ -23,6 +23,7 @@ import org.dspace.content.service.ItemService;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.webmvc.json.patch.PatchException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -42,8 +43,7 @@ public class LicenseReplacePatchOperation<R extends InProgressSubmission> extend
     SubmitPatchUtils submitPatchUtils;
 
     @Override
-    public R perform(Context context, R resource, Operation operation)
-            throws SQLException, IOException, AuthorizeException {
+    public R perform(Context context, R resource, Operation operation) throws SQLException, AuthorizeException {
         Boolean grant = null;
         // we are friendly with the client and accept also a string representation for the boolean
         if (operation.getValue() instanceof String) {
@@ -57,14 +57,22 @@ public class LicenseReplacePatchOperation<R extends InProgressSubmission> extend
         }
         Item item = resource.getItem();
         EPerson submitter = context.getCurrentUser();
-        // remove any existing DSpace license (just in case the user
-        // accepted it previously)
-        itemService.removeDSpaceLicense(context, item);
+        // remove any existing DSpace license (just in case the user accepted it previously)
+        try {
+            itemService.removeDSpaceLicense(context, item);
+        } catch (IOException e) {
+            throw new PatchException("IOException in LicenseReplacePatchOperation#perform trying to remove a DSpace " +
+                    "license from an item", e);
+        }
         if (grant) {
             String license = LicenseUtils.getLicenseText(context.getCurrentLocale(), resource.getCollection(), item,
                     submitter);
-
-            LicenseUtils.grantLicense(context, item, license, null);
+            try {
+                LicenseUtils.grantLicense(context, item, license, null);
+            } catch (IOException e) {
+                throw new PatchException("IOException in LicenseReplacePatchOperation#perform trying to remove the " +
+                        "DSpace license from an item", e);
+            }
         }
         return resource;
     }

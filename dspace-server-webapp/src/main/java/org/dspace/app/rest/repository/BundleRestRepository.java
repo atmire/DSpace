@@ -24,7 +24,6 @@ import org.dspace.app.rest.model.BitstreamRest;
 import org.dspace.app.rest.model.BundleRest;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.rest.projection.Projection;
-import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.Bitstream;
@@ -108,8 +107,7 @@ public class BundleRestRepository extends DSpaceObjectRestRepository<Bundle, Bun
     @Override
     @PreAuthorize("hasPermission(#uuid, 'BUNDLE', 'WRITE')")
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
-                         Patch patch)
-            throws AuthorizeException, SQLException, IllegalAccessException, IOException, DCInputsReaderException {
+                         Patch patch) throws AuthorizeException, SQLException {
         patchDSpaceObject(apiCategory, model, uuid, patch);
     }
 
