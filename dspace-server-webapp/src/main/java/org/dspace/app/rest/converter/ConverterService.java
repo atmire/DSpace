@@ -24,6 +24,7 @@ import org.dspace.app.rest.model.RestModel;
 import org.dspace.app.rest.model.hateoas.HALResource;
 import org.dspace.app.rest.projection.DefaultProjection;
 import org.dspace.app.rest.projection.Projection;
+import org.dspace.app.rest.projection.factory.DSpaceProjectionFactory;
 import org.dspace.app.rest.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -61,7 +62,7 @@ public class ConverterService {
     private List<DSpaceConverter> converters;
 
     @Autowired
-    private List<Projection> projections;
+    private List<DSpaceProjectionFactory> projectionFactories;
 
     /**
      * Converts the given model object to a rest object, using the appropriate {@link DSpaceConverter} and
@@ -251,8 +252,10 @@ public class ConverterService {
     @PostConstruct
     private void initialize() {
         // put all available projections in a map keyed by name
-        for (Projection projection : projections) {
-            projectionMap.put(projection.getName(), projection);
+        for (DSpaceProjectionFactory projectionFactory : projectionFactories) {
+            for (Projection projection : projectionFactory.instantiateProjections()) {
+                projectionMap.put(projection.getName(), projection);
+            }
         }
         projectionMap.put(Projection.DEFAULT.getName(), Projection.DEFAULT);
 
