@@ -25,6 +25,7 @@ import org.apache.axiom.om.OMXMLBuilderFactory;
 import org.apache.axiom.om.OMXMLParserWrapper;
 import org.apache.axiom.om.xpath.AXIOMXPath;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.external.model.ExternalDataObject;
@@ -245,7 +246,7 @@ public class PubmedArticleDataProvider implements ExternalDataProvider {
         invocationBuilder = getRecordsTarget.request(MediaType.TEXT_PLAIN_TYPE);
         response = invocationBuilder.get();
 
-        if (response.getStatus() != 200) {
+        if (response.getStatus() != HttpStatus.SC_OK) {
             throw new RuntimeException("The server responded with an error code different than 200");
         }
         List<OMElement> omElements = parseMetadata(response.readEntity(String.class));
@@ -293,7 +294,7 @@ public class PubmedArticleDataProvider implements ExternalDataProvider {
 
         Response response = invocationBuilder.get();
 
-        if (response.getStatus() != 200) {
+        if (response.getStatus() != HttpStatus.SC_OK) {
             throw new RuntimeException("The server responded with an error code different than 200");
         }
 
