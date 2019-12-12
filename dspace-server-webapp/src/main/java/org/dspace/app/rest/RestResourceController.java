@@ -809,7 +809,8 @@ public class RestResourceController implements InitializingBean {
                     RestModel object = (RestModel) linkMethod.invoke(linkRepository, request, uuid, page,
                             utils.obtainProjection());
                     if (object == null) {
-                        throw new ResourceNotFoundException(subpath + " undefined for " + model + "/" + uuid);
+                        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                        return null;
                     } else {
                         Link link = linkTo(this.getClass(), apiCategory, model).slash(uuid).slash(subpath)
                                 .withSelfRel();
