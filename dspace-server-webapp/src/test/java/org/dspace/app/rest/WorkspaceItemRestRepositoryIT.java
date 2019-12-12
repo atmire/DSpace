@@ -100,9 +100,9 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                                       .withIssueDate("2016-02-13")
                                       .build();
 
-        String token = getAuthToken(admin.getEmail(), password);
+        String authToken = getAuthToken(admin.getEmail(), password);
 
-        getClient(token).perform(get("/api/submission/workspaceitems"))
+        getClient(authToken).perform(get("/api/submission/workspaceitems"))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$._embedded.workspaceitems", Matchers.containsInAnyOrder(
                         WorkspaceItemMatcher.matchItemWithTitleAndDateIssued(workspaceItem1, "Workspace Item 1",
@@ -153,9 +153,9 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                                       .withIssueDate("2016-02-13")
                                       .build();
 
-        String token = getAuthToken(admin.getEmail(), password);
+        String authToken = getAuthToken(admin.getEmail(), password);
 
-        getClient(token).perform(get("/api/submission/workspaceitems").param("size", "2"))
+        getClient(authToken).perform(get("/api/submission/workspaceitems").param("size", "2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._embedded.workspaceitems",
                         Matchers.containsInAnyOrder(
@@ -167,7 +167,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                         Matchers.not(Matchers.contains(WorkspaceItemMatcher
                                 .matchItemWithTitleAndDateIssued(workspaceItem3, "Workspace Item 3", "2016-02-13")))));
 
-        getClient(token).perform(get("/api/submission/workspaceitems").param("size", "2").param("page", "1"))
+        getClient(authToken).perform(get("/api/submission/workspaceitems").param("size", "2").param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._embedded.workspaceitems",
                         Matchers.contains(WorkspaceItemMatcher.matchItemWithTitleAndDateIssued(workspaceItem3,
@@ -208,7 +208,9 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .withSubject("ExtraEntry")
                 .build();
 
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID())).andExpect(status().isOk())
+        String authToken = getAuthToken(admin.getEmail(), password);
+
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID())).andExpect(status().isOk())
                 .andExpect(jsonPath("$",
                         Matchers.is(WorkspaceItemMatcher.matchItemWithTitleAndDateIssuedAndSubject(witem,
                                 "Workspace Item 1", "2017-10-17", "ExtraEntry"))));
@@ -241,17 +243,20 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .withSubject("ExtraEntry")
                 .build();
 
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID() + "/collection"))
+        String authToken = getAuthToken(admin.getEmail(), password);
+
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID() + "/collection"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", Matchers
                         .is(CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle()))
                 ));
 
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID() + "/item")).andExpect(status().isOk())
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID() + "/item"))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$", Matchers.is(ItemMatcher.matchItemWithTitleAndDateIssued(witem.getItem(),
                         "Workspace Item 1", "2017-10-17"))));
 
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID() + "/submissionDefinition"))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID() + "/submissionDefinition"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", Matchers.is(hasJsonPath("$.id", is("traditional")))));
 
@@ -696,7 +701,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$",
@@ -770,7 +775,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors[?(@.message=='error.validation.required')]",
                     Matchers.contains(
@@ -798,7 +803,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witemMultipleSubjects.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witemMultipleSubjects.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.traditionalpagetwo['dc.subject'][0].value", is("Subject1")))
@@ -820,7 +825,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witemMultipleSubjects.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witemMultipleSubjects.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.traditionalpagetwo['dc.subject'][0].value", is("Subject3")))
@@ -840,7 +845,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witemMultipleSubjects.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witemMultipleSubjects.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.traditionalpagetwo['dc.subject'][0].value", is("Subject3")))
@@ -859,7 +864,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witemMultipleSubjects.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witemMultipleSubjects.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.traditionalpagetwo['dc.subject']").doesNotExist())
@@ -879,7 +884,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witemWithTitleDateAndSubjects.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witemWithTitleDateAndSubjects.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.traditionalpagetwo['dc.subject']").doesNotExist())
@@ -934,7 +939,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$",
@@ -994,7 +999,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.traditionalpagetwo['dc.subject'][0].value", is("Subject1")))
@@ -1023,7 +1028,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.traditionalpagetwo['dc.subject'][0].value", is("First Subject")))
@@ -1055,7 +1060,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.traditionalpagetwo['dc.subject'][0].value", is("First Subject")))
@@ -1090,7 +1095,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.traditionalpagetwo['dc.subject'][0].value", is("First Subject")))
@@ -1128,7 +1133,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.traditionalpagetwo['dc.subject'][0].value", is("First Subject")))
@@ -1181,7 +1186,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .build();
 
         // check that our workspaceitems come without a license (all are build in the same way, just check the first)
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.sections.license.granted",
                     is(false)))
@@ -1206,7 +1211,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.license.granted",
@@ -1232,7 +1237,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem2.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem2.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.license.granted",
@@ -1258,7 +1263,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem3.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem3.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.license.granted",
@@ -1284,7 +1289,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem4.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem4.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.license.granted",
@@ -1339,7 +1344,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .build();
 
         // check that our workspaceitems come with a license (all are build in the same way, just check the first)
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.sections.license.granted",
                     is(true)))
@@ -1364,7 +1369,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.license.granted",
@@ -1390,7 +1395,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem2.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem2.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.license.granted",
@@ -1416,7 +1421,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem3.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem3.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.license.granted",
@@ -1442,7 +1447,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // verify that the patch changes have been persisted
-        getClient().perform(get("/api/submission/workspaceitems/" + witem4.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem4.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.sections.license.granted",
@@ -1483,7 +1488,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .build();
 
         // check the file metadata
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.sections.upload.files[0].metadata['dc.source'][0].value",
                     is("/local/path/simple-article.pdf")))
@@ -1519,7 +1524,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // check that changes persist
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.sections.upload.files[0].metadata['dc.source'][0].value",
                     is("/local/path/simple-article.pdf")))
@@ -1549,7 +1554,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // check that changes persist
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.sections.upload.files[0].metadata['dc.source']").doesNotExist())
             .andExpect(jsonPath("$.sections.upload.files[0].metadata['dc.title'][0].value",
@@ -1573,7 +1578,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // check that changes persist
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.sections.upload.files[0].metadata['dc.title'][0].value",
                     is("another-filename.pdf")))
@@ -1621,7 +1626,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         ;
 
         // check the file metadata
-        getClient().perform(get("/api/submission/workspaceitems/" + witem.getID()))
+        getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.sections.upload.files[0].metadata['dc.title'][0].value",
                     is("simple-article.pdf")))

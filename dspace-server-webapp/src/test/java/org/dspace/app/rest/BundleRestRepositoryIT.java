@@ -147,7 +147,7 @@ public class BundleRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         context.restoreAuthSystemState();
 
-        getClient().perform(get("/api/core/items/" + item.getID() + "/bundles"))
+        getClient().perform(get("/api/core/items/" + item.getID() + "/bundles?projection=default"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.bundles", Matchers.hasItems(
@@ -164,7 +164,8 @@ public class BundleRestRepositoryIT extends AbstractControllerIntegrationTest {
                                                      bundle2.getBitstreams())
 
                    )))
-                   .andExpect(jsonPath("$._links.self.href", endsWith("/api/core/items/" + item.getID() + "/bundles")))
+                   .andExpect(jsonPath("$._links.self.href",
+                           endsWith("/api/core/items/" + item.getID() + "/bundles?projection=default")))
         ;
     }
 
@@ -359,7 +360,7 @@ public class BundleRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         context.restoreAuthSystemState();
 
-        getClient().perform(get("/api/core/bundles/" + bundle1.getID() + "/bitstreams"))
+        getClient().perform(get("/api/core/bundles/" + bundle1.getID() + "/bitstreams?projection=default"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.bitstreams", Matchers.hasItems(
@@ -394,7 +395,7 @@ public class BundleRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         context.restoreAuthSystemState();
 
-        getClient().perform(get("/api/core/bundles/" + bundle1.getID() + "/bitstreams"))
+        getClient().perform(get("/api/core/bundles/" + bundle1.getID() + "/bitstreams?projection=default"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))
                 .andExpect(jsonPath("$._embedded.bitstreams", Matchers.contains(
@@ -415,7 +416,7 @@ public class BundleRestRepositoryIT extends AbstractControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                     .andExpect(status().isOk());
 
-        getClient().perform(get("/api/core/bundles/" + bundle1.getID() + "/bitstreams"))
+        getClient().perform(get("/api/core/bundles/" + bundle1.getID() + "/bitstreams?projection=default"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))
                 .andExpect(jsonPath("$._embedded.bitstreams", Matchers.contains(
@@ -453,7 +454,7 @@ public class BundleRestRepositoryIT extends AbstractControllerIntegrationTest {
         String token = getAuthToken(admin.getEmail(), password);
 
         // Check if bundle is present
-        getClient().perform(get("/api/core/bundles/" + bundle1.getID() + "/bitstreams"))
+        getClient().perform(get("/api/core/bundles/" + bundle1.getID() + "/bitstreams?projection=default"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))
                 .andExpect(jsonPath("$._embedded.bitstreams", Matchers.hasItems(
