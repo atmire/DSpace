@@ -1,0 +1,358 @@
+<?xml version="1.0"?>
+<!DOCTYPE input-forms SYSTEM "../submission-forms.dtd">
+
+
+<input-forms>
+
+    <!-- The form-definitions map lays out the detailed definition of all the -->
+    <!-- submission forms. Each separate form set has a unique name as an     -->
+    <!-- attribute. This name matches one of the names in the form-map. One   -->
+    <!-- named form set has the name "traditional"; as this name suggests,    -->
+    <!-- it is the old style and is also the default, which gets used when    -->
+    <!-- the specified collection has no correspondingly-named form set.      -->
+    <!--                                                                      -->
+    <!-- Each form set contains an ordered set of pages; each page defines    -->
+    <!-- one submission metadata entry screen. Each page has an ordered list  -->
+    <!-- of field definitions, Each field definition corresponds to one       -->
+    <!-- metadata entry (a so-called row), which has a DC element name, a     -->
+    <!-- displayed label, a text string prompt which is called a hint, and    -->
+    <!-- an input-type. Each field also may hold optional elements: DC        -->
+    <!-- qualifier name, a repeatable flag, and a text string whose presence  -->
+    <!-- serves as a 'this field is required' flag.                           -->
+
+    <form-definitions>
+
+        <form name="traditionalpageone">
+<!--            TODO: avoid duplicate relations-->
+            <row>
+                <relation-field>
+                    <relationship-type>isAuthorOfPublication</relationship-type>
+                    <search-configuration>personConfiguration</search-configuration>
+                    <repeatable>true</repeatable>
+                    <label>Author</label>
+                    <hint>Add an author</hint>
+                    <linked-metadata-field>
+                        <dc-schema>dc</dc-schema>
+                        <dc-element>contributor</dc-element>
+                        <dc-qualifier>author</dc-qualifier>
+                        <input-type>name</input-type>
+                    </linked-metadata-field>
+                    <required>At least one author (plain text or relationship) is required</required>
+                </relation-field>
+            </row>
+        </form>
+
+        <form name="traditionalpagetwo">
+            <row>
+                <relation-field>
+                    <relationship-type>isOrgUnitOfPublication</relationship-type>
+                    <search-configuration>organization</search-configuration>
+                    <repeatable>true</repeatable>
+                    <label>Organization</label>
+                    <hint>Select the Organizational Unit related to this publication.</hint>
+                </relation-field>
+            </row>
+            <row>
+                <relation-field>
+                    <relationship-type>isProjectOfPublication</relationship-type>
+                    <search-configuration>project</search-configuration>
+                    <repeatable>true</repeatable>
+                    <label>Project</label>
+                    <hint>Select the Project related to this publication.</hint>
+                </relation-field>
+            </row>
+        </form>
+
+        <form name="peopleStep">
+            <row>
+                <field>
+                    <dc-schema>person</dc-schema>
+                    <dc-element>familyName</dc-element>
+                    <label>Last name</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the last name of the person</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>person</dc-schema>
+                    <dc-element>givenName</dc-element>
+                    <label>First name</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the first name of the person</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>person</dc-schema>
+                    <dc-element>email</dc-element>
+                    <label>Email</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the email of the person</hint>
+                </field>
+            </row>
+            <!--     <row>-->
+            <!--     <field>-->
+            <!--       <dc-schema>person</dc-schema>-->
+            <!--       <dc-element>identifier</dc-element>-->
+            <!--       <dc-qualifier>orcid</dc-qualifier>-->
+            <!--       <label>Orcid</label>-->
+            <!--       <input-type>onebox</input-type>-->
+            <!--       <hint>Enter the orcid of the person</hint>-->
+            <!--     </field>-->
+            <!--     </row>-->
+            <row>
+                <field>
+                    <dc-schema>person</dc-schema>
+                    <dc-element>birthDate</dc-element>
+                    <label>Birth date</label>
+                    <input-type>date</input-type>
+                    <hint>Enter the birth date of the person</hint>
+                </field>
+            </row>
+<!--            <row>-->
+<!--                <field>-->
+<!--                    <dc-schema>person</dc-schema>-->
+<!--                    <dc-element>identifier</dc-element>-->
+<!--                    <dc-qualifier>staffid</dc-qualifier>-->
+<!--                    <label>Staff ID</label>-->
+<!--                    <input-type>onebox</input-type>-->
+<!--                    <hint>Enter the staff id of the person</hint>-->
+<!--                </field>-->
+<!--            </row>-->
+            <row>
+                <field>
+                    <dc-schema>person</dc-schema>
+                    <dc-element>jobTitle</dc-element>
+                    <label>Job title</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the job title of the person</hint>
+                </field>
+            </row>
+            <row>
+                <relation-field>
+                    <relationship-type>isOrgUnitOfPerson</relationship-type>
+                    <search-configuration>organization</search-configuration>
+                    <label>Organization</label>
+                    <hint>Select the Organizational Unit this user is part of.</hint>
+                </relation-field>
+            </row>
+            <row>
+                <relation-field>
+                    <relationship-type>isProjectOfPerson</relationship-type>
+                    <search-configuration>project</search-configuration>
+                    <label>Project</label>
+                    <hint>Select the Project this user is part of.</hint>
+                </relation-field>
+            </row>
+        </form>
+
+        <form name="projectStep">
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>title</dc-element>
+                    <label>Name</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the name of the project</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>okr</dc-schema>
+                    <dc-element>title</dc-element>
+                    <label>Name</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the name of the project</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>title</dc-element>
+                    <dc-qualifier>alternative</dc-qualifier>
+                    <repeatable>true</repeatable>
+                    <label>Alternative Names</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the name of the project</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>identifier</dc-element>
+                    <label>ID</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the id of the project</hint>
+                </field>
+            </row>
+<!--            <row>-->
+<!--                <field>-->
+<!--                    <dc-schema>project</dc-schema>-->
+<!--                    <dc-element>identifier</dc-element>-->
+<!--                    <dc-qualifier>status</dc-qualifier>-->
+<!--                    <label>Status</label>-->
+<!--                    <input-type value-pairs-name="project_status">dropdown</input-type>-->
+<!--                    <hint>Enter the status of the project</hint>-->
+<!--                </field>-->
+<!--            </row>-->
+<!--            <row>-->
+<!--                <field>-->
+<!--                    <dc-schema>project</dc-schema>-->
+<!--                    <dc-element>identifier</dc-element>-->
+<!--                    <dc-qualifier>startdate</dc-qualifier>-->
+<!--                    <label>Start date</label>-->
+<!--                    <input-type>date</input-type>-->
+<!--                    <hint>Enter the start date of the project</hint>-->
+<!--                </field>-->
+<!--            </row>-->
+<!--            <row>-->
+<!--                <field>-->
+<!--                    <dc-schema>project</dc-schema>-->
+<!--                    <dc-element>identifier</dc-element>-->
+<!--                    <dc-qualifier>expectedcompletion</dc-qualifier>-->
+<!--                    <label>Expected Completion</label>-->
+<!--                    <input-type>date</input-type>-->
+<!--                    <hint>Enter the expected completion date of the project</hint>-->
+<!--                </field>-->
+<!--            </row>-->
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>subject</dc-element>
+                    <repeatable>true</repeatable>
+                    <label>Keywords</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the keywords of the project</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>description</dc-element>
+                    <label>Description</label>
+                    <input-type>textarea</input-type>
+                    <hint>Enter the description of the project</hint>
+                </field>
+            </row>
+            <row>
+                <relation-field>
+                    <relationship-type>isPublicationOfProject</relationship-type>
+                    <search-configuration>publication</search-configuration>
+                    <repeatable>true</repeatable>
+                    <label>Publication</label>
+                    <hint>Select the Publication related to this project.</hint>
+                </relation-field>
+            </row>
+            <row>
+                <relation-field>
+                    <relationship-type>isOrgUnitOfProject</relationship-type>
+                    <search-configuration>organization</search-configuration>
+                    <repeatable>true</repeatable>
+                    <label>Organization</label>
+                    <hint>Select the Organizational Unit related to this project.</hint>
+                </relation-field>
+            </row>
+            <row>
+                <relation-field>
+                    <relationship-type>isPersonOfProject</relationship-type>
+                    <search-configuration>person</search-configuration>
+                    <repeatable>true</repeatable>
+                    <label>People</label>
+                    <hint>Select the People related to this project.</hint>
+                </relation-field>
+            </row>
+        </form>
+
+        <form name="orgUnitStep">
+            <row>
+                <field>
+                    <dc-schema>organization</dc-schema>
+                    <dc-element>legalName</dc-element>
+                    <label>Name</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the name of the orgunit</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>identifier</dc-element>
+                    <label>ID</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the id of the orgunit</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>organization</dc-schema>
+                    <dc-element>foundingDate</dc-element>
+                    <label>Date established</label>
+                    <input-type>date</input-type>
+                    <hint>Enter the established date of the orgunit</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>organization</dc-schema>
+                    <dc-element>address</dc-element>
+                    <dc-qualifier>addressLocality</dc-qualifier>
+                    <label>City</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the city of the orgunit</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>organization</dc-schema>
+                    <dc-element>address</dc-element>
+                    <dc-qualifier>addressCountry</dc-qualifier>
+                    <label>Country</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the country of the orgunit</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>description</dc-element>
+                    <label>Description</label>
+                    <input-type>textarea</input-type>
+                    <hint>Enter the description of the orgunit</hint>
+                </field>
+            </row>
+            <row>
+                <relation-field>
+                    <relationship-type>isPublicationOfOrgUnit</relationship-type>
+                    <search-configuration>publication</search-configuration>
+                    <repeatable>true</repeatable>
+                    <label>Publication</label>
+                    <hint>Select the Publication related to this Organization Unit.</hint>
+                </relation-field>
+            </row>
+            <row>
+                <relation-field>
+                    <relationship-type>isProjectOfOrgUnit</relationship-type>
+                    <search-configuration>project</search-configuration>
+                    <repeatable>true</repeatable>
+                    <label>Project</label>
+                    <hint>Select the Project related to this Organization Unit.</hint>
+                </relation-field>
+            </row>
+            <row>
+                <relation-field>
+                    <relationship-type>isPersonOfOrgUnit</relationship-type>
+                    <search-configuration>person</search-configuration>
+                    <repeatable>true</repeatable>
+                    <label>People</label>
+                    <hint>Select the People related to this Organization Unit.</hint>
+                </relation-field>
+            </row>
+        </form>
+
+    </form-definitions>
+
+    <form-value-pairs>
+    </form-value-pairs>
+
+</input-forms>

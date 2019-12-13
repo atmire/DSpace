@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+<!DOCTYPE input-forms SYSTEM "../submission-forms.dtd">
+
+
+<input-forms>
+
+    <!-- The form-definitions map lays out the detailed definition of all the -->
+    <!-- submission forms. Each separate form set has a unique name as an     -->
+    <!-- attribute. This name matches one of the names in the form-map. One   -->
+    <!-- named form set has the name "traditional"; as this name suggests,    -->
+    <!-- it is the old style and is also the default, which gets used when    -->
+    <!-- the specified collection has no correspondingly-named form set.      -->
+    <!--                                                                      -->
+    <!-- Each form set contains an ordered set of pages; each page defines    -->
+    <!-- one submission metadata entry screen. Each page has an ordered list  -->
+    <!-- of field definitions, Each field definition corresponds to one       -->
+    <!-- metadata entry (a so-called row), which has a DC element name, a     -->
+    <!-- displayed label, a text string prompt which is called a hint, and    -->
+    <!-- an input-type. Each field also may hold optional elements: DC        -->
+    <!-- qualifier name, a repeatable flag, and a text string whose presence  -->
+    <!-- serves as a 'this field is required' flag.                           -->
+
+    <form-definitions>
+
+        <form name="traditionalpagetwo">
+            <row>
+                <relation-field>
+                    <relationship-type>isJournalIssueOfPublication</relationship-type>
+                    <search-configuration>publicationIssue</search-configuration>
+                    <label>Journal Issue</label>
+                    <hint>Select the journal issue related to this publication.</hint>
+                </relation-field>
+            </row>
+        </form>
+
+        <form name="journalStep">
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>title</dc-element>
+                    <label>Name</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the name of the journal</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>creativework</dc-schema>
+                    <dc-element>editor</dc-element>
+                    <label>Editor</label>
+                    <input-type>name</input-type>
+                    <hint>Enter the editor of the journal</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>creativeworkseries</dc-schema>
+                    <dc-element>issn</dc-element>
+                    <label>ISSN</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the issn of the journal</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>description</dc-element>
+                    <label>Description</label>
+                    <input-type>textarea</input-type>
+                    <hint>Enter the description of the journal</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>creativework</dc-schema>
+                    <dc-element>publisher</dc-element>
+                    <label>Publisher</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the publisher of the journal</hint>
+                </field>
+            </row>
+
+        </form>
+
+        <form name="journalVolumeStep">
+            <row>
+                <relation-field>
+                    <relationship-type>isVolumeOfJournal</relationship-type>
+                    <search-configuration>periodicalConfiguration</search-configuration>
+                    <filter>creativework.publisher:somepublishername</filter>
+                    <label>Journal</label>
+                    <hint>Select the journal related to this volume.</hint>
+                </relation-field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>title</dc-element>
+                    <label>Name</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the name of the journal volume</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>publicationVolume</dc-schema>
+                    <dc-element>volumeNumber</dc-element>
+                    <label>Volume</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the volume of the journal volume</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>creativework</dc-schema>
+                    <dc-element>datePublished</dc-element>
+                    <label>Issue date</label>
+                    <input-type>date</input-type>
+                    <hint>Enter the issue date of the journal volume</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>description</dc-element>
+                    <label>Description</label>
+                    <input-type>textarea</input-type>
+                    <hint>Enter the description of the journal volume</hint>
+                </field>
+            </row>
+        </form>
+
+        <form name="journalIssueStep">
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>title</dc-element>
+                    <label>Name</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the name of the journal issue</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>publicationissue</dc-schema>
+                    <dc-element>issueNumber</dc-element>
+                    <label>Number</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the number of the journal issue</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>creativework</dc-schema>
+                    <dc-element>datePublished</dc-element>
+                    <label>Issue date</label>
+                    <input-type>date</input-type>
+                    <hint>Enter the issue date of the journal issue</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>description</dc-element>
+                    <label>Description</label>
+                    <input-type>textarea</input-type>
+                    <hint>Enter the description of the journal issue</hint>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>creativework</dc-schema>
+                    <dc-element>keywords</dc-element>
+                    <repeatable>true</repeatable>
+                    <label>Keywords</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the keywords of the journal issue</hint>
+                </field>
+            </row>
+
+        </form>
+
+    </form-definitions>
+
+    <form-value-pairs>
+    </form-value-pairs>
+
+</input-forms>
