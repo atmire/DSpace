@@ -338,7 +338,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
                                            .build();
 
 
-        getClient().perform(get("/api/core/communities").param("size", "2"))
+        getClient().perform(get("/api/core/communities").param("size", "2").param("projection", "default"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))
                 .andExpect(jsonPath("$._embedded.communities", Matchers.containsInAnyOrder(
@@ -367,7 +367,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
 
         context.restoreAuthSystemState();
 
-        getClient().perform(get("/api/core/communities").param("size", "2"))
+        getClient().perform(get("/api/core/communities").param("size", "2").param("projection", "default"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.communities", Matchers.containsInAnyOrder(
@@ -378,7 +378,8 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
                    .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/communities")))
                    .andExpect(jsonPath("$.page", PageMatcher.pageEntryWithTotalPagesAndElements(0, 2, 2, 4)));
 
-        getClient().perform(get("/api/core/communities").param("size", "2").param("page", "1"))
+        getClient().perform(get("/api/core/communities").param("size", "2").param("page", "1")
+                   .param("projection", "default"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.communities", Matchers.containsInAnyOrder(
@@ -397,7 +398,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
         context.turnOffAuthorisationSystem();
         parentCommunity = CommunityBuilder.createCommunity(context).build();
 
-        getClient().perform(get("/api/core/communities"))
+        getClient().perform(get("/api/core/communities?projection=default"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))
                 .andExpect(jsonPath("$._embedded.communities", Matchers.contains(
@@ -458,8 +459,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
 
         context.restoreAuthSystemState();
 
-        getClient().perform(get("/api/core/communities")
-                                .param("size", "1"))
+        getClient().perform(get("/api/core/communities").param("size", "1").param("projection", "default"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.communities", Matchers.contains(
@@ -474,7 +474,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
                    .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/communities")))
         ;
 
-        getClient().perform(get("/api/core/communities")
+        getClient().perform(get("/api/core/communities?projection=default")
                                 .param("size", "1")
                                 .param("page", "1"))
                    .andExpect(status().isOk())
@@ -624,7 +624,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
 
         context.restoreAuthSystemState();
 
-        getClient().perform(get("/api/core/communities/search/top"))
+        getClient().perform(get("/api/core/communities/search/top?projection=default"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.communities", Matchers.containsInAnyOrder(
@@ -685,7 +685,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
 
         context.restoreAuthSystemState();
 
-        getClient().perform(get("/api/core/communities/search/subCommunities")
+        getClient().perform(get("/api/core/communities/search/subCommunities?projection=default")
                 .param("parent", parentCommunity.getID().toString()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))
@@ -719,7 +719,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
                 .andExpect(jsonPath("$.page.totalElements", is(2)))
         ;
 
-        getClient().perform(get("/api/core/communities/search/subCommunities")
+        getClient().perform(get("/api/core/communities/search/subCommunities?projection=default")
                 .param("parent", parentCommunityChild2.getID().toString()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))

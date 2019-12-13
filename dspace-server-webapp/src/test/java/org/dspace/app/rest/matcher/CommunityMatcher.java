@@ -29,8 +29,6 @@ public class CommunityMatcher {
                 hasJsonPath("$.uuid", is(uuid.toString())),
                 hasJsonPath("$.handle", is(handle)),
                 hasJsonPath("$.type", is("community")),
-                hasJsonPath("$._embedded.collections", Matchers.not(Matchers.empty())),
-                hasJsonPath("$._embedded.logo", Matchers.not(Matchers.empty())),
                 matchLinks(uuid)
         );
     }
@@ -44,8 +42,6 @@ public class CommunityMatcher {
                 hasJsonPath("$.name", is(titles.get(0))),
                 hasJsonPath("$.handle", is(handle)),
                 hasJsonPath("$.type", is("community")),
-                hasJsonPath("$._embedded.collections", Matchers.not(Matchers.empty())),
-                hasJsonPath("$._embedded.logo", Matchers.not(Matchers.empty())),
                 matchLinks(uuid)
         );
     }
@@ -54,7 +50,6 @@ public class CommunityMatcher {
         return allOf(
             matchProperties(name, uuid, handle),
             hasJsonPath("$._embedded.collections", Matchers.not(Matchers.empty())),
-            hasJsonPath("$._embedded.logo", Matchers.not(Matchers.empty())),
             matchLinks(uuid)
         );
     }
@@ -88,7 +83,6 @@ public class CommunityMatcher {
             hasJsonPath("$._embedded.collections._embedded.collections[0]",
                         CollectionMatcher
                             .matchCollectionEntry(col.getName(), col.getID(), col.getHandle(), col.getLogo())),
-            hasJsonPath("$._embedded.logo", Matchers.not(Matchers.empty())),
             matchLinks(uuid)
         );
     }
