@@ -794,6 +794,11 @@ public class RestResourceController implements InitializingBean {
                     Page<? extends RestModel> pageResult = (Page<? extends RestAddressableModel>) linkMethod
                             .invoke(linkRepository, request, uuid, page, utils.obtainProjection(true));
 
+                    if (pageResult == null) {
+                        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                        return null;
+                    }
+
                     Link link = null;
                     String querystring = request.getQueryString();
                     if (querystring != null && querystring.length() > 0) {

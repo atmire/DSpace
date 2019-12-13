@@ -72,7 +72,7 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         Collection col2 = CollectionBuilder.createCollection(context, child2).withName("Collection 2").build();
 
 
-        getClient().perform(get("/api/core/collections"))
+        getClient().perform(get("/api/core/collections?projection=default"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.collections", Matchers.containsInAnyOrder(
@@ -102,7 +102,7 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
 
         context.restoreAuthSystemState();
 
-        getClient().perform(get("/api/core/collections")
+        getClient().perform(get("/api/core/collections?projection=default")
                                 .param("size", "1"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
@@ -115,7 +115,7 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                        )
                    )));
 
-        getClient().perform(get("/api/core/collections")
+        getClient().perform(get("/api/core/collections?projection=default")
                                 .param("size", "1")
                                 .param("page", "1"))
                    .andExpect(status().isOk())
@@ -190,7 +190,8 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$", is(
-                       CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle())
+                       CollectionMatcher.matchCollectionEntry(col1.getName(), col1.getID(), col1.getHandle(),
+                               col1.getLogo())
                    )))
                    .andExpect(jsonPath("$", Matchers.not(
                        is(
@@ -883,7 +884,7 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
         Collection col2 = CollectionBuilder.createCollection(context, child2).withName("Collection 2").build();
 
 
-        getClient().perform(get("/api/core/collections"))
+        getClient().perform(get("/api/core/collections?projection=default"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.collections", Matchers.containsInAnyOrder(

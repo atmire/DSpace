@@ -8,6 +8,7 @@
 package org.dspace.app.rest.matcher;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasNoJsonPath;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
@@ -50,7 +51,7 @@ public class CollectionMatcher {
     private static Matcher<? super Object> matchLogo(Bitstream logo) {
         return logo == null ?
             allOf(
-                hasJsonPath("$._embedded.logo", Matchers.not(Matchers.empty()))
+                hasNoJsonPath("$._embedded.logo")
             ) :
             allOf(
                 hasJsonPath("$._embedded.logo",
