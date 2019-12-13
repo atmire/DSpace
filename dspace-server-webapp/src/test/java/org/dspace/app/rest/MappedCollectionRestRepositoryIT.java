@@ -68,10 +68,7 @@ public class MappedCollectionRestRepositoryIT extends AbstractControllerIntegrat
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/mappedCollections"))
                    .andExpect(status().isOk())
-                   .andExpect(jsonPath("$._embedded.mappedCollections", Matchers.not(Matchers.contains(
-                       CollectionMatcher.matchCollectionEntry("Collection 1", col1.getID(), col1.getHandle()),
-                       CollectionMatcher.matchCollectionEntry("Collection 3", col2.getID(), col2.getHandle()))
-                   )))
+                   .andExpect(jsonPath("$.page.totalElements", Matchers.equalTo(0)))
                    .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/items")))
         ;
 
@@ -119,11 +116,11 @@ public class MappedCollectionRestRepositoryIT extends AbstractControllerIntegrat
                         .content(
                                 "https://localhost:8080/spring-rest/api/core/collections/" + col2.getID() + "\n"
                         )
-        );
+        ).andExpect(status().isNoContent());
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/mappedCollections"))
                    .andExpect(status().isOk())
-                   .andExpect(jsonPath("$._embedded.mappedCollections", Matchers.containsInAnyOrder(
+                   .andExpect(jsonPath("$._embedded.collections", Matchers.containsInAnyOrder(
                        CollectionMatcher.matchCollectionEntry("Collection 2", col2.getID(), col2.getHandle())
                    )))
                    .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/items")))
@@ -176,11 +173,11 @@ public class MappedCollectionRestRepositoryIT extends AbstractControllerIntegrat
                             "https://localhost:8080/spring-rest/api/core/collections/" + col2.getID() + "\n" +
                             "https://localhost:8080/spring-rest/api/core/collections/" + col3.getID() + "\n"
                     )
-            );
+            ).andExpect(status().isNoContent());
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/mappedCollections"))
                    .andExpect(status().isOk())
-                   .andExpect(jsonPath("$._embedded.mappedCollections", Matchers.containsInAnyOrder(
+                   .andExpect(jsonPath("$._embedded.collections", Matchers.containsInAnyOrder(
                        CollectionMatcher.matchCollectionEntry("Collection 2", col2.getID(), col2.getHandle()),
                        CollectionMatcher.matchCollectionEntry("Collection 3", col3.getID(), col3.getHandle())
                    )))
@@ -242,11 +239,11 @@ public class MappedCollectionRestRepositoryIT extends AbstractControllerIntegrat
                             "https://localhost:8080/spring-rest/api/core/collections/" + col2.getID() + "\n" +
                             "https://localhost:8080/spring-rest/api/core/collections/" + col3.getID()
                     )
-            );
+            ).andExpect(status().isNoContent());
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/mappedCollections"))
                    .andExpect(status().isOk())
-                   .andExpect(jsonPath("$._embedded.mappedCollections", Matchers.containsInAnyOrder(
+                   .andExpect(jsonPath("$._embedded.collections", Matchers.containsInAnyOrder(
                        CollectionMatcher.matchCollectionEntry("Collection 2", col2.getID(), col2.getHandle()),
                        CollectionMatcher.matchCollectionEntry("Collection 3", col3.getID(), col3.getHandle())
                    )))
@@ -297,13 +294,11 @@ public class MappedCollectionRestRepositoryIT extends AbstractControllerIntegrat
                             "https://localhost:8080/spring-rest/api/core/collections/" + col3.getID() + "\n" +
                             "https://localhost:8080/spring-rest/api/core/collections/" + col1.getID() + "\n"
                     )
-            );
+            ).andExpect(status().isUnprocessableEntity());
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/mappedCollections"))
                    .andExpect(status().isOk())
-                   .andExpect(jsonPath("$._embedded.mappedCollections", Matchers.not(Matchers.contains(
-                       CollectionMatcher.matchCollectionEntry("Collection 1", col1.getID(), col1.getHandle())
-                   ))))
+                   .andExpect(jsonPath("$.page.totalElements", Matchers.equalTo(0)))
                    .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/items")))
         ;
         getClient().perform(get("/api/core/collections/" + col1.getID() + "/mappedItems"))
@@ -352,7 +347,7 @@ public class MappedCollectionRestRepositoryIT extends AbstractControllerIntegrat
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/mappedCollections"))
                    .andExpect(status().isOk())
-                   .andExpect(jsonPath("$._embedded.mappedCollections", Matchers.not(Matchers.contains(
+                   .andExpect(jsonPath("$._embedded.collections", Matchers.not(Matchers.contains(
                        CollectionMatcher.matchCollectionEntry("Collection 1", col1.getID(), col1.getHandle()))
                    )))
                    .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/items")))
@@ -369,7 +364,7 @@ public class MappedCollectionRestRepositoryIT extends AbstractControllerIntegrat
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/mappedCollections"))
                    .andExpect(status().isOk())
-                   .andExpect(jsonPath("$._embedded.mappedCollections", Matchers.not(Matchers.containsInAnyOrder(
+                   .andExpect(jsonPath("$._embedded.collections", Matchers.not(Matchers.containsInAnyOrder(
                        CollectionMatcher.matchCollectionEntry("Collection 2", col2.getID(), col2.getHandle()),
                        CollectionMatcher.matchCollectionEntry("Collection 1", col1.getID(), col1.getHandle())
                    ))))
@@ -394,11 +389,12 @@ public class MappedCollectionRestRepositoryIT extends AbstractControllerIntegrat
                 .andExpect(jsonPath("$._embedded.mappedItems", Matchers.hasSize(1)));
 
         getClient(adminToken)
-            .perform(delete("/api/core/items/" + publicItem1.getID() + "/mappedCollections/" + col1.getID()));
+            .perform(delete("/api/core/items/" + publicItem1.getID() + "/mappedCollections/" + col1.getID()))
+                .andExpect(status().isNoContent());
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/mappedCollections"))
                    .andExpect(status().isOk())
-                   .andExpect(jsonPath("$._embedded.mappedCollections", Matchers.not(Matchers.containsInAnyOrder(
+                   .andExpect(jsonPath("$._embedded.collections", Matchers.not(Matchers.containsInAnyOrder(
                        CollectionMatcher.matchCollectionEntry("Collection 2", col2.getID(), col2.getHandle()),
                        CollectionMatcher.matchCollectionEntry("Collection 1", col1.getID(), col1.getHandle())
                    ))))
@@ -541,7 +537,7 @@ public class MappedCollectionRestRepositoryIT extends AbstractControllerIntegrat
         getClient(adminToken)
                 .perform(delete("/api/core/items/" + templateItem.getID() + "/mappedCollections/"
                         + col2.getID()))
-                .andExpect(status().is(405));
+                .andExpect(status().isMethodNotAllowed());
     }
 
     @Test
@@ -615,10 +611,7 @@ public class MappedCollectionRestRepositoryIT extends AbstractControllerIntegrat
         context.setCurrentUser(null);
         getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/mappedCollections"))
                    .andExpect(status().isOk())
-                   .andExpect(jsonPath("$._embedded.mappedCollections", Matchers.not(Matchers.contains(
-                       CollectionMatcher.matchCollectionEntry("Collection 1", col1.getID(), col1.getHandle()),
-                       CollectionMatcher.matchCollectionEntry("Collection 3", col2.getID(), col2.getHandle()))
-                   )))
+                   .andExpect(jsonPath("$.page.totalElements", Matchers.equalTo(0)))
                    .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/items")))
         ;
     }
@@ -701,7 +694,7 @@ public class MappedCollectionRestRepositoryIT extends AbstractControllerIntegrat
 
         getClient().perform(delete("/api/core/items/" + publicItem1.getID() + "/mappedCollections/"
                                        + col2.getID()))
-            .andExpect(status().is(401));
+            .andExpect(status().isUnauthorized());
 
 
     }
