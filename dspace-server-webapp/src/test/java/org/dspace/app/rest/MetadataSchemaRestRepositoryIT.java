@@ -27,9 +27,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dspace.app.rest.builder.MetadataSchemaBuilder;
-import org.dspace.app.rest.converter.MetadataSchemaConverter;
+import org.dspace.app.rest.converter.ConverterService;
 import org.dspace.app.rest.matcher.MetadataschemaMatcher;
 import org.dspace.app.rest.model.MetadataSchemaRest;
+import org.dspace.app.rest.projection.Projection;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.MetadataSchema;
@@ -53,7 +54,7 @@ public class MetadataSchemaRestRepositoryIT extends AbstractControllerIntegratio
     private static final String TEST_NAMESPACE_UPDATED = "testSchemaNameSpaceUpdated";
 
     @Autowired
-    MetadataSchemaConverter metadataSchemaConverter;
+    ConverterService converter;
 
     @Autowired
     private MetadataSchemaService metadataSchemaService;

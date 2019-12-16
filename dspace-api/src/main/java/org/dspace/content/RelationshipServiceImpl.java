@@ -317,8 +317,8 @@ public class RelationshipServiceImpl implements RelationshipService {
 
     @Override
     public void delete(Context context, Relationship relationship) throws SQLException, AuthorizeException {
-        //TODO: retrieve default settings from configuration
-        delete(context, relationship, false, false);
+        delete(context, relationship, relationship.getRelationshipType().isCopyToLeft(),
+               relationship.getRelationshipType().isCopyToRight());
     }
 
     @Override
@@ -326,8 +326,8 @@ public class RelationshipServiceImpl implements RelationshipService {
         throws SQLException, AuthorizeException {
         log.info(org.dspace.core.LogManager.getHeader(context, "delete_relationship",
                                                       "relationship_id=" + relationship.getID() + "&" +
-                                                          "copyToLeftItem=" + copyToLeftItem + "&" +
-                                                          "copyToRightItem=" + copyToRightItem));
+                                                          "copyMetadataValuesToLeftItem=" + copyToLeftItem + "&" +
+                                                          "copyMetadataValuesToRightItem=" + copyToRightItem));
         if (isRelationshipValidToDelete(context, relationship) &&
             copyToItemPermissionCheck(context, relationship, copyToLeftItem, copyToRightItem)) {
             // To delete a relationship, a user must have WRITE permissions on one of the related Items
@@ -364,9 +364,14 @@ public class RelationshipServiceImpl implements RelationshipService {
                 relationshipMetadataService.findRelationshipMetadataValueForItemRelationship(context,
                     relationship.getLeftItem(), entityTypeString, relationship, true);
             for (RelationshipMetadataValue relationshipMetadataValue : relationshipMetadataValues) {
-                itemService.addMetadata(context, relationship.getLeftItem(),
-                                        relationshipMetadataValue.getMetadataField(), null,
-                                        relationshipMetadataValue.getValue() );
+                itemService.addAndShiftRightMetadata(context, relationship.getLeftItem(),
+                                                     relationshipMetadataValue.getMetadataField().
+                                                         getMetadataSchema().getName(),
+                                                     relationshipMetadataValue.getMetadataField().getElement(),
+                                                     relationshipMetadataValue.getMetadataField().getQualifier(),
+                                                     relationshipMetadataValue.getLanguage(),
+                                                     relationshipMetadataValue.getValue(), null, -1,
+                                                     relationshipMetadataValue.getPlace());
             }
             itemService.update(context, relationship.getLeftItem());
         }
@@ -377,9 +382,14 @@ public class RelationshipServiceImpl implements RelationshipService {
                 relationshipMetadataService.findRelationshipMetadataValueForItemRelationship(context,
                     relationship.getRightItem(), entityTypeString, relationship, true);
             for (RelationshipMetadataValue relationshipMetadataValue : relationshipMetadataValues) {
-                itemService.addMetadata(context, relationship.getRightItem(),
-                                        relationshipMetadataValue.getMetadataField(), null,
-                                        relationshipMetadataValue.getValue() );
+                itemService.addAndShiftRightMetadata(context, relationship.getRightItem(),
+                                                     relationshipMetadataValue.getMetadataField().
+                                                         getMetadataSchema().getName(),
+                                                     relationshipMetadataValue.getMetadataField().getElement(),
+                                                     relationshipMetadataValue.getMetadataField().getQualifier(),
+                                                     relationshipMetadataValue.getLanguage(),
+                                                     relationshipMetadataValue.getValue(), null, -1,
+                                                     relationshipMetadataValue.getPlace());
             }
             itemService.update(context, relationship.getRightItem());
         }

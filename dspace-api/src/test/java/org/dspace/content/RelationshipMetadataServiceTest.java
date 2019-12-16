@@ -53,6 +53,7 @@ public class RelationshipMetadataServiceTest extends AbstractUnitTest {
     Item leftItem;
     Item rightItem;
     Relationship relationship;
+    RelationshipType isAuthorOfPublicationRelationshipType;
 
     /**
      * This method will be run before every test as per @Before. It will
@@ -111,10 +112,33 @@ public class RelationshipMetadataServiceTest extends AbstractUnitTest {
         itemService.addMetadata(context, rightItem, "person", "givenName", null, null, "firstName");
         EntityType publicationEntityType = entityTypeService.create(context, "Publication");
         EntityType authorEntityType = entityTypeService.create(context, "Author");
-        RelationshipType isAuthorOfPublication = relationshipTypeService
+        isAuthorOfPublicationRelationshipType = relationshipTypeService
                 .create(context, publicationEntityType, authorEntityType,
                         "isAuthorOfPublication", "isPublicationOfAuthor",
                         null, null, null, null);
+
+        relationship = relationshipService.create(context, leftItem, rightItem,
+            isAuthorOfPublicationRelationshipType, 0, 0);
+        context.restoreAuthSystemState();
+    }
+
+    /**
+     * Common function to convert leftItem to a publication item, convert rightItem to an author item,
+     * and relating them to each other stored in the relationship field
+     */
+    private void initPublicationAuthorWithCopyParams(boolean copyToLeft, boolean copyToRight)
+        throws SQLException, AuthorizeException {
+        context.turnOffAuthorisationSystem();
+        itemService.addMetadata(context, leftItem, "relationship", "type", null, null, "Publication");
+        itemService.addMetadata(context, rightItem, "relationship", "type", null, null, "Author");
+        itemService.addMetadata(context, rightItem, "person", "familyName", null, null, "familyName");
+        itemService.addMetadata(context, rightItem, "person", "givenName", null, null, "firstName");
+        EntityType publicationEntityType = entityTypeService.create(context, "Publication");
+        EntityType authorEntityType = entityTypeService.create(context, "Author");
+        RelationshipType isAuthorOfPublication = relationshipTypeService
+            .create(context, publicationEntityType, authorEntityType,
+                    "isAuthorOfPublication", "isPublicationOfAuthor",
+                    null, null, null, null, copyToLeft, copyToRight);
 
         relationship = relationshipService.create(context, leftItem, rightItem, isAuthorOfPublication, 0, 0);
         context.restoreAuthSystemState();
@@ -356,23 +380,81 @@ public class RelationshipMetadataServiceTest extends AbstractUnitTest {
     }
 
     @Test
-    public void testGetNextRightPlace() throws Exception {
-        assertThat(relationshipService.findNextRightPlaceByRightItem(context, authorItem), equalTo(0));
+    public void testDeleteAuthorRelationshipCopyToLeftItemFromDefaultInDb() throws Exception {
+        initPublicationAuthorWithCopyParams(true, false);
         context.turnOffAuthorisationSystem();
-
-        itemService.addMetadata(context, item, "relationship", "type", null, null, "Publication");
-        itemService.addMetadata(context, authorItem, "relationship", "type", null, null, "Author");
-        itemService.addMetadata(context, authorItem, "person", "familyName", null, null, "familyName");
-        itemService.addMetadata(context, authorItem, "person", "givenName", null, null, "firstName");
-        EntityType publicationEntityType = entityTypeService.create(context, "Publication");
-        EntityType authorEntityType = entityTypeService.create(context, "Author");
-        RelationshipType isAuthorOfPublication = relationshipTypeService
-            .create(context, publicationEntityType, authorEntityType, "isAuthorOfPublication", "isPublicationOfAuthor",
-                    null, null, null, null);
-        Relationship relationship = relationshipService.create(context, item, authorItem, isAuthorOfPublication, 0, 0);
+        //delete the relationship, copying the virtual metadata to actual metadata on the leftItem
+        //leftItem is the publication
+        relationshipService.delete(context, relationship);
         context.restoreAuthSystemState();
 
-        assertThat(relationshipService.findNextRightPlaceByRightItem(context, authorItem), equalTo(1));
+        //verify the dc.contributor.author actual metadata
+        List<MetadataValue> authorList = itemService.getMetadata(leftItem, "dc", "contributor", "author", Item.ANY);
+        assertThat(authorList.size(), equalTo(1));
+        assertThat(authorList.get(0).getValue(), equalTo("familyName, firstName"));
+        assertThat(authorList.get(0).getMetadataField().getMetadataSchema().getName(), equalTo("dc"));
+        assertThat(authorList.get(0).getMetadataField().getElement(), equalTo("contributor"));
+        assertThat(authorList.get(0).getMetadataField().getQualifier(), equalTo("author"));
+        assertNull(authorList.get(0).getAuthority());
+
+        //verify there's no relation.isAuthorOfPublication actual metadata
+        List<MetadataValue> relationshipMetadataList = itemService
+            .getMetadata(leftItem, MetadataSchemaEnum.RELATION.getName(), "isAuthorOfPublication", null, Item.ANY);
+        assertThat(relationshipMetadataList.size(), equalTo(0));
+
+        //request the virtual metadata of the publication only
+        List<RelationshipMetadataValue> list = relationshipMetadataService.getRelationshipMetadata(leftItem, true);
+        assertThat(list.size(), equalTo(0));
+    }
+
+    @Test
+    public void testAuthorDeleteRelationshipCopyToRightItemFromDefaultInDb() throws Exception {
+        initPublicationAuthorWithCopyParams(false, true);
+        context.turnOffAuthorisationSystem();
+        //delete the relationship, copying the virtual metadata to actual metadata on the rightItem
+        //rightItem is the author
+        relationshipService.delete(context, relationship);
+        context.restoreAuthSystemState();
+
+        //verify there's no dc.contributor.author actual metadata on the publication
+        List<MetadataValue> authorList = itemService.getMetadata(leftItem, "dc", "contributor", "author", Item.ANY);
+        assertThat(authorList.size(), equalTo(0));
+
+        //verify there's no relation.isAuthorOfPublication actual metadata on the publication
+        List<MetadataValue> relationshipMetadataList = itemService
+            .getMetadata(leftItem, MetadataSchemaEnum.RELATION.getName(), "isAuthorOfPublication", null, Item.ANY);
+        assertThat(relationshipMetadataList.size(), equalTo(0));
+    }
+
+    @Test
+    public void testDeleteAuthorRelationshipCopyToBothItemsFromDefaultsInDb() throws Exception {
+        initPublicationAuthorWithCopyParams(true, true);
+        context.turnOffAuthorisationSystem();
+        //delete the relationship, copying the virtual metadata to actual metadata on the both items
+        relationshipService.delete(context, relationship);
+        context.restoreAuthSystemState();
+
+        //verify the dc.contributor.author actual metadata
+        List<MetadataValue> authorList = itemService.getMetadata(leftItem, "dc", "contributor", "author", Item.ANY);
+        assertThat(authorList.size(), equalTo(1));
+        assertThat(authorList.get(0).getValue(), equalTo("familyName, firstName"));
+        assertThat(authorList.get(0).getMetadataField().getMetadataSchema().getName(), equalTo("dc"));
+        assertThat(authorList.get(0).getMetadataField().getElement(), equalTo("contributor"));
+        assertThat(authorList.get(0).getMetadataField().getQualifier(), equalTo("author"));
+        assertNull(authorList.get(0).getAuthority());
+
+        //verify there's no relation.isAuthorOfPublication actual metadata
+        List<MetadataValue> relationshipMetadataList = itemService
+            .getMetadata(leftItem, MetadataSchemaEnum.RELATION.getName(), "isAuthorOfPublication", null, Item.ANY);
+        assertThat(relationshipMetadataList.size(), equalTo(0));
+    }
+
+    @Test
+    public void testGetNextRightPlace() throws Exception {
+        assertThat(relationshipService.findNextRightPlaceByRightItem(context, rightItem), equalTo(0));
+        initPublicationAuthor();
+
+        assertThat(relationshipService.findNextRightPlaceByRightItem(context, rightItem), equalTo(1));
 
         context.turnOffAuthorisationSystem();
         Community community = communityService.create(null, context);
@@ -381,11 +463,11 @@ public class RelationshipMetadataServiceTest extends AbstractUnitTest {
         WorkspaceItem is = workspaceItemService.create(context, col, false);
         Item secondItem = installItemService.installItem(context, is);
         itemService.addMetadata(context, secondItem, "relationship", "type", null, null, "Publication");
-        Relationship secondRelationship = relationshipService.create(context, secondItem, authorItem,
-                                                                     isAuthorOfPublication, 0, 0);
+        Relationship secondRelationship = relationshipService.create(context, secondItem, rightItem,
+                                                                     isAuthorOfPublicationRelationshipType, 0, 0);
         context.restoreAuthSystemState();
 
-        assertThat(relationshipService.findNextRightPlaceByRightItem(context, authorItem), equalTo(2));
+        assertThat(relationshipService.findNextRightPlaceByRightItem(context, rightItem), equalTo(2));
 
 
 
@@ -393,22 +475,10 @@ public class RelationshipMetadataServiceTest extends AbstractUnitTest {
 
     @Test
     public void testGetNextLeftPlace() throws Exception {
-        assertThat(relationshipService.findNextLeftPlaceByLeftItem(context, item), equalTo(0));
-        context.turnOffAuthorisationSystem();
+        assertThat(relationshipService.findNextLeftPlaceByLeftItem(context, leftItem), equalTo(0));
+        initPublicationAuthor();
 
-        itemService.addMetadata(context, item, "relationship", "type", null, null, "Publication");
-        itemService.addMetadata(context, authorItem, "relationship", "type", null, null, "Author");
-        itemService.addMetadata(context, authorItem, "person", "familyName", null, null, "familyName");
-        itemService.addMetadata(context, authorItem, "person", "givenName", null, null, "firstName");
-        EntityType publicationEntityType = entityTypeService.create(context, "Publication");
-        EntityType authorEntityType = entityTypeService.create(context, "Author");
-        RelationshipType isAuthorOfPublication = relationshipTypeService
-            .create(context, publicationEntityType, authorEntityType, "isAuthorOfPublication", "isPublicationOfAuthor",
-                    null, null, null, null);
-        Relationship relationship = relationshipService.create(context, item, authorItem, isAuthorOfPublication, 0, 0);
-        context.restoreAuthSystemState();
-
-        assertThat(relationshipService.findNextLeftPlaceByLeftItem(context, item), equalTo(1));
+        assertThat(relationshipService.findNextLeftPlaceByLeftItem(context, leftItem), equalTo(1));
 
         context.turnOffAuthorisationSystem();
         Community community = communityService.create(null, context);
@@ -419,11 +489,11 @@ public class RelationshipMetadataServiceTest extends AbstractUnitTest {
         itemService.addMetadata(context, secondAuthor, "relationship", "type", null, null, "Author");
         itemService.addMetadata(context, secondAuthor, "person", "familyName", null, null, "familyName");
         itemService.addMetadata(context, secondAuthor, "person", "givenName", null, null, "firstName");
-        Relationship secondRelationship = relationshipService.create(context, item, secondAuthor,
-                                                                     isAuthorOfPublication, 0, 0);
+        Relationship secondRelationship = relationshipService.create(context, leftItem, secondAuthor,
+                                                                     isAuthorOfPublicationRelationshipType, 0, 0);
         context.restoreAuthSystemState();
 
-        assertThat(relationshipService.findNextLeftPlaceByLeftItem(context, item), equalTo(2));
+        assertThat(relationshipService.findNextLeftPlaceByLeftItem(context, leftItem), equalTo(2));
 
 
 
