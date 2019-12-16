@@ -663,8 +663,7 @@ public class RestResourceController implements InitializingBean {
         if (modelObject == null) {
             throw new HttpRequestMethodNotSupportedException(RequestMethod.PUT.toString());
         }
-        DSpaceResource result = repository.wrapResource(modelObject);
-        linkService.addLinks(result);
+        DSpaceResource result = converter.toResource(modelObject);
         return ControllerUtils.toResponseEntity(HttpStatus.OK, null, result);
     }
     /**
@@ -729,8 +728,7 @@ public class RestResourceController implements InitializingBean {
         if (modelObject == null) {
             throw new HttpRequestMethodNotSupportedException(RequestMethod.POST.toString());
         }
-        DSpaceResource result = repository.wrapResource(modelObject);
-        linkService.addLinks(result);
+        DSpaceResource result = converter.toResource(modelObject);
         //TODO manage HTTPHeader
         return ControllerUtils.toResponseEntity(HttpStatus.CREATED, null, result);
     }
@@ -1208,8 +1206,7 @@ public class RestResourceController implements InitializingBean {
         if (modelObject == null) {
             throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + uuid + " not found");
         }
-        DSpaceResource result = repository.wrapResource(modelObject);
-        linkService.addLinks(result);
+        DSpaceResource result = converter.toResource(modelObject);
         return ControllerUtils.toResponseEntity(HttpStatus.OK, null, result);
 
     }
