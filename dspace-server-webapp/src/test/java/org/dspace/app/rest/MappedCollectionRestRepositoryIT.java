@@ -390,7 +390,7 @@ public class MappedCollectionRestRepositoryIT extends AbstractControllerIntegrat
 
         getClient(adminToken)
             .perform(delete("/api/core/items/" + publicItem1.getID() + "/mappedCollections/" + col1.getID()))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isUnprocessableEntity());
 
         getClient().perform(get("/api/core/items/" + publicItem1.getID() + "/mappedCollections"))
                    .andExpect(status().isOk())
