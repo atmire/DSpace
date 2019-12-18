@@ -21,9 +21,20 @@ import org.dspace.app.rest.RestResourceController;
  *
  * @author Andrea Bollini (andrea.bollini at 4science.it)
  */
+@LinksRest(links = {
+        @LinkRest(
+                name = EPersonRest.GROUPS,
+                linkClass = GroupRest.class,
+                method = "getGroups",
+                embedOptional = true
+        )
+})
 public class EPersonRest extends DSpaceObjectRest {
     public static final String NAME = "eperson";
     public static final String CATEGORY = RestAddressableModel.EPERSON;
+
+    public static final String GROUPS = "groups";
+
     private String netid;
 
     private Date lastActive;
@@ -38,8 +49,6 @@ public class EPersonRest extends DSpaceObjectRest {
 
     @JsonProperty(access = Access.WRITE_ONLY)
     private String password;
-
-    private List<GroupRest> groups;
 
     @Override
     @JsonProperty(access = Access.READ_ONLY)
@@ -101,16 +110,6 @@ public class EPersonRest extends DSpaceObjectRest {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    @LinkRest(linkClass = GroupRest.class)
-    @JsonIgnore
-    public List<GroupRest> getGroups() {
-        return groups;
-    }
-
-    public void setGroups(List<GroupRest> groups) {
-        this.groups = groups;
     }
 
     @Override
