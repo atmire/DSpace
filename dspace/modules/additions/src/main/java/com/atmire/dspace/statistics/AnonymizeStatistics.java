@@ -184,8 +184,9 @@ public class AnonymizeStatistics {
 
                 for (SolrDocument document : documents.getResults()) {
                     updated++;
-                    callables.add(new DoProcessing(document, updated));
 
+
+                    callables.add(new DoProcessing(document, updated));
                     String shard = (String) document.getFieldValue("[shard]");
 
                     if(StringUtils.isNotBlank(shard)){
@@ -231,7 +232,7 @@ public class AnonymizeStatistics {
         return solrLoggerService.query(
                 "ip:*",
                 "time:[* TO " + TIME_LIMIT + "] AND -dns:" + ANONYMISED,
-                null, batchSize, -1, null, null, null, null, null, false, false
+                null, batchSize, -1, null, null, null, null, null, false, false, true
         );
     }
 

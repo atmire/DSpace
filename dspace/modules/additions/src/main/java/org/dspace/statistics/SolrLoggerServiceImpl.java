@@ -887,11 +887,11 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
 
             SolrInputDocument newInput = ClientUtils
                     .toSolrInputDocument(solrDocument);
-            solr.add(newInput);
+
+            shard.add(newInput);
 
             if(commit) {
                 shard.commit();
-                solr.commit();
             }
         }
         // System.out.println("SolrLogger.update(\""+query+"\"):"+(new
@@ -1072,6 +1072,11 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
 
     @Override
     public QueryResponse query(String query, String filterQuery, String facetField, int rows, int max, String dateType, String dateStart, String dateEnd, List<String> facetQueries, String sort, boolean ascending, boolean defaultFilterQueries) throws SolrServerException {
+        return query(query, filterQuery, facetField, rows, max, dateType, dateStart, dateEnd, facetQueries, sort, ascending, defaultFilterQueries, false);
+    }
+
+    @Override
+    public QueryResponse query(String query, String filterQuery, String facetField, int rows, int max, String dateType, String dateStart, String dateEnd, List<String> facetQueries, String sort, boolean ascending, boolean defaultFilterQueries, boolean includeShardField) throws SolrServerException {
 
         if (solr == null)
         {
@@ -1080,23 +1085,27 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
 
         // System.out.println("QUERY");
         SolrQuery solrQuery = new SolrQuery().setRows(rows).setQuery(query)
-                .setFacetMinCount(1);
+                                             .setFacetMinCount(1);
         addAdditionalSolrYearCores(solrQuery);
+
+        if(includeShardField){
+            solrQuery.setParam("fl", "[shard],*");
+        }
 
         // Set the date facet if present
         if (dateType != null)
         {
             solrQuery.setParam("facet.date", "time")
-                    .
-                    // EXAMPLE: NOW/MONTH+1MONTH
+                .
+                // EXAMPLE: NOW/MONTH+1MONTH
                     setParam("facet.date.end",
-                            "NOW/" + dateType + dateEnd + dateType).setParam(
-                            "facet.date.gap", "+1" + dateType)
-                    .
-                    // EXAMPLE: NOW/MONTH-" + nbMonths + "MONTHS
+                             "NOW/" + dateType + dateEnd + dateType).setParam(
+                "facet.date.gap", "+1" + dateType)
+                .
+                // EXAMPLE: NOW/MONTH-" + nbMonths + "MONTHS
                     setParam("facet.date.start",
-                            "NOW/" + dateType + dateStart + dateType + "S")
-                    .setFacet(true);
+                             "NOW/" + dateType + dateStart + dateType + "S")
+                .setFacet(true);
         }
         if (facetQueries != null)
         {
