@@ -45,24 +45,4 @@ public class EPersonMatcher {
             hasJsonPath("$.email", is(email))
             );
     }
-
-    public static Matcher<? super Object> matchEPersonWithGroups(String email, String... groups) {
-        Matcher<? super Object>[] matchers =
-                (Matcher<? super Object>[]) Array.newInstance(Matcher.class, groups.length);
-        for (int i = 0; i < groups.length; i++) {
-            matchers[i] = GroupMatcher.matchGroupWithName(groups[i]);
-        }
-
-        return allOf(
-                hasJsonPath("$.type", is("eperson")),
-                hasJsonPath("$.email", is(email)),
-                hasJsonPath("$._embedded.groups._embedded.groups", containsInAnyOrder(
-                        matchers)));
-    }
-
-    public static Matcher<? super Object> matchDefaultTestEPerson() {
-        return allOf(
-                hasJsonPath("$.type", is("eperson"))
-        );
-    }
 }

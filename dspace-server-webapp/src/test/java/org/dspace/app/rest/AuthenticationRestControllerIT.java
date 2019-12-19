@@ -71,7 +71,7 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
 
                         .andExpect(jsonPath("$._links.eperson.href", startsWith(REST_SERVER_URL)))
                         .andExpect(jsonPath("$._embedded.eperson",
-                                EPersonMatcher.matchEPersonWithGroups(eperson.getEmail(), "Anonymous")));
+                                EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())));
     }
 
     @Test
@@ -379,7 +379,7 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
                 .andExpect(jsonPath("$.type", is("status")))
                 .andExpect(jsonPath("$._links.eperson.href", startsWith(REST_SERVER_URL)))
                 .andExpect(jsonPath("$._embedded.eperson",
-                        EPersonMatcher.matchEPersonWithGroups(eperson.getEmail(), "Anonymous", "Reviewers")));
+                        EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())));
     }
 
     @Test
@@ -414,7 +414,7 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
                 .andExpect(jsonPath("$.type", is("status")))
                 .andExpect(jsonPath("$._links.eperson.href", startsWith(REST_SERVER_URL)))
                 .andExpect(jsonPath("$._embedded.eperson",
-                        EPersonMatcher.matchEPersonWithGroups(eperson.getEmail(), "Anonymous", "Administrator")));
+                        EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())));
 
         //Simulate that a new shibboleth authentication has happened from another IP
         token = getClient().perform(post("/api/authn/login")
@@ -434,7 +434,7 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
                 .andExpect(jsonPath("$.type", is("status")))
                 .andExpect(jsonPath("$._links.eperson.href", startsWith(REST_SERVER_URL)))
                 .andExpect(jsonPath("$._embedded.eperson",
-                        EPersonMatcher.matchEPersonWithGroups(eperson.getEmail(), "Anonymous")));
+                        EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())));
     }
 
 }
