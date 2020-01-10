@@ -9,5 +9,10 @@
         <property name="description" value="Update Discovery Solr Search Index"/>
     </bean>
 
+    <bean id="Harvest" class="org.dspace.app.harvest.Harvest" scope="prototype">
+        <property name="name" value="harvest"/>
+        <property name="description" value="Manage the OAI-PMH harvesting of external collections"/>
+    </bean>
+
 
 </beans>
