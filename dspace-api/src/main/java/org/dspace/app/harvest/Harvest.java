@@ -66,21 +66,21 @@ public class Harvest extends DSpaceRunnable {
         Options options = new Options();
 
         options.addOption("p", "purge", false, "delete all items in the collection");
-        options.getOption("p").setType(String.class);
+        options.getOption("p").setType(boolean.class);
         options.addOption("r", "run", false, "run the standard harvest procedure");
-        options.getOption("r").setType(String.class);
+        options.getOption("r").setType(boolean.class);
         options.addOption("g", "ping", false, "test the OAI server and set");
-        options.getOption("g").setType(String.class);
+        options.getOption("g").setType(boolean.class);
         options.addOption("o", "once", false, "run the harvest procedure with specified parameters");
-        options.getOption("o").setType(String.class);
+        options.getOption("o").setType(boolean.class);
         options.addOption("s", "setup", false, "Set the collection up for harvesting");
-        options.getOption("s").setType(String.class);
+        options.getOption("s").setType(boolean.class);
         options.addOption("S", "start", false, "start the harvest loop");
-        options.getOption("S").setType(String.class);
+        options.getOption("S").setType(boolean.class);
         options.addOption("R", "reset", false, "reset harvest status on all collections");
-        options.getOption("R").setType(String.class);
-        options.addOption("P", "purge", false, "purge all harvestable collections");
-        options.getOption("P").setType(String.class);
+        options.getOption("R").setType(boolean.class);
+        options.addOption("P", "purge-collections", false, "purge all harvestable collections");
+        options.getOption("P").setType(boolean.class);
 
 
         options.addOption("e", "eperson", true,
@@ -429,7 +429,7 @@ public class Harvest extends DSpaceRunnable {
     public void setup() throws ParseException {
         if (commandLine.hasOption('h')) {
             help = true;
-
+            return;
         }
 
         if (commandLine.hasOption('s')) {
