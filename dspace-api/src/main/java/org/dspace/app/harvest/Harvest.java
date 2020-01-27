@@ -324,11 +324,20 @@ public class Harvest extends DSpaceRunnable {
         handler.logInfo("Running: a harvest cycle on " + collectionID);
 
         handler.logInfo("Initializing the harvester... ");
-        OAIHarvester harvester = null;
+        Collection collection = resolveCollection(collectionID);
+        HarvestedCollection hc = null;
         try {
-            Collection collection = resolveCollection(collectionID);
-            HarvestedCollection hc = harvestedCollectionService.find(context, collection);
-            harvester = new OAIHarvester(context, collection, hc);
+            hc = harvestedCollectionService.find(context, collection);
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to run harvester", e);
+        }
+        runHarvestedCollection(hc, email);
+    }
+
+    private void runHarvestedCollection(HarvestedCollection harvestedCollection, String email) {
+        OAIHarvester harvester;
+        try {
+            harvester = new OAIHarvester(context, harvestedCollection.getCollection(), harvestedCollection);
             handler.logInfo("success. ");
         } catch (HarvestingException hex) {
             handler.logError("failed. ");
@@ -368,7 +377,6 @@ public class Harvest extends DSpaceRunnable {
         try {
             List<HarvestedCollection> harvestedCollections = harvestedCollectionService.findAll(context);
             for (HarvestedCollection harvestedCollection : harvestedCollections) {
-                //hc.setHarvestResult(null,"");
                 harvestedCollection.setHarvestStartTime(null);
                 harvestedCollection.setHarvestStatus(HarvestedCollection.STATUS_READY);
                 harvestedCollectionService.update(context, harvestedCollection);
@@ -386,7 +394,10 @@ public class Harvest extends DSpaceRunnable {
     private void startHarvester() {
         try {
             handler.logInfo("Starting harvest loop... ");
-            HarvestServiceFactory.getInstance().getHarvestSchedulingService().startNewScheduler();
+            List<HarvestedCollection> cids = harvestedCollectionService.findReady(context);
+            for (HarvestedCollection harvestedCollection : cids) {
+                runHarvestedCollection(harvestedCollection, eperson);
+            }
             handler.logInfo("running. ");
         } catch (Exception ex) {
             handler.handleException(ex);
