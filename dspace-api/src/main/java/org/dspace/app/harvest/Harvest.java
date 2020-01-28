@@ -30,7 +30,6 @@ import org.dspace.handle.factory.HandleServiceFactory;
 import org.dspace.harvest.HarvestedCollection;
 import org.dspace.harvest.HarvestingException;
 import org.dspace.harvest.OAIHarvester;
-import org.dspace.harvest.factory.HarvestServiceFactory;
 import org.dspace.harvest.service.HarvestedCollectionService;
 import org.dspace.scripts.DSpaceRunnable;
 import org.springframework.beans.factory.annotation.Autowired;
