@@ -18,10 +18,15 @@ import org.dspace.storage.bitstore.service.BitstreamStorageService;
  */
 public abstract class StorageServiceFactory {
 
+    private static StorageServiceFactory storageServiceFactory;
+
     public abstract BitstreamStorageService getBitstreamStorageService();
 
     public static StorageServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("storageServiceFactory", StorageServiceFactory.class);
+        if (storageServiceFactory == null) {
+            storageServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("storageServiceFactory", StorageServiceFactory.class);
+        }
+        return storageServiceFactory;
     }
 }

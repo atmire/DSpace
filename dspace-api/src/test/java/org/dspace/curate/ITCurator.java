@@ -20,7 +20,6 @@ import org.dspace.content.Community;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.Site;
 import org.dspace.content.factory.ContentServiceFactory;
-import org.dspace.services.ConfigurationService;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -68,12 +67,6 @@ public class ITCurator
     @Test
     public void testCurate_Reporting()
             throws SQLException, IOException, AuthorizeException {
-        // Configure for testing.
-        ConfigurationService cfg = kernelImpl.getConfigurationService();
-        cfg.setProperty("plugin.named.org.dspace.curate.CurationTask",
-                Task1.class.getName() + " = task1");
-        cfg.addPropertyValue("plugin.named.org.dspace.curate.CurationTask",
-                Task2.class.getName() + " = task2");
 
         // Create some structure.
         context.turnOffAuthorisationSystem();

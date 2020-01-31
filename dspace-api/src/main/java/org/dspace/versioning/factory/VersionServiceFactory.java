@@ -19,12 +19,17 @@ import org.dspace.versioning.service.VersioningService;
  */
 public abstract class VersionServiceFactory {
 
+    private static VersionServiceFactory versionServiceFactory;
+
     public abstract VersionHistoryService getVersionHistoryService();
 
     public abstract VersioningService getVersionService();
 
     public static VersionServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("versionServiceFactory", VersionServiceFactory.class);
+        if (versionServiceFactory == null) {
+            versionServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("versionServiceFactory", VersionServiceFactory.class);
+        }
+        return versionServiceFactory;
     }
 }

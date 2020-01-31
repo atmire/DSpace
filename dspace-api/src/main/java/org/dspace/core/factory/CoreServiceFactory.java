@@ -21,6 +21,8 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class CoreServiceFactory {
 
+    private static CoreServiceFactory coreServiceFactory;
+
     public abstract LicenseService getLicenseService();
 
     public abstract NewsService getNewsService();
@@ -30,7 +32,10 @@ public abstract class CoreServiceFactory {
     public abstract ClientInfoService getClientInfoService();
 
     public static CoreServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("coreServiceFactory", CoreServiceFactory.class);
+        if (coreServiceFactory == null) {
+            coreServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("coreServiceFactory", CoreServiceFactory.class);
+        }
+        return coreServiceFactory;
     }
 }

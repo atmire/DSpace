@@ -38,7 +38,6 @@ import org.dspace.content.service.ItemService;
 import org.dspace.content.service.WorkspaceItemService;
 import org.dspace.identifier.factory.IdentifierServiceFactory;
 import org.dspace.identifier.service.DOIService;
-import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
 import org.dspace.workflow.WorkflowException;
 import org.dspace.workflow.WorkflowItem;
@@ -62,8 +61,6 @@ public class DOIIdentifierProviderTest
 
     private static final String PREFIX = "10.5072";
     private static final String NAMESPACE_SEPARATOR = "dspaceUnitTests-";
-
-    private static ConfigurationService config = null;
 
     protected DOIService doiService = IdentifierServiceFactory.getInstance().getDOIService();
     protected CommunityService communityService = ContentServiceFactory.getInstance().getCommunityService();
@@ -105,18 +102,11 @@ public class DOIIdentifierProviderTest
             //we need to commit the changes so we don't block the table for testing
             context.restoreAuthSystemState();
 
-            config = DSpaceServicesFactory.getInstance().getConfigurationService();
-            // Configure the service under test.
-            config.setProperty(DOIIdentifierProvider.CFG_PREFIX, PREFIX);
-            config.setProperty(DOIIdentifierProvider.CFG_NAMESPACE_SEPARATOR,
-                               NAMESPACE_SEPARATOR);
-
             connector = new MockDOIConnector();
 
             provider = DSpaceServicesFactory.getInstance().getServiceManager()
                                             .getServiceByName(DOIIdentifierProvider.class.getName(),
                                                               DOIIdentifierProvider.class);
-            provider.setConfigurationService(config);
             provider.setDOIConnector(connector);
         } catch (AuthorizeException ex) {
             log.error("Authorization Error in init", ex);

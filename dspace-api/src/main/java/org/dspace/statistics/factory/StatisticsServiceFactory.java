@@ -19,12 +19,17 @@ import org.dspace.statistics.util.SpiderDetectorService;
  */
 public abstract class StatisticsServiceFactory {
 
+    private static StatisticsServiceFactory statisticsServiceFactory;
+
     public abstract SolrLoggerService getSolrLoggerService();
 
     public abstract SpiderDetectorService getSpiderDetectorService();
 
     public static StatisticsServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("statisticsServiceFactory", StatisticsServiceFactory.class);
+        if (statisticsServiceFactory == null) {
+            statisticsServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("statisticsServiceFactory", StatisticsServiceFactory.class);
+        }
+        return statisticsServiceFactory;
     }
 }

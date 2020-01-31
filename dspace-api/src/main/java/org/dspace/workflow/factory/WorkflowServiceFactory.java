@@ -19,12 +19,17 @@ import org.dspace.workflow.WorkflowService;
  */
 public abstract class WorkflowServiceFactory {
 
+    private static WorkflowServiceFactory workflowServiceFactory;
+
     public abstract WorkflowService getWorkflowService();
 
     public abstract WorkflowItemService getWorkflowItemService();
 
     public static WorkflowServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("workflowServiceFactory", WorkflowServiceFactory.class);
+        if (workflowServiceFactory == null) {
+            workflowServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("workflowServiceFactory", WorkflowServiceFactory.class);
+        }
+        return workflowServiceFactory;
     }
 }

@@ -18,10 +18,15 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class HandleServiceFactory {
 
+    private static HandleServiceFactory handleServiceFactory;
+
     public abstract HandleService getHandleService();
 
     public static HandleServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("handleServiceFactory", HandleServiceFactory.class);
+        if (handleServiceFactory == null) {
+            handleServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("handleServiceFactory", HandleServiceFactory.class);
+        }
+        return handleServiceFactory;
     }
 }

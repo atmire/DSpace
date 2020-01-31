@@ -18,10 +18,15 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class EmbargoServiceFactory {
 
+    private static EmbargoServiceFactory embargoServiceFactory;
+
     public abstract EmbargoService getEmbargoService();
 
     public static EmbargoServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("embargoServiceFactory", EmbargoServiceFactory.class);
+        if (embargoServiceFactory == null) {
+            embargoServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("embargoServiceFactory", EmbargoServiceFactory.class);
+        }
+        return embargoServiceFactory;
     }
 }

@@ -18,10 +18,15 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class AuthenticateServiceFactory {
 
+    private static AuthenticateServiceFactory authenticateServiceFactory;
+
     public abstract AuthenticationService getAuthenticationService();
 
     public static AuthenticateServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("authenticateServiceFactory", AuthenticateServiceFactory.class);
+        if (authenticateServiceFactory == null) {
+            authenticateServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("authenticateServiceFactory", AuthenticateServiceFactory.class);
+        }
+        return authenticateServiceFactory;
     }
 }

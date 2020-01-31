@@ -20,6 +20,8 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class HarvestServiceFactory {
 
+    private static HarvestServiceFactory harvestServiceFactory;
+
     public abstract HarvestedCollectionService getHarvestedCollectionService();
 
     public abstract HarvestedItemService getHarvestedItemService();
@@ -27,7 +29,10 @@ public abstract class HarvestServiceFactory {
     public abstract HarvestSchedulingService getHarvestSchedulingService();
 
     public static HarvestServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("harvestServiceFactory", HarvestServiceFactory.class);
+        if (harvestServiceFactory == null) {
+            harvestServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("harvestServiceFactory", HarvestServiceFactory.class);
+        }
+        return harvestServiceFactory;
     }
 }

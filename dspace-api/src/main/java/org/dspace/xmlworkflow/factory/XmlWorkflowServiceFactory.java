@@ -26,6 +26,8 @@ import org.dspace.xmlworkflow.storedcomponents.service.XmlWorkflowItemService;
  */
 public abstract class XmlWorkflowServiceFactory extends WorkflowServiceFactory {
 
+    private static XmlWorkflowServiceFactory xmlWorkflowServiceFactory;
+
     public abstract XmlWorkflowFactory getWorkflowFactory();
 
     public abstract WorkflowRequirementsService getWorkflowRequirementsService();
@@ -45,7 +47,10 @@ public abstract class XmlWorkflowServiceFactory extends WorkflowServiceFactory {
     public abstract XmlWorkflowItemService getXmlWorkflowItemService();
 
     public static XmlWorkflowServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("workflowServiceFactory", XmlWorkflowServiceFactory.class);
+        if (xmlWorkflowServiceFactory == null) {
+            xmlWorkflowServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("workflowServiceFactory", XmlWorkflowServiceFactory.class);
+        }
+        return xmlWorkflowServiceFactory;
     }
 }

@@ -19,6 +19,9 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  * @author kevinvandevelde at atmire.com
  */
 public abstract class UtilServiceFactory {
+
+    private static UtilServiceFactory utilServiceFactory;
+
     public abstract WebAppService getWebAppService();
 
     public abstract OpenSearchService getOpenSearchService();
@@ -26,8 +29,11 @@ public abstract class UtilServiceFactory {
     public abstract MetadataExposureService getMetadataExposureService();
 
     public static UtilServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("appUtilServiceFactory", UtilServiceFactory.class);
+        if (utilServiceFactory == null) {
+            utilServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("appUtilServiceFactory", UtilServiceFactory.class);
+        }
+        return utilServiceFactory;
     }
 
 }

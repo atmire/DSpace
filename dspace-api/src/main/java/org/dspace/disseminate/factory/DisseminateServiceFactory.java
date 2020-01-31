@@ -18,10 +18,15 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class DisseminateServiceFactory {
 
+    private static DisseminateServiceFactory disseminateServiceFactory;
+
     public abstract CitationDocumentService getCitationDocumentService();
 
     public static DisseminateServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("disseminateServiceFactory", DisseminateServiceFactory.class);
+        if (disseminateServiceFactory == null) {
+            disseminateServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("disseminateServiceFactory", DisseminateServiceFactory.class);
+        }
+        return disseminateServiceFactory;
     }
 }

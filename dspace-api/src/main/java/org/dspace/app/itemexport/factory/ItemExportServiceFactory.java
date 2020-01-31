@@ -18,10 +18,15 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class ItemExportServiceFactory {
 
+    private static ItemExportServiceFactory itemExportServiceFactory;
+
     public abstract ItemExportService getItemExportService();
 
     public static ItemExportServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("itemExportServiceFactory", ItemExportServiceFactory.class);
+        if (itemExportServiceFactory == null) {
+            itemExportServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("itemExportServiceFactory", ItemExportServiceFactory.class);
+        }
+        return itemExportServiceFactory;
     }
 }

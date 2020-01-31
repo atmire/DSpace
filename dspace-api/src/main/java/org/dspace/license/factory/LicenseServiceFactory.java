@@ -18,10 +18,15 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class LicenseServiceFactory {
 
+    private static LicenseServiceFactory licenseServiceFactory;
+
     public abstract CreativeCommonsService getCreativeCommonsService();
 
     public static LicenseServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("licenseServiceFactory", LicenseServiceFactory.class);
+        if (licenseServiceFactory == null) {
+            licenseServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("licenseServiceFactory", LicenseServiceFactory.class);
+        }
+        return licenseServiceFactory;
     }
 }

@@ -8,7 +8,7 @@
 package org.dspace.app.sfx.factory;
 
 import org.dspace.app.sfx.service.SFXFileReaderService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.dspace.utils.DSpace;
 
 /**
  * Factory implementation to get services for the sfx package, use SfxServiceFactory.getInstance() to retrieve an
@@ -18,11 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class SfxServiceFactoryImpl extends SfxServiceFactory {
 
-    @Autowired(required = true)
-    private SFXFileReaderService sfxFileReaderService;
-
     @Override
     public SFXFileReaderService getSfxFileReaderService() {
-        return sfxFileReaderService;
+        return new DSpace().getServiceManager().getServiceByName("SFXFileReaderService", SFXFileReaderService.class);
     }
 }

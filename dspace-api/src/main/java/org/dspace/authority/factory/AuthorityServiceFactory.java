@@ -25,6 +25,8 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class AuthorityServiceFactory {
 
+    private static AuthorityServiceFactory authorityServiceFactory;
+
     public abstract AuthorityValueService getAuthorityValueService();
 
     public abstract AuthorityTypes getAuthorTypes();
@@ -39,7 +41,10 @@ public abstract class AuthorityServiceFactory {
     public abstract List<AuthorityIndexerInterface> getAuthorityIndexers();
 
     public static AuthorityServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("authorityServiceFactory", AuthorityServiceFactory.class);
+        if (authorityServiceFactory == null) {
+            authorityServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("authorityServiceFactory", AuthorityServiceFactory.class);
+        }
+        return authorityServiceFactory;
     }
 }

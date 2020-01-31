@@ -18,10 +18,15 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class RequestItemServiceFactory {
 
+    private static RequestItemServiceFactory requestItemServiceFactory;
+
     public abstract RequestItemService getRequestItemService();
 
     public static RequestItemServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("requestItemServiceFactory", RequestItemServiceFactory.class);
+        if (requestItemServiceFactory == null) {
+            requestItemServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("requestItemServiceFactory", RequestItemServiceFactory.class);
+        }
+        return requestItemServiceFactory;
     }
 }

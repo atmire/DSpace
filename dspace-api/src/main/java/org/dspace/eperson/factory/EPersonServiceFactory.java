@@ -23,6 +23,8 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class EPersonServiceFactory {
 
+    private static EPersonServiceFactory ePersonServiceFactory;
+
     public abstract EPersonService getEPersonService();
 
     public abstract GroupService getGroupService();
@@ -36,7 +38,10 @@ public abstract class EPersonServiceFactory {
     public abstract SupervisorService getSupervisorService();
 
     public static EPersonServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("ePersonServiceFactory", EPersonServiceFactory.class);
+        if (ePersonServiceFactory == null) {
+            ePersonServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("ePersonServiceFactory", EPersonServiceFactory.class);
+        }
+        return ePersonServiceFactory;
     }
 }

@@ -8,7 +8,7 @@
 package org.dspace.app.mediafilter.factory;
 
 import org.dspace.app.mediafilter.service.MediaFilterService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.dspace.utils.DSpace;
 
 /**
  * Factory implementation to get services for the mediafilter package, use MediaFilterServiceFactory.getInstance() to
@@ -18,11 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class MediaFilterServiceFactoryImpl extends MediaFilterServiceFactory {
 
-    @Autowired(required = true)
-    private MediaFilterService mediaFilterService;
-
     @Override
     public MediaFilterService getMediaFilterService() {
-        return mediaFilterService;
+        return new DSpace().getServiceManager().getServiceByName("mediaFilterService", MediaFilterService.class);
     }
 }

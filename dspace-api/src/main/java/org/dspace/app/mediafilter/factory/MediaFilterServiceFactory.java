@@ -18,10 +18,15 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class MediaFilterServiceFactory {
 
+    private static MediaFilterServiceFactory mediaFilterServiceFactory;
+
     public abstract MediaFilterService getMediaFilterService();
 
     public static MediaFilterServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("mediaFilterServiceFactory", MediaFilterServiceFactory.class);
+        if (mediaFilterServiceFactory == null) {
+            mediaFilterServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("mediaFilterServiceFactory", MediaFilterServiceFactory.class);
+        }
+        return mediaFilterServiceFactory;
     }
 }

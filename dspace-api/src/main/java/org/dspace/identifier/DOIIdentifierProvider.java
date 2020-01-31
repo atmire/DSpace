@@ -763,7 +763,7 @@ public class DOIIdentifierProvider
         List<MetadataValue> metadata = itemService.getMetadata(item, MD_SCHEMA, DOI_ELEMENT, DOI_QUALIFIER, null);
         for (MetadataValue id : metadata) {
             if (id.getValue().startsWith(
-                DOI.RESOLVER + String.valueOf(SLASH) + PREFIX + String.valueOf(SLASH) + NAMESPACE_SEPARATOR)) {
+                DOI.RESOLVER + String.valueOf(SLASH) + getPrefix() + String.valueOf(SLASH) + getNamespaceSeparator())) {
                 return doiService.DOIFromExternalFormat(id.getValue());
             }
         }

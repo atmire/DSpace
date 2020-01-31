@@ -19,12 +19,17 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class AuthorizeServiceFactory {
 
+    private static AuthorizeServiceFactory authorizeServiceFactory;
+
     public abstract AuthorizeService getAuthorizeService();
 
     public abstract ResourcePolicyService getResourcePolicyService();
 
     public static AuthorizeServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("authorizeServiceFactory", AuthorizeServiceFactory.class);
+        if (authorizeServiceFactory == null) {
+            authorizeServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("authorizeServiceFactory", AuthorizeServiceFactory.class);
+        }
+        return authorizeServiceFactory;
     }
 }

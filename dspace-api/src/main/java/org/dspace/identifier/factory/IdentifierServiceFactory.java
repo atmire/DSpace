@@ -19,12 +19,17 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class IdentifierServiceFactory {
 
+    private static IdentifierServiceFactory identifierServiceFactory;
+
     public abstract IdentifierService getIdentifierService();
 
     public abstract DOIService getDOIService();
 
     public static IdentifierServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("identifierServiceFactory", IdentifierServiceFactory.class);
+        if (identifierServiceFactory == null) {
+            identifierServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("identifierServiceFactory", IdentifierServiceFactory.class);
+        }
+        return identifierServiceFactory;
     }
 }

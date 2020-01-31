@@ -18,6 +18,8 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class ScriptServiceFactory {
 
+    private static ScriptServiceFactory scriptServiceFactory;
+
     /**
      * This method will return an instance of the ScriptService
      * @return An instance of the ScriptService
@@ -35,7 +37,10 @@ public abstract class ScriptServiceFactory {
      * @return An implementation of the ScriptServiceFactory
      */
     public static ScriptServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("scriptServiceFactory", ScriptServiceFactory.class);
+        if (scriptServiceFactory == null) {
+            scriptServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("scriptServiceFactory", ScriptServiceFactory.class);
+        }
+        return scriptServiceFactory;
     }
 }

@@ -21,6 +21,8 @@ import org.dspace.workflowbasic.service.TaskListItemService;
  */
 public abstract class BasicWorkflowServiceFactory extends WorkflowServiceFactory {
 
+    private static BasicWorkflowServiceFactory basicWorkflowServiceFactory;
+
     public abstract BasicWorkflowService getBasicWorkflowService();
 
     public abstract BasicWorkflowItemService getBasicWorkflowItemService();
@@ -28,7 +30,10 @@ public abstract class BasicWorkflowServiceFactory extends WorkflowServiceFactory
     public abstract TaskListItemService getTaskListItemService();
 
     public static BasicWorkflowServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("workflowServiceFactory", BasicWorkflowServiceFactory.class);
+        if (basicWorkflowServiceFactory == null) {
+            basicWorkflowServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("workflowServiceFactory", BasicWorkflowServiceFactory.class);
+        }
+        return basicWorkflowServiceFactory;
     }
 }

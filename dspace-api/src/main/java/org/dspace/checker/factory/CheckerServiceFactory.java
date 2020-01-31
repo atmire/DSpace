@@ -21,6 +21,8 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class CheckerServiceFactory {
 
+    private static CheckerServiceFactory checkerServiceFactory;
+
     public abstract MostRecentChecksumService getMostRecentChecksumService();
 
     public abstract ChecksumHistoryService getChecksumHistoryService();
@@ -30,7 +32,10 @@ public abstract class CheckerServiceFactory {
     public abstract ChecksumResultService getChecksumResultService();
 
     public static CheckerServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("checkerServiceFactory", CheckerServiceFactory.class);
+        if (checkerServiceFactory == null) {
+            checkerServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("checkerServiceFactory", CheckerServiceFactory.class);
+        }
+        return checkerServiceFactory;
     }
 }

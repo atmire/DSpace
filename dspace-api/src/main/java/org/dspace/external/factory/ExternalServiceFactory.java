@@ -16,6 +16,8 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class ExternalServiceFactory {
 
+    private static ExternalServiceFactory externalServiceFactory;
+
     /**
      * Calling this method will provide an ExternalDataService bean
      * @return  An implementation of the ExternalDataService
@@ -28,7 +30,10 @@ public abstract class ExternalServiceFactory {
      * @return  An implementation of this class to work with
      */
     public static ExternalServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("externalServiceFactory", ExternalServiceFactory.class);
+        if (externalServiceFactory == null) {
+            externalServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("externalServiceFactory", ExternalServiceFactory.class);
+        }
+        return externalServiceFactory;
     }
 }

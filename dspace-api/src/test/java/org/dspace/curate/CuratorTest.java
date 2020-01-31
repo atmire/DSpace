@@ -16,7 +16,6 @@ import org.dspace.AbstractUnitTest;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.SiteService;
-import org.dspace.services.ConfigurationService;
 import org.junit.Test;
 
 /**
@@ -25,6 +24,7 @@ import org.junit.Test;
  */
 public class CuratorTest
         extends AbstractUnitTest {
+
     private static final SiteService SITE_SERVICE = ContentServiceFactory.getInstance().getSiteService();
 
     static final String RUN_PARAMETER_NAME = "runParameter";
@@ -49,12 +49,6 @@ public class CuratorTest
         System.out.println("curate");
 
         final String TASK_NAME = "dummyTask";
-
-        // Configure the task to be run.
-        ConfigurationService cfg = kernelImpl.getConfigurationService();
-        cfg.setProperty("plugin.named.org.dspace.curate.CurationTask",
-                DummyTask.class.getName() + " = " + TASK_NAME);
-        cfg.setProperty(TASK_NAME + '.' + TASK_PROPERTY_NAME, TASK_PROPERTY_VALUE);
 
         // Get and configure a Curator.
         Curator instance = new Curator();

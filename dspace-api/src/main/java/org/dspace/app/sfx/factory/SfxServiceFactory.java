@@ -18,10 +18,15 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class SfxServiceFactory {
 
+    private static SfxServiceFactory sfxServiceFactory;
+
     public abstract SFXFileReaderService getSfxFileReaderService();
 
     public static SfxServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("sfxServiceFactory", SfxServiceFactory.class);
+        if (sfxServiceFactory == null) {
+            sfxServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("sfxServiceFactory", SfxServiceFactory.class);
+        }
+        return sfxServiceFactory;
     }
 }

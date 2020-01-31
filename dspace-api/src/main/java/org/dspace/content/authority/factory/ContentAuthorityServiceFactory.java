@@ -19,13 +19,18 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class ContentAuthorityServiceFactory {
 
+    private static ContentAuthorityServiceFactory contentAuthorityServiceFactory;
+
     public abstract ChoiceAuthorityService getChoiceAuthorityService();
 
     public abstract MetadataAuthorityService getMetadataAuthorityService();
 
     public static ContentAuthorityServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("contentAuthorityServiceFactory",
-                                                      ContentAuthorityServiceFactory.class);
+        if (contentAuthorityServiceFactory == null) {
+            contentAuthorityServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("contentAuthorityServiceFactory",
+                            ContentAuthorityServiceFactory.class);
+        }
+        return contentAuthorityServiceFactory;
     }
 }

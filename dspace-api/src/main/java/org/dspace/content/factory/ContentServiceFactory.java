@@ -44,6 +44,8 @@ import org.dspace.workflow.factory.WorkflowServiceFactory;
  */
 public abstract class ContentServiceFactory {
 
+    private static ContentServiceFactory contentServiceFactory;
+
     public abstract List<DSpaceObjectService<? extends DSpaceObject>> getDSpaceObjectServices();
 
     public abstract List<DSpaceObjectLegacySupportService<? extends DSpaceObject>>
@@ -146,8 +148,11 @@ public abstract class ContentServiceFactory {
     }
 
     public static ContentServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("contentServiceFactory", ContentServiceFactory.class);
+        if (contentServiceFactory == null) {
+            contentServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("contentServiceFactory", ContentServiceFactory.class);
+        }
+        return contentServiceFactory;
     }
 
 }

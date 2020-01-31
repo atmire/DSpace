@@ -18,10 +18,15 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class EventServiceFactory {
 
+    private static EventServiceFactory eventServiceFactory;
+
     public abstract EventService getEventService();
 
     public static EventServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("eventServiceFactory", EventServiceFactory.class);
+        if (eventServiceFactory == null) {
+            eventServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("eventServiceFactory", EventServiceFactory.class);
+        }
+        return eventServiceFactory;
     }
 }

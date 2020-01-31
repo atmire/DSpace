@@ -8,7 +8,7 @@
 package org.dspace.app.itemimport.factory;
 
 import org.dspace.app.itemimport.service.ItemImportService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.dspace.utils.DSpace;
 
 /**
  * Factory implementation to get services for the itemimport package, use ItemImportService.getInstance() to retrieve
@@ -18,11 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class ItemImportServiceFactoryImpl extends ItemImportServiceFactory {
 
-    @Autowired(required = true)
-    private ItemImportService itemImportService;
-
     @Override
     public ItemImportService getItemImportService() {
-        return itemImportService;
+        return new DSpace().getServiceManager().getServiceByName("itemImportService", ItemImportService.class);
     }
 }

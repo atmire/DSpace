@@ -18,10 +18,15 @@ import org.dspace.services.factory.DSpaceServicesFactory;
  */
 public abstract class CurateServiceFactory {
 
+    private static CurateServiceFactory curateServiceFactory;
+
     public abstract WorkflowCuratorService getWorkflowCuratorService();
 
     public static CurateServiceFactory getInstance() {
-        return DSpaceServicesFactory.getInstance().getServiceManager()
-                                    .getServiceByName("curateServiceFactory", CurateServiceFactory.class);
+        if (curateServiceFactory == null) {
+            curateServiceFactory = DSpaceServicesFactory.getInstance().getServiceManager()
+                    .getServiceByName("curateServiceFactory", CurateServiceFactory.class);
+        }
+        return curateServiceFactory;
     }
 }
