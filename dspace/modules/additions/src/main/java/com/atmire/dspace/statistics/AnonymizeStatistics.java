@@ -36,6 +36,7 @@ import static java.util.Arrays.asList;
 import static java.util.Calendar.DAY_OF_YEAR;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.cli.Option.builder;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.time.DateFormatUtils.format;
 import static org.apache.log4j.Logger.getLogger;
 import static org.dspace.core.LogManager.getHeader;
@@ -186,11 +187,10 @@ public class AnonymizeStatistics {
                 for (SolrDocument document : documents.getResults()) {
                     updated++;
 
-
                     callables.add(new DoProcessing(document, updated));
                     String shard = (String) document.getFieldValue("[shard]");
 
-                    if(StringUtils.isNotBlank(shard)){
+                    if (isNotBlank(shard)){
                         shards.add(shard);
                     }
                 }
@@ -199,9 +199,9 @@ public class AnonymizeStatistics {
 
                 solrLoggerService.commit();
 
-//                for (String shard : shards) {
-//                    solrLoggerService.commitShard(shard);
-//                }
+                for (String shard : shards) {
+                    solrLoggerService.commitShard(shard);
+                }
 
                 System.out.println("processed " + updated + " records");
             } while (documents.getResults().getNumFound() > 0);

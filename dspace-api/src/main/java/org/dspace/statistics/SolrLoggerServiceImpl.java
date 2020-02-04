@@ -833,8 +833,8 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
 
         ResultProcessor processor = new ResultProcessor() {
             @Override
-            public void process(List<SolrInputDocument> docs) {
-                docsToUpdate.addAll(docs);
+            public void process(SolrInputDocument document) {
+                docsToUpdate.add(document);
             }
         };
 
@@ -843,6 +843,10 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
         // Add the new (updated onces
         for (int i = 0; i < docsToUpdate.size(); i++) {
             SolrInputDocument solrDocument = docsToUpdate.get(i);
+
+            HttpSolrClient shard = getShard(solrDocument.getFieldValue("[shard]").toString());
+            shard.deleteByQuery("uid:" + solrDocument.getFieldValue("uid"));
+
             // Now loop over our fieldname actions
             for (int j = 0; j < fieldNames.size(); j++) {
                 String fieldName = fieldNames.get(j);
@@ -859,7 +863,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
                 } else if (action.equals("remOne")) {
                     // Remove the field
                     java.util.Collection<Object> values = solrDocument
-                        .getFieldValues(fieldName);
+                            .getFieldValues(fieldName);
                     solrDocument.removeField(fieldName);
                     for (Object value : values) {
                         // Keep all the values besides the one we need to remove
@@ -869,11 +873,16 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
                     }
                 }
             }
-            solr.add(solrDocument);
-        }
 
-        if (commit) {
-            solr.commit();
+            solrDocument.removeField("_version_");
+            solrDocument.removeField("[shard]");
+
+            shard.add(solrDocument);
+
+            if (commit) {
+                shard.commit();
+                solr.commit();
+            }
         }
         // System.out.println("SolrLogger.update(\""+query+"\"):"+(new
         // Date().getTime() - start)+"ms,"+numbFound+"records");
@@ -1543,11 +1552,14 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
         solr.commit();
     }
 
-//    @Override
-//    public void commitShard(String shard) throws Exception {
-//        HttpSolrServer shardSolr = new HttpSolrServer("http://" + shard);
-//        shardSolr.commit();
-//    }
+    @Override
+    public void commitShard(String shard) throws Exception {
+        getShard(shard).commit();
+    }
+
+    private HttpSolrClient getShard(String shard) {
+        return new HttpSolrClient.Builder("http://" + shard).build();
+    }
 
     protected void addDocumentsToFile(Context context, SolrDocumentList docs, File exportOutput)
         throws SQLException, ParseException, IOException {
