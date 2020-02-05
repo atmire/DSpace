@@ -103,6 +103,8 @@ import org.dspace.usage.UsageWorkflowEvent;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static org.apache.commons.lang.StringUtils.substringAfterLast;
+
 /**
  * Static holder for a HttpSolrClient connection pool to issue
  * usage logging events to Solr from DSpace libraries, and some static query
@@ -128,6 +130,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
     protected boolean useProxies;
 
     private static final List<String> statisticYearCores = new ArrayList<>();
+    private static final Map<String, HttpSolrClient> statisticYearCoreServers = new HashMap<>();
     private static boolean statisticYearCoresInit = false;
 
     private static final String IP_V4_REGEX = "^((?:\\d{1,3}\\.){3})\\d{1,3}$";
@@ -844,7 +847,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
         for (int i = 0; i < docsToUpdate.size(); i++) {
             SolrInputDocument solrDocument = docsToUpdate.get(i);
 
-            HttpSolrClient shard = getShard(solrDocument.getFieldValue("[shard]").toString());
+            HttpSolrClient shard = getSolrServer(solrDocument.getFieldValue("[shard]").toString());
             shard.deleteByQuery("uid:" + solrDocument.getFieldValue("uid"));
 
             // Now loop over our fieldname actions
@@ -1329,6 +1332,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
             SolrPingResponse ping = returnServer.ping();
             log.debug("Ping of Solr Core {} returned with Status {}",
                     coreName, ping.getStatus());
+            statisticYearCoreServers.put(coreName, returnServer);
             return returnServer;
         } catch (IOException | RemoteSolrException | SolrServerException e) {
             log.debug("Ping of Solr Core {} failed with {}.  New Core Will be Created",
@@ -1553,12 +1557,12 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
     }
 
     @Override
-    public void commitShard(String shard) throws Exception {
-        getShard(shard).commit();
+    public void commitShard(String shard) throws IOException, SolrServerException {
+        getSolrServer(shard).commit();
     }
 
-    private HttpSolrClient getShard(String shard) {
-        return new HttpSolrClient.Builder("http://" + shard).build();
+    private HttpSolrClient getSolrServer(String shard) {
+        return statisticYearCoreServers.get(substringAfterLast(shard, "/"));
     }
 
     protected void addDocumentsToFile(Context context, SolrDocumentList docs, File exportOutput)
