@@ -16,7 +16,7 @@
         <property name="description" value="Export metadata for batch editing"/>
     </bean>
 
-    <bean id="retry-tracker" class="org.dspace.statistics.export.RetryOpenUrlTracker" scope="prototype">
+    <bean id="retry-tracker" class="org.dspace.statistics.export.RetryFailedOpenUrlTracker" scope="prototype">
         <property name="description" value="Retry all failed commits to the OpenURLTracker"/>
     </bean>
 
