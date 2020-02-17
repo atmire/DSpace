@@ -1372,6 +1372,136 @@ prevent the generation of resource policy entry values with null dspace_object a
 
     }
 
+    @Override
+    public void addAndShiftRightMetadata(Context context, Item dso, String schema, String element, String qualifier,
+                                         String lang, String value, String authority, int confidence, int index)
+            throws SQLException {
+
+        List<MetadataValue> list = getMetadata(dso, schema, element, qualifier);
+
+        int idx = 0;
+        int place = 0;
+        boolean last = true;
+        for (MetadataValue rr : list) {
+            if (idx == index) {
+                addMetadata(context, dso, schema, element, qualifier,
+                        lang, value, authority, confidence);
+                place++;
+                last = false;
+            }
+            moveSingleMetadataValue(context, dso, schema, element, qualifier, place, rr);
+            place++;
+            idx++;
+        }
+        if (last) {
+            addMetadata(context, dso, schema, element, qualifier,
+                    lang, value, authority, confidence);
+        }
+    }
+
+    @Override
+    public void moveMetadata(Context context, Item dso, String schema, String element, String qualifier, int from, int to)
+            throws SQLException, IllegalArgumentException {
+
+        if (from == to) {
+            throw new IllegalArgumentException("The \"from\" location MUST be different from \"to\" location");
+        }
+
+        List<MetadataValue> list = getMetadata(dso, schema, element, qualifier);
+
+        if (from >= list.size()) {
+            throw new IllegalArgumentException(
+                    "The \"from\" location MUST exist for the operation to be successful. Idx:" + from);
+        }
+
+        int idx = 0;
+        MetadataValue moved = null;
+        for (MetadataValue md : list) {
+            if (idx == from) {
+                moved = md;
+                break;
+            }
+            idx++;
+        }
+
+        idx = 0;
+        int place = 0;
+        boolean last = true;
+        for (MetadataValue rr : list) {
+            if (idx == to && to < from) {
+                moveSingleMetadataValue(context, dso, schema, element, qualifier, place, moved);
+                place++;
+                last = false;
+            }
+            if (idx != from) {
+                moveSingleMetadataValue(context, dso, schema, element, qualifier, place, rr);
+                place++;
+            }
+            if (idx == to && to > from) {
+                moveSingleMetadataValue(context, dso, schema, element, qualifier, place, moved);
+                place++;
+                last = false;
+            }
+            idx++;
+        }
+        if (last) {
+            moveSingleMetadataValue(context, dso, schema, element, qualifier, place, moved);
+        }
+    }
+
+    /**
+     * Supports moving metadata by adding the metadata value or updating the place of the relationship
+     */
+    protected void addSingleMetadataValueForMove(Context context, Item dso, String schema, String element,
+                                               String qualifier, int place, MetadataValue rr) throws SQLException {
+        if (rr instanceof RelationshipMetadataValue) {
+            try {
+                //Retrieve the applicable relationship
+                Relationship rs = relationshipService.find(context,
+                        ((RelationshipMetadataValue) rr).getRelationshipId());
+                if (rs.getLeftItem() == dso) {
+                    rs.setLeftPlace(place);
+                } else {
+                    rs.setRightPlace(place);
+                }
+                relationshipService.update(context, rs);
+            } catch (Exception e) {
+                //should not occur, otherwise metadata can't be updated either
+                log.error("An error occurred while moving " + rr.getAuthority() + " for item " + dso.getID(), e);
+            }
+        } else {
+            //just add the metadata
+            addMetadata(context, dso, schema, element, qualifier, rr.getLanguage(), rr.getValue(),
+                    rr.getAuthority(), rr.getConfidence());
+        }
+    }
+
+    /**
+     * Supports moving metadata by adding the metadata value or updating the place of the relationship
+     */
+    protected void moveSingleMetadataValue(Context context, Item dso, String schema, String element,
+                                               String qualifier, int place, MetadataValue rr) throws SQLException {
+        if (rr instanceof RelationshipMetadataValue) {
+            try {
+                //Retrieve the applicable relationship
+                Relationship rs = relationshipService.find(context,
+                        ((RelationshipMetadataValue) rr).getRelationshipId());
+                if (rs.getLeftItem() == dso) {
+                    rs.setLeftPlace(place);
+                } else {
+                    rs.setRightPlace(place);
+                }
+                relationshipService.update(context, rs);
+            } catch (Exception e) {
+                //should not occur, otherwise metadata can't be updated either
+                log.error("An error occurred while moving " + rr.getAuthority() + " for item " + dso.getID(), e);
+            }
+        } else {
+            //just move the metadata
+            rr.setPlace(place);
+        }
+    }
+
     /**
      * This method will sort the List of MetadataValue objects based on the MetadataSchema, MetadataField Element,
      * MetadataField Qualifier and MetadataField Place in that order.

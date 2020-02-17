@@ -161,7 +161,7 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
         return values;
     }
 
-    private List<MetadataValue> getMetadata(T dso, String schema, String element, String qualifier) {
+    protected List<MetadataValue> getMetadata(T dso, String schema, String element, String qualifier) {
         List<MetadataValue> values;
         if (Item.ANY.equals(qualifier)) {
             values = getMetadata(dso, schema, element, Item.ANY, Item.ANY);
