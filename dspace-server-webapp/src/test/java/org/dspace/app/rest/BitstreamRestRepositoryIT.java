@@ -26,6 +26,7 @@ import org.dspace.app.rest.builder.CommunityBuilder;
 import org.dspace.app.rest.builder.ItemBuilder;
 import org.dspace.app.rest.matcher.BitstreamFormatMatcher;
 import org.dspace.app.rest.matcher.BitstreamMatcher;
+import org.dspace.app.rest.matcher.HalMatcher;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
 import org.dspace.app.rest.test.MetadataPatchSuite;
 import org.dspace.content.Bitstream;
@@ -92,7 +93,8 @@ public class BitstreamRestRepositoryIT extends AbstractControllerIntegrationTest
 
         String token = getAuthToken(admin.getEmail(), password);
 
-        getClient(token).perform(get("/api/core/bitstreams/"))
+        getClient(token).perform(get("/api/core/bitstreams/")
+                   .param("projection", "full"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.bitstreams", Matchers.containsInAnyOrder(
@@ -150,7 +152,8 @@ public class BitstreamRestRepositoryIT extends AbstractControllerIntegrationTest
         String token = getAuthToken(admin.getEmail(), password);
 
         getClient(token).perform(get("/api/core/bitstreams/")
-                                .param("size", "1"))
+                   .param("size", "1")
+                   .param("projection", "full"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.bitstreams", Matchers.contains(
@@ -166,7 +169,8 @@ public class BitstreamRestRepositoryIT extends AbstractControllerIntegrationTest
 
         getClient(token).perform(get("/api/core/bitstreams/")
                                 .param("size", "1")
-                                .param("page", "1"))
+                                .param("page", "1")
+                                .param("projection", "full"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.bitstreams", Matchers.contains(
@@ -248,6 +252,7 @@ public class BitstreamRestRepositoryIT extends AbstractControllerIntegrationTest
         //We turn off the authorization system in order to create the structure as defined below
         context.turnOffAuthorisationSystem();
 
+
         //** GIVEN **
         //1. A community-collection structure with one parent community with sub-community and one collection.
         parentCommunity = CommunityBuilder.createCommunity(context)
@@ -289,11 +294,20 @@ public class BitstreamRestRepositoryIT extends AbstractControllerIntegrationTest
                                          .build();
         }
 
-        getClient().perform(get("/api/core/bitstreams/" + bitstream.getID()))
+        // When full projection is requested, response should include expected properties, links, and embeds.
+        getClient().perform(get("/api/core/bitstreams/" + bitstream.getID())
+                   .param("projection", "full"))
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
+                   .andExpect(jsonPath("$", BitstreamMatcher.matchFullEmbeds()))
                    .andExpect(jsonPath("$", BitstreamMatcher.matchBitstreamEntry(bitstream)))
                    .andExpect(jsonPath("$", not(BitstreamMatcher.matchBitstreamEntry(bitstream1))))
+        ;
+
+        // When no projection is requested, response should include expected properties, links, and no embeds.
+        getClient().perform(get("/api/core/bitstreams/" + bitstream.getID()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", HalMatcher.matchNoEmbeds()))
         ;
 
     }
@@ -474,7 +488,7 @@ public class BitstreamRestRepositoryIT extends AbstractControllerIntegrationTest
     }
 
     @Test
-    public void deleteUnauthorized() throws Exception {
+    public void deleteForbidden() throws Exception {
 
         //We turn off the authorization system in order to create the structure as defined below
         context.turnOffAuthorisationSystem();
@@ -521,7 +535,7 @@ public class BitstreamRestRepositoryIT extends AbstractControllerIntegrationTest
     }
 
     @Test
-    public void deleteForbidden() throws Exception {
+    public void deleteUnauthorized() throws Exception {
 
         //We turn off the authorization system in order to create the structure as defined below
         context.turnOffAuthorisationSystem();
@@ -581,13 +595,72 @@ public class BitstreamRestRepositoryIT extends AbstractControllerIntegrationTest
 
         String token = getAuthToken(admin.getEmail(), password);
 
-        // 422 error when trying to DELETE parentCommunity logo
+        // trying to DELETE parentCommunity logo should work
         getClient(token).perform(delete("/api/core/bitstreams/" + parentCommunity.getLogo().getID()))
-                   .andExpect(status().is(422));
+                   .andExpect(status().is(204));
 
-        // 422 error when trying to DELETE collection logo
+        // trying to DELETE collection logo should work
         getClient(token).perform(delete("/api/core/bitstreams/" + col.getLogo().getID()))
-                   .andExpect(status().is(422));
+                   .andExpect(status().is(204));
+    }
+
+    @Test
+    public void deleteMissing() throws Exception {
+        String token = getAuthToken(admin.getEmail(), password);
+
+        // Delete
+        getClient(token).perform(delete("/api/core/bitstreams/1c11f3f1-ba1f-4f36-908a-3f1ea9a557eb"))
+                .andExpect(status().isNotFound());
+
+        // Verify 404 after failed delete
+        getClient(token).perform(delete("/api/core/bitstreams/1c11f3f1-ba1f-4f36-908a-3f1ea9a557eb"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void deleteDeleted() throws Exception {
+        //We turn off the authorization system in order to create the structure as defined below
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        //1. A community-collection structure with one parent community with sub-community and one collection.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                .withName("Parent Community")
+                .build();
+        Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
+                .withName("Sub Community")
+                .build();
+        Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
+
+        //2. One public items that is readable by Anonymous
+        Item publicItem1 = ItemBuilder.createItem(context, col1)
+                .withTitle("Test")
+                .withIssueDate("2010-10-17")
+                .withAuthor("Smith, Donald")
+                .withSubject("ExtraEntry")
+                .build();
+
+        String bitstreamContent = "ThisIsSomeDummyText";
+        //Add a bitstream to an item
+        Bitstream bitstream = null;
+        try (InputStream is = IOUtils.toInputStream(bitstreamContent, CharEncoding.UTF_8)) {
+            bitstream = BitstreamBuilder.
+                    createBitstream(context, publicItem1, is)
+                    .withName("Bitstream")
+                    .withDescription("Description")
+                    .withMimeType("text/plain")
+                    .build();
+        }
+
+        String token = getAuthToken(admin.getEmail(), password);
+
+        // Delete
+        getClient(token).perform(delete("/api/core/bitstreams/" + bitstream.getID()))
+                .andExpect(status().is(204));
+
+        // Verify 404 when trying to delete a non-existing bitstream
+        getClient(token).perform(delete("/api/core/bitstreams/" + bitstream.getID()))
+                .andExpect(status().isNotFound());
     }
 
     @Test

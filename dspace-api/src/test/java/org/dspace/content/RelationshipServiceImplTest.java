@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RelationshipServiceImplTest {
@@ -66,7 +66,7 @@ public class RelationshipServiceImplTest {
     @Test
     public void testFindAll() throws Exception {
         // Mock DAO to return our mocked relationshipsList
-        when(relationshipDAO.findAll(context, Relationship.class)).thenReturn(relationshipsList);
+        when(relationshipDAO.findAll(context, Relationship.class, -1, -1)).thenReturn(relationshipsList);
         // The reported Relationship(s) should match our relationshipsList
         assertEquals("TestFindAll 0", relationshipsList, relationshipService.findAll(context));
     }
@@ -84,23 +84,22 @@ public class RelationshipServiceImplTest {
         RelationshipType hasDog = new RelationshipType();
         RelationshipType hasFather = new RelationshipType();
         RelationshipType hasMother = new RelationshipType();
-        hasDog.setLeftLabel("hasDog");
-        hasDog.setRightLabel("isDogOf");
-        hasFather.setLeftLabel("hasFather");
-        hasFather.setRightLabel("isFatherOf");
-        hasMother.setLeftLabel("hasMother");
-        hasMother.setRightLabel("isMotherOf");
+        hasDog.setLeftwardType("hasDog");
+        hasDog.setRightwardType("isDogOf");
+        hasFather.setLeftwardType("hasFather");
+        hasFather.setRightwardType("isFatherOf");
+        hasMother.setLeftwardType("hasMother");
+        hasMother.setRightwardType("isMotherOf");
 
         relationshipTest.add(getRelationship(cindy, spot, hasDog,0,0));
         relationshipTest.add(getRelationship(cindy, jasper, hasDog,0,1));
         relationshipTest.add(getRelationship(cindy, hank, hasFather,0,0));
         relationshipTest.add(getRelationship(fred, cindy, hasMother,0,0));
         relationshipTest.add(getRelationship(bob, cindy, hasMother,1,0));
-        when(relationshipService.findByItem(context, cindy)).thenReturn(relationshipTest);
-        when(relationshipDAO.findByItem(context, cindy)).thenReturn(relationshipTest);
+        when(relationshipService.findByItem(context, cindy, -1, -1)).thenReturn(relationshipTest);
 
         // Mock the state of objects utilized in findByItem() to meet the success criteria of the invocation
-        when(relationshipDAO.findByItem(context, cindy)).thenReturn(relationshipTest);
+        when(relationshipDAO.findByItem(context, cindy, -1, -1)).thenReturn(relationshipTest);
 
         List<Relationship> results = relationshipService.findByItem(context, cindy);
         assertEquals("TestFindByItem 0", relationshipTest, results);
@@ -115,11 +114,11 @@ public class RelationshipServiceImplTest {
         Item item = mock(Item.class);
 
         // Mock DAO to return mocked left place as 0
-        when(relationshipDAO.findLeftPlaceByLeftItem(context, item)).thenReturn(0);
+        when(relationshipDAO.findNextLeftPlaceByLeftItem(context, item)).thenReturn(0);
 
         // The left place reported from out mocked item should match the DAO's report of the left place
-        assertEquals("TestFindLeftPlaceByLeftItem 0", relationshipDAO.findLeftPlaceByLeftItem(context, item),
-                relationshipService.findLeftPlaceByLeftItem(context, item));
+        assertEquals("TestFindLeftPlaceByLeftItem 0", relationshipDAO.findNextLeftPlaceByLeftItem(context, item),
+                relationshipService.findNextLeftPlaceByLeftItem(context, item));
     }
 
     @Test
@@ -128,11 +127,11 @@ public class RelationshipServiceImplTest {
         Item item = mock(Item.class);
 
         // Mock lower level DAO to return mocked right place as 0
-        when(relationshipDAO.findRightPlaceByRightItem(context, item)).thenReturn(0);
+        when(relationshipDAO.findNextRightPlaceByRightItem(context, item)).thenReturn(0);
 
         // The right place reported from out mocked item should match the DAO's report of the right place
-        assertEquals("TestFindRightPlaceByRightItem 0", relationshipDAO.findRightPlaceByRightItem(context, item),
-                relationshipService.findRightPlaceByRightItem(context, item));
+        assertEquals("TestFindRightPlaceByRightItem 0", relationshipDAO.findNextRightPlaceByRightItem(context, item),
+                relationshipService.findNextRightPlaceByRightItem(context, item));
     }
 
     @Test
@@ -194,8 +193,8 @@ public class RelationshipServiceImplTest {
         EntityType rightEntityType = mock(EntityType.class);
         testRel.setLeftType(leftEntityType);
         testRel.setRightType(rightEntityType);
-        testRel.setLeftLabel("Entitylabel");
-        testRel.setRightLabel("Entitylabel");
+        testRel.setLeftwardType("Entitylabel");
+        testRel.setRightwardType("Entitylabel");
         metsList.add(metVal);
         relationship = getRelationship(leftItem, rightItem, testRel, 0,0);
         leftTypelist.add(relationship);
@@ -206,8 +205,6 @@ public class RelationshipServiceImplTest {
                 .isUseForPlaceTrueForRelationshipType(relationship.getRelationshipType(), true)).thenReturn(true);
         when(authorizeService
                 .authorizeActionBoolean(context, relationship.getLeftItem(), Constants.WRITE)).thenReturn(true);
-        when(authorizeService
-                .authorizeActionBoolean(context, relationship.getRightItem(), Constants.WRITE)).thenReturn(true);
         when(relationshipService.findByItem(context,leftItem)).thenReturn(leftTypelist);
         when(relationshipService.findByItem(context,rightItem)).thenReturn(rightTypelist);
         when(leftEntityType.getLabel()).thenReturn("Entitylabel");
@@ -232,8 +229,6 @@ public class RelationshipServiceImplTest {
 
     @Test
     public void testDelete() throws Exception {
-        // Mock admin state
-        when(authorizeService.isAdmin(context)).thenReturn(true);
 
         // Declare objects utilized in unit test
         MetadataValue metVal = mock(MetadataValue.class);
@@ -247,8 +242,8 @@ public class RelationshipServiceImplTest {
         EntityType rightEntityType = mock(EntityType.class);
         testRel.setLeftType(leftEntityType);
         testRel.setRightType(rightEntityType);
-        testRel.setLeftLabel("Entitylabel");
-        testRel.setRightLabel("Entitylabel");
+        testRel.setLeftwardType("Entitylabel");
+        testRel.setRightwardType("Entitylabel");
         testRel.setLeftMinCardinality(0);
         testRel.setRightMinCardinality(0);
         metsList.add(metVal);
@@ -261,19 +256,12 @@ public class RelationshipServiceImplTest {
                 .thenReturn(true);
         when(authorizeService.authorizeActionBoolean(context, relationship.getLeftItem(), Constants.WRITE))
                 .thenReturn(true);
-        when(authorizeService.authorizeActionBoolean(context, relationship.getRightItem(), Constants.WRITE))
-                .thenReturn(true);
         when(relationshipService.findByItem(context,leftItem)).thenReturn(leftTypelist);
         when(relationshipService.findByItem(context,rightItem)).thenReturn(rightTypelist);
-        when(leftEntityType.getLabel()).thenReturn("Entitylabel");
-        when(rightEntityType.getLabel()).thenReturn("Entitylabel");
-        when(metVal.getValue()).thenReturn("Entitylabel");
-        when(metsList.get(0).getValue()).thenReturn("Entitylabel");
         when(relationshipService.findByItemAndRelationshipType(context, leftItem, testRel, true))
                 .thenReturn(leftTypelist);
-        when(itemService.getMetadata(leftItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
-        when(itemService.getMetadata(rightItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
-        when(relationshipDAO.create(any(), any())).thenReturn(relationship);
+        when(relationshipService.findByItemAndRelationshipType(context, rightItem, testRel, false))
+                .thenReturn(rightTypelist);
         when(relationshipService.find(context,0)).thenReturn(relationship);
 
         // Invoke delete()
@@ -287,7 +275,6 @@ public class RelationshipServiceImplTest {
     public void testUpdate() throws Exception {
         // Mock admin state
         context.turnOffAuthorisationSystem();
-        when(authorizeService.isAdmin(context)).thenReturn(true);
 
         // Declare objects utilized in unit test
         MetadataValue metVal = mock(MetadataValue.class);
@@ -299,8 +286,8 @@ public class RelationshipServiceImplTest {
         EntityType rightEntityType = mock(EntityType.class);
         testRel.setLeftType(leftEntityType);
         testRel.setRightType(rightEntityType);
-        testRel.setLeftLabel("Entitylabel");
-        testRel.setRightLabel("Entitylabel");
+        testRel.setLeftwardType("Entitylabel");
+        testRel.setRightwardType("Entitylabel");
         testRel.setLeftMinCardinality(0);
         testRel.setRightMinCardinality(0);
         metsList.add(metVal);
@@ -311,14 +298,18 @@ public class RelationshipServiceImplTest {
         when(itemService.getMetadata(rightItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
         when(authorizeService.authorizeActionBoolean(context, relationship.getLeftItem(),
                 Constants.WRITE)).thenReturn(true);
-        when(authorizeService.authorizeActionBoolean(context, relationship.getRightItem(),
-                Constants.WRITE)).thenReturn(true);
 
         // Invoke update()
         relationshipService.update(context, relationship);
 
         // Verify RelationshipDAO.delete() ran once to confirm proper invocation of update()
         Mockito.verify(relationshipDAO).save(context, relationship);
+    }
+
+    @Test
+    public void testCountTotal() throws Exception {
+        when(relationshipDAO.countRows(context)).thenReturn(0);
+        assertEquals("TestCountTotal 1", 0, relationshipService.countTotal(context));
     }
 
     /**

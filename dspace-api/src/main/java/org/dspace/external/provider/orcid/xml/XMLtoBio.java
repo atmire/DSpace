@@ -43,6 +43,15 @@ public class XMLtoBio extends Converter<List<Result>> {
         return bios;
     }
 
+    public int getNumberOfResultsFromXml(InputStream xml) {
+        try {
+            Search search = (Search) unmarshall(xml, Search.class);
+            return search.getNumFound().intValue();
+        } catch (SAXException | URISyntaxException e) {
+            log.error(e);
+        }
+        return 0;
+    }
     public Person convertSinglePerson(InputStream xml) {
         Person person = null;
         try {

@@ -15,12 +15,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.launcher.ScriptLauncher;
 import org.dspace.app.rest.builder.AbstractBuilder;
+import org.dspace.app.scripts.handler.impl.TestDSpaceRunnableHandler;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Community;
 import org.dspace.core.Context;
 import org.dspace.core.I18nUtil;
-import org.dspace.discovery.MockSolrServiceImpl;
-import org.dspace.discovery.SearchService;
+import org.dspace.discovery.MockSolrSearchCore;
+import org.dspace.discovery.SolrSearchCore;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
 import org.dspace.eperson.factory.EPersonServiceFactory;
@@ -41,7 +42,7 @@ public class AbstractIntegrationTestWithDatabase extends AbstractDSpaceIntegrati
      * log4j category
      */
     private static final Logger log = LogManager
-            .getLogger(AbstractIntegrationTestWithDatabase.class);
+        .getLogger(AbstractIntegrationTestWithDatabase.class);
 
     /**
      * Context mock object to use in the tests.
@@ -178,9 +179,9 @@ public class AbstractIntegrationTestWithDatabase extends AbstractDSpaceIntegrati
             cleanupContext();
 
             // Clear the search core.
-            MockSolrServiceImpl searchService = DSpaceServicesFactory.getInstance()
+            MockSolrSearchCore searchService = DSpaceServicesFactory.getInstance()
                     .getServiceManager()
-                    .getServiceByName(SearchService.class.getName(), MockSolrServiceImpl.class);
+                    .getServiceByName(SolrSearchCore.class.getName(), MockSolrSearchCore.class);
             searchService.reset();
 
             // Reload our ConfigurationService (to reset configs to defaults again)
@@ -227,7 +228,13 @@ public class AbstractIntegrationTestWithDatabase extends AbstractDSpaceIntegrati
             }
 
             // Look up command in the configuration, and execute.
-            return ScriptLauncher.runOneCommand(commandConfigs, args, kernelImpl);
+            TestDSpaceRunnableHandler testDSpaceRunnableHandler = new TestDSpaceRunnableHandler();
+            int status =  ScriptLauncher.handleScript(args, commandConfigs, testDSpaceRunnableHandler, kernelImpl);
+            if (testDSpaceRunnableHandler.getException() != null) {
+                throw testDSpaceRunnableHandler.getException();
+            } else {
+                return status;
+            }
         } finally {
             if (!context.isValid()) {
                 setUp();

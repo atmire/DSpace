@@ -90,13 +90,13 @@ public class CsvImportIT extends AbstractEntityIntegrationTest {
                                                                            itemC, itemB);
 
         List<Relationship> relationships = relationshipService.findByItem(context, itemE);
-        getClient().perform(get("/api/core/relationships/" + relationships.get(0).getID()))
+        getClient().perform(get("/api/core/relationships/" + relationships.get(0).getID()).param("projection", "full"))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$.leftPlace", is(0)))
                    .andExpect(jsonPath("$._links.rightItem.href", containsString(itemC.getID().toString())))
                    .andExpect(jsonPath("$.rightPlace", is(1)))
                    .andExpect(jsonPath("$", Matchers.is(RelationshipMatcher.matchRelationship(relationships.get(0)))));
-        getClient().perform(get("/api/core/relationships/" + relationships.get(1).getID().toString()))
+        getClient().perform(get("/api/core/relationships/" + relationships.get(1).getID()).param("projection", "full"))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$.leftPlace", is(1)))
                    .andExpect(jsonPath("$._links.rightItem.href", containsString(itemB.getID().toString())))
@@ -131,7 +131,7 @@ public class CsvImportIT extends AbstractEntityIntegrationTest {
     private void assertArticleRelationships(Item article, Item itemB, Item itemC, Item itemF) throws SQLException {
         List<Relationship> relationshipsForArticle = relationshipService
             .findByItemAndRelationshipType(context, article, relationshipTypeService
-                .findbyTypesAndLabels(context, entityTypeService.findByEntityType(context, "Publication"),
+                .findbyTypesAndTypeName(context, entityTypeService.findByEntityType(context, "Publication"),
                                       entityTypeService.findByEntityType(context, "Person"), "isAuthorOfPublication",
                                       "isPublicationOfAuthor"));
         assertThat(relationshipsForArticle.size(), is(3));
@@ -188,7 +188,7 @@ public class CsvImportIT extends AbstractEntityIntegrationTest {
         List<Relationship> relationships = relationshipService.findByItem(context, item);
         assertThat(reasonAssertCheck, relationships.size(), equalTo(sizeToCheck));
         getClient().perform(get("/api/core/items/" + item.getID())).andExpect(status().isOk());
-        getClient().perform(get("/api/core/relationships/" + relationships.get(0).getID()))
+        getClient().perform(get("/api/core/relationships/" + relationships.get(0).getID()).param("projection", "full"))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$.leftPlace", is(leftPlaceToCheck)))
                    .andExpect(jsonPath("$.rightPlace", is(rightPlaceToCheck)))

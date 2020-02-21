@@ -7,9 +7,14 @@
  */
 package org.dspace.external.service;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
+import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.Collection;
+import org.dspace.content.WorkspaceItem;
+import org.dspace.core.Context;
 import org.dspace.external.model.ExternalDataObject;
 import org.dspace.external.provider.ExternalDataProvider;
 
@@ -52,4 +57,24 @@ public interface ExternalDataService {
      */
     public List<ExternalDataObject> searchExternalDataObjects(String source, String query, int start, int limit);
 
+    /**
+     * This method wil return the total amount of results that will be found for the given query in the given source
+     * @param source    The source in which the query will happen to return the number of results
+     * @param query     The query to be ran in this source to retrieve the total amount of results
+     * @return          The total amount of results that can be returned for this query in the given source
+     */
+    public int getNumberOfResults(String source, String query);
+
+    /**
+     * This method will create a WorkspaceItem in the given Collection based on the given ExternalDataObject.
+     * @param context               The relevant DSpace context
+     * @param externalDataObject    The relevant ExternalDataObject to be used
+     * @param collection            The Collection in which the item will be present
+     * @return                      The created Item
+     * @throws AuthorizeException   If something goes wrong
+     * @throws SQLException         If something goes wrong
+     */
+    WorkspaceItem createWorkspaceItemFromExternalDataObject(Context context, ExternalDataObject externalDataObject,
+                                                            Collection collection)
+        throws AuthorizeException, SQLException;
 }

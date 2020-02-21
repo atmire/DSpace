@@ -9,7 +9,6 @@ package org.dspace.app.rest.repository;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import javax.servlet.ServletInputStream;
@@ -17,35 +16,37 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
-import org.dspace.app.rest.converter.CollectionConverter;
-import org.dspace.app.rest.converter.MetadataConverter;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
+import org.dspace.app.rest.model.BitstreamRest;
 import org.dspace.app.rest.model.CollectionRest;
 import org.dspace.app.rest.model.CommunityRest;
-import org.dspace.app.rest.model.hateoas.CollectionResource;
+import org.dspace.app.rest.model.TemplateItemRest;
 import org.dspace.app.rest.model.patch.Patch;
-import org.dspace.app.rest.repository.patch.DSpaceObjectPatch;
+import org.dspace.app.rest.model.wrapper.TemplateItem;
+import org.dspace.app.rest.projection.Projection;
 import org.dspace.app.rest.utils.CollectionRestEqualityUtils;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.Bitstream;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
+import org.dspace.content.Item;
+import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.CommunityService;
+import org.dspace.content.service.ItemService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
-import org.dspace.util.UUIDUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * This is the repository responsible to manage Item Rest object
@@ -56,25 +57,23 @@ import org.springframework.stereotype.Component;
 @Component(CollectionRest.CATEGORY + "." + CollectionRest.NAME)
 public class CollectionRestRepository extends DSpaceObjectRestRepository<Collection, CollectionRest> {
 
-    private final CollectionService cs;
-
     @Autowired
     CommunityService communityService;
 
     @Autowired
-    CollectionConverter converter;
-
-    @Autowired
-    MetadataConverter metadataConverter;
-
-    @Autowired
     CollectionRestEqualityUtils collectionRestEqualityUtils;
 
+    @Autowired
+    private CollectionService cs;
 
-    public CollectionRestRepository(CollectionService dsoService,
-                                    CollectionConverter dsoConverter) {
-        super(dsoService, dsoConverter, new DSpaceObjectPatch<CollectionRest>() {});
-        this.cs = dsoService;
+    @Autowired
+    private BitstreamService bitstreamService;
+
+    @Autowired
+    private ItemService itemService;
+
+    public CollectionRestRepository(CollectionService dsoService) {
+        super(dsoService);
     }
 
     @Override
@@ -89,66 +88,48 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
         if (collection == null) {
             return null;
         }
-        return dsoConverter.fromModel(collection);
+        return converter.toRest(collection, utils.obtainProjection());
     }
 
     @Override
     public Page<CollectionRest> findAll(Context context, Pageable pageable) {
-        List<Collection> it = null;
-        List<Collection> collections = new ArrayList<Collection>();
-        int total = 0;
         try {
-            total = cs.countTotal(context);
-            it = cs.findAll(context, pageable.getPageSize(), pageable.getOffset());
-            for (Collection c : it) {
-                collections.add(c);
-            }
+            long total = cs.countTotal(context);
+            List<Collection> collections = cs.findAll(context, pageable.getPageSize(),
+                Math.toIntExact(pageable.getOffset()));
+            return converter.toRestPage(collections, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<CollectionRest> page = new PageImpl<Collection>(collections, pageable, total).map(dsoConverter);
-        return page;
     }
 
     @SearchRestMethod(name = "findAuthorizedByCommunity")
     public Page<CollectionRest> findAuthorizedByCommunity(
-            @Parameter(value = "uuid", required = true) UUID communityUuid, Pageable pageable) {
-        Context context = obtainContext();
-        List<Collection> it = null;
-        List<Collection> collections = new ArrayList<Collection>();
+        @Parameter(value = "uuid", required = true) UUID communityUuid, Pageable pageable) {
         try {
+            Context context = obtainContext();
             Community com = communityService.find(context, communityUuid);
             if (com == null) {
                 throw new ResourceNotFoundException(
-                        CommunityRest.CATEGORY + "." + CommunityRest.NAME + " with id: " + communityUuid
+                    CommunityRest.CATEGORY + "." + CommunityRest.NAME + " with id: " + communityUuid
                         + " not found");
             }
-            it = cs.findAuthorized(context, com, Constants.ADD);
-            for (Collection c : it) {
-                collections.add(c);
-            }
+            List<Collection> collections = cs.findAuthorized(context, com, Constants.ADD);
+            return converter.toRestPage(utils.getPage(collections, pageable), utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<CollectionRest> page = utils.getPage(collections, pageable).map(dsoConverter);
-        return page;
     }
 
     @SearchRestMethod(name = "findAuthorized")
     public Page<CollectionRest> findAuthorized(Pageable pageable) {
-        Context context = obtainContext();
-        List<Collection> it = null;
-        List<Collection> collections = new ArrayList<Collection>();
         try {
-            it = cs.findAuthorizedOptimized(context, Constants.ADD);
-            for (Collection c : it) {
-                collections.add(c);
-            }
+            Context context = obtainContext();
+            List<Collection> collections = cs.findAuthorizedOptimized(context, Constants.ADD);
+            return converter.toRestPage(utils.getPage(collections, pageable), utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Page<CollectionRest> page = utils.getPage(collections, pageable).map(dsoConverter);
-        return page;
     }
 
     @Override
@@ -164,13 +145,19 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
     }
 
     @Override
-    public CollectionResource wrapResource(CollectionRest collection, String... rels) {
-        return new CollectionResource(collection, utils, rels);
+    protected CollectionRest createAndReturn(Context context) throws AuthorizeException {
+        throw new DSpaceBadRequestException("Cannot create a Collection without providing a parent Community.");
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
-    protected CollectionRest createAndReturn(Context context) throws AuthorizeException {
+    @PreAuthorize("hasPermission(#id, 'COMMUNITY', 'ADD')")
+    protected CollectionRest createAndReturn(Context context, UUID id) throws AuthorizeException {
+
+        if (id == null) {
+            throw new DSpaceBadRequestException("Parent Community UUID is null. " +
+                "Cannot create a Collection without providing a parent Community");
+        }
+
         HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
         ObjectMapper mapper = new ObjectMapper();
         CollectionRest collectionRest;
@@ -178,47 +165,30 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
             ServletInputStream input = req.getInputStream();
             collectionRest = mapper.readValue(input, CollectionRest.class);
         } catch (IOException e1) {
-            throw new UnprocessableEntityException("Error parsing request body: " + e1.toString());
+            throw new UnprocessableEntityException("Error parsing request body.", e1);
         }
 
         Collection collection;
-
-
-        String parentCommunityString = req.getParameter("parent");
         try {
-            Community parent = null;
-            if (StringUtils.isNotBlank(parentCommunityString)) {
-
-                UUID parentCommunityUuid = UUIDUtils.fromString(parentCommunityString);
-                if (parentCommunityUuid == null) {
-                    throw new DSpaceBadRequestException("The given parent was invalid: "
-                            + parentCommunityString);
-                }
-
-                parent = communityService.find(context, parentCommunityUuid);
-                if (parent == null) {
-                    throw new UnprocessableEntityException("Parent community for id: "
-                            + parentCommunityUuid + " not found");
-                }
-            } else {
-                throw new DSpaceBadRequestException("The parent parameter cannot be left empty," +
-                                                  "collections require a parent community.");
+            Community parent = communityService.find(context, id);
+            if (parent == null) {
+                throw new UnprocessableEntityException("Parent community for id: "
+                    + id + " not found");
             }
             collection = cs.create(context, parent);
             cs.update(context, collection);
             metadataConverter.setMetadata(context, collection, collectionRest.getMetadata());
         } catch (SQLException e) {
-            throw new RuntimeException("Unable to create new Collection under parent Community " +
-                                           parentCommunityString, e);
+            throw new RuntimeException("Unable to create new Collection under parent Community " + id, e);
         }
-        return converter.convert(collection);
+        return converter.toRest(collection, Projection.DEFAULT);
     }
 
 
     @Override
     @PreAuthorize("hasPermission(#id, 'COLLECTION', 'WRITE')")
     protected CollectionRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
-                                JsonNode jsonNode)
+                                 JsonNode jsonNode)
         throws RepositoryMethodNotImplementedException, SQLException, AuthorizeException {
         CollectionRest collectionRest;
         try {
@@ -230,35 +200,105 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
         if (collection == null) {
             throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");
         }
-        CollectionRest originalCollectionRest = converter.fromModel(collection);
+        CollectionRest originalCollectionRest = converter.toRest(collection, Projection.DEFAULT);
         if (collectionRestEqualityUtils.isCollectionRestEqualWithoutMetadata(originalCollectionRest, collectionRest)) {
             metadataConverter.setMetadata(context, collection, collectionRest.getMetadata());
         } else {
             throw new IllegalArgumentException("The UUID in the Json and the UUID in the url do not match: "
-                                                   + id + ", "
-                                                   + collectionRest.getId());
+                + id + ", "
+                + collectionRest.getId());
         }
-        return converter.fromModel(collection);
+        return converter.toRest(collection, Projection.DEFAULT);
     }
+
     @Override
     @PreAuthorize("hasPermission(#id, 'COLLECTION', 'DELETE')")
     protected void delete(Context context, UUID id) throws AuthorizeException {
-        Collection collection = null;
         try {
-            collection = cs.find(context, id);
+            Collection collection = cs.find(context, id);
             if (collection == null) {
                 throw new ResourceNotFoundException(
                     CollectionRest.CATEGORY + "." + CollectionRest.NAME + " with id: " + id + " not found");
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Unable to find Collection with id = " + id, e);
-        }
-        try {
             cs.delete(context, collection);
         } catch (SQLException e) {
             throw new RuntimeException("Unable to delete Collection with id = " + id, e);
         } catch (IOException e) {
             throw new RuntimeException("Unable to delete collection because the logo couldn't be deleted", e);
+        }
+    }
+
+    /**
+     * Method to install a logo on a Collection which doesn't have a logo
+     * Called by request mappings in CollectionLogoController
+     *
+     * @param context
+     * @param collection The collection on which to install the logo
+     * @param uploadfile The new logo
+     * @return The created bitstream containing the new logo
+     * @throws IOException
+     * @throws AuthorizeException
+     * @throws SQLException
+     */
+    public BitstreamRest setLogo(Context context, Collection collection, MultipartFile uploadfile)
+        throws IOException, AuthorizeException, SQLException {
+
+        if (collection.getLogo() != null) {
+            throw new UnprocessableEntityException(
+                "The collection with the given uuid already has a logo: " + collection.getID());
+        }
+        Bitstream bitstream = cs.setLogo(context, collection, uploadfile.getInputStream());
+        cs.update(context, collection);
+        bitstreamService.update(context, bitstream);
+        return converter.toRest(context.reloadEntity(bitstream), Projection.DEFAULT);
+    }
+
+    /**
+     * This method creates a new Item to be used as a template in a Collection
+     *
+     * @param context
+     * @param collection    The collection for which to make the item
+     * @param inputItemRest The new item
+     * @return The created TemplateItem
+     * @throws SQLException
+     * @throws AuthorizeException
+     */
+    public TemplateItemRest createTemplateItem(Context context, Collection collection, TemplateItemRest inputItemRest)
+        throws SQLException, AuthorizeException {
+        if (collection.getTemplateItem() != null) {
+            throw new UnprocessableEntityException("Collection with ID " + collection.getID()
+                + " already contains a template item");
+        }
+        cs.createTemplateItem(context, collection);
+        Item item = collection.getTemplateItem();
+        metadataConverter.setMetadata(context, item, inputItemRest.getMetadata());
+        item.setDiscoverable(false);
+
+        cs.update(context, collection);
+        itemService.update(context, item);
+
+        return converter.toRest(new TemplateItem(item), Projection.DEFAULT);
+    }
+
+    /**
+     * This method looks up the template Item associated with a Collection
+     *
+     * @param collection The Collection for which to find the template
+     * @return The template Item from the Collection
+     * @throws SQLException
+     */
+    public TemplateItemRest getTemplateItem(Collection collection) throws SQLException {
+        Item item = collection.getTemplateItem();
+        if (item == null) {
+            throw new ResourceNotFoundException(
+                "TemplateItem from " + CollectionRest.CATEGORY + "." + CollectionRest.NAME + " with id: "
+                    + collection.getID() + " not found");
+        }
+
+        try {
+            return converter.toRest(new TemplateItem(item), Projection.DEFAULT);
+        } catch (IllegalArgumentException e) {
+            throw new UnprocessableEntityException("The item with id " + item.getID() + " is not a template item");
         }
     }
 }

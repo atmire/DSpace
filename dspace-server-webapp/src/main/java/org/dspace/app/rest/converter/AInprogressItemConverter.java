@@ -7,8 +7,6 @@
  */
 package org.dspace.app.rest.converter;
 
-import java.io.Serializable;
-import java.sql.SQLException;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -17,6 +15,7 @@ import org.dspace.app.rest.model.AInprogressSubmissionRest;
 import org.dspace.app.rest.model.ErrorRest;
 import org.dspace.app.rest.model.SubmissionDefinitionRest;
 import org.dspace.app.rest.model.SubmissionSectionRest;
+import org.dspace.app.rest.projection.Projection;
 import org.dspace.app.rest.submit.AbstractRestProcessingStep;
 import org.dspace.app.rest.submit.SubmissionService;
 import org.dspace.app.util.SubmissionConfigReader;
@@ -37,31 +36,20 @@ import org.springframework.beans.factory.annotation.Autowired;
  *            the DSpace API inprogressSubmission object
  * @param <R>
  *            the DSpace REST inprogressSubmission representation
- * @param <ID>
- *            the Serializable class used as primary key
  */
-public abstract class AInprogressItemConverter<T extends InProgressSubmission<ID>,
-                            R extends AInprogressSubmissionRest<ID>, ID extends Serializable>
+public abstract class AInprogressItemConverter<T extends InProgressSubmission,
+                            R extends AInprogressSubmissionRest>
         implements IndexableObjectConverter<T, R> {
 
     private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(AInprogressItemConverter.class);
 
     @Autowired
-    private EPersonConverter epersonConverter;
-
-    @Autowired
-    private ItemConverter itemConverter;
-
-    @Autowired
-    private CollectionConverter collectionConverter;
-
-    protected SubmissionConfigReader submissionConfigReader;
-
-    @Autowired
-    private SubmissionDefinitionConverter submissionDefinitionConverter;
+    private ConverterService converter;
 
     @Autowired
     private SubmissionSectionConverter submissionSectionConverter;
+
+    protected SubmissionConfigReader submissionConfigReader;
 
     @Autowired
     SubmissionService submissionService;
@@ -70,28 +58,24 @@ public abstract class AInprogressItemConverter<T extends InProgressSubmission<ID
         submissionConfigReader = new SubmissionConfigReader();
     }
 
-    protected void fillFromModel(T obj, R witem) {
+    protected void fillFromModel(T obj, R witem, Projection projection) {
         Collection collection = obj.getCollection();
         Item item = obj.getItem();
         EPerson submitter = null;
-        try {
-            submitter = obj.getSubmitter();
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
+        submitter = obj.getSubmitter();
 
         witem.setId(obj.getID());
-        witem.setCollection(collection != null ? collectionConverter.convert(collection) : null);
-        witem.setItem(itemConverter.convert(item));
-        witem.setSubmitter(epersonConverter.convert(submitter));
+        witem.setCollection(collection != null ? converter.toRest(collection, projection) : null);
+        witem.setItem(converter.toRest(item, projection));
+        witem.setSubmitter(converter.toRest(submitter, projection));
 
         // 1. retrieve the submission definition
         // 2. iterate over the submission section to allow to plugin additional
         // info
 
         if (collection != null) {
-            SubmissionDefinitionRest def = submissionDefinitionConverter
-                .convert(submissionConfigReader.getSubmissionConfigByCollection(collection.getHandle()));
+            SubmissionDefinitionRest def = converter.toRest(
+                    submissionConfigReader.getSubmissionConfigByCollection(collection.getHandle()), projection);
             witem.setSubmissionDefinition(def);
             for (SubmissionSectionRest sections : def.getPanels()) {
                 SubmissionStepConfig stepConfig = submissionSectionConverter.toModel(sections);

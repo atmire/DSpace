@@ -28,9 +28,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.content.DCPersonName;
+import org.dspace.content.dto.MetadataValueDTO;
 import org.dspace.external.model.ExternalDataObject;
 import org.dspace.external.provider.ExternalDataProvider;
-import org.dspace.mock.MockMetadataValue;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -56,8 +56,6 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  * lcname.url = http://alcme.oclc.org/srw/search/lcnaf
  *
- * TODO: make # of results to ask for (and return) configurable.
- *
  * @author Larry Stone
  * @version $Revision $
  */
@@ -66,7 +64,6 @@ public class LCNameDataProvider implements ExternalDataProvider {
 
     private String url;
     private String sourceIdentifier;
-    private String apiKey;
 
     // NS URI for SRU respones
     protected static final String NS_SRU = "http://www.loc.gov/zing/srw/";
@@ -116,22 +113,6 @@ public class LCNameDataProvider implements ExternalDataProvider {
         this.sourceIdentifier = sourceIdentifier;
     }
 
-    /**
-     * Generic getter for the apiKey
-     * @return the apiKey value of this LCNameDataProvider
-     */
-    public String getApiKey() {
-        return apiKey;
-    }
-
-    /**
-     * Generic setter for the apiKey
-     * @param apiKey   The apiKey to be set on this LCNameDataProvider
-     */
-    public void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
-    }
-
     @Override
     public List<ExternalDataObject> searchExternalDataObjects(String text, int start, int limit) {
         // punt if there is no query text
@@ -155,54 +136,19 @@ public class LCNameDataProvider implements ExternalDataProvider {
             limit = 50;
         }
 
-        URI sruUri;
-        try {
-            URIBuilder builder = new URIBuilder(url);
-            builder.addParameter("operation", "searchRetrieve");
-            builder.addParameter("version", "1.1");
-            builder.addParameter("recordSchema", "info:srw/schema/1/marcxml-v1.1");
-            builder.addParameter("query", query.toString());
-            builder.addParameter("maximumRecords", String.valueOf(limit));
-            builder.addParameter("startRecord", String.valueOf(start + 1));
-            sruUri = builder.build();
-        } catch (URISyntaxException e) {
-            log.error("SRU query failed: ", e);
-            return Collections.EMPTY_LIST;
-        }
-        HttpGet get = new HttpGet(sruUri);
-
-        log.debug("Trying SRU query, URL=" + sruUri);
-
+        HttpGet get = constructHttpGet(query, start, limit);
         // 2. web request
         try {
             HttpClient hc = new DefaultHttpClient();
             HttpResponse response = hc.execute(get);
             if (response.getStatusLine().getStatusCode() == 200) {
-                SAXParserFactory spf = SAXParserFactory.newInstance();
-                SAXParser sp = spf.newSAXParser();
-                XMLReader xr = sp.getXMLReader();
-                SRUHandler handler = new SRUHandler(sourceIdentifier);
-
-                // XXX FIXME: should turn off validation here explicitly, but
-                //  it seems to be off by default.
-                xr.setFeature("http://xml.org/sax/features/namespaces", true);
-                xr.setContentHandler(handler);
-                xr.setErrorHandler(handler);
-                HttpEntity responseBody = response.getEntity();
-                xr.parse(new InputSource(responseBody.getContent()));
+                SRUHandler handler = parseResponseToSRUHandler(response);
 
                 // this probably just means more results available..
                 if (handler.hits != handler.result.size()) {
                     log.warn("Discrepency in results, result.length=" + handler.result.size() +
                                  ", yet expected results=" + handler.hits);
                 }
-                boolean more = handler.hits > (start + handler.result.size());
-
-                // XXX add non-auth option; perhaps the UI should do this?
-                // XXX it's really a policy matter if they allow unauth result.
-                // XXX good, stop it.
-                // handler.result.add(new Choice("", text, "Non-Authority: \""+text+"\""));
-
                 return handler.result;
             }
         } catch (IOException e) {
@@ -222,6 +168,80 @@ public class LCNameDataProvider implements ExternalDataProvider {
 
     public boolean supports(String source) {
         return StringUtils.equalsIgnoreCase(sourceIdentifier, source);
+    }
+
+    private HttpGet constructHttpGet(StringBuilder query, int start, int limit) {
+        URI sruUri;
+        try {
+            URIBuilder builder = new URIBuilder(url);
+            builder.addParameter("operation", "searchRetrieve");
+            builder.addParameter("version", "1.1");
+            builder.addParameter("recordSchema", "info:srw/schema/1/marcxml-v1.1");
+            builder.addParameter("query", query.toString());
+            builder.addParameter("maximumRecords", String.valueOf(limit));
+            builder.addParameter("startRecord", String.valueOf(start + 1));
+            sruUri = builder.build();
+        } catch (URISyntaxException e) {
+            log.error("SRU query failed: ", e);
+            return null;
+        }
+        HttpGet get = new HttpGet(sruUri);
+
+        log.debug("Trying SRU query, URL=" + sruUri);
+        return get;
+    }
+
+    @Override
+    public int getNumberOfResults(String query) {
+        // punt if there is no query text
+        if (query == null || query.trim().length() == 0) {
+            return 0;
+        }
+
+        // 1. build CQL query
+        DCPersonName pn = new DCPersonName(query);
+        StringBuilder queryStringBuilder = new StringBuilder();
+        queryStringBuilder.append("local.FirstName = \"").append(pn.getFirstNames()).
+            append("\" and local.FamilyName = \"").append(pn.getLastName()).
+                              append("\"");
+
+        HttpGet get = constructHttpGet(queryStringBuilder, 0, 1);
+
+        // 2. web request
+        try {
+            HttpClient hc = new DefaultHttpClient();
+            HttpResponse response = hc.execute(get);
+            if (response.getStatusLine().getStatusCode() == 200) {
+                SRUHandler handler = parseResponseToSRUHandler(response);
+                return handler.hits;
+            }
+        } catch (IOException | ParserConfigurationException | SAXException e) {
+            log.warn("Failed parsing SRU result: ", e);
+            return 0;
+        } finally {
+            get.releaseConnection();
+        }
+        return 0;
+
+
+    }
+
+    private SRUHandler parseResponseToSRUHandler(HttpResponse response)
+        throws ParserConfigurationException, SAXException, IOException {
+        SAXParserFactory spf = SAXParserFactory.newInstance();
+        SAXParser sp = spf.newSAXParser();
+        XMLReader xr = sp.getXMLReader();
+                SRUHandler handler = new SRUHandler(sourceIdentifier);
+
+        // XXX FIXME: should turn off validation here explicitly, but
+        //  it seems to be off by default.
+        xr.setFeature("http://xml.org/sax/features/namespaces", true);
+        xr.setContentHandler(handler);
+        xr.setErrorHandler(handler);
+        HttpEntity responseBody = response.getEntity();
+        xr.parse(new InputSource(responseBody.getContent()));
+
+        return handler;
     }
 
     /**
@@ -292,18 +312,28 @@ public class LCNameDataProvider implements ExternalDataProvider {
                     externalDataObject.setValue(name);
                     externalDataObject.setId(lccn);
                     String[] names = name.split(", ");
-                    String lastName = names[0];
+                    String familyName = names[0];
                     String givenName = names.length > 1 ? names[1] : null;
-                    externalDataObject.addMetadata(new MockMetadataValue("person", "familyName", null, null, lastName));
-                    externalDataObject.addMetadata(new MockMetadataValue("person", "givenName", null, null, givenName));
-                    externalDataObject.addMetadata(new MockMetadataValue("person", "identifier", "lccn", null, lccn));
-                    externalDataObject.addMetadata(new MockMetadataValue("person", "date", "birth", null, birthDate));
+                    if (StringUtils.isNotBlank(familyName)) {
+                        externalDataObject
+                            .addMetadata(new MetadataValueDTO("person", "familyName", null, null, familyName));
+                    }
+                    if (StringUtils.isNotBlank(givenName)) {
+                        externalDataObject
+                            .addMetadata(new MetadataValueDTO("person", "givenName", null, null, givenName));
+                    }
+                    if (StringUtils.isNotBlank(birthDate)) {
+                        externalDataObject
+                            .addMetadata(new MetadataValueDTO("person", "date", "birth", null, birthDate));
+                    }
+                    externalDataObject.addMetadata(new MetadataValueDTO("person", "identifier", "lccn", null, lccn));
                     result.add(externalDataObject);
                 } else {
                     log.warn("Got anomalous result, at least one of these null: lccn=" + lccn + ", name=" + name);
                 }
                 name = null;
                 lccn = null;
+                birthDate = null;
             } else if (localName.equals("subfield") && namespaceURI.equals(NS_MX)) {
                 if (lastTag != null && lastCode != null) {
                     if (lastTag.equals("010") && lastCode.equals("a")) {
