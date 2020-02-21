@@ -42,11 +42,15 @@ public abstract class PatchOperation<M> {
     /**
      * Throws PatchBadRequestException for missing operation value.
      *
-     * @param value the value to test
+     * @param value
+     *            the value to test
      */
-    void checkOperationValue(Object value) {
+    public void checkOperationValue(Object value) {
         if (value == null) {
             throw new DSpaceBadRequestException("No value provided for the operation.");
+        }
+        if (value instanceof String && (((String) value).trim().isBlank())) {
+            throw new DSpaceBadRequestException("Value can't be empty or just spaces.");
         }
     }
 
@@ -73,7 +77,7 @@ public abstract class PatchOperation<M> {
     }
 
     /**
-     * Determines whether or not this Patch Operation can do this patch (RestModel and path gets checked)
+     * Determines whether or not this Patch Operation can do this patch (Object of operation and path gets checked)
      * @param objectToMatch    Object whose class must be instance of type object
      *                              for which this PatchOperation was created
      * @param operation        Operation of the patch, should match this type of Patch Operation

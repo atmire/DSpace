@@ -80,7 +80,7 @@ public class SubmissionService {
 
     /**
      * Create a workspaceitem using the information in the reqest
-     * 
+     *
      * @param context
      *            the dspace context
      * @param request
@@ -92,7 +92,7 @@ public class SubmissionService {
     public WorkspaceItem createWorkspaceItem(Context context, Request request) throws SQLException, AuthorizeException {
         WorkspaceItem wsi = null;
         Collection collection = null;
-        String collectionUUID = request.getHttpServletRequest().getParameter("collection");
+        String collectionUUID = request.getHttpServletRequest().getParameter("owningCollection");
 
         if (StringUtils.isBlank(collectionUUID)) {
             collectionUUID = configurationService.getProperty("submission.default.collection");
@@ -179,14 +179,14 @@ public class SubmissionService {
         checksum.setValue(source.getChecksum());
         data.setCheckSum(checksum);
         data.setSizeBytes(source.getSizeBytes());
-        data.setUrl(configurationService.getProperty("dspace.url") + "/api/" + BitstreamRest.CATEGORY + "/" + English
-            .plural(BitstreamRest.NAME) + "/" + source.getID() + "/content");
+        data.setUrl(configurationService.getProperty("dspace.server.url") + "/api/" + BitstreamRest.CATEGORY + "/" +
+                        English.plural(BitstreamRest.NAME) + "/" + source.getID() + "/content");
         return data;
     }
 
     /**
      * Create a workflowitem using the information in the reqest
-     * 
+     *
      * @param context
      *            the dspace context
      * @param requestUriListString

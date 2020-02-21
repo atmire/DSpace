@@ -107,8 +107,9 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     public Page<EPersonRest> findAll(Context context, Pageable pageable) {
         try {
             long total = es.countTotal(context);
-            List<EPerson> epersons = es.findAll(context, EPerson.EMAIL, pageable.getPageSize(), pageable.getOffset());
-            return converter.toRestPage(epersons, pageable, total, utils.obtainProjection(true));
+            List<EPerson> epersons = es.findAll(context, EPerson.EMAIL, pageable.getPageSize(),
+                    Math.toIntExact(pageable.getOffset()));
+            return converter.toRestPage(epersons, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -130,9 +131,9 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
         try {
             Context context = obtainContext();
             long total = es.searchResultCount(context, q);
-            List<EPerson> epersons = es.search(context, q, pageable.getOffset(),
-                    pageable.getOffset() + pageable.getPageSize());
-            return converter.toRestPage(epersons, pageable, total, utils.obtainProjection(true));
+            List<EPerson> epersons = es.search(context, q, Math.toIntExact(pageable.getOffset()),
+                    Math.toIntExact(pageable.getOffset() + pageable.getPageSize()));
+            return converter.toRestPage(epersons, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -144,7 +145,7 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
      *
      * @param email
      *            is the *required* email address
-     * @return a Page of EPersonRest instances matching the user query
+     * @return the EPersonRest instance, if any, matching the user query
      */
     @SearchRestMethod(name = "byEmail")
     public EPersonRest findByEmail(@Parameter(value = "email", required = true) String email) {

@@ -31,7 +31,7 @@ import org.springframework.util.Assert;
  * "/sections/<:name-of-the-form>/<:metadata>/-"
  *
  * Example: <code>
- * curl -X PATCH http://${dspace.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
+ * curl -X PATCH http://${dspace.server.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
  * Content-Type: application/json" -d '[{ "op": "add", "path": "
  * /sections/traditionalpageone/dc.title/-", "value": {"value": "Add new
  * title"}}]'
@@ -41,7 +41,7 @@ import org.springframework.util.Assert;
  * "/sections/<:name-of-the-form>/<:metadata>/<:idx-zero-based>"
  *
  * Example: <code>
- * curl -X PATCH http://${dspace.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
+ * curl -X PATCH http://${dspace.server.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
  * Content-Type: application/json" -d '[{ "op": "add", "path": "
  * /sections/traditionalpageone/dc.title/1", "value": {"value": "Add new
  * title"}}]'
@@ -51,7 +51,7 @@ import org.springframework.util.Assert;
  * "/sections/<:name-of-the-form>/<:metadata>"
  *
  * Example: <code>
- * curl -X PATCH http://${dspace.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
+ * curl -X PATCH http://${dspace.server.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
  * Content-Type: application/json" -d '[{ "op": "add", "path": "
  * /sections/traditionalpageone/dc.title", "value": [{"value": "Add new first
  * title"}, {"value": "Add new second title"}]}]'

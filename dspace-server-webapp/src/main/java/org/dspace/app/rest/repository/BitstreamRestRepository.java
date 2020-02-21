@@ -100,14 +100,14 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
         int total = 0;
         try {
             total = bs.countTotal(context);
-            it = bs.findAll(context, pageable.getPageSize(), pageable.getOffset());
+            it = bs.findAll(context, pageable.getPageSize(), Math.toIntExact(pageable.getOffset()));
             while (it.hasNext()) {
                 bit.add(it.next());
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        Projection projection = utils.obtainProjection(true);
+        Projection projection = utils.obtainProjection();
         Page<BitstreamRest> page = new PageImpl<>(bit, pageable, total)
                 .map((bitstream) -> converter.toRest(bitstream, projection));
         return page;

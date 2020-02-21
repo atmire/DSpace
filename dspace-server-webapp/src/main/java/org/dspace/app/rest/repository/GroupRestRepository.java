@@ -97,8 +97,9 @@ public class GroupRestRepository extends DSpaceObjectRestRepository<Group, Group
     public Page<GroupRest> findAll(Context context, Pageable pageable) {
         try {
             long total = gs.countTotal(context);
-            List<Group> groups = gs.findAll(context, null, pageable.getPageSize(), pageable.getOffset());
-            return converter.toRestPage(groups, pageable, total, utils.obtainProjection(true));
+            List<Group> groups = gs.findAll(context, null, pageable.getPageSize(),
+                    Math.toIntExact(pageable.getOffset()));
+            return converter.toRestPage(groups, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }

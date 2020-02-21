@@ -117,7 +117,7 @@ public class WorkflowItemRestRepository extends DSpaceRestRepository<WorkflowIte
         try {
             long total = wis.countAll(context);
             List<XmlWorkflowItem> witems = wis.findAll(context, pageable.getPageNumber(), pageable.getPageSize());
-            return converter.toRestPage(witems, pageable, total, utils.obtainProjection(true));
+            return converter.toRestPage(witems, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -132,7 +132,7 @@ public class WorkflowItemRestRepository extends DSpaceRestRepository<WorkflowIte
             long total = wis.countBySubmitter(context, ep);
             List<XmlWorkflowItem> witems = wis.findBySubmitter(context, ep, pageable.getPageNumber(),
                     pageable.getPageSize());
-            return converter.toRestPage(witems, pageable, total, utils.obtainProjection(true));
+            return converter.toRestPage(witems, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -171,7 +171,7 @@ public class WorkflowItemRestRepository extends DSpaceRestRepository<WorkflowIte
                                    MultipartFile file) throws Exception {
 
         Context context = obtainContext();
-        WorkflowItemRest wsi = findOne(id);
+        WorkflowItemRest wsi = findOne(context, id);
         XmlWorkflowItem source = wis.find(context, id);
         List<ErrorRest> errors = new ArrayList<ErrorRest>();
         SubmissionConfig submissionConfig =

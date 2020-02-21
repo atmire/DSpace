@@ -43,16 +43,16 @@ public class ResourcePatch<M> {
 
     /**
      * Checks with all possible patch operations whether they support this operation
-     *      (based on instanceof restModel and operation.path
+     *      (based on instanceof dso and operation.path)
      * @param context       Context of patch operation
-     * @param dso           the dso resource to patch
+     * @param object        the resource to patch
      * @param operation     the patch operation
      */
-    protected void performPatchOperation(Context context, M dso, Operation operation)
-            throws SQLException, AuthorizeException {
+    protected void performPatchOperation(Context context, M object, Operation operation)
+            throws DSpaceBadRequestException, SQLException, AuthorizeException {
         for (PatchOperation patchOperation: patchOperations) {
-            if (patchOperation.supports(dso, operation)) {
-                patchOperation.perform(context, dso, operation);
+            if (patchOperation.supports(object, operation)) {
+                patchOperation.perform(context,object, operation);
                 return;
             }
         }
