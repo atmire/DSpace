@@ -10,6 +10,7 @@ package org.dspace.app.rest.repository.patch.operation;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -90,7 +91,7 @@ public final class DSpaceObjectMetadataPatchUtils {
 
             }
         } catch (SQLException e) {
-            throw new DSpaceBadRequestException("SQLException in DspaceObjectMetadataPatchUtils.addVallue trying to " +
+            throw new DSpaceBadRequestException("SQLException in DSpaceObjectMetadataPatchUtils.addVallue trying to " +
                     "add metadata to dso.", e);
         }
     }
@@ -113,7 +114,7 @@ public final class DSpaceObjectMetadataPatchUtils {
                     metadataField.getElement(), metadataField.getQualifier(), Integer.parseInt(indexFrom),
                     Integer.parseInt(indexTo));
         } catch (SQLException e) {
-            throw new DSpaceBadRequestException("SQLException in DspaceObjectMetadataPatchUtils.move trying to " +
+            throw new DSpaceBadRequestException("SQLException in DSpaceObjectMetadataPatchUtils.move trying to " +
                     "move metadata in dso.", e);
         }
     }
@@ -153,32 +154,31 @@ public final class DSpaceObjectMetadataPatchUtils {
                 }
             }
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("This index (" + index + ") is not valid nr", e);
+            throw new IllegalArgumentException("This index (" + index + ") is not valid number.", e);
         } catch (ArrayIndexOutOfBoundsException e) {
             throw new UnprocessableEntityException("There is no metadata of this type at that index");
         } catch (SQLException e) {
-            throw new DSpaceBadRequestException("SQLException in DspaceObjectMetadataPatchUtils.removeValue " +
+            throw new DSpaceBadRequestException("SQLException in DSpaceObjectMetadataPatchUtils.removeValue " +
                     "trying to remove metadata from dso.", e);
         }
     }
 
     /**
      * Replaces metadata in the dso; 4 cases:
-     * - If we replace everything: clears all metadata
-     * - If we replace for a single field: clearMetadata on the field & add the new ones
-     * - A single existing metadata value:
-     * Retrieve the metadatavalue object & make alterations directly on this object
-     * - A single existing metadata property:
-     * Retrieve the metadatavalue object & make alterations directly on this object
-     *
-     * @param context         context patch is being performed in
-     * @param dso             dso being patched
-     * @param dsoService      service doing the patch in db
-     * @param metadataField   possible md field being patched (if null all md gets cleared)
-     * @param metadataValue   value of md element
-     * @param index           possible index of md being replaced
-     * @param propertyOfMd    possible property of md being replaced
-     * @param valueMdProperty possible new value of property of md being replaced
+     *      * - If we replace everything: clears all metadata
+     *      * - If we replace for a single field: clearMetadata on the field & add the new ones
+     *      * - A single existing metadata value:
+     *      * Retrieve the metadatavalue object & make alterations directly on this object
+     *      * - A single existing metadata property:
+     *      * Retrieve the metadatavalue object & make alterations directly on this object
+     * @param context           context patch is being performed in
+     * @param dso               dso being patched
+     * @param dsoService        service doing the patch in db
+     * @param metadataField     possible md field being patched (if null all md gets cleared)
+     * @param metadataValue     value of md element
+     * @param index             possible index of md being replaced
+     * @param propertyOfMd      possible property of md being replaced
+     * @param valueMdProperty   possible new value of property of md being replaced
      */
     public void replaceValue(Context context, DSpaceObject dso, DSpaceObjectService dsoService,
                                 MetadataField metadataField, MetadataValueRest metadataValue, String index,
@@ -192,7 +192,8 @@ public final class DSpaceObjectMetadataPatchUtils {
 
         // replace all metadata for existing key
         if (index == null) {
-            this.replaceMetadataFieldMetadata(context, dso, dsoService, metadataField, Arrays.asList(metadataValue));
+            this.replaceMetadataFieldMetadata(context, dso, dsoService, metadataField,
+                    Collections.singletonList(metadataValue));
             return;
         }
         // replace single existing metadata value
@@ -276,7 +277,7 @@ public final class DSpaceObjectMetadataPatchUtils {
                 throw new UnprocessableEntityException("There is no metadata of this type at that index");
             }
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("This index (" + index + ") is not valid nr", e);
+            throw new IllegalArgumentException("This index (" + index + ") is not valid number.", e);
         }
     }
 

@@ -9,12 +9,10 @@ package org.dspace.app.rest.submit.step;
 
 import java.util.UUID;
 
-import org.dspace.app.rest.repository.patch.ResourcePatch;
 import org.dspace.app.rest.submit.AbstractRestProcessingStep;
 import org.dspace.app.rest.submit.SubmissionService;
 import org.dspace.app.util.SubmissionStepConfig;
 import org.dspace.content.InProgressSubmission;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Collection step for DSpace Spring Rest. Expose the collection information of
@@ -23,9 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
 public class CollectionStep extends org.dspace.submit.step.SelectCollectionStep implements AbstractRestProcessingStep {
-
-    @Autowired
-    ResourcePatch<InProgressSubmission> resourcePatch;
 
     @Override
     public UUID getData(SubmissionService submissionService, InProgressSubmission obj, SubmissionStepConfig config) {

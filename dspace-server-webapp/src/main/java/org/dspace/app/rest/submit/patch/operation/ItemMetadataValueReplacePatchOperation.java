@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.operation;
+package org.dspace.app.rest.submit.patch.operation;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.List;
 import org.dspace.app.rest.model.MetadataValueRest;
 import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
-import org.dspace.app.rest.repository.patch.operation.DspaceObjectMetadataPatchUtils;
+import org.dspace.app.rest.repository.patch.operation.DSpaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.content.MetadataField;
@@ -32,7 +32,7 @@ import org.springframework.util.Assert;
  * must return an error.
  *
  * Example: <code>
- * curl -X PATCH http://${dspace.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
+ * curl -X PATCH http://${dspace.server.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
  * Content-Type: application/json" -d '[{ "op": "replace", "path": "
  * /sections/traditionalpageone/dc.title/0", "value": {"value": "Add new
  * title", "language": "en"}}]'
@@ -41,7 +41,7 @@ import org.springframework.util.Assert;
  * It is also possible to change only a single attribute of the {@link MetadataValueRest} (except the "place").
  *
  * Example: <code>
- * curl -X PATCH http://${dspace.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
+ * curl -X PATCH http://${dspace.server.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
  * Content-Type: application/json" -d '[{ "op": "replace", "path": "
  * /sections/traditionalpageone/dc.title/0/language", "value": "it"}]'
  * </code>
@@ -58,7 +58,7 @@ public class ItemMetadataValueReplacePatchOperation<R extends InProgressSubmissi
     SubmitPatchUtils submitPatchUtils;
 
     @Autowired
-    DspaceObjectMetadataPatchUtils metadataPatchUtils;
+    DSpaceObjectMetadataPatchUtils metadataPatchUtils;
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {

@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.operation;
+package org.dspace.app.rest.submit.patch.operation;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.List;
 import org.dspace.app.rest.model.MetadataValueRest;
 import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
-import org.dspace.app.rest.repository.patch.operation.DspaceObjectMetadataPatchUtils;
+import org.dspace.app.rest.repository.patch.operation.DSpaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.content.MetadataField;
@@ -77,7 +77,7 @@ public class ItemMetadataValueAddPatchOperation<R extends InProgressSubmission> 
     SubmitPatchUtils submitPatchUtils;
 
     @Autowired
-    DspaceObjectMetadataPatchUtils metadataPatchUtils;
+    DSpaceObjectMetadataPatchUtils metadataPatchUtils;
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {

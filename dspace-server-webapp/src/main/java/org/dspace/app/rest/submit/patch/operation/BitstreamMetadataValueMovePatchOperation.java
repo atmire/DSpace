@@ -5,14 +5,14 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.operation;
+package org.dspace.app.rest.submit.patch.operation;
 
 import java.sql.SQLException;
 import java.util.List;
 
 import org.dspace.app.rest.model.patch.MoveOperation;
 import org.dspace.app.rest.model.patch.Operation;
-import org.dspace.app.rest.repository.patch.operation.DspaceObjectMetadataPatchUtils;
+import org.dspace.app.rest.repository.patch.operation.DSpaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component;
  * instance to put the 3rd author as 1st author you need to run:
  *
  * <code>
- * curl -X PATCH http://${dspace.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
+ * curl -X PATCH http://${dspace.server.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
  * Content-Type: application/json" -d '[{ "op": "move", "from": "
  * /sections/traditionalpageone/dc.contributor.author/2", "path": "
  * /sections/traditionalpageone/dc.contributor.author/0"}]'
@@ -54,7 +54,7 @@ public class BitstreamMetadataValueMovePatchOperation<R extends InProgressSubmis
     SubmitPatchUtils submitPatchUtils;
 
     @Autowired
-    DspaceObjectMetadataPatchUtils metadataPatchUtils;
+    DSpaceObjectMetadataPatchUtils metadataPatchUtils;
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {

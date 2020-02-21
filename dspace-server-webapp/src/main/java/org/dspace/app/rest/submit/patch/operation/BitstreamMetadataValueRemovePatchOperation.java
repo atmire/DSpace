@@ -5,13 +5,13 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.operation;
+package org.dspace.app.rest.submit.patch.operation;
 
 import java.sql.SQLException;
 import java.util.List;
 
 import org.dspace.app.rest.model.patch.Operation;
-import org.dspace.app.rest.repository.patch.operation.DspaceObjectMetadataPatchUtils;
+import org.dspace.app.rest.repository.patch.operation.DSpaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
  * "/sections/<:name-of-the-form>/<:metadata>/<:idx-zero-based>"
  *
  * Example: <code>
- * curl -X PATCH http://${dspace.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
+ * curl -X PATCH http://${dspace.server.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
  * Content-Type: application/json" -d '[{ "op": "remove", "path": "
  * /sections/traditionalpageone/dc.title/1"}]'
  * </code>
@@ -41,7 +41,7 @@ import org.springframework.stereotype.Component;
  * "/sections/<:name-of-the-form>/<:metadata>"
  *
  * Example: <code>
- * curl -X PATCH http://${dspace.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
+ * curl -X PATCH http://${dspace.server.url}/api/submission/workspaceitems/<:id-workspaceitem> -H "
  * Content-Type: application/json" -d '[{ "op": "remove", "path": "
  * /sections/traditionalpageone/dc.title"}]'
  * </code>
@@ -61,7 +61,7 @@ public class BitstreamMetadataValueRemovePatchOperation<R extends InProgressSubm
     SubmitPatchUtils submitPatchUtils;
 
     @Autowired
-    DspaceObjectMetadataPatchUtils metadataPatchUtils;
+    DSpaceObjectMetadataPatchUtils metadataPatchUtils;
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {

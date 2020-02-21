@@ -25,7 +25,6 @@ import org.dspace.app.rest.repository.ItemTemplateItemOfLinkRepository;
 import org.dspace.app.rest.repository.TemplateItemRestRepository;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.Utils;
-import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Item;
 import org.dspace.content.service.ItemService;

@@ -48,49 +48,6 @@ public class DSpaceObjectMetadataRemoveOperation<R extends DSpaceObject> extends
         return resource;
     }
 
-    /**
-     * Removes a metadata from the dso at a given index (or all of that type if no index was given)
-     *
-     * @param context       context patch is being performed in
-     * @param dso           dso being patched
-     * @param dsoService    service doing the patch in db
-     * @param metadataField md field being patched
-     * @param index         index at where we want to delete metadata
-     */
-    private void remove(Context context, DSpaceObject dso, DSpaceObjectService dsoService, MetadataField metadataField,
-                        String index) {
-        metadataPatchUtils.checkMetadataFieldNotNull(metadataField);
-        try {
-            if (index == null) {
-                // remove all metadata of this type
-                dsoService.clearMetadata(context, dso, metadataField.getMetadataSchema().getName(),
-                        metadataField.getElement(), metadataField.getQualifier(), Item.ANY);
-            } else {
-                // remove metadata at index
-                List<MetadataValue> metadataValues = dsoService.getMetadata(dso,
-                        metadataField.getMetadataSchema().getName(), metadataField.getElement(),
-                        metadataField.getQualifier(), Item.ANY);
-                int indexInt = Integer.parseInt(index);
-                if (indexInt >= 0 && metadataValues.size() > indexInt
-                        && metadataValues.get(indexInt) != null) {
-                    // remove that metadata
-                    dsoService.removeMetadataValues(context, dso,
-                            Arrays.asList(metadataValues.get(indexInt)));
-                } else {
-                    throw new UnprocessableEntityException("UnprocessableEntityException - There is no metadata of " +
-                            "this type at that index");
-                }
-            }
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("This index (" + index + ") is not valid number.", e);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw new UnprocessableEntityException("There is no metadata of this type at that index");
-        } catch (SQLException e) {
-            throw new DSpaceBadRequestException("SQLException in DspaceObjectMetadataRemoveOperation.remove " +
-                    "trying to remove metadata from dso.", e);
-        }
-    }
-
     @Override
     public boolean supports(Object objectToMatch, Operation operation) {
         return ((operation.getPath().startsWith(metadataPatchUtils.OPERATION_METADATA_PATH)

@@ -5,9 +5,10 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.operation;
+package org.dspace.app.rest.submit.patch.operation;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -18,7 +19,6 @@ import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.ResourcePolicy;
 import org.dspace.authorize.service.AuthorizeService;
-import org.dspace.authorize.service.ResourcePolicyService;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
 import org.dspace.content.InProgressSubmission;
@@ -35,12 +35,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * Submission "replace" operation to replace resource policies in the Bitstream
+ * Submission "add" operation to add resource policies in the Bitstream
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
 @Component
-public class ResourcePolicyReplacePatchOperation<R extends InProgressSubmission> extends PatchOperation<R> {
+public class ResourcePolicyAddPatchOperation<R extends InProgressSubmission> extends PatchOperation<R> {
 
     @Autowired
     BitstreamService bitstreamService;
@@ -50,8 +50,6 @@ public class ResourcePolicyReplacePatchOperation<R extends InProgressSubmission>
 
     @Autowired
     AuthorizeService authorizeService;
-    @Autowired
-    ResourcePolicyService resourcePolicyService;
 
     @Autowired
     GroupService groupService;
@@ -63,8 +61,7 @@ public class ResourcePolicyReplacePatchOperation<R extends InProgressSubmission>
 
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException, AuthorizeException {
-        // "path": "/sections/upload/files/0/accessConditions/0"
-        // "abspath": "/files/0/accessConditions/0"
+        //"path": "/sections/upload/files/0/accessConditions"
         String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
         Item item = resource.getItem();
         List<Bundle> bundle = itemService.getBundles(item, Constants.CONTENT_BUNDLE_NAME);
@@ -72,22 +69,19 @@ public class ResourcePolicyReplacePatchOperation<R extends InProgressSubmission>
             int idx = 0;
             for (Bitstream b : bb.getBitstreams()) {
                 if (idx == Integer.parseInt(split[1])) {
-                    List<ResourcePolicy> policies = authorizeService.findPoliciesByDSOAndType(context, b,
-                            ResourcePolicy.TYPE_CUSTOM);
-                    String rpIdx = split[3];
-                    int index = 0;
-                    for (ResourcePolicy policy : policies) {
-                        Integer toReplace = Integer.parseInt(rpIdx);
-                        if (index == toReplace) {
-                            b.getResourcePolicies().remove(policy);
-                            break;
-                        }
-                        index++;
-                    }
-                    if (split.length == 4) {
-                        ResourcePolicyRest newAccessCondition =
+
+                    List<ResourcePolicyRest> newAccessConditions = new ArrayList<ResourcePolicyRest>();
+                    if (split.length == 3) {
+                        authorizeService.removePoliciesActionFilter(context, b, Constants.READ);
+                        newAccessConditions = submitPatchUtils.evaluateArrayObject(
+                                (LateObjectEvaluator) operation.getValue(), ResourcePolicyRest[].class);
+                    } else if (split.length == 4) {
+                        // contains "-", call index-based accessConditions it make not sense
+                        newAccessConditions.add(
                                 (ResourcePolicyRest) submitPatchUtils.evaluateSingleObject(
-                                        (LateObjectEvaluator) operation.getValue(), ResourcePolicyRest.class);
+                                        (LateObjectEvaluator) operation.getValue(), ResourcePolicyRest.class));
+                    }
+                    for (ResourcePolicyRest newAccessCondition : newAccessConditions) {
                         String name = newAccessCondition.getName();
                         String description = newAccessCondition.getDescription();
 
@@ -104,12 +98,9 @@ public class ResourcePolicyReplacePatchOperation<R extends InProgressSubmission>
                         Date startDate = newAccessCondition.getStartDate();
                         Date endDate = newAccessCondition.getEndDate();
                         authorizeService.createResourcePolicy(context, b, group, eperson, Constants.READ,
-                                ResourcePolicy.TYPE_CUSTOM, name, description, startDate, endDate);
+                                ResourcePolicy.TYPE_CUSTOM, name, description, startDate,
+                                endDate);
                         // TODO manage duplicate policy
-                    } else {
-                        // "path":
-                        // "/sections/upload/files/0/accessConditions/0/startDate"
-                        // TODO
                     }
                 }
                 idx++;
@@ -122,6 +113,6 @@ public class ResourcePolicyReplacePatchOperation<R extends InProgressSubmission>
     public boolean supports(Object objectToMatch, Operation operation) {
         return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
                 && operation.getPath().contains("accessConditions")
-                && operation.getOp().trim().equalsIgnoreCase(OPERATION_REPLACE));
+                && operation.getOp().trim().equalsIgnoreCase(OPERATION_ADD));
     }
 }

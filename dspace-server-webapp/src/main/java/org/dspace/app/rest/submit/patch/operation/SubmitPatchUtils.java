@@ -5,7 +5,7 @@
  *
  * http://www.dspace.org/license/
  */
-package org.dspace.app.rest.submit.operation;
+package org.dspace.app.rest.submit.patch.operation;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.dspace.app.rest.model.MetadataValueRest;
 import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
-import org.dspace.app.rest.repository.patch.operation.DspaceObjectMetadataPatchUtils;
+import org.dspace.app.rest.repository.patch.operation.DSpaceObjectMetadataPatchUtils;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.content.MetadataField;
@@ -36,7 +36,7 @@ public class SubmitPatchUtils<M extends Object> {
     private static final String SUBMIT_SECTIONS_PATH = "/sections";
 
     @Autowired
-    DspaceObjectMetadataPatchUtils metadataPatchUtils;
+    DSpaceObjectMetadataPatchUtils metadataPatchUtils;
 
     /**
      * Return part of the path needed for the patch operation (ex dc.title/2 => the md being changed and the index)
