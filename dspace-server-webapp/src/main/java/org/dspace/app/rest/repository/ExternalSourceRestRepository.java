@@ -42,7 +42,7 @@ public class ExternalSourceRestRepository extends DSpaceRestRepository<ExternalS
      * externalSourceName and with the given entryId
      * @param externalSourceName The externalSourceName that defines which ExternalDataProvider is used
      * @param entryId       The entryId used for the lookup
-     * @return              An ExternalSourceEntryRest object that complies with the above params
+     * @return An ExternalSourceEntryRest object that complies with the above params
      */
     public ExternalSourceEntryRest getExternalSourceEntryValue(String externalSourceName, String entryId) {
         if (externalDataService.getExternalDataProvider(externalSourceName) == null) {
@@ -62,7 +62,7 @@ public class ExternalSourceRestRepository extends DSpaceRestRepository<ExternalS
      * @param query         The query used in the lookup
      * @param parent        The parent used in the lookup
      * @param pageable      The pagination object
-     * @return              A paginated list of ExternalSourceEntryResource objects that comply with the params
+     * @return A paginated list of ExternalSourceEntryResource objects that comply with the params
      */
     public Page<ExternalSourceEntryRest> getExternalSourceEntries(String externalSourceName, String query,
                                                                   String parent, Pageable pageable) {
@@ -71,7 +71,7 @@ public class ExternalSourceRestRepository extends DSpaceRestRepository<ExternalS
         }
         List<ExternalDataObject> externalDataObjects = externalDataService
             .searchExternalDataObjects(externalSourceName, query, Math.toIntExact(pageable.getOffset()),
-                    pageable.getPageSize());
+                                       pageable.getPageSize());
         int numberOfResults = externalDataService.getNumberOfResults(externalSourceName, query);
         return converter.toRestPage(externalDataObjects, pageable, numberOfResults,
                                     utils.obtainProjection());
@@ -80,8 +80,10 @@ public class ExternalSourceRestRepository extends DSpaceRestRepository<ExternalS
     @Override
     public ExternalSourceRest findOne(Context context, String externalSourceName) {
         ExternalDataProvider externalDataProvider = externalDataService.getExternalDataProvider(externalSourceName)
-                                                                       .orElseThrow(() -> new ResourceNotFoundException("ExternalDataProvider for: " +
-                                                                                                                            authorityName + " couldn't be found"));
+                                                                       .orElseThrow(() -> new ResourceNotFoundException(
+                                                                           "ExternalDataProvider for: " +
+                                                                               externalSourceName + " couldn't be " +
+                                                                               "found"));
         return converter.toRest(externalDataProvider, utils.obtainProjection());
     }
 

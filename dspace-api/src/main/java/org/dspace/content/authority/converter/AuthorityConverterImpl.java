@@ -15,6 +15,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.solr.common.SolrDocument;
 import org.dspace.content.authority.AuthorityValue;
+import org.dspace.content.dto.MetadataValueDTO;
 import org.dspace.external.model.ExternalDataObject;
 import org.dspace.mock.MockMetadataValue;
 
@@ -60,7 +61,19 @@ public class AuthorityConverterImpl implements AuthorityConverter {
         authorityValue.setExternalSourceIdentifier(externalDataObject.getId());
         authorityValue.setCategory(category);
         authorityValue.setValue(externalDataObject.getValue());
-        authorityValue.setMetadata(externalDataObject.getMetadata());
+        List<MetadataValueDTO> metadata = externalDataObject.getMetadata();
+        List<MockMetadataValue> metadataValues = new LinkedList<>();
+        for (MetadataValueDTO metadataValueDTO : metadata) {
+            MockMetadataValue mockMetadataValue = new MockMetadataValue(metadataValueDTO.getSchema(),
+                                                                        metadataValueDTO.getElement(),
+                                                                        metadataValueDTO.getQualifier(),
+                                                                        metadataValueDTO.getLanguage(),
+                                                                        metadataValueDTO.getValue(),
+                                                                        metadataValueDTO.getAuthority(),
+                                                                        metadataValueDTO.getConfidence());
+            metadataValues.add(mockMetadataValue);
+        }
+        authorityValue.setMetadata(metadataValues);
         return authorityValue;
     }
 }
