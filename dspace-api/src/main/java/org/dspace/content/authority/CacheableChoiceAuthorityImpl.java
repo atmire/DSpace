@@ -158,15 +158,17 @@ public class CacheableChoiceAuthorityImpl implements CacheableAuthority, ChoiceA
                     query = "";
                     for (int i = 0; i < splittedString.length - 1; i++) {
                         query += "value:" + splittedString[i];
+                        query += " AND ";
                     }
                     String lastString = splittedString[splittedString.length - 1];
-                    if (CharUtils.compare(lastString.charAt(lastString.length() - 1), ' ') == 0) {
+                    if (CharUtils.compare(text.charAt(text.length() - 1), ' ') == 0
+                        && StringUtils.isNotBlank(lastString)) {
                         query += "value:" + lastString;
                     } else {
                         query += "value:" + lastString + "*";
                     }
                 } else {
-                    query = "value:{" + text + "}*";
+                    query = "value:" + text + "*";
                 }
             }
         }
