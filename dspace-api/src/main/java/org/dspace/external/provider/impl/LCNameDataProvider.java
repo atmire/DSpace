@@ -231,7 +231,7 @@ public class LCNameDataProvider implements ExternalDataProvider {
         SAXParserFactory spf = SAXParserFactory.newInstance();
         SAXParser sp = spf.newSAXParser();
         XMLReader xr = sp.getXMLReader();
-                SRUHandler handler = new SRUHandler(sourceIdentifier);
+        SRUHandler handler = new SRUHandler(sourceIdentifier);
 
         // XXX FIXME: should turn off validation here explicitly, but
         //  it seems to be off by default.

@@ -41,7 +41,6 @@ import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.core.factory.CoreServiceFactory;
 import org.dspace.handle.factory.HandleServiceFactory;
-import org.dspace.mock.MockMetadataValue;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.Namespace;

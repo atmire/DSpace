@@ -44,7 +44,6 @@ import org.dspace.content.MetadataValue;
 import org.dspace.content.Relationship;
 import org.dspace.content.RelationshipType;
 import org.dspace.content.WorkspaceItem;
-import org.dspace.content.authority.AuthorityValue;
 import org.dspace.content.authority.Choices;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.CollectionService;
@@ -1003,15 +1002,12 @@ public class MetadataImport {
             }
 
             // look up the value and authority in solr
-            AuthorityValue authorityValue = null;
             Optional<ExternalDataObject> externalDataObject = externalDataProvider.getExternalDataObject(value);
             if (externalDataObject.isPresent()) {
                 dcv.setAuthority(externalDataObject.get().getId());
-            } else {
-                dcv.setAuthority(value);
+                dcv.setValue(externalDataObject.get().getValue());
+                dcv.setConfidence(Choices.CF_ACCEPTED);
             }
-
-            dcv.setConfidence(Choices.CF_ACCEPTED);
         } else if (value == null || !value.contains(csv.getAuthoritySeparator())) {
             simplyCopyValue(value, dcv);
         } else {

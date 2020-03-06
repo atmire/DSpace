@@ -15,6 +15,9 @@ import org.dspace.external.factory.ExternalServiceFactory;
 import org.dspace.external.provider.ExternalDataProvider;
 import org.dspace.external.service.ExternalDataService;
 
+/**
+ * This class contains util methods for BulkEdit functionality
+ */
 public class BulkEditUtils {
 
     private BulkEditUtils() {
@@ -23,6 +26,12 @@ public class BulkEditUtils {
     protected static final ExternalDataService externalDataService = ExternalServiceFactory.getInstance()
                                                                                            .getExternalDataService();
 
+    /**
+     * This method will retrieve the ExternalDataProvider from the String given to it. It'll parse the ":" out of the
+     * String and it'll try to find an ExternalDataProvider for it if it exists and return this
+     * @param mdHeader  The String to be checked
+     * @return          The Optional pair of metadataheader and ExternalDataProvider of it's found
+     */
     public static Optional<Pair<String, ExternalDataProvider>> getExternalDataProviderFromMdHeader(String mdHeader) {
         if (containsExternalProvider(mdHeader)) {
             String metadataHeader = StringUtils.substringAfter(mdHeader, ":");
@@ -38,6 +47,12 @@ public class BulkEditUtils {
         return Optional.empty();
     }
 
+    /**
+     * This method will return true or false depending on whether the String given to it contains an externalProvider
+     * or not. This is typically found by the ":" in the String
+     * @param md    the String to be checked
+     * @return      A boolean value indicating whether an ExternalProvider is contained in the String or not
+     */
     public static boolean containsExternalProvider(String md) {
         return StringUtils.contains(md, ":");
 
