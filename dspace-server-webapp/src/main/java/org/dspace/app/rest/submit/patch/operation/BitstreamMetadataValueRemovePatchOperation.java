@@ -92,6 +92,7 @@ public class BitstreamMetadataValueRemovePatchOperation<R extends InProgressSubm
     public boolean supports(Object objectToMatch, Operation operation) {
         return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
                 && operation.getPath().contains("files")
+                && operation.getPath().contains("metadata")
                 && operation.getOp().trim().equalsIgnoreCase(OPERATION_REMOVE));
     }
 }

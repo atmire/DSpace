@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.dspace.app.rest.model.MetadataValueRest;
-import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.repository.patch.operation.DSpaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
@@ -84,8 +83,7 @@ public class ItemMetadataValueAddPatchOperation<R extends InProgressSubmission> 
         String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
         // if split size is one so we have a call to initialize or replace
         if (split.length == 1) {
-            List<MetadataValueRest> list = submitPatchUtils.evaluateArrayObject(
-                    (LateObjectEvaluator) operation.getValue(), MetadataValueRest[].class);
+            List<MetadataValueRest> list = metadataPatchUtils.extractMetadataValuesFromOperation(operation);
             MetadataField metadataField = metadataPatchUtils.getMetadataField(context, split[0]);
             metadataPatchUtils.replaceMetadataFieldMetadata(context, resource.getItem(), itemService, metadataField,
                     list);
@@ -93,9 +91,7 @@ public class ItemMetadataValueAddPatchOperation<R extends InProgressSubmission> 
         } else {
             // call with "-" or "index-based" we should receive only single
             // object member
-            MetadataValueRest object =
-                    (MetadataValueRest) submitPatchUtils.evaluateSingleObject(
-                            (LateObjectEvaluator) operation.getValue(), MetadataValueRest.class);
+            MetadataValueRest object = metadataPatchUtils.extractMetadataValuesFromOperation(operation).get(0);
             // check if is not empty
             List<MetadataValue> metadataByMetadataString = itemService.getMetadataByMetadataString(resource.getItem(),
                     split[0]);

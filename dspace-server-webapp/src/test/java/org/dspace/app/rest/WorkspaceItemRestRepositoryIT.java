@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,16 +39,19 @@ import org.dspace.app.rest.matcher.CollectionMatcher;
 import org.dspace.app.rest.matcher.ItemMatcher;
 import org.dspace.app.rest.matcher.MetadataMatcher;
 import org.dspace.app.rest.matcher.WorkspaceItemMatcher;
+import org.dspace.app.rest.model.ResourcePolicyRest;
 import org.dspace.app.rest.model.patch.AddOperation;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.model.patch.RemoveOperation;
 import org.dspace.app.rest.model.patch.ReplaceOperation;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
+import org.dspace.authorize.ResourcePolicy;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.dspace.content.Item;
 import org.dspace.content.WorkspaceItem;
+import org.dspace.core.Constants;
 import org.dspace.eperson.EPerson;
 import org.dspace.services.ConfigurationService;
 import org.hamcrest.Matchers;
@@ -1648,6 +1650,66 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
             .andExpect(jsonPath("$.sections.upload.files[0].metadata['dc.source'][0].value",
                     is("/local/path/simple-article.pdf")))
         ;
+    }
+
+    @Test
+    /**
+     * Test adding RP during upload
+     *
+     * @throws Exception
+     */
+    //TODO make test
+    public void resourcePolicyTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        //1. A community-collection structure with one parent community with sub-community and two collections.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+        Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
+                                           .withName("Sub Community")
+                                           .build();
+        Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
+
+        String authToken = getAuthToken(admin.getEmail(), password);
+
+        WorkspaceItem witem = WorkspaceItemBuilder.createWorkspaceItem(context, col1)
+                                                  .withTitle("Test WorkspaceItem")
+                                                  .withIssueDate("2017-10-17")
+                                                  .build();
+
+        InputStream pdf = getClass().getResourceAsStream("simple-article.pdf");
+        final MockMultipartFile pdfFile = new MockMultipartFile("file", "/local/path/simple-article.pdf",
+            "application/pdf", pdf);
+
+        // upload the file in our workspaceitem
+        getClient(authToken).perform(fileUpload("/api/submission/workspaceitems/" + witem.getID())
+            .file(pdfFile))
+                            .andExpect(status().isCreated())
+                            .andExpect(jsonPath("$.sections.upload.files[0].metadata['dc.title'][0].value",
+                                is("simple-article.pdf")))
+                            .andExpect(jsonPath("$.sections.upload.files[0].metadata['dc.source'][0].value",
+                                is("/local/path/simple-article.pdf")))
+        ;
+
+        ObjectMapper mapper = new ObjectMapper();
+        ResourcePolicyRest resourcePolicyRest = new ResourcePolicyRest();
+
+        resourcePolicyRest.setPolicyType(ResourcePolicy.TYPE_SUBMISSION);
+        resourcePolicyRest.setAction(Constants.actionText[Constants.READ]);
+
+        // try to update the filename with an update opt
+        List<Operation> updateOpts = new ArrayList<Operation>();
+        Map<String, String> updateValue = new HashMap<String, String>();
+        updateValue.put("value", "another-filename.pdf");
+        updateOpts.add(new AddOperation("/sections/upload/files/0/accessConditions/-", resourcePolicyRest));
+
+        String patchBody = getPatchContent(updateOpts);
+        getClient(authToken).perform(patch("/api/submission/workspaceitems/" + witem.getID())
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+                            .andExpect(status().isOk());
     }
 
     @Test

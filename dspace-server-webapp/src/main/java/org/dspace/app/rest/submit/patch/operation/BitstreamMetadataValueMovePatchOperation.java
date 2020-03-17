@@ -90,6 +90,7 @@ public class BitstreamMetadataValueMovePatchOperation<R extends InProgressSubmis
     public boolean supports(Object objectToMatch, Operation operation) {
         return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
                 && operation.getPath().contains("files")
+                && operation.getPath().contains("metadata")
                 && operation.getOp().trim().equalsIgnoreCase(OPERATION_MOVE));
     }
 }

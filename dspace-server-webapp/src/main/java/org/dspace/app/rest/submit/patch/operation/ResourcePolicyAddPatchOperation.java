@@ -76,6 +76,7 @@ public class ResourcePolicyAddPatchOperation<R extends InProgressSubmission> ext
                         newAccessConditions = submitPatchUtils.evaluateArrayObject(
                                 (LateObjectEvaluator) operation.getValue(), ResourcePolicyRest[].class);
                     } else if (split.length == 4) {
+                        //TODO refactor without evaluateSingleObject and evaluateArrayObject
                         // contains "-", call index-based accessConditions it make not sense
                         newAccessConditions.add(
                                 (ResourcePolicyRest) submitPatchUtils.evaluateSingleObject(
@@ -112,6 +113,7 @@ public class ResourcePolicyAddPatchOperation<R extends InProgressSubmission> ext
     @Override
     public boolean supports(Object objectToMatch, Operation operation) {
         return (submitPatchUtils.checkIfInProgressSubmissionAndStartsWithSections(objectToMatch, operation)
+                && operation.getPath().contains("files")
                 && operation.getPath().contains("accessConditions")
                 && operation.getOp().trim().equalsIgnoreCase(OPERATION_ADD));
     }

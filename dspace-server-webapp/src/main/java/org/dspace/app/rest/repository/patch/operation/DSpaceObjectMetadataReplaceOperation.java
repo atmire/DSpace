@@ -44,7 +44,8 @@ public class DSpaceObjectMetadataReplaceOperation<R extends DSpaceObject> extend
         String[] partsOfPath = operation.getPath().split("/");
         // Index of md being patched
         String indexInPath = (partsOfPath.length > 3) ? partsOfPath[3] : null;
-        MetadataValueRest metadataValueToReplace = metadataPatchUtils.extractMetadataValueFromOperation(operation);
+        MetadataValueRest metadataValueToReplace =
+            metadataPatchUtils.extractMetadataValuesFromOperation(operation).get(0);
         // Property of md being altered
         String propertyOfMd = metadataPatchUtils.extractPropertyOfMdFromPath(partsOfPath);
         String newValueMdAttribute = metadataPatchUtils.extractNewValueOfMd(operation);

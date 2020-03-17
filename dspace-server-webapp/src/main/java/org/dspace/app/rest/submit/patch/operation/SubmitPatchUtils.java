@@ -98,6 +98,7 @@ public class SubmitPatchUtils<M extends Object> {
         }
     }
 
+    //TODO refactor without evaluateSingleObject and evaluateArrayObject
     protected List<M> evaluateArrayObject(LateObjectEvaluator value, Class arrayClassForEvaluation) {
         List<M> results = new ArrayList<M>();
         M[] list = null;
