@@ -679,6 +679,293 @@ public class WorkflowItemRestRepositoryIT extends AbstractControllerIntegrationT
 
     }
 
+
+    @Test
+    /**
+     * A delete request over a workflowitem should result in abort the workflow sending the item back to the submitter
+     * workspace
+     *
+     * @throws Exception
+     */
+    public void deleteOneExpungeFalseTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        //1. A community with one collection.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 1")
+                .withWorkflowGroup(1, admin).build();
+
+        //2. create a normal user to use as submitter
+        EPerson submitter = EPersonBuilder.createEPerson(context)
+                .withEmail("submitter@example.com")
+                .withPassword("dspace")
+                .build();
+
+        context.setCurrentUser(submitter);
+
+        //3. a workflow item
+        XmlWorkflowItem witem = WorkflowItemBuilder.createWorkflowItem(context, col1)
+                .withTitle("Workflow Item 1")
+                .withIssueDate("2017-10-17")
+                .build();
+
+        Item item = witem.getItem();
+
+        //Add a bitstream to the item
+        String bitstreamContent = "ThisIsSomeDummyText";
+        Bitstream bitstream = null;
+        try (InputStream is = IOUtils.toInputStream(bitstreamContent, CharEncoding.UTF_8)) {
+            bitstream = BitstreamBuilder
+                    .createBitstream(context, item, is)
+                    .withName("Bitstream1")
+                    .withMimeType("text/plain").build();
+        }
+
+        context.restoreAuthSystemState();
+
+        String token = getAuthToken(admin.getEmail(), password);
+        String tokenSubmitter = getAuthToken(submitter.getEmail(), "dspace");
+
+        // Delete the workflowitem
+        getClient(token).perform(
+                delete("/api/workflow/workflowitems/" + witem.getID() + "?expunge=false"))
+                .andExpect(status().is(204));
+
+        // Trying to get deleted workflowitem should fail with 404
+        getClient(token).perform(get("/api/workflow/workflowitems/" + witem.getID()))
+                   .andExpect(status().is(404));
+
+        // the workflowitem's item should still exist
+        getClient(token).perform(get("/api/core/items/" + item.getID()))
+                   .andExpect(status().is(200));
+
+        // the workflowitem's bitstream should still exist
+        getClient(token).perform(get("/api/core/bitstreams/" + bitstream.getID()))
+                   .andExpect(status().is(200));
+
+        // a workspaceitem should exist now in the submitter workspace
+        getClient(tokenSubmitter).perform(get("/api/submission/workspaceitems"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$._embedded.workspaceitems", Matchers.containsInAnyOrder(
+                        WorkspaceItemMatcher.matchItemWithTitleAndDateIssued(null, "Workflow Item 1",
+                                "2017-10-17"))))
+                   .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/submission/workspaceitems")))
+                   .andExpect(jsonPath("$.page.size", is(20)))
+                   .andExpect(jsonPath("$.page.totalElements", is(1)));
+
+    }
+
+    @Test
+    /**
+     * A delete request over a workflowitem should result in abort the workflow sending the item back to the submitter
+     * workspace
+     *
+     * @throws Exception
+     */
+    public void deleteOneForbiddenTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        EPerson reviewer = EPersonBuilder.createEPerson(context)
+                .withEmail("reviewer@example.com")
+                .withPassword("dspace")
+                .build();
+
+        //1. A community with one collection.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 1")
+                .withWorkflowGroup(1, reviewer).build();
+
+        //2. create a normal user to use as submitter
+        EPerson submitter = EPersonBuilder.createEPerson(context)
+                .withEmail("submitter@example.com")
+                .withPassword("dspace")
+                .build();
+
+        context.setCurrentUser(submitter);
+
+        //3. a workflow item
+        XmlWorkflowItem witem = WorkflowItemBuilder.createWorkflowItem(context, col1)
+                .withTitle("Workflow Item 1")
+                .withIssueDate("2017-10-17")
+                .build();
+
+        Item item = witem.getItem();
+
+        //Add a bitstream to the item
+        String bitstreamContent = "ThisIsSomeDummyText";
+        Bitstream bitstream = null;
+        try (InputStream is = IOUtils.toInputStream(bitstreamContent, CharEncoding.UTF_8)) {
+            bitstream = BitstreamBuilder
+                    .createBitstream(context, item, is)
+                    .withName("Bitstream1")
+                    .withMimeType("text/plain").build();
+        }
+
+        context.restoreAuthSystemState();
+
+        String token = getAuthToken(admin.getEmail(), password);
+        String tokenSubmitter = getAuthToken(submitter.getEmail(), "dspace");
+        String tokenReviewer = getAuthToken(reviewer.getEmail(), "dspace");
+
+        // Delete the workflowitem
+        // Delete without the expunge parameter should only be available to the admin, not to anonymous, submitter, current workflow member
+        getClient().perform(delete("/api/workflow/workflowitems/" + witem.getID()))
+                .andExpect(status().isUnauthorized());
+        getClient(tokenSubmitter).perform(delete("/api/workflow/workflowitems/" + witem.getID()))
+                .andExpect(status().isForbidden());
+        getClient(tokenReviewer).perform(delete("/api/workflow/workflowitems/" + witem.getID()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    /**
+     * A delete request over a workflowitem should result in abort the workflow sending the item back to the submitter
+     * workspace
+     *
+     * @throws Exception
+     */
+    public void expungeOneTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        //1. A community with one collection.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 1")
+                .withWorkflowGroup(1, admin).build();
+
+        //2. create a normal user to use as submitter
+        EPerson submitter = EPersonBuilder.createEPerson(context)
+                .withEmail("submitter@example.com")
+                .withPassword("dspace")
+                .build();
+
+        context.setCurrentUser(submitter);
+
+        //3. a workflow item
+        XmlWorkflowItem witem = WorkflowItemBuilder.createWorkflowItem(context, col1)
+                .withTitle("Workflow Item 1")
+                .withIssueDate("2017-10-17")
+                .build();
+
+        Item item = witem.getItem();
+
+        //Add a bitstream to the item
+        String bitstreamContent = "ThisIsSomeDummyText";
+        Bitstream bitstream = null;
+        try (InputStream is = IOUtils.toInputStream(bitstreamContent, CharEncoding.UTF_8)) {
+            bitstream = BitstreamBuilder
+                    .createBitstream(context, item, is)
+                    .withName("Bitstream1")
+                    .withMimeType("text/plain").build();
+        }
+
+        context.restoreAuthSystemState();
+
+        String token = getAuthToken(admin.getEmail(), password);
+        String tokenSubmitter = getAuthToken(submitter.getEmail(), "dspace");
+
+        // Delete the workflowitem
+        getClient(token).perform(
+                delete("/api/workflow/workflowitems/" + witem.getID() + "?expunge=true"))
+                .andExpect(status().is(204));
+
+        // Trying to get deleted workflowitem should fail with 404
+        getClient(token).perform(get("/api/workflow/workflowitems/" + witem.getID()))
+                   .andExpect(status().is(404));
+
+        // the workflowitem's item should also not exist anymore
+        getClient(token).perform(get("/api/core/items/" + item.getID()))
+                   .andExpect(status().is(404));
+
+        // the workflowitem's bitstream should also not exist anymore
+        getClient(token).perform(get("/api/core/bitstreams/" + bitstream.getID()))
+                   .andExpect(status().is(404));
+
+        // a workspaceitem should not exist in the submitter workspace
+        getClient(tokenSubmitter).perform(get("/api/submission/workspaceitems"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$._embedded.workspaceitems").doesNotExist())
+                   .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/submission/workspaceitems")))
+                   .andExpect(jsonPath("$.page.totalElements", is(0)));
+
+    }
+
+    @Test
+    /**
+     * A delete request over a workflowitem should result in abort the workflow sending the item back to the submitter
+     * workspace
+     *
+     * @throws Exception
+     */
+    public void expungeOneForbiddenTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        EPerson reviewer = EPersonBuilder.createEPerson(context)
+                .withEmail("reviewer@example.com")
+                .withPassword("dspace")
+                .build();
+
+        //1. A community with one collection.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 1")
+                .withWorkflowGroup(1, reviewer).build();
+
+        //2. create a normal user to use as submitter
+        EPerson submitter = EPersonBuilder.createEPerson(context)
+                .withEmail("submitter@example.com")
+                .withPassword("dspace")
+                .build();
+
+        context.setCurrentUser(submitter);
+
+        //3. a workflow item
+        XmlWorkflowItem witem = WorkflowItemBuilder.createWorkflowItem(context, col1)
+                .withTitle("Workflow Item 1")
+                .withIssueDate("2017-10-17")
+                .build();
+
+        Item item = witem.getItem();
+
+        //Add a bitstream to the item
+        String bitstreamContent = "ThisIsSomeDummyText";
+        Bitstream bitstream = null;
+        try (InputStream is = IOUtils.toInputStream(bitstreamContent, CharEncoding.UTF_8)) {
+            bitstream = BitstreamBuilder
+                    .createBitstream(context, item, is)
+                    .withName("Bitstream1")
+                    .withMimeType("text/plain").build();
+        }
+
+        context.restoreAuthSystemState();
+
+        String token = getAuthToken(admin.getEmail(), password);
+        String tokenSubmitter = getAuthToken(submitter.getEmail(), "dspace");
+        String tokenReviewer = getAuthToken(reviewer.getEmail(), "dspace");
+
+        // Delete the workflowitem
+        // Delete with the expunge parameter should only be available to the admin, not to anonymous, submitter, current workflow member
+        getClient().perform(
+                delete("/api/workflow/workflowitems/" + witem.getID() + "?expunge=true"))
+                .andExpect(status().isUnauthorized());
+        getClient(tokenSubmitter).perform(
+                delete("/api/workflow/workflowitems/" + witem.getID() + "?expunge=true"))
+                .andExpect(status().isForbidden());
+        getClient(tokenReviewer).perform(
+                delete("/api/workflow/workflowitems/" + witem.getID() + "?expunge=true"))
+                .andExpect(status().isForbidden());
+    }
+
     @Test
     /**
      * Test the deposit of a workspaceitem POSTing to the resource workflowitems collection endpoint a workspaceitem (as

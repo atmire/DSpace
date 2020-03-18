@@ -34,6 +34,7 @@ import org.dspace.app.util.SubmissionConfigReader;
 import org.dspace.app.util.SubmissionConfigReaderException;
 import org.dspace.app.util.SubmissionStepConfig;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.WorkspaceItem;
 import org.dspace.content.service.BitstreamFormatService;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.ItemService;
@@ -41,6 +42,7 @@ import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.EPersonServiceImpl;
 import org.dspace.services.ConfigurationService;
+import org.dspace.services.RequestService;
 import org.dspace.workflow.WorkflowException;
 import org.dspace.workflow.WorkflowService;
 import org.dspace.xmlworkflow.WorkflowConfigurationException;
@@ -105,6 +107,12 @@ public class WorkflowItemRestRepository extends DSpaceRestRepository<WorkflowIte
 
     @Autowired
     protected XmlWorkflowFactory workflowFactory;
+
+    @Autowired
+    private RequestService requestService;
+
+    @Autowired
+    private WorkspaceItemRestRepository workspaceItemRestRepository;
 
     private final SubmissionConfigReader submissionConfigReader;
 
@@ -312,7 +320,15 @@ public class WorkflowItemRestRepository extends DSpaceRestRepository<WorkflowIte
             if (witem == null) {
                 throw new ResourceNotFoundException("WorkflowItem ID " + id + " not found");
             }
-            wfs.abort(context, witem, context.getCurrentUser());
+            final WorkspaceItem workspaceItem = wfs.abort(context, witem, context.getCurrentUser());
+            final boolean expunge = "true".equalsIgnoreCase(
+                    requestService.getCurrentRequest()
+                            .getHttpServletRequest()
+                            .getParameter("expunge")
+            );
+            if (expunge) {
+                workspaceItemRestRepository.delete(context, workspaceItem.getID());
+            }
         } catch (AuthorizeException e) {
             throw new RESTAuthorizationException(e);
         } catch (SQLException e) {
