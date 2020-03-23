@@ -1733,7 +1733,10 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         updateOpts.add(new AddOperation("/sections/upload/files/0/accessConditions/-", resourcePolicyRest));
 
         String patchBody = getPatchContent(updateOpts);
-//        patchBody = "[{“op”:“add”,“path”:“/sections/upload/files/0/accessConditions/-“,”value”:{“id”:null,“name”:“rpTest”,“groupUUID”:“bc263f34-0812-4be8-a378-249325ac0231”,“policyType”:“TYPE_SUBMISSION”,“description”:null,“action”:“READ”,“startDate”:1584959453726,“endDate”:1585045853726,“type”:“resourcepolicy”}}]";
+//        patchBody = "[{“op”:“add”,“path”:“/sections/upload/files/0/accessConditions/-“,”value”:{“id”:null,
+//       “name”:“rpTest”,“groupUUID”:“bc263f34-0812-4be8-a378-249325ac0231”,“policyType”:“TYPE_SUBMISSION”,
+//      “description”:null,“action”:“READ”,“startDate”:1584959453726,“endDate”:1585045853726,
+//     “type”:“resourcepolicy”}}]";
         getClient(authToken).perform(patch("/api/submission/workspaceitems/" + witem.getID())
             .content(patchBody)
             .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
