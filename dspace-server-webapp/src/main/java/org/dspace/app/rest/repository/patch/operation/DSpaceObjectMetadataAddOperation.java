@@ -40,7 +40,8 @@ public class DSpaceObjectMetadataAddOperation<R extends DSpaceObject> extends Pa
     @Override
     public R perform(Context context, R resource, Operation operation) throws SQLException {
         DSpaceObjectService dsoService = ContentServiceFactory.getInstance().getDSpaceObjectService(resource);
-        MetadataValueRest metadataValueToAdd = metadataPatchUtils.extractMetadataValuesFromOperation(operation).get(0);
+        MetadataValueRest metadataValueToAdd = (MetadataValueRest)
+            super.extractValuesFromOperation(operation, MetadataValueRest.class).get(0);
         MetadataField metadataField = metadataPatchUtils.getMetadataField(context, operation);
         String indexInPath = metadataPatchUtils.getIndexFromPath(operation.getPath());
 

@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.dspace.app.rest.model.MetadataValueRest;
-import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.repository.patch.operation.DSpaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
@@ -101,16 +100,15 @@ public class BitstreamMetadataValueAddPatchOperation<R extends InProgressSubmiss
 
                     if (split.length == 4) {
                         MetadataField metadataField = metadataPatchUtils.getMetadataField(context, split[3]);
-                        List<MetadataValueRest> list = submitPatchUtils.evaluateArrayObject(
-                                (LateObjectEvaluator) operation.getValue(), MetadataValueRest[].class);
+                        List<MetadataValueRest> list = (List<MetadataValueRest>)
+                            super.extractValuesFromOperation(operation, MetadataValueRest.class);
                         metadataPatchUtils.replaceMetadataFieldMetadata(context, b, bitstreamService, metadataField,
                                 list);
                     } else {
                         // call with "-" or "index-based" we should receive only single
                         // object member
-                        MetadataValueRest object =
-                                (MetadataValueRest) submitPatchUtils.evaluateSingleObject(
-                                        (LateObjectEvaluator) operation.getValue(), MetadataValueRest.class);
+                        MetadataValueRest object = (MetadataValueRest)
+                            super.extractValuesFromOperation(operation, MetadataValueRest.class).get(0);
                         // check if is not empty
                         List<MetadataValue> metadataByMetadataString =
                                 bitstreamService.getMetadataByMetadataString(b, split[3]);

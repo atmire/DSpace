@@ -7,10 +7,17 @@
  */
 package org.dspace.app.rest.repository.patch.operation;
 
+import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.BooleanUtils;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
+import org.dspace.app.rest.model.MetadataValueRest;
+import org.dspace.app.rest.model.patch.JsonValueEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
@@ -27,6 +34,8 @@ public abstract class PatchOperation<M> {
     protected static final String OPERATION_COPY = "copy";
     protected static final String OPERATION_MOVE = "move";
     protected static final String OPERATION_REMOVE = "remove";
+
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Updates the rest model by applying the patch operation.
@@ -84,5 +93,53 @@ public abstract class PatchOperation<M> {
      * @return                 True if this PatchOperation class can do the patch for this given dso type and Path
      */
     public abstract boolean supports(Object objectToMatch, Operation operation);
+
+    /**
+     * Extract multiple values from Operation by parsing the json and mapping it to a List<classForEvaluation>
+     *
+     * @param operation             Operation whose value is begin parsed
+     * @param classForEvaluation    Class to where the operation values are mapped
+     * @return List    List of objects extracted from json in operation value
+     */
+    public List extractValuesFromOperation(Operation operation, Class classForEvaluation) {
+        List<M> values = new ArrayList<>();
+        try {
+            if (operation.getValue() != null) {
+                if (operation.getValue() instanceof JsonValueEvaluator) {
+                    JsonNode valueNode = ((JsonValueEvaluator) operation.getValue()).getValueNode();
+                    if (valueNode.isArray()) {
+                        for (final JsonNode objNode : valueNode) {
+                            values.add(objectMapper.treeToValue(objNode, (Class<M>) classForEvaluation));
+                        }
+                    } else {
+                        values.add(objectMapper.treeToValue(valueNode, (Class<M>) classForEvaluation));
+                    }
+                }
+                if (operation.getValue() instanceof String) {
+                    String valueString = (String) operation.getValue();
+                    values.add((M) classForEvaluation.newInstance());
+                    if (classForEvaluation.equals(MetadataValueRest.class)) {
+                        ((MetadataValueRest) values.get(0)).setValue(valueString);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new DSpaceBadRequestException(
+                "IOException in PatchOperation.extractValuesFromOperation " +
+                "trying to map json from operation.value to List<MetadataValue> class.", e);
+        } catch (IllegalAccessException e) {
+            throw new DSpaceBadRequestException(
+                "IllegalAccessException in PatchOperation.extractValuesFromOperation " +
+                "trying to map json from operation.value to List<" + classForEvaluation + "> class.", e);
+        } catch (InstantiationException e) {
+            throw new DSpaceBadRequestException(
+                "InstantiationException in PatchOperation.extractValuesFromOperation " +
+                "trying to map json from operation.value to List<" + classForEvaluation + "> class.", e);
+        }
+        if (values == null || values.isEmpty()) {
+            throw new DSpaceBadRequestException("Could not extract " + classForEvaluation + " Objects from Operation");
+        }
+        return values;
+    }
 
 }

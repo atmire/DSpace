@@ -13,7 +13,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.dspace.app.rest.model.ResourcePolicyRest;
-import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.authorize.AuthorizeException;
@@ -73,14 +72,12 @@ public class ResourcePolicyAddPatchOperation<R extends InProgressSubmission> ext
                     List<ResourcePolicyRest> newAccessConditions = new ArrayList<ResourcePolicyRest>();
                     if (split.length == 3) {
                         authorizeService.removePoliciesActionFilter(context, b, Constants.READ);
-                        newAccessConditions = submitPatchUtils.evaluateArrayObject(
-                                (LateObjectEvaluator) operation.getValue(), ResourcePolicyRest[].class);
+                        newAccessConditions = (List<ResourcePolicyRest>)
+                            super.extractValuesFromOperation(operation, ResourcePolicyRest.class);
                     } else if (split.length == 4) {
-                        //TODO refactor without evaluateSingleObject and evaluateArrayObject
                         // contains "-", call index-based accessConditions it make not sense
-                        newAccessConditions.add(
-                                (ResourcePolicyRest) submitPatchUtils.evaluateSingleObject(
-                                        (LateObjectEvaluator) operation.getValue(), ResourcePolicyRest.class));
+                        newAccessConditions.add((ResourcePolicyRest)
+                            super.extractValuesFromOperation(operation, ResourcePolicyRest.class).get(0));
                     }
                     for (ResourcePolicyRest newAccessCondition : newAccessConditions) {
                         String name = newAccessCondition.getName();

@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.dspace.app.rest.model.MetadataValueRest;
-import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.repository.patch.operation.DSpaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
@@ -70,9 +69,8 @@ public class ItemMetadataValueReplacePatchOperation<R extends InProgressSubmissi
         // if split size is one so we have a call to initialize or replace
         MetadataField metadataField = metadataPatchUtils.getMetadataField(context, split[0]);
         if (split.length == 2) {
-            MetadataValueRest obj =
-                    (MetadataValueRest) submitPatchUtils.evaluateSingleObject(
-                            (LateObjectEvaluator) operation.getValue(), MetadataValueRest.class);
+            MetadataValueRest obj = (MetadataValueRest)
+                super.extractValuesFromOperation(operation, MetadataValueRest.class).get(0);
             metadataPatchUtils.replaceValue(context, resource.getItem(), itemService, metadataField, obj,
                     indexString, null, null);
         } else {

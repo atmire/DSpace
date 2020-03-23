@@ -12,7 +12,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.dspace.app.rest.model.ResourcePolicyRest;
-import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
 import org.dspace.authorize.AuthorizeException;
@@ -85,9 +84,8 @@ public class ResourcePolicyReplacePatchOperation<R extends InProgressSubmission>
                         index++;
                     }
                     if (split.length == 4) {
-                        ResourcePolicyRest newAccessCondition =
-                                (ResourcePolicyRest) submitPatchUtils.evaluateSingleObject(
-                                        (LateObjectEvaluator) operation.getValue(), ResourcePolicyRest.class);
+                        ResourcePolicyRest newAccessCondition = (ResourcePolicyRest)
+                            super.extractValuesFromOperation(operation, ResourcePolicyRest.class).get(0);
                         String name = newAccessCondition.getName();
                         String description = newAccessCondition.getDescription();
 

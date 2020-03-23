@@ -8,12 +8,10 @@
 package org.dspace.app.rest.submit.patch.operation;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.dspace.app.rest.model.MetadataValueRest;
-import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.repository.patch.operation.DSpaceObjectMetadataPatchUtils;
 import org.dspace.content.DSpaceObject;
@@ -96,30 +94,6 @@ public class SubmitPatchUtils<M extends Object> {
                 }
             }
         }
-    }
-
-    //TODO refactor without evaluateSingleObject and evaluateArrayObject
-    protected List<M> evaluateArrayObject(LateObjectEvaluator value, Class arrayClassForEvaluation) {
-        List<M> results = new ArrayList<M>();
-        M[] list = null;
-        if (value != null) {
-            LateObjectEvaluator object = (LateObjectEvaluator) value;
-            list = (M[]) object.evaluate(arrayClassForEvaluation);
-        }
-
-        for (M t : list) {
-            results.add(t);
-        }
-        return results;
-    }
-
-    protected M evaluateSingleObject(LateObjectEvaluator value, Class classForEvaluation) {
-        M single = null;
-        if (value != null) {
-            LateObjectEvaluator object = (LateObjectEvaluator) value;
-            single = (M) object.evaluate(classForEvaluation);
-        }
-        return single;
     }
 
     /**

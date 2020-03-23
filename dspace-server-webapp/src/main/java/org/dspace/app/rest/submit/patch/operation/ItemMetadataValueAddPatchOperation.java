@@ -83,15 +83,16 @@ public class ItemMetadataValueAddPatchOperation<R extends InProgressSubmission> 
         String[] split = submitPatchUtils.getAbsolutePath(operation.getPath()).split("/");
         // if split size is one so we have a call to initialize or replace
         if (split.length == 1) {
-            List<MetadataValueRest> list = metadataPatchUtils.extractMetadataValuesFromOperation(operation);
+            List<MetadataValueRest> list = (List<MetadataValueRest>)
+                super.extractValuesFromOperation(operation, MetadataValueRest.class);
             MetadataField metadataField = metadataPatchUtils.getMetadataField(context, split[0]);
             metadataPatchUtils.replaceMetadataFieldMetadata(context, resource.getItem(), itemService, metadataField,
                     list);
-
         } else {
             // call with "-" or "index-based" we should receive only single
             // object member
-            MetadataValueRest object = metadataPatchUtils.extractMetadataValuesFromOperation(operation).get(0);
+            MetadataValueRest object = (MetadataValueRest)
+                super.extractValuesFromOperation(operation, MetadataValueRest.class).get(0);
             // check if is not empty
             List<MetadataValue> metadataByMetadataString = itemService.getMetadataByMetadataString(resource.getItem(),
                     split[0]);

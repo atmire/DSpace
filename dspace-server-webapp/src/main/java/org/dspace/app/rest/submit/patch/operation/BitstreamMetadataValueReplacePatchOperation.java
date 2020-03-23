@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.dspace.app.rest.model.MetadataValueRest;
-import org.dspace.app.rest.model.patch.LateObjectEvaluator;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.repository.patch.operation.DSpaceObjectMetadataPatchUtils;
 import org.dspace.app.rest.repository.patch.operation.PatchOperation;
@@ -60,7 +59,7 @@ public class BitstreamMetadataValueReplacePatchOperation<R extends InProgressSub
             int idx = 0;
             for (Bitstream b : bb.getBitstreams()) {
                 if (idx == Integer.parseInt(split[1])) {
-                    replace(context, b, split, operation.getValue());
+                    replace(context, b, split, operation);
                 }
                 idx++;
             }
@@ -73,10 +72,10 @@ public class BitstreamMetadataValueReplacePatchOperation<R extends InProgressSub
      * @param context       Context of patch
      * @param bitstream     Bitstream whose md is being replaced
      * @param split         All sections of the operation path (/ seperator)
-     * @param value         Value the md is being replaced with
+     * @param operation     Patch operation, containing the value the md is being replaced with
      * @throws SQLException if db error
      */
-    private void replace(Context context, Bitstream bitstream, String[] split, Object value)
+    private void replace(Context context, Bitstream bitstream, String[] split, Operation operation)
             throws SQLException {
         String mdString = split[3];
         List<MetadataValue> metadataByMetadataString
@@ -87,15 +86,14 @@ public class BitstreamMetadataValueReplacePatchOperation<R extends InProgressSub
         // if split size is one so we have a call to initialize or replace
         MetadataField metadataField = metadataPatchUtils.getMetadataField(context, mdString);
         if (split.length == 5) {
-            MetadataValueRest obj =
-                    (MetadataValueRest) submitPatchUtils.evaluateSingleObject((LateObjectEvaluator) value,
-                            MetadataValueRest.class);
+            MetadataValueRest obj = (MetadataValueRest)
+                super.extractValuesFromOperation(operation, MetadataValueRest.class).get(0);
             metadataPatchUtils.replaceValue(context, bitstream, bitstreamService, metadataField, obj, indexString,
                     null, null);
         } else {
             //"path": "/sections/upload/files/0/metadata/dc.title/2/language"
             if (split.length > 5) {
-                submitPatchUtils.setDeclaredField(context, bitstream, value, metadataField, split[5],
+                submitPatchUtils.setDeclaredField(context, bitstream, operation.getValue(), metadataField, split[5],
                         metadataByMetadataString, indexString, bitstreamService);
             }
         }
