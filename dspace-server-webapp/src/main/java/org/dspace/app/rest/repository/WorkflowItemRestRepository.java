@@ -314,6 +314,7 @@ public class WorkflowItemRestRepository extends DSpaceRestRepository<WorkflowIte
      * move the workflowitem back to the submitter workspace regardless to how the workflow is designed
      */
     protected void delete(Context context, Integer id) {
+        boolean expunge = isExpunge();
         XmlWorkflowItem witem = null;
         try {
             witem = wis.find(context, id);
@@ -321,11 +322,6 @@ public class WorkflowItemRestRepository extends DSpaceRestRepository<WorkflowIte
                 throw new ResourceNotFoundException("WorkflowItem ID " + id + " not found");
             }
             final WorkspaceItem workspaceItem = wfs.abort(context, witem, context.getCurrentUser());
-            final boolean expunge = "true".equalsIgnoreCase(
-                    requestService.getCurrentRequest()
-                            .getHttpServletRequest()
-                            .getParameter("expunge")
-            );
             if (expunge) {
                 workspaceItemRestRepository.delete(context, workspaceItem.getID());
             }
@@ -338,6 +334,26 @@ public class WorkflowItemRestRepository extends DSpaceRestRepository<WorkflowIte
             throw new RuntimeException("IOException in " + this.getClass() + "#delete trying to delete a workflowitem" +
                 " from db (abort).", e);
         }
+    }
+
+    private boolean isExpunge() {
+        boolean expunge;
+        final String expungeParameter = requestService.getCurrentRequest()
+                .getHttpServletRequest()
+                .getParameter("expunge");
+        if ("true".equals(expungeParameter)) {
+            expunge = true;
+        } else if ("false".equals(expungeParameter)) {
+            expunge = false;
+        } else if (expungeParameter == null) {
+            expunge = false;
+        } else {
+            throw new DSpaceBadRequestException(
+                    "The the only valid values for the optional expunge parameter"
+                            + " are true or false, not " + expungeParameter
+            );
+        }
+        return expunge;
     }
 
     /**
