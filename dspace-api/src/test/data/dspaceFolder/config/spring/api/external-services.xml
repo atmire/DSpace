@@ -72,7 +72,7 @@
         <property name="externalDataProvider" ref="BTEDataProvider"/>
         <property name="id" value="bte-connector"/>
         <property name="fileBased" value="true"/>
-        <property name="metadataBased" value="false"/>
+        <property name="metadataBased" value="true"/>
         <property name="queryBased" value="false"/>
         <property name="fieldForTitle" value="title"/>
     </bean>
