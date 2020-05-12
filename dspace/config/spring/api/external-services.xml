@@ -20,6 +20,7 @@
             <util:list>
                 <ref bean="pubmedArticleMetadataSuggestionProvider"/>
                 <ref bean="orcidV2AuthorMetadataSuggestionProvider"/>
+                <ref bean="BTEMetadataSuggestionProvider"/>
             </util:list>
         </property>
     </bean>
@@ -91,6 +92,20 @@
                 </bean>
             </util:list>
         </property>
+    </bean>
+
+    <bean name="BTEDataProvider" class="org.dspace.external.provider.impl.BTEDataProvider">
+        <property name="sourceIdentifier" value="bte-connector"/>
+    </bean>
+
+    <bean name="BTEMetadataSuggestionProvider"
+          class="org.dspace.external.provider.metadata.impl.BTEMetadataSuggestionProvider">
+        <property name="externalDataProvider" ref="BTEDataProvider"/>
+        <property name="id" value="bte-connector"/>
+        <property name="fileBased" value="true"/>
+        <property name="metadataBased" value="false"/>
+        <property name="queryBased" value="false"/>
+        <property name="fieldForTitle" value="title"/>
     </bean>
 </beans>
 

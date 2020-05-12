@@ -8,6 +8,7 @@
 package org.dspace.content.dto;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.dspace.content.MetadataField;
 import org.dspace.content.MetadataSchema;
 import org.dspace.content.MetadataValue;
@@ -21,6 +22,11 @@ import org.dspace.content.authority.Choices;
  * @author kevinvandevelde at atmire.com
  */
 public class MetadataValueDTO {
+
+    /**
+     * log4j category
+     */
+    private static Logger log = org.apache.logging.log4j.LogManager.getLogger(MetadataValueDTO.class);
 
     private String schema;
     private String element;
@@ -78,6 +84,25 @@ public class MetadataValueDTO {
         this.schema = schema;
         this.element = element;
         this.qualifier = qualifier;
+        this.language = language;
+        this.value = value;
+    }
+
+    /**
+     * Constructor for the MetadataValueDTO class
+     * @param mdFieldString The mdFieldString from which we can extract schema, element and qualifier which are to be
+     *                      assigned to this MetadataValueDTO object
+     * @param language      The language to be assigend to this MetadataValueDTO object
+     * @param value         The value to be assigned to this MetadataValueDTO object
+     */
+    public MetadataValueDTO(String mdFieldString, String language, String value) {
+        String[] seq = mdFieldString.split("\\.");
+        if (seq.length < 2 ) {
+            log.error("{} is not a valid metadata field string of the form schema.element(.qualifier)", mdFieldString);
+        }
+        this.schema = seq[0];
+        this.element = seq[1];
+        this.qualifier = seq.length == 3 ? seq[2] : null;
         this.language = language;
         this.value = value;
     }

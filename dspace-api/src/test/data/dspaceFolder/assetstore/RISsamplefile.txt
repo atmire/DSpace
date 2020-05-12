@@ -1,0 +1,49 @@
+TY  - JOUR
+ID  - 32529
+T1  - Development and external validation of a clinical prognostic score for death in visceral leishmaniasis patients in a high HIV co-infection burden area in Ethiopia
+A1  - Abongomera,C.
+A1  - Ritmeijer,K.
+A1  - Vogt,F.
+A1  - Buyze,J.
+A1  - Mekonnen,Z.
+A1  - Admassu,H.
+A1  - Colebunders,R.
+A1  - Mohammed,R.
+A1  - Lynen,L.
+A1  - Diro,E.
+A1  - Van Griensven,J.
+Y1  - 2017///
+N1  - 17 pp.
+KW  - Leishmaniasis
+KW  - Visceral
+KW  - Protozoal diseases
+KW  - HIV
+KW  - Viral diseases
+KW  - Co-infections
+KW  - Clinical
+KW  - Outcomes
+KW  - Prognosis
+KW  - Ethiopia
+KW  - Africa-East
+RP  - IN FILE
+SP  - e0178996
+JF  - PLoS ONE
+VL  - 12
+IS  - 6
+U1  - Article-E
+U2  - ITG-C1B; ITG-C3B; ITG-C4A; ITG-C7X; ITG-C9A; ITG-CLA; DCS; U-HIVNTD; U-CTU; U-HIVCLI; U-INFDIS; JIF; OAJ; DOI; PDF; Abstract; DSPACE64
+U3  - English
+N2  - BACKGROUND: In Ethiopia, case fatality rates among subgroups of visceral leishmaniasis (VL) patients are high. A clinical prognostic score for death in VL patients could contribute to optimal management and reduction of these case fatality rates. We aimed to identify predictors of death from VL, and to develop and externally validate a clinical prognostic score for death in VL patients, in a high HIV co-infection burden area in Ethiopia. 
+METHODOLOGY/PRINCIPAL FINDINGS: We conducted a retrospective cohort study in north west Ethiopia. Predictors with an adjusted likelihood ratio >/=1.5 or </=0.67 were retained to calculate the predictor score. The derivation cohort consisted of 1686 VL patients treated at an upgraded health center and the external validation cohort consisted of 404 VL patients treated in hospital. There were 99 deaths in the derivation cohort and 53 deaths in the external validation cohort. The predictors of death were: age >40 years (score +1); HIV seropositive (score +1); HIV seronegative (score -1); hemoglobin </=6.5 g/dl (score +1); bleeding (score +1); jaundice (score +1); edema (score +1); ascites (score +2) and tuberculosis (score +1). The total predictor score per patient ranged from -1 to +5. A score of -1, indicated a low risk of death (1.0%), a score of 0 an intermediate risk of death (3.8%) and a score of +1 to +5, a high risk of death (10.4-85.7%). The area under the receiver operating characteristic curve was 0.83 (95% confidence interval: 0.79-0.87) in derivation, and 0.78 (95% confidence interval: 0.72-0.83) in external validation. 
+CONCLUSIONS/SIGNIFICANCE: The overall performance of the score was good. The score can enable the early detection of VL cases at high risk of death, which can inform operational, clinical management guidelines, and VL program management. Implementation of focused strategies could contribute to optimal management and reduction of the case fatality rates.
+SN  - 1932-6203
+M1  - PLoS ONE
+M2  - 54
+AD  - Medecins Sans Frontieres, Abdurafi, Ethiopia
+Department of Clinical Sciences, Institute of Tropical Medicine, Antwerp, Belgium
+Public Health Department, Medecins Sans Frontieres, Amsterdam, The Netherlands
+Department of Internal Medicine, University of Gondar, Gondar, Ethiopia
+UR  - http://dx.doi.org/10.1371/journal.pone.0178996
+L2  - http://lib.itg.be/pdf/itg/2017/2017ponee0178996.pdf
+L3  - http://www.ncbi.nlm.nih.gov/pubmed/28582440
+ER  - 
