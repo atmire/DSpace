@@ -1,3 +1,10 @@
+/**
+ * The contents of this file are subject to the license and copyright
+ * detailed in the LICENSE and NOTICE files at the root of the source
+ * tree and available online at
+ *
+ * http://www.dspace.org/license/
+ */
 package org.dspace.app.bulkedit;
 
 import static org.junit.Assert.assertEquals;
@@ -12,8 +19,6 @@ import java.util.List;
 
 import org.apache.logging.log4j.Logger;
 import org.dspace.AbstractUnitTest;
-import org.dspace.app.launcher.ScriptLauncher;
-import org.dspace.app.scripts.handler.impl.TestDSpaceRunnableHandler;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
@@ -22,7 +27,6 @@ import org.dspace.content.Item;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.Relationship;
 import org.dspace.content.RelationshipMetadataService;
-import org.dspace.content.RelationshipMetadataServiceTest;
 import org.dspace.content.RelationshipType;
 import org.dspace.content.WorkspaceItem;
 import org.dspace.content.factory.ContentServiceFactory;
@@ -35,11 +39,9 @@ import org.dspace.content.service.ItemService;
 import org.dspace.content.service.RelationshipService;
 import org.dspace.content.service.RelationshipTypeService;
 import org.dspace.content.service.WorkspaceItemService;
-import org.dspace.core.I18nUtil;
 import org.dspace.eperson.Group;
 import org.dspace.eperson.factory.EPersonServiceFactory;
 import org.dspace.eperson.service.GroupService;
-import org.jdom.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -122,7 +124,8 @@ public class CsvImportTest extends AbstractUnitTest {
     public void verifySubjectDeletionOnCsvImportWithEmptyColumn() throws Exception {
         itemService.addMetadata(context, leftItem, "dc", "subject", null, null, "testSubject");
         itemService.addMetadata(context, leftItem, "dc", "title", null, null, "new title");
-        assertEquals("testSubject", itemService.getMetadata(leftItem, "dc", "subject", null, Item.ANY).get(0).getValue());
+        assertEquals("testSubject",
+                     itemService.getMetadata(leftItem, "dc", "subject", null, Item.ANY).get(0).getValue());
 
         String csvLineString = leftItem.getID().toString() + "," + col
             .getHandle() + "," + "new title" + ",";
@@ -178,7 +181,6 @@ public class CsvImportTest extends AbstractUnitTest {
         out.flush();
         out.close();
         out = null;
-
 
 
         MetadataImport.main(new String[] {"metadata-import", "-f", filename, "-e", eperson.getEmail(), "-s"});
