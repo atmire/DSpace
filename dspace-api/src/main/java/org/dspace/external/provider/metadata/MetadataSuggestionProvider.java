@@ -7,6 +7,8 @@
  */
 package org.dspace.external.provider.metadata;
 
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -164,6 +166,9 @@ public abstract class MetadataSuggestionProvider<T extends ExternalDataProvider>
         }
         if (useMetadata && !isMetadataBased()) {
             return false;
+        }
+        if (isEmpty(metadataSuggestionProviderFilters)) {
+            return true;
         }
         for (MetadataSuggestionProviderFilter metadataSuggestionProviderFilter : metadataSuggestionProviderFilters) {
             if (metadataSuggestionProviderFilter.supports(inProgressSubmission)) {
