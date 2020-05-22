@@ -24,7 +24,7 @@ import gr.ekt.bte.core.RecordSet;
 import gr.ekt.bte.core.Value;
 import gr.ekt.bte.dataloader.FileDataLoader;
 import gr.ekt.bte.exceptions.MalformedSourceException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpException;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.itemimport.BTEBatchImportService;
@@ -70,7 +70,7 @@ public class BTEMetadataSuggestionProvider extends MetadataSuggestionProvider<BT
     protected BTEBatchImportService bteBatchImportService
         = DSpaceServicesFactory.getInstance().getServiceManager()
                                .getServiceByName("org.dspace.app.itemimport.BTEBatchImportService",
-                                                 BTEBatchImportService.class);
+                                   BTEBatchImportService.class);
 
     protected List<MetadataListener> listeners = DSpaceServicesFactory.getInstance().getServiceManager()
                                                                       .getServicesByType(MetadataListener.class);
@@ -110,12 +110,17 @@ public class BTEMetadataSuggestionProvider extends MetadataSuggestionProvider<BT
             for (DataLoader dataLoader : listener.getDataloadersMap().values()) {
                 SubmissionLookupDataLoader submissionLookupDataLoader = (SubmissionLookupDataLoader) dataLoader;
                 Map<String, Set<String>> identifierKeys = this.getIdentifierKeysMap(item, listener);
-                try (Context context = new Context()) {
-                    context.turnOffAuthorisationSystem();
-                    List<Record> records = submissionLookupDataLoader.getByIdentifier(context, identifierKeys);
-                    result.addAll(this.constructExternalDataObjectListFromRecordList(records));
-                } catch (HttpException | IOException e) {
-                    log.error(e.getMessage(), e);
+                if (!identifierKeys.isEmpty()) {
+                    try (Context context = new Context()) {
+                        context.turnOffAuthorisationSystem();
+                        List<Record> records = submissionLookupDataLoader.getByIdentifier(context, identifierKeys);
+                        context.restoreAuthSystemState();
+                        if (records != null) {
+                            result.addAll(this.constructExternalDataObjectListFromRecordList(records));
+                        }
+                    } catch (HttpException | IOException e) {
+                        log.error(e.getMessage(), e);
+                    }
                 }
             }
         }

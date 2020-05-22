@@ -278,6 +278,14 @@
 
   <!-- Used by system: do not remove -->
   <dc-type>
+    <schema>dc</schema>
+    <element>identifier</element>
+    <qualifier>doi</qualifier>
+    <scope_note>DOI Identifier</scope_note>
+  </dc-type>
+
+  <!-- Used by system: do not remove -->
+  <dc-type>
 	<schema>dc</schema>
     <element>description</element>
     <!-- unqualified -->
