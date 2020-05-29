@@ -292,6 +292,10 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
                         !String.valueOf(dcvalue[charPos]).equals("\u0009") &&
                         !String.valueOf(dcvalue[charPos]).equals("\n") &&
                         !String.valueOf(dcvalue[charPos]).equals("\r")) {
+                        if (log.isDebugEnabled()) {
+                            log.debug("Replace character " + dcvalue[charPos] +
+                                    ", code &#" + (int) (dcvalue[charPos]) + "; with space");
+                        }
                         dcvalue[charPos] = ' ';
                     }
                 }
