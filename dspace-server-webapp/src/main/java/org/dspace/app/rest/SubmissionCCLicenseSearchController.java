@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
  * This controller is responsible for searching the CC License URI
  */
 @RestController
-@RequestMapping("/api/" + SubmissionCCLicenseRest.CATEGORY + "/" + SubmissionCCLicenseRest.PLURAL + "/search" +
+@RequestMapping("/api/" + SubmissionCCLicenseRest.CATEGORY + "/" + SubmissionCCLicenseRest.PLURAL + "/search-old" +
         "/rightsByQuestions")
 @PreAuthorize("hasAuthority('AUTHENTICATED')")
 public class SubmissionCCLicenseSearchController {
