@@ -1261,7 +1261,7 @@
             <dependency>
                 <groupId>commons-beanutils</groupId>
                 <artifactId>commons-beanutils</artifactId>
-                <version>1.9.3</version>
+                <version>1.9.4</version>
             </dependency>
             <dependency>
                 <groupId>commons-cli</groupId>
@@ -1716,7 +1716,7 @@
     <licenses>
         <license>
             <name>DuraSpace BSD License</name>
-            <url>https://raw.github.com/DSpace/DSpace/master/LICENSE</url>
+            <url>https://raw.github.com/DSpace/DSpace/main/LICENSE</url>
             <distribution>repo</distribution>
             <comments>
                A BSD 3-Clause license for the DSpace codebase.
