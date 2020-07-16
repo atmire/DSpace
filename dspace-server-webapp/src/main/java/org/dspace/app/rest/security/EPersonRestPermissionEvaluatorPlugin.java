@@ -66,11 +66,12 @@ public class EPersonRestPermissionEvaluatorPlugin extends RestObjectPermissionEv
 
         EPerson ePerson = null;
 
+        // anonymous user
         try {
+
             ePerson = context.getCurrentUser();
             UUID dsoId = UUID.fromString(targetId.toString());
 
-            // anonymous user
             if (ePerson == null) {
                 return false;
             } else if (dsoId.equals(ePerson.getID())) {
@@ -82,7 +83,6 @@ public class EPersonRestPermissionEvaluatorPlugin extends RestObjectPermissionEv
                        && AuthorizeUtil.canCollectionAdminManageAccounts()) {
                 return true;
             }
-
         } catch (SQLException e) {
             log.error(e.getMessage(), e);
         }

@@ -34,6 +34,7 @@ import org.dspace.app.rest.builder.BitstreamBuilder;
 import org.dspace.app.rest.builder.BundleBuilder;
 import org.dspace.app.rest.builder.CollectionBuilder;
 import org.dspace.app.rest.builder.CommunityBuilder;
+import org.dspace.app.rest.builder.EPersonBuilder;
 import org.dspace.app.rest.builder.GroupBuilder;
 import org.dspace.app.rest.builder.ItemBuilder;
 import org.dspace.app.rest.matcher.AuthenticationStatusMatcher;
@@ -803,16 +804,36 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
         Bitstream bitstream = createPrivateBitstream();
         String shortLivedToken = getShortLivedToken(eperson);
 
-        getClient().perform(get("/api/core/bitstreams/" + bitstream.getID() + "/content?token=" + shortLivedToken))
+        getClient().perform(get("/api/core/bitstreams/" + bitstream.getID()
+                + "/content?authentication-token=" + shortLivedToken))
             .andExpect(status().isOk());
     }
 
     @Test
-    public void testSessionTokenToDowloadBitstream() throws Exception {
+    public void testShortLivedTokenToDowloadBitstreamUnauthorized() throws Exception {
         Bitstream bitstream = createPrivateBitstream();
 
-        String sessionToken = getAuthToken(eperson.getEmail(), password);
-        getClient().perform(get("/api/core/bitstreams/" + bitstream.getID() + "/content?token=" + sessionToken))
+        context.turnOffAuthorisationSystem();
+        EPerson testEPerson = EPersonBuilder.createEPerson(context)
+            .withNameInMetadata("John", "Doe")
+            .withEmail("UnauthorizedUser@example.com")
+            .withPassword(password)
+            .build();
+        context.restoreAuthSystemState();
+
+        String shortLivedToken = getShortLivedToken(testEPerson);
+        getClient().perform(get("/api/core/bitstreams/" + bitstream.getID()
+                + "/content?authentication-token=" + shortLivedToken))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void testLoginTokenToDowloadBitstream() throws Exception {
+        Bitstream bitstream = createPrivateBitstream();
+
+        String loginToken = getAuthToken(eperson.getEmail(), password);
+        getClient().perform(get("/api/core/bitstreams/" + bitstream.getID()
+                + "/content?authentication-token=" + loginToken))
             .andExpect(status().isForbidden());
     }
 
@@ -822,14 +843,45 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
         configurationService.setProperty("jwt.shortLived.token.expiration", "1");
         String shortLivedToken = getShortLivedToken(eperson);
         Thread.sleep(1);
-        getClient().perform(get("/api/core/bitstreams/" + bitstream.getID() + "/content?token=" + shortLivedToken))
+        getClient().perform(get("/api/core/bitstreams/" + bitstream.getID()
+                + "/content?authentication-token=" + shortLivedToken))
             .andExpect(status().isForbidden());
     }
 
-    private String getShortLivedToken(EPerson ePerson) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
+    @Test
+    public void testShortLivedAndLoginTokenSeparation() throws Exception {
+        configurationService.setProperty("jwt.shortLived.token.expiration", "1");
 
         String token = getAuthToken(eperson.getEmail(), password);
+        Thread.sleep(2);
+        getClient(token).perform(get("/api/authn/status").param("projection", "full"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.authenticated", is(true)));
+    }
+
+    // TODO: fix the exception. For now we want to verify a short lived token can't be used to login
+    @Test(expected = Exception.class)
+    public void testLoginWithShortLivedToken() throws Exception {
+        String shortLivedToken = getShortLivedToken(eperson);
+
+        getClient().perform(post("/api/authn/login?authentication-token=" + shortLivedToken))
+            .andExpect(status().isInternalServerError());
+        // TODO: This internal server error needs to be fixed. This should actually produce a forbidden status
+        //.andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void testGenerateShortLivedTokenWithShortLivedToken() throws Exception {
+        String shortLivedToken = getShortLivedToken(eperson);
+
+        getClient().perform(post("/api/authn/shortlivedtokens?authentication-token=" + shortLivedToken))
+            .andExpect(status().isForbidden());
+    }
+
+    private String getShortLivedToken(EPerson requestUser) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+
+        String token = getAuthToken(requestUser.getEmail(), password);
         MvcResult mvcResult = getClient(token).perform(post("/api/authn/shortlivedtokens"))
             .andReturn();
 

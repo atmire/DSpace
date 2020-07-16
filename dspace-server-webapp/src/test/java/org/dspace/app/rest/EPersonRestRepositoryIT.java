@@ -114,37 +114,37 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         String authToken = getAuthToken(admin.getEmail(), password);
 
         try {
-        getClient(authToken).perform(post("/api/eperson/epersons")
-                                        .content(mapper.writeValueAsBytes(data))
-                                        .contentType(contentType)
-                            .param("projection", "full"))
-                            .andExpect(status().isCreated())
-                            .andExpect(content().contentType(contentType))
-                            .andExpect(jsonPath("$", EPersonMatcher.matchFullEmbeds()))
-                            .andExpect(jsonPath("$", Matchers.allOf(
-                               hasJsonPath("$.uuid", not(empty())),
-                               // is it what you expect? EPerson.getName() returns the email...
-                               //hasJsonPath("$.name", is("Doe John")),
-                               hasJsonPath("$.email", is("createtest@example.com")),
-                               hasJsonPath("$.type", is("eperson")),
-                               hasJsonPath("$.canLogIn", is(true)),
-                               hasJsonPath("$.requireCertificate", is(false)),
-                               hasJsonPath("$._links.self.href", not(empty())),
-                               hasJsonPath("$.metadata", Matchers.allOf(
-                                       matchMetadata("eperson.firstname", "John"),
-                                       matchMetadata("eperson.lastname", "Doe")
-                               )))))
-                            .andDo(result -> idRef
+            getClient(authToken).perform(post("/api/eperson/epersons")
+                .content(mapper.writeValueAsBytes(data))
+                .contentType(contentType)
+                .param("projection", "full"))
+                                .andExpect(status().isCreated())
+                                .andExpect(content().contentType(contentType))
+                                .andExpect(jsonPath("$", EPersonMatcher.matchFullEmbeds()))
+                                .andExpect(jsonPath("$", Matchers.allOf(
+                                    hasJsonPath("$.uuid", not(empty())),
+                                    // is it what you expect? EPerson.getName() returns the email...
+                                    //hasJsonPath("$.name", is("Doe John")),
+                                    hasJsonPath("$.email", is("createtest@example.com")),
+                                    hasJsonPath("$.type", is("eperson")),
+                                    hasJsonPath("$.canLogIn", is(true)),
+                                    hasJsonPath("$.requireCertificate", is(false)),
+                                    hasJsonPath("$._links.self.href", not(empty())),
+                                    hasJsonPath("$.metadata", Matchers.allOf(
+                                        matchMetadata("eperson.firstname", "John"),
+                                        matchMetadata("eperson.lastname", "Doe")
+                                                                            )))))
+                                .andDo(result -> idRef
                                     .set(UUID.fromString(read(result.getResponse().getContentAsString(), "$.id"))));
 
-        getClient(authToken).perform(post("/api/eperson/epersons")
+            getClient(authToken).perform(post("/api/eperson/epersons")
                 .content(mapper.writeValueAsBytes(dataFull))
                 .contentType(contentType))
-                .andExpect(status().isCreated())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$", HalMatcher.matchNoEmbeds()))
-                .andDo(result -> idRefNoEmbeds
-                        .set(UUID.fromString(read(result.getResponse().getContentAsString(), "$.id"))));;
+                                .andExpect(status().isCreated())
+                                .andExpect(content().contentType(contentType))
+                                .andExpect(jsonPath("$", HalMatcher.matchNoEmbeds()))
+                                .andDo(result -> idRefNoEmbeds
+                                    .set(UUID.fromString(read(result.getResponse().getContentAsString(), "$.id"))));;
 
         } finally {
             EPersonBuilder.deleteEPerson(idRef.get());
@@ -176,12 +176,12 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.restoreAuthSystemState();
 
         getClient().perform(post("/api/eperson/epersons")
-                                         .content(mapper.writeValueAsBytes(data))
-                                         .contentType(contentType)
-                                         .param("projection", "full"))
-                            .andExpect(status().isUnauthorized());
+            .content(mapper.writeValueAsBytes(data))
+            .contentType(contentType)
+            .param("projection", "full"))
+                   .andExpect(status().isUnauthorized());
         getClient().perform(get("/api/eperson/epersons/search/byEmail")
-                                .param("email", data.getEmail()))
+            .param("email", data.getEmail()))
                    .andExpect(status().isNoContent());
     }
 
@@ -198,15 +198,15 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(get("/api/eperson/eperson"))
-                   .andExpect(status().isOk())
-                   .andExpect(content().contentType(contentType))
-                   .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
-                       EPersonMatcher.matchEPersonEntry(newUser),
-                       EPersonMatcher.matchEPersonOnEmail(admin.getEmail()),
-                       EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())
-                   )))
-                   .andExpect(jsonPath("$.page.size", is(20)))
-                   .andExpect(jsonPath("$.page.totalElements", is(3)))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
+                                EPersonMatcher.matchEPersonEntry(newUser),
+                                EPersonMatcher.matchEPersonOnEmail(admin.getEmail()),
+                                EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())
+                                                                                                   )))
+                            .andExpect(jsonPath("$.page.size", is(20)))
+                            .andExpect(jsonPath("$.page.totalElements", is(3)))
         ;
 
         getClient().perform(get("/api/eperson/epersons"))
@@ -234,9 +234,9 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.turnOffAuthorisationSystem();
 
         EPerson testEPerson = EPersonBuilder.createEPerson(context)
-                                        .withNameInMetadata("John", "Doe")
-                                        .withEmail("Johndoe@example.com")
-                                        .build();
+                                            .withNameInMetadata("John", "Doe")
+                                            .withEmail("Johndoe@example.com")
+                                            .build();
 
         context.restoreAuthSystemState();
 
@@ -244,34 +244,34 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         // NOTE: /eperson/epersons endpoint returns users sorted by email
         // using size = 2 the first page will contain our new test user and default 'admin' ONLY
         getClient(authToken).perform(get("/api/eperson/epersons")
-                                .param("size", "2"))
-                   .andExpect(status().isOk())
-                   .andExpect(content().contentType(contentType))
-                   .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
-                           EPersonMatcher.matchEPersonEntry(testEPerson),
-                           EPersonMatcher.matchEPersonOnEmail(admin.getEmail())
-                   )))
-                   .andExpect(jsonPath("$._embedded.epersons", Matchers.not(
-                       Matchers.contains(
-                           EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())
-                       )
-                   )))
-                   .andExpect(jsonPath("$.page.size", is(2)))
-                   .andExpect(jsonPath("$.page.totalElements", is(3)))
+            .param("size", "2"))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
+                                EPersonMatcher.matchEPersonEntry(testEPerson),
+                                EPersonMatcher.matchEPersonOnEmail(admin.getEmail())
+                                                                                                   )))
+                            .andExpect(jsonPath("$._embedded.epersons", Matchers.not(
+                                Matchers.contains(
+                                    EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())
+                                                 )
+                                                                                    )))
+                            .andExpect(jsonPath("$.page.size", is(2)))
+                            .andExpect(jsonPath("$.page.totalElements", is(3)))
         ;
 
         // using size = 2 the *second* page will contains our default 'eperson' ONLY
         getClient(authToken).perform(get("/api/eperson/epersons")
-                                .param("size", "2")
-                                .param("page", "1"))
-                   .andExpect(status().isOk())
-                   .andExpect(content().contentType(contentType))
-                   .andExpect(jsonPath("$._embedded.epersons", Matchers.contains(
-                       EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())
-                   )))
-                   .andExpect(jsonPath("$._embedded.epersons", Matchers.hasSize(1)))
-                   .andExpect(jsonPath("$.page.size", is(2)))
-                   .andExpect(jsonPath("$.page.totalElements", is(3)))
+            .param("size", "2")
+            .param("page", "1"))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$._embedded.epersons", Matchers.contains(
+                                EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())
+                                                                                         )))
+                            .andExpect(jsonPath("$._embedded.epersons", Matchers.hasSize(1)))
+                            .andExpect(jsonPath("$.page.size", is(2)))
+                            .andExpect(jsonPath("$.page.totalElements", is(3)))
         ;
 
         getClient().perform(get("/api/eperson/epersons"))
@@ -299,23 +299,23 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         // When full projection is requested, response should include expected properties, links, and embeds.
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(get("/api/eperson/epersons/" + ePerson2.getID()).param("projection", "full"))
-                   .andExpect(status().isOk())
-                   .andExpect(jsonPath("$", EPersonMatcher.matchFullEmbeds()))
-                   .andExpect(content().contentType(contentType))
-                   .andExpect(jsonPath("$", is(
-                       EPersonMatcher.matchEPersonEntry(ePerson2)
-                   )))
-                   .andExpect(jsonPath("$", Matchers.not(
-                       is(
-                           EPersonMatcher.matchEPersonEntry(ePerson)
-                       )
-                   )))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$", EPersonMatcher.matchFullEmbeds()))
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$", is(
+                                EPersonMatcher.matchEPersonEntry(ePerson2)
+                                                       )))
+                            .andExpect(jsonPath("$", Matchers.not(
+                                is(
+                                    EPersonMatcher.matchEPersonEntry(ePerson)
+                                  )
+                                                                 )))
         ;
 
         // When no projection is requested, response should include expected properties, links, and no embeds.
         getClient(authToken).perform(get("/api/eperson/epersons/" + ePerson2.getID()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", HalMatcher.matchNoEmbeds()))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$", HalMatcher.matchNoEmbeds()))
         ;
 
     }
@@ -325,21 +325,21 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.turnOffAuthorisationSystem();
 
         EPerson ePerson1 = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("Mik", "Reck")
-                .withEmail("MikReck@email.com")
-                .withPassword("qwerty01")
-                .build();
+                                         .withNameInMetadata("Mik", "Reck")
+                                         .withEmail("MikReck@email.com")
+                                         .withPassword("qwerty01")
+                                         .build();
 
         EPerson ePerson2 = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("Bob", "Smith")
-                .withEmail("bobsmith@example.com")
-                .build();
+                                         .withNameInMetadata("Bob", "Smith")
+                                         .withEmail("bobsmith@example.com")
+                                         .build();
 
         context.restoreAuthSystemState();
 
         String tokenEperson1 = getAuthToken(ePerson1.getEmail(), "qwerty01");
         getClient(tokenEperson1).perform(get("/api/eperson/epersons/" + ePerson2.getID()))
-                .andExpect(status().isForbidden());
+                                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -347,9 +347,9 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.turnOffAuthorisationSystem();
 
         EPerson ePerson1 = EPersonBuilder.createEPerson(context)
-                                        .withNameInMetadata("John", "Doe")
-                                        .withEmail("Johndoe@example.com")
-                                        .build();
+                                         .withNameInMetadata("John", "Doe")
+                                         .withEmail("Johndoe@example.com")
+                                         .build();
 
         EPerson ePerson2 = EPersonBuilder.createEPerson(context)
                                          .withNameInMetadata("Jane", "Smith")
@@ -361,18 +361,18 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         // Verify admin can access information about any user (and only one user is included in response)
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(get("/api/eperson/epersons/" + ePerson2.getID()))
-                   .andExpect(status().isOk())
-                   .andExpect(content().contentType(contentType))
-                   .andExpect(jsonPath("$", is(
-                       EPersonMatcher.matchEPersonEntry(ePerson2)
-                   )))
-                   .andExpect(jsonPath("$", Matchers.not(
-                       is(
-                           EPersonMatcher.matchEPersonEntry(ePerson1)
-                       )
-                   )))
-                   .andExpect(jsonPath("$._links.self.href",
-                                       Matchers.containsString("/api/eperson/epersons/" + ePerson2.getID())));
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$", is(
+                                EPersonMatcher.matchEPersonEntry(ePerson2)
+                                                       )))
+                            .andExpect(jsonPath("$", Matchers.not(
+                                is(
+                                    EPersonMatcher.matchEPersonEntry(ePerson1)
+                                  )
+                                                                 )))
+                            .andExpect(jsonPath("$._links.self.href",
+                                Matchers.containsString("/api/eperson/epersons/" + ePerson2.getID())));
 
 
         // Verify an unprivileged user cannot access information about a *different* user
@@ -382,13 +382,13 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // Verify an unprivilegd user can access information about himself/herself
         getClient(epersonToken).perform(get("/api/eperson/epersons/" + eperson.getID()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$", is(
-                        EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())
-                )))
-                .andExpect(jsonPath("$._links.self.href",
-                                    Matchers.containsString("/api/eperson/epersons/" + eperson.getID())));
+                               .andExpect(status().isOk())
+                               .andExpect(content().contentType(contentType))
+                               .andExpect(jsonPath("$", is(
+                                   EPersonMatcher.matchEPersonOnEmail(eperson.getEmail())
+                                                          )))
+                               .andExpect(jsonPath("$._links.self.href",
+                                   Matchers.containsString("/api/eperson/epersons/" + eperson.getID())));
 
     }
 
@@ -397,20 +397,20 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.turnOffAuthorisationSystem();
 
         EPerson testEPerson1 = EPersonBuilder.createEPerson(context)
-                                        .withNameInMetadata("John", "Doe")
-                                        .withEmail("Johndoe@example.com")
-                                        .build();
+                                             .withNameInMetadata("John", "Doe")
+                                             .withEmail("Johndoe@example.com")
+                                             .build();
 
         EPerson testEPerson2 = EPersonBuilder.createEPerson(context)
-                                         .withNameInMetadata("Jane", "Smith")
-                                         .withEmail("janesmith@example.com")
-                                         .build();
+                                             .withNameInMetadata("Jane", "Smith")
+                                             .withEmail("janesmith@example.com")
+                                             .build();
 
         context.restoreAuthSystemState();
 
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(get("/api/eperson/epersons/" + UUID.randomUUID()))
-                   .andExpect(status().isNotFound());
+                            .andExpect(status().isNotFound());
 
     }
 
@@ -418,13 +418,13 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
     public void searchMethodsExist() throws Exception {
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(get("/api/eperson/epersons"))
-                .andExpect(jsonPath("$._links.search.href", Matchers.notNullValue()));
+                            .andExpect(jsonPath("$._links.search.href", Matchers.notNullValue()));
 
         getClient(authToken).perform(get("/api/eperson/epersons/search"))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(contentType))
-        .andExpect(jsonPath("$._links.byEmail", Matchers.notNullValue()))
-        .andExpect(jsonPath("$._links.byMetadata", Matchers.notNullValue()));
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$._links.byEmail", Matchers.notNullValue()))
+                            .andExpect(jsonPath("$._links.byMetadata", Matchers.notNullValue()));
     }
 
     @Test
@@ -447,28 +447,28 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(get("/api/eperson/epersons/search/byEmail")
-                                             .param("email", ePerson.getEmail()))
+            .param("email", ePerson.getEmail()))
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(contentType))
                             .andExpect(jsonPath("$", is(
-                                    EPersonMatcher.matchEPersonEntry(ePerson)
-                            )));
+                                EPersonMatcher.matchEPersonEntry(ePerson)
+                                                       )));
 
         // it must be case-insensitive
         getClient(authToken).perform(get("/api/eperson/epersons/search/byEmail")
-                                             .param("email", ePerson.getEmail().toUpperCase()))
+            .param("email", ePerson.getEmail().toUpperCase()))
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(contentType))
                             .andExpect(jsonPath("$", is(
-                                    EPersonMatcher.matchEPersonEntry(ePerson)
-                            )));
+                                EPersonMatcher.matchEPersonEntry(ePerson)
+                                                       )));
     }
 
     @Test
     public void findByEmailUndefined() throws Exception {
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(get("/api/eperson/epersons/search/byEmail")
-                                             .param("email", "undefined@undefined.com"))
+            .param("email", "undefined@undefined.com"))
                             .andExpect(status().isNoContent());
     }
 
@@ -493,47 +493,47 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
                                          .build();
 
         EPerson ePerson3 = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("Tom", "Doe")
-                .withEmail("tomdoe@example.com")
-                .build();
+                                         .withNameInMetadata("Tom", "Doe")
+                                         .withEmail("tomdoe@example.com")
+                                         .build();
 
         EPerson ePerson4 = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("Dirk", "Doe-Postfix")
-                .withEmail("dirkdoepostfix@example.com")
-                .build();
+                                         .withNameInMetadata("Dirk", "Doe-Postfix")
+                                         .withEmail("dirkdoepostfix@example.com")
+                                         .build();
 
         EPerson ePerson5 = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("Harry", "Prefix-Doe")
-                .withEmail("harrydoeprefix@example.com")
-                .build();
+                                         .withNameInMetadata("Harry", "Prefix-Doe")
+                                         .withEmail("harrydoeprefix@example.com")
+                                         .build();
 
         context.restoreAuthSystemState();
 
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(get("/api/eperson/epersons/search/byMetadata")
-                    .param("query", ePerson.getLastName()))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType(contentType))
-                    .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
-                            EPersonMatcher.matchEPersonEntry(ePerson),
-                            EPersonMatcher.matchEPersonEntry(ePerson3),
-                            EPersonMatcher.matchEPersonEntry(ePerson4),
-                            EPersonMatcher.matchEPersonEntry(ePerson5)
-                    )))
-                    .andExpect(jsonPath("$.page.totalElements", is(4)));
+            .param("query", ePerson.getLastName()))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
+                                EPersonMatcher.matchEPersonEntry(ePerson),
+                                EPersonMatcher.matchEPersonEntry(ePerson3),
+                                EPersonMatcher.matchEPersonEntry(ePerson4),
+                                EPersonMatcher.matchEPersonEntry(ePerson5)
+                                                                                                   )))
+                            .andExpect(jsonPath("$.page.totalElements", is(4)));
 
         // it must be case insensitive
         getClient(authToken).perform(get("/api/eperson/epersons/search/byMetadata")
-                .param("query", ePerson.getLastName().toLowerCase()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
-                        EPersonMatcher.matchEPersonEntry(ePerson),
-                        EPersonMatcher.matchEPersonEntry(ePerson3),
-                        EPersonMatcher.matchEPersonEntry(ePerson4),
-                        EPersonMatcher.matchEPersonEntry(ePerson5)
-                )))
-                .andExpect(jsonPath("$.page.totalElements", is(4)));
+            .param("query", ePerson.getLastName().toLowerCase()))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
+                                EPersonMatcher.matchEPersonEntry(ePerson),
+                                EPersonMatcher.matchEPersonEntry(ePerson3),
+                                EPersonMatcher.matchEPersonEntry(ePerson4),
+                                EPersonMatcher.matchEPersonEntry(ePerson5)
+                                                                                                   )))
+                            .andExpect(jsonPath("$.page.totalElements", is(4)));
     }
 
     @Test
@@ -550,47 +550,47 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
                                          .build();
 
         EPerson ePerson3 = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("John", "Smith")
-                .withEmail("tomdoe@example.com")
-                .build();
+                                         .withNameInMetadata("John", "Smith")
+                                         .withEmail("tomdoe@example.com")
+                                         .build();
 
         EPerson ePerson4 = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("John-Postfix", "Smath")
-                .withEmail("dirkdoepostfix@example.com")
-                .build();
+                                         .withNameInMetadata("John-Postfix", "Smath")
+                                         .withEmail("dirkdoepostfix@example.com")
+                                         .build();
 
         EPerson ePerson5 = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("Prefix-John", "Smoth")
-                .withEmail("harrydoeprefix@example.com")
-                .build();
+                                         .withNameInMetadata("Prefix-John", "Smoth")
+                                         .withEmail("harrydoeprefix@example.com")
+                                         .build();
 
         context.restoreAuthSystemState();
 
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(get("/api/eperson/epersons/search/byMetadata")
-                    .param("query", ePerson.getFirstName()))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType(contentType))
-                    .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
-                            EPersonMatcher.matchEPersonEntry(ePerson),
-                            EPersonMatcher.matchEPersonEntry(ePerson3),
-                            EPersonMatcher.matchEPersonEntry(ePerson4),
-                            EPersonMatcher.matchEPersonEntry(ePerson5)
-                    )))
-                    .andExpect(jsonPath("$.page.totalElements", is(4)));
+            .param("query", ePerson.getFirstName()))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
+                                EPersonMatcher.matchEPersonEntry(ePerson),
+                                EPersonMatcher.matchEPersonEntry(ePerson3),
+                                EPersonMatcher.matchEPersonEntry(ePerson4),
+                                EPersonMatcher.matchEPersonEntry(ePerson5)
+                                                                                                   )))
+                            .andExpect(jsonPath("$.page.totalElements", is(4)));
 
         // it must be case insensitive
         getClient(authToken).perform(get("/api/eperson/epersons/search/byMetadata")
-                .param("query", ePerson.getFirstName().toLowerCase()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
-                        EPersonMatcher.matchEPersonEntry(ePerson),
-                        EPersonMatcher.matchEPersonEntry(ePerson3),
-                        EPersonMatcher.matchEPersonEntry(ePerson4),
-                        EPersonMatcher.matchEPersonEntry(ePerson5)
-                )))
-                .andExpect(jsonPath("$.page.totalElements", is(4)));
+            .param("query", ePerson.getFirstName().toLowerCase()))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
+                                EPersonMatcher.matchEPersonEntry(ePerson),
+                                EPersonMatcher.matchEPersonEntry(ePerson3),
+                                EPersonMatcher.matchEPersonEntry(ePerson4),
+                                EPersonMatcher.matchEPersonEntry(ePerson5)
+                                                                                                   )))
+                            .andExpect(jsonPath("$.page.totalElements", is(4)));
     }
 
     @Test
@@ -625,22 +625,22 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(get("/api/eperson/epersons/search/byMetadata")
-                                             .param("query", ePerson.getEmail()))
+            .param("query", ePerson.getEmail()))
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(contentType))
                             .andExpect(jsonPath("$._embedded.epersons", Matchers.contains(
-                                    EPersonMatcher.matchEPersonEntry(ePerson)
-                            )))
+                                EPersonMatcher.matchEPersonEntry(ePerson)
+                                                                                         )))
                             .andExpect(jsonPath("$.page.totalElements", is(1)));
 
         // it must be case insensitive
         getClient(authToken).perform(get("/api/eperson/epersons/search/byMetadata")
-                                             .param("query", ePerson.getEmail().toLowerCase()))
+            .param("query", ePerson.getEmail().toLowerCase()))
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(contentType))
                             .andExpect(jsonPath("$._embedded.epersons", Matchers.contains(
-                                    EPersonMatcher.matchEPersonEntry(ePerson)
-                            )))
+                                EPersonMatcher.matchEPersonEntry(ePerson)
+                                                                                         )))
                             .andExpect(jsonPath("$.page.totalElements", is(1)));
     }
 
@@ -676,22 +676,22 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(get("/api/eperson/epersons/search/byMetadata")
-                                             .param("query", String.valueOf(ePerson.getID())))
+            .param("query", String.valueOf(ePerson.getID())))
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(contentType))
                             .andExpect(jsonPath("$._embedded.epersons", Matchers.contains(
-                                    EPersonMatcher.matchEPersonEntry(ePerson)
-                            )))
+                                EPersonMatcher.matchEPersonEntry(ePerson)
+                                                                                         )))
                             .andExpect(jsonPath("$.page.totalElements", is(1)));
 
         // it must be case insensitive
         getClient(authToken).perform(get("/api/eperson/epersons/search/byMetadata")
-                                             .param("query", String.valueOf(ePerson.getID()).toLowerCase()))
+            .param("query", String.valueOf(ePerson.getID()).toLowerCase()))
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(contentType))
                             .andExpect(jsonPath("$._embedded.epersons", Matchers.contains(
-                                    EPersonMatcher.matchEPersonEntry(ePerson)
-                            )))
+                                EPersonMatcher.matchEPersonEntry(ePerson)
+                                                                                         )))
                             .andExpect(jsonPath("$.page.totalElements", is(1)));
     }
 
@@ -699,15 +699,15 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
     @Test
     public void findByMetadataUnauthorized() throws Exception {
         getClient().perform(get("/api/eperson/epersons/search/byMetadata")
-                                             .param("query", "Doe, John"))
-                            .andExpect(status().isUnauthorized());
+            .param("query", "Doe, John"))
+                   .andExpect(status().isUnauthorized());
     }
 
     @Test
     public void findByMetadataForbidden() throws Exception {
         String authToken = getAuthToken(eperson.getEmail(), password);
         getClient(authToken).perform(get("/api/eperson/epersons/search/byMetadata")
-                                             .param("query", "Doe, John"))
+            .param("query", "Doe, John"))
                             .andExpect(status().isForbidden());
     }
 
@@ -715,17 +715,17 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
     public void findByMetadataUndefined() throws Exception {
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(get("/api/eperson/epersons/search/byMetadata")
-                .param("query", "Doe, John"))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(contentType))
-        .andExpect(jsonPath("$.page.totalElements", is(0)));
+            .param("query", "Doe, John"))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(contentType))
+                            .andExpect(jsonPath("$.page.totalElements", is(0)));
     }
 
     @Test
     public void findByMetadataMissingParameter() throws Exception {
         String authToken = getAuthToken(admin.getEmail(), password);
         getClient(authToken).perform(get("/api/eperson/epersons/search/byMetadata"))
-                .andExpect(status().isBadRequest());
+                            .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -742,11 +742,11 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // Delete
         getClient(token).perform(delete("/api/eperson/epersons/" + ePerson.getID()))
-                .andExpect(status().is(204));
+                        .andExpect(status().is(204));
 
         // Verify 404 after delete
         getClient().perform(get("/api/eperson/epersons/" + ePerson.getID()))
-                .andExpect(status().isNotFound());
+                   .andExpect(status().isNotFound());
     }
 
     @Test
@@ -764,14 +764,14 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // Delete using an unauthorized user
         getClient(token).perform(delete("/api/eperson/epersons/" + ePerson.getID()))
-                .andExpect(status().isForbidden());
+                        .andExpect(status().isForbidden());
 
         // login as admin
         String adminToken = getAuthToken(admin.getEmail(), password);
 
         // Verify the eperson is still here
         getClient(adminToken).perform(get("/api/eperson/epersons/" + ePerson.getID()))
-                .andExpect(status().isOk());
+                             .andExpect(status().isOk());
     }
 
     @Test
@@ -786,14 +786,14 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // Delete as anonymous user
         getClient().perform(delete("/api/eperson/epersons/" + ePerson.getID()))
-                .andExpect(status().isUnauthorized());
+                   .andExpect(status().isUnauthorized());
 
         // login as admin
         String adminToken = getAuthToken(admin.getEmail(), password);
 
         // Verify the eperson is still here
         getClient(adminToken).perform(get("/api/eperson/epersons/" + ePerson.getID()))
-                .andExpect(status().isOk());
+                             .andExpect(status().isOk());
     }
 
     @Test
@@ -802,9 +802,9 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.turnOffAuthorisationSystem();
 
         EPerson ePerson = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("Sample", "Submitter")
-                .withEmail("submitter@example.com")
-                .build();
+                                        .withNameInMetadata("Sample", "Submitter")
+                                        .withEmail("submitter@example.com")
+                                        .build();
 
         // force the use of the new user for subsequent operation
         context.setCurrentUser(ePerson);
@@ -828,11 +828,11 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // 422 error when trying to DELETE the eperson=submitter
         getClient(token).perform(delete("/api/eperson/epersons/" + ePerson.getID()))
-                   .andExpect(status().is(422));
+                        .andExpect(status().is(422));
 
         // Verify the eperson is still here
         getClient(token).perform(get("/api/eperson/epersons/" + ePerson.getID()))
-                .andExpect(status().isOk());
+                        .andExpect(status().isOk());
     }
 
     @Test
@@ -856,9 +856,9 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // should be forbidden.
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
-                   .andExpect(status().isForbidden());
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+                        .andExpect(status().isForbidden());
 
         token = getAuthToken(admin.getEmail(), password);
 
@@ -886,9 +886,9 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         String patchBody = getPatchContent(ops);
         // should be unauthorized.
         getClient().perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
-                        .andExpect(status().isUnauthorized());
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+                   .andExpect(status().isUnauthorized());
 
         String token = getAuthToken(admin.getEmail(), password);
 
@@ -920,8 +920,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // update net id
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.netid", Matchers.is("newNetId")))
                         .andExpect(jsonPath("$.email", Matchers.is("johndoe@example.com")))
@@ -997,8 +997,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // update of netId should fail.
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isBadRequest());
 
         getClient(token).perform(get("/api/eperson/epersons/" + ePerson.getID()))
@@ -1032,8 +1032,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // initialize to true
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.netid", Matchers.is(newId)));
 
@@ -1045,8 +1045,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // should return bad request
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isBadRequest());
 
         // value should be unchanged.
@@ -1080,8 +1080,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // updates canLogIn to true
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.canLogIn", Matchers.is(true)))
                         .andExpect(jsonPath("$.email", Matchers.is("johndoe@example.com")))
@@ -1111,8 +1111,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // initialize to true
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.canLogIn", Matchers.is(true)));;
 
@@ -1124,8 +1124,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // should return bad request
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isBadRequest());
 
         // value should still be true.
@@ -1159,8 +1159,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // updates requireCertificate to false
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.requireCertificate", Matchers.is(false)))
                         .andExpect(jsonPath("$.email", Matchers.is("johndoe@example.com")))
@@ -1189,8 +1189,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // initialize to true
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.requireCertificate", Matchers.is(true)));;
 
@@ -1201,8 +1201,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // should return bad request
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isBadRequest());
 
         // value should still be true.
@@ -1239,8 +1239,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // updates password
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isOk());
 
         // login with new password
@@ -1256,16 +1256,16 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.turnOffAuthorisationSystem();
 
         EPerson ePerson1 = EPersonBuilder.createEPerson(context)
-                                        .withNameInMetadata("John", "Doe")
-                                        .withEmail("Johndoe@example.com")
-                                        .withPassword(password)
-                                        .build();
+                                         .withNameInMetadata("John", "Doe")
+                                         .withEmail("Johndoe@example.com")
+                                         .withPassword(password)
+                                         .build();
 
         EPerson ePerson2 = EPersonBuilder.createEPerson(context)
-                                          .withNameInMetadata("Jane", "Doe")
-                                          .withEmail("Janedoe@example.com")
-                                          .withPassword(password)
-                                          .build();
+                                         .withNameInMetadata("Jane", "Doe")
+                                         .withEmail("Janedoe@example.com")
+                                         .withPassword(password)
+                                         .build();
 
         context.restoreAuthSystemState();
 
@@ -1281,8 +1281,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // should not be able to update the password of eperson two
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson2.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isForbidden());
 
         // login with old password
@@ -1315,8 +1315,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // updates password
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isOk());
 
         // login with new password
@@ -1332,9 +1332,9 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.turnOffAuthorisationSystem();
 
         EPerson ePerson = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("John", "Doe")
-                .withEmail("Johndoe@example.com")
-                .build();
+                                        .withNameInMetadata("John", "Doe")
+                                        .withEmail("Johndoe@example.com")
+                                        .build();
 
         context.restoreAuthSystemState();
 
@@ -1349,9 +1349,9 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // replace of password should fail
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
-                .andExpect(status().isBadRequest());
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+                        .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -1375,8 +1375,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // should return
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isForbidden());
 
     }
@@ -1402,8 +1402,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // should return
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isForbidden());
 
     }
@@ -1432,8 +1432,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // initialize passwd
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isOk());
 
 
@@ -1444,8 +1444,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // should return bad request
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isBadRequest());
 
         // login with original password
@@ -1479,8 +1479,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // updates email
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(jsonPath("$.email", Matchers.is(newEmail)))
                         .andExpect(status().isOk());
 
@@ -1514,8 +1514,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // returns 403
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isForbidden());
 
     }
@@ -1542,8 +1542,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // should return bad request
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isBadRequest());
 
         // login with original password
@@ -1579,8 +1579,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         String patchBody = getPatchContent(ops);
 
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.canLogIn", Matchers.is(true)))
                         .andExpect(jsonPath("$.netid", Matchers.is("multitestId")))
@@ -1610,8 +1610,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // Initialized canLogIn value is true.
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.canLogIn", Matchers.is(true)));
 
@@ -1629,8 +1629,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // The 3rd operation should result in bad request
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                .content(patchBody)
-                .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isBadRequest());
 
         // The value of canLogIn should equal the previously initialized value.
@@ -1719,8 +1719,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // replace operation on eperson.firstname by owning user
         getClient(token).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                                     .content(patchBody)
-                                     .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.metadata", Matchers.allOf(
                             MetadataMatcher.matchMetadata("eperson.firstname", newName))));
@@ -1744,10 +1744,10 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
                                         .build();
 
         EPerson ePerson2 = EPersonBuilder.createEPerson(context)
-                                        .withNameInMetadata("Jane", "Smith")
-                                        .withEmail("Janesmith@example.com")
-                                        .withPassword(password)
-                                        .build();
+                                         .withNameInMetadata("Jane", "Smith")
+                                         .withEmail("Janesmith@example.com")
+                                         .withPassword(password)
+                                         .build();
 
         String newName = "JohnReplace";
 
@@ -1763,9 +1763,9 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         // attempts to replace eperson.firstname, not allowed, only allowed by admin or owning user
         getClient(token2).perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                                     .content(patchBody)
-                                     .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
-                        .andExpect(status().isForbidden());
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+                         .andExpect(status().isForbidden());
 
         // No replacement of the eperson.firstname
         getClient(token).perform(get("/api/eperson/epersons/" + ePerson.getID()))
@@ -1779,10 +1779,10 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.turnOffAuthorisationSystem();
 
         EPerson ePerson1 = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("Mik", "Reck")
-                .withEmail("MikReck@email.com")
-                .withPassword("qwerty01")
-                .build();
+                                         .withNameInMetadata("Mik", "Reck")
+                                         .withEmail("MikReck@email.com")
+                                         .withPassword("qwerty01")
+                                         .build();
 
         context.restoreAuthSystemState();
 
@@ -1790,13 +1790,13 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         // by contract the groups embedded in the eperson only contains direct explicit membership,
         // so the anonymous group is not listed
         getClient(tokenEperson1).perform(get("/api/eperson/epersons/" + ePerson1.getID())
-                .param("projection", "full"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$", Matchers.allOf(
-                        hasJsonPath("$._embedded.groups._embedded.groups.length()", is(0)),
-                        hasJsonPath("$._embedded.groups.page.totalElements", is(0))
-                )));
+            .param("projection", "full"))
+                                .andExpect(status().isOk())
+                                .andExpect(content().contentType(contentType))
+                                .andExpect(jsonPath("$", Matchers.allOf(
+                                    hasJsonPath("$._embedded.groups._embedded.groups.length()", is(0)),
+                                    hasJsonPath("$._embedded.groups.page.totalElements", is(0))
+                                                                       )));
     }
 
     /**
@@ -1814,14 +1814,14 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
                                         .build();
 
         Group parentGroup1 = GroupBuilder.createGroup(context)
-                                        .withName("Test Parent Group 1")
-                                        .build();
+                                         .withName("Test Parent Group 1")
+                                         .build();
 
         Group childGroup1 = GroupBuilder.createGroup(context)
-                                       .withName("Test Child Group 1")
-                                       .withParent(parentGroup1)
-                                       .addMember(ePerson)
-                                       .build();
+                                        .withName("Test Child Group 1")
+                                        .withParent(parentGroup1)
+                                        .addMember(ePerson)
+                                        .build();
 
         Group parentGroup2 = GroupBuilder.createGroup(context)
                                          .withName("Test Parent Group 2")
@@ -1840,13 +1840,13 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(contentType))
                             .andExpect(jsonPath("$._embedded.groups", containsInAnyOrder(
-                                    GroupMatcher.matchGroupWithName(childGroup1.getName()),
-                                    GroupMatcher.matchGroupWithName(childGroup2.getName()))))
+                                GroupMatcher.matchGroupWithName(childGroup1.getName()),
+                                GroupMatcher.matchGroupWithName(childGroup2.getName()))))
                             .andExpect(jsonPath("$._embedded.groups", Matchers.not(
-                                    containsInAnyOrder(
-                                            GroupMatcher.matchGroupWithName(parentGroup1.getName()),
-                                            GroupMatcher.matchGroupWithName(parentGroup2.getName()))))
-                            );
+                                containsInAnyOrder(
+                                    GroupMatcher.matchGroupWithName(parentGroup1.getName()),
+                                    GroupMatcher.matchGroupWithName(parentGroup2.getName()))))
+                                      );
 
     }
 
@@ -1855,20 +1855,20 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         context.turnOffAuthorisationSystem();
 
         EPerson adminChild1 = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("Oliver", "Rossi")
-                .withEmail("adminChild1@example.com")
-                .withPassword(password)
-                .build();
+                                            .withNameInMetadata("Oliver", "Rossi")
+                                            .withEmail("adminChild1@example.com")
+                                            .withPassword(password)
+                                            .build();
         EPerson adminCol1 = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("James", "Rossi")
-                .withEmail("adminCol1@example.com")
-                .withPassword(password)
-                .build();
+                                          .withNameInMetadata("James", "Rossi")
+                                          .withEmail("adminCol1@example.com")
+                                          .withPassword(password)
+                                          .build();
         EPerson colSubmitter = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("Carl", "Rossi")
-                .withEmail("colSubmitter@example.com")
-                .withPassword(password)
-                .build();
+                                             .withNameInMetadata("Carl", "Rossi")
+                                             .withEmail("colSubmitter@example.com")
+                                             .withPassword(password)
+                                             .build();
 
         parentCommunity = CommunityBuilder.createCommunity(context)
                                           .withName("Parent Community")
@@ -1892,30 +1892,30 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         String tokencolSubmitter = getAuthToken(colSubmitter.getEmail(), password);
 
         getClient(tokenAdminComm).perform(get("/api/eperson/epersons/search/byMetadata")
-                 .param("query", "Rossi"))
-                 .andExpect(status().isOk())
-                 .andExpect(content().contentType(contentType))
-                 .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
-                            EPersonMatcher.matchEPersonEntry(adminChild1),
-                            EPersonMatcher.matchEPersonEntry(adminCol1),
-                            EPersonMatcher.matchEPersonEntry(colSubmitter)
-                            )))
-                 .andExpect(jsonPath("$.page.totalElements", is(3)));
+            .param("query", "Rossi"))
+                                 .andExpect(status().isOk())
+                                 .andExpect(content().contentType(contentType))
+                                 .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
+                                     EPersonMatcher.matchEPersonEntry(adminChild1),
+                                     EPersonMatcher.matchEPersonEntry(adminCol1),
+                                     EPersonMatcher.matchEPersonEntry(colSubmitter)
+                                                                                                        )))
+                                 .andExpect(jsonPath("$.page.totalElements", is(3)));
 
         getClient(tokenAdminCol).perform(get("/api/eperson/epersons/search/byMetadata")
-                 .param("query", "Rossi"))
-                 .andExpect(status().isOk())
-                 .andExpect(content().contentType(contentType))
-                 .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
-                            EPersonMatcher.matchEPersonEntry(adminChild1),
-                            EPersonMatcher.matchEPersonEntry(adminCol1),
-                            EPersonMatcher.matchEPersonEntry(colSubmitter)
-                            )))
-                 .andExpect(jsonPath("$.page.totalElements", is(3)));
+            .param("query", "Rossi"))
+                                .andExpect(status().isOk())
+                                .andExpect(content().contentType(contentType))
+                                .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
+                                    EPersonMatcher.matchEPersonEntry(adminChild1),
+                                    EPersonMatcher.matchEPersonEntry(adminCol1),
+                                    EPersonMatcher.matchEPersonEntry(colSubmitter)
+                                                                                                       )))
+                                .andExpect(jsonPath("$.page.totalElements", is(3)));
 
         getClient(tokencolSubmitter).perform(get("/api/eperson/epersons/search/byMetadata")
-                .param("query", "Rossi"))
-        .andExpect(status().isForbidden());
+            .param("query", "Rossi"))
+                                    .andExpect(status().isForbidden());
     }
 
     @Test
@@ -1937,20 +1937,20 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         confPropsCommunityAdmins.add("core.authorization.community-admin.collection.admin-group");
 
         EPerson adminChild1 = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("Oliver", "Rossi")
-                .withEmail("adminChild1@example.com")
-                .withPassword(password)
-                .build();
+                                            .withNameInMetadata("Oliver", "Rossi")
+                                            .withEmail("adminChild1@example.com")
+                                            .withPassword(password)
+                                            .build();
         EPerson adminCol = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("James", "Rossi")
-                .withEmail("adminCol1@example.com")
-                .withPassword(password)
-                .build();
+                                         .withNameInMetadata("James", "Rossi")
+                                         .withEmail("adminCol1@example.com")
+                                         .withPassword(password)
+                                         .build();
         EPerson col1Submitter = EPersonBuilder.createEPerson(context)
-                .withNameInMetadata("Carl", "Rossi")
-                .withEmail("col1Submitter@example.com")
-                .withPassword(password)
-                .build();
+                                              .withNameInMetadata("Carl", "Rossi")
+                                              .withEmail("col1Submitter@example.com")
+                                              .withPassword(password)
+                                              .build();
 
         parentCommunity = CommunityBuilder.createCommunity(context)
                                           .withName("Parent Community")
@@ -1974,41 +1974,41 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         for (String prop : confPropsCollectionAdmins) {
             getClient(tokenAdminCol).perform(get("/api/eperson/epersons/search/byMetadata")
-                    .param("query", "Rossi"))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType(contentType))
-                    .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
-                               EPersonMatcher.matchEPersonEntry(adminChild1),
-                               EPersonMatcher.matchEPersonEntry(adminCol),
-                               EPersonMatcher.matchEPersonEntry(col1Submitter)
-                               )))
-                    .andExpect(jsonPath("$.page.totalElements", is(3)));
+                .param("query", "Rossi"))
+                                    .andExpect(status().isOk())
+                                    .andExpect(content().contentType(contentType))
+                                    .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
+                                        EPersonMatcher.matchEPersonEntry(adminChild1),
+                                        EPersonMatcher.matchEPersonEntry(adminCol),
+                                        EPersonMatcher.matchEPersonEntry(col1Submitter)
+                                                                                                           )))
+                                    .andExpect(jsonPath("$.page.totalElements", is(3)));
 
             configurationService.setProperty(prop, false);
         }
 
         getClient(tokenAdminCol).perform(get("/api/eperson/epersons/search/byMetadata")
-                .param("query", "Rossi"))
-                .andExpect(status().isForbidden());
+            .param("query", "Rossi"))
+                                .andExpect(status().isForbidden());
 
         for (String prop : confPropsCommunityAdmins) {
             getClient(tokenAdminComm).perform(get("/api/eperson/epersons/search/byMetadata")
-                    .param("query", "Rossi"))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType(contentType))
-                    .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
-                               EPersonMatcher.matchEPersonEntry(adminChild1),
-                               EPersonMatcher.matchEPersonEntry(adminCol),
-                               EPersonMatcher.matchEPersonEntry(col1Submitter)
-                               )))
-                    .andExpect(jsonPath("$.page.totalElements", is(3)));
+                .param("query", "Rossi"))
+                                     .andExpect(status().isOk())
+                                     .andExpect(content().contentType(contentType))
+                                     .andExpect(jsonPath("$._embedded.epersons", Matchers.containsInAnyOrder(
+                                         EPersonMatcher.matchEPersonEntry(adminChild1),
+                                         EPersonMatcher.matchEPersonEntry(adminCol),
+                                         EPersonMatcher.matchEPersonEntry(col1Submitter)
+                                                                                                            )))
+                                     .andExpect(jsonPath("$.page.totalElements", is(3)));
 
             configurationService.setProperty(prop, false);
         }
 
         getClient(tokenAdminComm).perform(get("/api/eperson/epersons/search/byMetadata")
-                .param("query", "Rossi"))
-                .andExpect(status().isForbidden());
+            .param("query", "Rossi"))
+                                 .andExpect(status().isForbidden());
     }
 
     @Test
@@ -2034,10 +2034,10 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         PasswordHash oldPassword = ePersonService.getPasswordHash(ePerson);
         // updates password
         getClient().perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                                     .content(patchBody)
-                                     .contentType(MediaType.APPLICATION_JSON_PATCH_JSON)
-                                     .param("token", tokenForEPerson))
-                        .andExpect(status().isOk());
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON)
+            .param("token", tokenForEPerson))
+                   .andExpect(status().isOk());
 
         PasswordHash newPasswordHash = ePersonService.getPasswordHash(ePerson);
         assertNotEquals(oldPassword, newPasswordHash);
@@ -2070,10 +2070,10 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         PasswordHash oldPassword = ePersonService.getPasswordHash(ePerson);
         // updates password
         getClient().perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                                     .content(patchBody)
-                                     .contentType(MediaType.APPLICATION_JSON_PATCH_JSON)
-                                     .param("token", "RandomToken"))
-                        .andExpect(status().isUnauthorized());
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON)
+            .param("token", "RandomToken"))
+                   .andExpect(status().isUnauthorized());
 
         PasswordHash newPasswordHash = ePersonService.getPasswordHash(ePerson);
         assertEquals(oldPassword.getHashString(),newPasswordHash.getHashString());
@@ -2097,10 +2097,10 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
 
 
         EPerson ePersonTwo = EPersonBuilder.createEPerson(context)
-                                        .withNameInMetadata("Smith", "Donald")
-                                        .withEmail("donaldSmith@fake-email.com")
-                                        .withPassword(password)
-                                        .build();
+                                           .withNameInMetadata("Smith", "Donald")
+                                           .withEmail("donaldSmith@fake-email.com")
+                                           .withPassword(password)
+                                           .build();
 
         String newPassword = "newpassword";
 
@@ -2118,10 +2118,10 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         PasswordHash oldPassword = ePersonService.getPasswordHash(ePerson);
         // updates password
         getClient().perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                                     .content(patchBody)
-                                     .contentType(MediaType.APPLICATION_JSON_PATCH_JSON)
-                                     .param("token", tokenForEPersonTwo))
-                        .andExpect(status().isUnauthorized());
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON)
+            .param("token", tokenForEPersonTwo))
+                   .andExpect(status().isUnauthorized());
 
         PasswordHash newPasswordHash = ePersonService.getPasswordHash(ePerson);
         assertEquals(oldPassword.getHashString(),newPasswordHash.getHashString());
@@ -2157,10 +2157,10 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         PasswordHash oldPassword = ePersonService.getPasswordHash(ePerson);
         // updates password
         getClient().perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                                     .content(patchBody)
-                                     .contentType(MediaType.APPLICATION_JSON_PATCH_JSON)
-                                     .param("token", tokenForEPerson))
-                        .andExpect(status().isUnauthorized());
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON)
+            .param("token", tokenForEPerson))
+                   .andExpect(status().isUnauthorized());
 
         PasswordHash newPasswordHash = ePersonService.getPasswordHash(ePerson);
         assertEquals(oldPassword.getHashString(),newPasswordHash.getHashString());
@@ -2183,8 +2183,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         RegistrationRest registrationRest = new RegistrationRest();
         registrationRest.setEmail(newRegisterEmail);
         getClient().perform(post("/api/eperson/registrations")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(mapper.writeValueAsBytes(registrationRest)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(registrationRest)))
                    .andExpect(status().isCreated());
 
         EPerson ePerson = EPersonBuilder.createEPerson(context)
@@ -2206,10 +2206,10 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         PasswordHash oldPassword = ePersonService.getPasswordHash(ePerson);
         // updates password
         getClient().perform(patch("/api/eperson/epersons/" + ePerson.getID())
-                                     .content(patchBody)
-                                     .contentType(MediaType.APPLICATION_JSON_PATCH_JSON)
-                                     .param("token", newRegisterToken))
-                        .andExpect(status().isUnauthorized());
+            .content(patchBody)
+            .contentType(MediaType.APPLICATION_JSON_PATCH_JSON)
+            .param("token", newRegisterToken))
+                   .andExpect(status().isUnauthorized());
 
         PasswordHash newPasswordHash = ePersonService.getPasswordHash(ePerson);
         assertTrue(StringUtils.equalsIgnoreCase(oldPassword.getHashString(),newPasswordHash.getHashString()));
@@ -2231,37 +2231,37 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         RegistrationRest registrationRest = new RegistrationRest();
         registrationRest.setEmail(newRegisterEmail);
         getClient().perform(post("/api/eperson/registrations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsBytes(registrationRest)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(registrationRest)))
                    .andExpect(status().isCreated());
         String newRegisterToken = registrationDataService.findByEmail(context, newRegisterEmail).getToken();
 
         // We need to create this json manually to support actually setting the password to a value.
         // When using the mapper to write an EPersonRest object to JSON to pass it along, the password gets lost
         String json = "{\"metadata\":{\"eperson.firstname\":[{\"value\":\"John\"}]," +
-            "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"password\":\"somePassword\"," +
-            "\"type\":\"eperson\"}";
+                      "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"password\":\"somePassword\"," +
+                      "\"type\":\"eperson\"}";
 
         AtomicReference<UUID> idRef = new AtomicReference<UUID>();
 
         try {
             getClient().perform(post("/api/eperson/epersons")
-                                    .param("token", newRegisterToken)
-                                    .content(json)
-                                    .contentType(MediaType.APPLICATION_JSON))
-                                      .andExpect(status().isCreated())
-                                      .andExpect(jsonPath("$", Matchers.allOf(
-                                hasJsonPath("$.uuid", not(empty())),
-                                // is it what you expect? EPerson.getName() returns the email...
-                                //hasJsonPath("$.name", is("Doe John")),
-                                hasJsonPath("$.type", is("eperson")),
-                                hasJsonPath("$._links.self.href", not(empty())),
-                                hasJsonPath("$.metadata", Matchers.allOf(
-                                    matchMetadata("eperson.firstname", "John"),
-                                    matchMetadata("eperson.lastname", "Doe")
-                                )))))
-                                .andDo(result -> idRef
-                                    .set(UUID.fromString(read(result.getResponse().getContentAsString(), "$.id"))));
+                .param("token", newRegisterToken)
+                .content(json)
+                .contentType(MediaType.APPLICATION_JSON))
+                       .andExpect(status().isCreated())
+                       .andExpect(jsonPath("$", Matchers.allOf(
+                           hasJsonPath("$.uuid", not(empty())),
+                           // is it what you expect? EPerson.getName() returns the email...
+                           //hasJsonPath("$.name", is("Doe John")),
+                           hasJsonPath("$.type", is("eperson")),
+                           hasJsonPath("$._links.self.href", not(empty())),
+                           hasJsonPath("$.metadata", Matchers.allOf(
+                               matchMetadata("eperson.firstname", "John"),
+                               matchMetadata("eperson.lastname", "Doe")
+                                                                   )))))
+                       .andDo(result -> idRef
+                           .set(UUID.fromString(read(result.getResponse().getContentAsString(), "$.id"))));
 
 
 
@@ -2288,37 +2288,37 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         RegistrationRest registrationRest = new RegistrationRest();
         registrationRest.setEmail(newRegisterEmail);
         getClient().perform(post("/api/eperson/registrations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsBytes(registrationRest)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(registrationRest)))
                    .andExpect(status().isCreated());
         String newRegisterToken = registrationDataService.findByEmail(context, newRegisterEmail).getToken();
 
         // We need to create this json manually to support actually setting the password to a value.
         // When using the mapper to write an EPersonRest object to JSON to pass it along, the password gets lost
         String json = "{\"metadata\":{\"eperson.firstname\":[{\"value\":\"John\"}]," +
-            "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"email\":\"" + newRegisterEmail +
-            "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
+                      "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"email\":\"" + newRegisterEmail +
+                      "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
 
         AtomicReference<UUID> idRef = new AtomicReference<UUID>();
 
         try {
             getClient().perform(post("/api/eperson/epersons")
-                                                               .param("token", newRegisterToken)
-                                                               .content(json)
-                                                               .contentType(MediaType.APPLICATION_JSON))
-                                                  .andExpect(status().isCreated())
-                                                  .andExpect(jsonPath("$", Matchers.allOf(
-                                                      hasJsonPath("$.uuid", not(empty())),
-                                                      // is it what you expect? EPerson.getName() returns the email...
-                                                      //hasJsonPath("$.name", is("Doe John")),
-                                                      hasJsonPath("$.email", is(newRegisterEmail)),
-                                                      hasJsonPath("$.type", is("eperson")),
-                                                      hasJsonPath("$._links.self.href", not(empty())),
-                                                      hasJsonPath("$.metadata", Matchers.allOf(
-                                                          matchMetadata("eperson.firstname", "John"),
-                                                          matchMetadata("eperson.lastname", "Doe")
-                                                      ))))).andDo(result -> idRef
-                            .set(UUID.fromString(read(result.getResponse().getContentAsString(), "$.id"))));
+                .param("token", newRegisterToken)
+                .content(json)
+                .contentType(MediaType.APPLICATION_JSON))
+                       .andExpect(status().isCreated())
+                       .andExpect(jsonPath("$", Matchers.allOf(
+                           hasJsonPath("$.uuid", not(empty())),
+                           // is it what you expect? EPerson.getName() returns the email...
+                           //hasJsonPath("$.name", is("Doe John")),
+                           hasJsonPath("$.email", is(newRegisterEmail)),
+                           hasJsonPath("$.type", is("eperson")),
+                           hasJsonPath("$._links.self.href", not(empty())),
+                           hasJsonPath("$.metadata", Matchers.allOf(
+                               matchMetadata("eperson.firstname", "John"),
+                               matchMetadata("eperson.lastname", "Doe")
+                                                                   ))))).andDo(result -> idRef
+                .set(UUID.fromString(read(result.getResponse().getContentAsString(), "$.id"))));
 
             String epersonUuid = String.valueOf(idRef.get());
             EPerson createdEPerson = ePersonService.find(context, UUID.fromString(epersonUuid));
@@ -2343,37 +2343,37 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         RegistrationRest registrationRest = new RegistrationRest();
         registrationRest.setEmail(newRegisterEmail);
         getClient().perform(post("/api/eperson/registrations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsBytes(registrationRest)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(registrationRest)))
                    .andExpect(status().isCreated());
         String newRegisterToken = registrationDataService.findByEmail(context, newRegisterEmail).getToken();
 
         // We need to create this json manually to support actually setting the password to a value.
         // When using the mapper to write an EPersonRest object to JSON to pass it along, the password gets lost
         String json = "{\"metadata\":{\"eperson.firstname\":[{\"value\":\"John\"}]," +
-            "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"selfRegistered\":true,\"email\":\"" + newRegisterEmail +
-            "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
+                      "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"selfRegistered\":true,\"email\":\"" + newRegisterEmail +
+                      "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
 
         AtomicReference<UUID> idRef = new AtomicReference<UUID>();
 
         try {
             getClient().perform(post("/api/eperson/epersons")
-                                                               .param("token", newRegisterToken)
-                                                               .content(json)
-                                                               .contentType(MediaType.APPLICATION_JSON))
-                                                  .andExpect(status().isCreated())
-                                                  .andExpect(jsonPath("$", Matchers.allOf(
-                                                      hasJsonPath("$.uuid", not(empty())),
-                                                      // is it what you expect? EPerson.getName() returns the email...
-                                                      //hasJsonPath("$.name", is("Doe John")),
-                                                      hasJsonPath("$.email", is(newRegisterEmail)),
-                                                      hasJsonPath("$.type", is("eperson")),
-                                                      hasJsonPath("$._links.self.href", not(empty())),
-                                                      hasJsonPath("$.metadata", Matchers.allOf(
-                                                          matchMetadata("eperson.firstname", "John"),
-                                                          matchMetadata("eperson.lastname", "Doe")
-                                                      ))))).andDo(result -> idRef
-                    .set(UUID.fromString(read(result.getResponse().getContentAsString(), "$.id"))));
+                .param("token", newRegisterToken)
+                .content(json)
+                .contentType(MediaType.APPLICATION_JSON))
+                       .andExpect(status().isCreated())
+                       .andExpect(jsonPath("$", Matchers.allOf(
+                           hasJsonPath("$.uuid", not(empty())),
+                           // is it what you expect? EPerson.getName() returns the email...
+                           //hasJsonPath("$.name", is("Doe John")),
+                           hasJsonPath("$.email", is(newRegisterEmail)),
+                           hasJsonPath("$.type", is("eperson")),
+                           hasJsonPath("$._links.self.href", not(empty())),
+                           hasJsonPath("$.metadata", Matchers.allOf(
+                               matchMetadata("eperson.firstname", "John"),
+                               matchMetadata("eperson.lastname", "Doe")
+                                                                   ))))).andDo(result -> idRef
+                .set(UUID.fromString(read(result.getResponse().getContentAsString(), "$.id"))));
 
 
             String epersonUuid = String.valueOf(idRef.get());
@@ -2402,8 +2402,8 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         RegistrationRest registrationRest = new RegistrationRest();
         registrationRest.setEmail(newRegisterEmail);
         getClient().perform(post("/api/eperson/registrations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsBytes(registrationRest)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(registrationRest)))
                    .andExpect(status().isCreated());
         String newRegisterToken = registrationDataService.findByEmail(context, newRegisterEmail).getToken();
 
@@ -2411,22 +2411,22 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         RegistrationRest registrationRestTwo = new RegistrationRest();
         registrationRestTwo.setEmail(newRegisterEmailTwo);
         getClient().perform(post("/api/eperson/registrations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsBytes(registrationRestTwo)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(registrationRestTwo)))
                    .andExpect(status().isCreated());
         String newRegisterTokenTwo = registrationDataService.findByEmail(context, newRegisterEmailTwo).getToken();
 
         // We need to create this json manually to support actually setting the password to a value.
         // When using the mapper to write an EPersonRest object to JSON to pass it along, the password gets lost
         String json = "{\"metadata\":{\"eperson.firstname\":[{\"value\":\"John\"}]," +
-            "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"email\":\"" + newRegisterEmailTwo +
-            "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
+                      "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"email\":\"" + newRegisterEmailTwo +
+                      "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
 
         getClient().perform(post("/api/eperson/epersons")
-                                                           .param("token", newRegisterToken)
-                                                           .content(json)
-                                                           .contentType(MediaType.APPLICATION_JSON))
-                                              .andExpect(status().isBadRequest());
+            .param("token", newRegisterToken)
+            .content(json)
+            .contentType(MediaType.APPLICATION_JSON))
+                   .andExpect(status().isBadRequest());
 
         EPerson createdEPerson = ePersonService.findByEmail(context, newRegisterEmailTwo);
         assertNull(createdEPerson);
@@ -2448,22 +2448,22 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         RegistrationRest registrationRest = new RegistrationRest();
         registrationRest.setEmail(newRegisterEmail);
         getClient().perform(post("/api/eperson/registrations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsBytes(registrationRest)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(registrationRest)))
                    .andExpect(status().isCreated());
         String newRegisterToken = registrationDataService.findByEmail(context, newRegisterEmail).getToken();
 
         // We need to create this json manually to support actually setting the password to a value.
         // When using the mapper to write an EPersonRest object to JSON to pass it along, the password gets lost
         String json = "{\"metadata\":{\"eperson.firstname\":[{\"value\":\"John\"}]," +
-            "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"email\":\"" + newRegisterEmail +
-            "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
+                      "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"email\":\"" + newRegisterEmail +
+                      "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
 
         getClient().perform(post("/api/eperson/epersons")
-                                     .param("token", "randomToken")
-                                     .content(json)
-                                     .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isBadRequest());
+            .param("token", "randomToken")
+            .content(json)
+            .contentType(MediaType.APPLICATION_JSON))
+                   .andExpect(status().isBadRequest());
 
         EPerson createdEPerson = ePersonService.findByEmail(context, newRegisterEmail);
         assertNull(createdEPerson);
@@ -2483,22 +2483,22 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         RegistrationRest registrationRest = new RegistrationRest();
         registrationRest.setEmail(newRegisterEmail);
         getClient().perform(post("/api/eperson/registrations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsBytes(registrationRest)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(registrationRest)))
                    .andExpect(status().isCreated());
         String newRegisterToken = registrationDataService.findByEmail(context, newRegisterEmail).getToken();
 
         // We need to create this json manually to support actually setting the password to a value.
         // When using the mapper to write an EPersonRest object to JSON to pass it along, the password gets lost
         String json = "{\"metadata\":{\"eperson.firstname\":[{\"value\":\"John\"}]," +
-            "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"selfRegistered\":false,\"email\":\"" + newRegisterEmail +
-            "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
+                      "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"selfRegistered\":false,\"email\":\"" + newRegisterEmail +
+                      "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
 
         getClient().perform(post("/api/eperson/epersons")
-                                                           .param("token", newRegisterToken)
-                                                           .content(json)
-                                                           .contentType(MediaType.APPLICATION_JSON))
-                                              .andExpect(status().isBadRequest());
+            .param("token", newRegisterToken)
+            .content(json)
+            .contentType(MediaType.APPLICATION_JSON))
+                   .andExpect(status().isBadRequest());
 
         EPerson createdEPerson = ePersonService.findByEmail(context, newRegisterEmail);
         assertNull(createdEPerson);
@@ -2518,21 +2518,21 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         RegistrationRest registrationRest = new RegistrationRest();
         registrationRest.setEmail(newRegisterEmail);
         getClient().perform(post("/api/eperson/registrations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsBytes(registrationRest)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(registrationRest)))
                    .andExpect(status().isCreated());
         String newRegisterToken = registrationDataService.findByEmail(context, newRegisterEmail).getToken();
 
         // We need to create this json manually to support actually setting the password to a value.
         // When using the mapper to write an EPersonRest object to JSON to pass it along, the password gets lost
         String json = "{\"metadata\":{\"eperson.firstname\":[{\"value\":\"John\"}]},\"selfRegistered\":true," +
-            "\"email\":\"" + newRegisterEmail + "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
+                      "\"email\":\"" + newRegisterEmail + "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
 
         getClient().perform(post("/api/eperson/epersons")
-                                     .param("token", newRegisterToken)
-                                     .content(json)
-                                     .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isBadRequest());
+            .param("token", newRegisterToken)
+            .content(json)
+            .contentType(MediaType.APPLICATION_JSON))
+                   .andExpect(status().isBadRequest());
 
         EPerson createdEPerson = ePersonService.findByEmail(context, newRegisterEmail);
         assertNull(createdEPerson);
@@ -2552,21 +2552,21 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         RegistrationRest registrationRest = new RegistrationRest();
         registrationRest.setEmail(newRegisterEmail);
         getClient().perform(post("/api/eperson/registrations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsBytes(registrationRest)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(registrationRest)))
                    .andExpect(status().isCreated());
         String newRegisterToken = registrationDataService.findByEmail(context, newRegisterEmail).getToken();
 
         // We need to create this json manually to support actually setting the password to a value.
         // When using the mapper to write an EPersonRest object to JSON to pass it along, the password gets lost
         String json = "{\"metadata\":{\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"selfRegistered\":true," +
-            "\"email\":\"" + newRegisterEmail + "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
+                      "\"email\":\"" + newRegisterEmail + "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
 
         getClient().perform(post("/api/eperson/epersons")
-                                     .param("token", newRegisterToken)
-                                     .content(json)
-                                     .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isBadRequest());
+            .param("token", newRegisterToken)
+            .content(json)
+            .contentType(MediaType.APPLICATION_JSON))
+                   .andExpect(status().isBadRequest());
 
         EPerson createdEPerson = ePersonService.findByEmail(context, newRegisterEmail);
         assertNull(createdEPerson);
@@ -2586,22 +2586,22 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         RegistrationRest registrationRest = new RegistrationRest();
         registrationRest.setEmail(newRegisterEmail);
         getClient().perform(post("/api/eperson/registrations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsBytes(registrationRest)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(registrationRest)))
                    .andExpect(status().isCreated());
         String newRegisterToken = registrationDataService.findByEmail(context, newRegisterEmail).getToken();
 
         // We need to create this json manually to support actually setting the password to a value.
         // When using the mapper to write an EPersonRest object to JSON to pass it along, the password gets lost
         String json = "{\"metadata\":{\"eperson.firstname\":[{\"value\":\"John\"}]," +
-            "\"eperson.lastname\":[{\"value\":\"Doe\"}]}," +
-            "\"type\":\"eperson\"}";
+                      "\"eperson.lastname\":[{\"value\":\"Doe\"}]}," +
+                      "\"type\":\"eperson\"}";
 
         getClient().perform(post("/api/eperson/epersons")
-                                     .param("token", newRegisterToken)
-                                     .content(json)
-                                     .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isBadRequest());
+            .param("token", newRegisterToken)
+            .content(json)
+            .contentType(MediaType.APPLICATION_JSON))
+                   .andExpect(status().isBadRequest());
 
         EPerson createdEPerson = ePersonService.findByEmail(context, newRegisterEmail);
         assertNull(createdEPerson);
@@ -2622,22 +2622,22 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         RegistrationRest registrationRest = new RegistrationRest();
         registrationRest.setEmail(eperson.getEmail());
         getClient().perform(post("/api/eperson/registrations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsBytes(registrationRest)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(registrationRest)))
                    .andExpect(status().isCreated());
         String forgotPasswordToken = registrationDataService.findByEmail(context, eperson.getEmail()).getToken();
 
         // We need to create this json manually to support actually setting the password to a value.
         // When using the mapper to write an EPersonRest object to JSON to pass it along, the password gets lost
         String json = "{\"metadata\":{\"eperson.firstname\":[{\"value\":\"John\"}]," +
-            "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"selfRegistered\":true,\"password\":\"somePassword\"," +
-            "\"type\":\"eperson\"}";
+                      "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"selfRegistered\":true,\"password\":\"somePassword\"," +
+                      "\"type\":\"eperson\"}";
 
         getClient().perform(post("/api/eperson/epersons")
-                                     .param("token", forgotPasswordToken)
-                                     .content(json)
-                                     .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isBadRequest());
+            .param("token", forgotPasswordToken)
+            .content(json)
+            .contentType(MediaType.APPLICATION_JSON))
+                   .andExpect(status().isBadRequest());
 
         EPerson createdEPerson = ePersonService.findByEmail(context, newEmail);
         assertNull(createdEPerson);
@@ -2658,37 +2658,37 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         RegistrationRest registrationRest = new RegistrationRest();
         registrationRest.setEmail(newRegisterEmail);
         getClient().perform(post("/api/eperson/registrations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsBytes(registrationRest)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(registrationRest)))
                    .andExpect(status().isCreated());
         String newRegisterToken = registrationDataService.findByEmail(context, newRegisterEmail).getToken();
 
         // We need to create this json manually to support actually setting the password to a value.
         // When using the mapper to write an EPersonRest object to JSON to pass it along, the password gets lost
         String json = "{\"metadata\":{\"eperson.firstname\":[{\"value\":\"John\"}]," +
-            "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"email\":\"" + newRegisterEmail +
-            "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
+                      "\"eperson.lastname\":[{\"value\":\"Doe\"}]},\"email\":\"" + newRegisterEmail +
+                      "\",\"password\":\"somePassword\",\"type\":\"eperson\"}";
 
         AtomicReference<UUID> idRef = new AtomicReference<UUID>();
 
         try {
             getClient().perform(post("/api/eperson/epersons")
-                                                               .param("token", newRegisterToken)
-                                                               .content(json)
-                                                               .contentType(MediaType.APPLICATION_JSON))
-                                                  .andExpect(status().isCreated())
-                                                  .andExpect(jsonPath("$", Matchers.allOf(
-                                                      hasJsonPath("$.uuid", not(empty())),
-                                                      // is it what you expect? EPerson.getName() returns the email...
-                                                      //hasJsonPath("$.name", is("Doe John")),
-                                                      hasJsonPath("$.email", is(newRegisterEmail)),
-                                                      hasJsonPath("$.type", is("eperson")),
-                                                      hasJsonPath("$._links.self.href", not(empty())),
-                                                      hasJsonPath("$.metadata", Matchers.allOf(
-                                                          matchMetadata("eperson.firstname", "John"),
-                                                          matchMetadata("eperson.lastname", "Doe")
-                                                      ))))).andDo(result -> idRef
-                    .set(UUID.fromString(read(result.getResponse().getContentAsString(), "$.id"))));
+                .param("token", newRegisterToken)
+                .content(json)
+                .contentType(MediaType.APPLICATION_JSON))
+                       .andExpect(status().isCreated())
+                       .andExpect(jsonPath("$", Matchers.allOf(
+                           hasJsonPath("$.uuid", not(empty())),
+                           // is it what you expect? EPerson.getName() returns the email...
+                           //hasJsonPath("$.name", is("Doe John")),
+                           hasJsonPath("$.email", is(newRegisterEmail)),
+                           hasJsonPath("$.type", is("eperson")),
+                           hasJsonPath("$._links.self.href", not(empty())),
+                           hasJsonPath("$.metadata", Matchers.allOf(
+                               matchMetadata("eperson.firstname", "John"),
+                               matchMetadata("eperson.lastname", "Doe")
+                                                                   ))))).andDo(result -> idRef
+                .set(UUID.fromString(read(result.getResponse().getContentAsString(), "$.id"))));
 
             String epersonUuid = String.valueOf(idRef.get());
             EPerson createdEPerson = ePersonService.find(context, UUID.fromString(epersonUuid));
@@ -2709,11 +2709,11 @@ public class EPersonRestRepositoryIT extends AbstractControllerIntegrationTest {
         getClient(token).perform(get("/api"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$._links",Matchers.allOf(
-                                hasJsonPath("$.epersons.href",
-                                         is("http://localhost/api/eperson/epersons")),
-                                hasJsonPath("$.eperson-registration.href",
-                                         is("http://localhost/api/eperson/registrations"))
-                        )));
+                            hasJsonPath("$.epersons.href",
+                                is("http://localhost/api/eperson/epersons")),
+                            hasJsonPath("$.eperson-registration.href",
+                                is("http://localhost/api/eperson/registrations"))
+                                                                     )));
     }
 
 }

@@ -164,7 +164,7 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
         }
         if (es.findByEmail(context, registrationData.getEmail()) != null) {
             throw new DSpaceBadRequestException("The token given already contains an email address that resolves" +
-                                                "to an eperson");
+                                                " to an eperson");
         }
         String emailFromJson = epersonRest.getEmail();
         if (StringUtils.isNotBlank(emailFromJson)) {
@@ -199,7 +199,7 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
             List<MetadataValueRest> epersonLastName = metadataRest.getMap().get("eperson.lastname");
             if (epersonFirstName == null || epersonLastName == null ||
                 epersonFirstName.isEmpty() || epersonLastName.isEmpty()) {
-                throw new DSpaceBadRequestException("The eperson.firstname and eperson.lastname values need to be " +
+                throw new UnprocessableEntityException("The eperson.firstname and eperson.lastname values need to be " +
                                                     "filled in");
             }
         }
