@@ -263,13 +263,24 @@ public class RelationshipServiceImpl implements RelationshipService {
 
     @Override
     public List<Relationship> findByItem(Context context, Item item, Integer limit, Integer offset)
-            throws SQLException {
+        throws SQLException {
 
         List<Relationship> list = relationshipDAO.findByItem(context, item, limit, offset);
 
         list.sort((o1, o2) -> {
-            int relationshipType = o1.getRelationshipType().getLeftwardType()
-                                     .compareTo(o2.getRelationshipType().getLeftwardType());
+            String firstToCompare = "";
+            if (o1.getLeftItem().equals(item)) {
+                firstToCompare = o1.getRelationshipType().getLeftwardType();
+            } else {
+                firstToCompare = o1.getRelationshipType().getRightwardType();
+            }
+            String secondToCompare = "";
+            if (o2.getLeftItem().equals(item)) {
+                secondToCompare = o2.getRelationshipType().getLeftwardType();
+            } else {
+                secondToCompare = o2.getRelationshipType().getRightwardType();
+            }
+            int relationshipType = firstToCompare.compareTo(secondToCompare);
             if (relationshipType != 0) {
                 return relationshipType;
             } else {
@@ -282,7 +293,6 @@ public class RelationshipServiceImpl implements RelationshipService {
         });
         return list;
     }
-
     @Override
     public List<Relationship> findAll(Context context) throws SQLException {
         return findAll(context, -1, -1);
