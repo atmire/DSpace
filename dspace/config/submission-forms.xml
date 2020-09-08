@@ -1164,35 +1164,6 @@
                     <!--    <language value-pairs-name="common_iso_languages">true</language> -->
                 </field>
             </row>
-            <row>
-                <field>
-                    <dc-schema>dc</dc-schema>
-                    <dc-element>contributor</dc-element>
-                    <dc-qualifier>author</dc-qualifier>
-                    <repeatable>true</repeatable>
-                    <label>Authors</label>
-                    <input-type>name</input-type>
-                    <hint>Manually add an author: Please include the entire first name, and a middle initial if appropriate. Do not use only
-                        initials, as this makes the author more difficult to identify later.</hint>
-                    <required></required>
-                </field>
-            </row>
-            <row>
-                <field>
-                    <dc-schema>prism</dc-schema>
-                    <dc-element>publicationName</dc-element>
-                    <dc-qualifier></dc-qualifier>
-                    <repeatable>false</repeatable>
-                    <label>Journal name</label>
-                    <input-type>onebox</input-type>
-                    <hint>Enter the journal name of the item.</hint>
-                    <required>You must enter the journal name.</required>
-                    <!--    <language value-pairs-name="common_iso_languages">true</language> -->
-                </field>
-            </row>
-        </form>
-
-        <form name="datapackagepagetwo">
 
             <row>
                 <relation-field>
@@ -1212,14 +1183,6 @@
                     <hint>Select the Publication related to this Data Package.</hint>
                 </relation-field>
             </row>
-            <row>
-                <relation-field>
-                    <relationship-type>isOrgUnitOfDataPackage</relationship-type>
-                    <search-configuration>orgunit</search-configuration>
-                    <label>Organization</label>
-                    <hint>Select the Organizational Unit related to this Data Package.</hint>
-                </relation-field>
-            </row>
 
             <row>
                 <field>
@@ -1230,20 +1193,6 @@
                     <label>Abstract</label>
                     <input-type>textarea</input-type>
                     <hint>Enter the abstract of the item. </hint>
-                    <required></required>
-                </field>
-            </row>
-            <row>
-                <field>
-                    <dc-schema>dc</dc-schema>
-                    <dc-element>identifier</dc-element>
-                    <dc-qualifier></dc-qualifier>
-                    <!-- An input-type of qualdrop_value MUST be marked as repeatable -->
-                    <repeatable>true</repeatable>
-                    <label>Identifiers</label>
-                    <input-type value-pairs-name="common_identifiers">qualdrop_value</input-type>
-                    <hint>If the item has any identification numbers or codes associated with
-                        it, please enter the types and the actual numbers or codes.</hint>
                     <required></required>
                 </field>
             </row>
@@ -1277,16 +1226,66 @@
                     <!--    <language value-pairs-name="common_iso_languages">true</language> -->
                 </field>
             </row>
+            <row>
+                <relation-field>
+                    <relationship-type>isAuthorOfDataFile</relationship-type>
+                    <search-configuration>person</search-configuration>
+                    <repeatable>true</repeatable>
+                    <name-variants>true</name-variants>
+                    <label>Author</label>
+                    <hint>Add an author</hint>
+                    <linked-metadata-field>
+                        <dc-schema>dc</dc-schema>
+                        <dc-element>contributor</dc-element>
+                        <dc-qualifier>author</dc-qualifier>
+                        <input-type>name</input-type>
+                    </linked-metadata-field>
+                    <required>At least one author (plain text or relationship) is required</required>
+                </relation-field>
+            </row>
 
             <row>
                 <relation-field>
                     <relationship-type>isDataPackageOfDataFile</relationship-type>
                     <search-configuration>dataPackage</search-configuration>
+                    <repeatable>true</repeatable>
                     <label>Data Package</label>
                     <hint>Select the Data Package related to this Data File.</hint>
                 </relation-field>
             </row>
+            <row>
+                <relation-field>
+                    <relationship-type>isOrgUnitOfDataFile</relationship-type>
+                    <search-configuration>orgunit</search-configuration>
+                    <label>Organization</label>
+                    <hint>Select the Organizational Unit related to this Data File.</hint>
+                </relation-field>
+            </row>
+            <row>
+                <relation-field>
+                    <relationship-type>isPublicationOfDataFile</relationship-type>
+                    <search-configuration>publication</search-configuration>
+                    <label>Publication</label>
+                    <hint>Select the Publication related to this Data File.</hint>
+                </relation-field>
+            </row>
 
+        </form>
+
+        <form name="datafilepagetwo">
+            <row>
+                <field>
+                    <dc-schema>prism</dc-schema>
+                    <dc-element>publicationName</dc-element>
+                    <dc-qualifier></dc-qualifier>
+                    <repeatable>false</repeatable>
+                    <label>Journal name</label>
+                    <input-type>onebox</input-type>
+                    <hint>Enter the journal name of the item.</hint>
+                    <required>You must enter the journal name.</required>
+                    <!--    <language value-pairs-name="common_iso_languages">true</language> -->
+                </field>
+            </row>
             <row>
                 <field>
                     <dc-schema>dc</dc-schema>
@@ -1302,12 +1301,14 @@
             <row>
                 <field>
                     <dc-schema>dc</dc-schema>
-                    <dc-element>contributor</dc-element>
-                    <dc-qualifier>author</dc-qualifier>
+                    <dc-element>identifier</dc-element>
+                    <dc-qualifier></dc-qualifier>
+                    <!-- An input-type of qualdrop_value MUST be marked as repeatable -->
                     <repeatable>true</repeatable>
-                    <label>Author of data file</label>
-                    <input-type>name</input-type>
-                    <hint>Manually add an author: Please include the entire first name, and a middle initial if appropriate. Do not use only initials, as this makes the author more difficult to identify later.</hint>
+                    <label>Identifiers</label>
+                    <input-type value-pairs-name="common_identifiers">qualdrop_value</input-type>
+                    <hint>If the item has any identification numbers or codes associated with
+                        it, please enter the types and the actual numbers or codes.</hint>
                     <required></required>
                 </field>
             </row>
@@ -1317,9 +1318,9 @@
                     <dc-element>type</dc-element>
                     <dc-qualifier>embargo</dc-qualifier>
                     <repeatable>false</repeatable>
-                    <label>Set a data embargo</label>
+                    <label>Set an optional embargo for making this Data File item available</label>
                     <input-type value-pairs-name="embargo_types">dropdown</input-type>
-                    <hint>If an embargo is set, this data file will not be available until the embargo expires.</hint>
+                    <hint>If an embargo is set, this data file item will not be available until the embargo expires.</hint>
                 </field>
             </row>
             <row>

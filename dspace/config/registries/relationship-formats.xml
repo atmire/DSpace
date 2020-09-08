@@ -177,5 +177,35 @@
         <element>isOrgUnitOfDataPackage</element>
         <scope_note></scope_note>
     </dc-type>
+    <dc-type>
+        <schema>relation</schema>
+        <element>isAuthorOfDataFile</element>
+        <scope_note></scope_note>
+    </dc-type>
+    <dc-type>
+        <schema>relation</schema>
+        <element>isDataFileOfAuthor</element>
+        <scope_note></scope_note>
+    </dc-type>
+    <dc-type>
+        <schema>relation</schema>
+        <element>isDataFileOfOrgUnit</element>
+        <scope_note></scope_note>
+    </dc-type>
+    <dc-type>
+        <schema>relation</schema>
+        <element>isOrgUnitOfDataFile</element>
+        <scope_note></scope_note>
+    </dc-type>
+    <dc-type>
+        <schema>relation</schema>
+        <element>isDataFileOfPublication</element>
+        <scope_note></scope_note>
+    </dc-type>
+    <dc-type>
+        <schema>relation</schema>
+        <element>isPublicationOfDataFile</element>
+        <scope_note></scope_note>
+    </dc-type>
 
 </dspace-dc-types>

@@ -174,4 +174,46 @@
         <copyToLeft>true</copyToLeft>
         <copyToRight>true</copyToRight>
     </type>
+    <type>
+        <leftType>DataFile</leftType>
+        <rightType>Person</rightType>
+        <leftwardType>isAuthorOfDataFile</leftwardType>
+        <rightwardType>isDataFileOfAuthor</rightwardType>
+        <leftCardinality>
+            <min>0</min>
+        </leftCardinality>
+        <rightCardinality>
+            <min>0</min>
+        </rightCardinality>
+        <copyToLeft>true</copyToLeft>
+    </type>
+    <type>
+        <leftType>OrgUnit</leftType>
+        <rightType>DataFile</rightType>
+        <leftwardType>isDataFileOfOrgUnit</leftwardType>
+        <rightwardType>isOrgUnitOfDataFile</rightwardType>
+        <leftCardinality>
+            <min>0</min>
+        </leftCardinality>
+        <rightCardinality>
+            <min>0</min>
+        </rightCardinality>
+        <copyToLeft>true</copyToLeft>
+        <copyToRight>true</copyToRight>
+    </type>
+    <type>
+        <leftType>Publication</leftType>
+        <rightType>DataFile</rightType>
+        <leftwardType>isDataFileOfPublication</leftwardType>
+        <rightwardType>isPublicationOfDataFile</rightwardType>
+        <leftCardinality>
+            <min>0</min>
+        </leftCardinality>
+        <rightCardinality>
+            <min>0</min>
+            <max>1</max>
+        </rightCardinality>
+        <copyToLeft>true</copyToLeft>
+        <copyToRight>true</copyToRight>
+    </type>
 </relationships>

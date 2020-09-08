@@ -108,12 +108,12 @@
 			<processing-class>org.dspace.app.rest.submit.step.DescribeStep</processing-class>
 			<type>submission-form</type>
 		</step>
-		<step id="datapackagepagetwo" mandatory="true">
-			<heading>submit.progressbar.describe.steptwo</heading>
+		<step id="datafilepageone" mandatory="true">
+			<heading>submit.progressbar.describe.stepone</heading>
 			<processing-class>org.dspace.app.rest.submit.step.DescribeStep</processing-class>
 			<type>submission-form</type>
 		</step>
-		<step id="datafilepageone" mandatory="true">
+		<step id="datafilepagetwo" mandatory="true">
 			<heading>submit.progressbar.describe.stepone</heading>
 			<processing-class>org.dspace.app.rest.submit.step.DescribeStep</processing-class>
 			<type>submission-form</type>
@@ -307,13 +307,13 @@
 		<submission-process name="DataPackage">
 			<step id="collection" />
 			<step id="datapackagepageone"/>
-			<step id="datapackagepagetwo"/>
 			<step id="upload" />
 			<step id="license" />
 		</submission-process>
 		<submission-process name="DataFile">
 			<step id="collection" />
 			<step id="datafilepageone"/>
+			<step id="datafilepagetwo"/>
 			<step id="upload" />
 			<step id="license" />
 		</submission-process>

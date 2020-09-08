@@ -21,6 +21,7 @@
                 <entry key="isVolumeOfJournal" value-ref="isVolumeOfJournalMap"/>
                 <entry key="isIssueOfJournalVolume" value-ref="isIssueOfJournalVolumeMap"/>
                 <entry key="isJournalIssueOfPublication" value-ref="isJournalIssueOfPublicationMap"/>
+                <entry key="isAuthorOfDataFile" value-ref="isAuthorOfDataFileMap"/>
             </map>
         </property>
     </bean>
@@ -61,6 +62,10 @@
         <property name="useForPlace" value="true"/>
         <property name="populateWithNameVariant" value="true"/>
     </bean>
+
+    <util:map id="isAuthorOfDataFileMap">
+        <entry key="dc.contributor.author" value-ref="publicationAuthor_author"/>
+    </util:map>
 
     <!-- Config like this will tell our VirtualMetadataPopulator to include the virtual metadata field
      'dc.contributor.other' on the appropriate item with the values defined in the value-ref.
