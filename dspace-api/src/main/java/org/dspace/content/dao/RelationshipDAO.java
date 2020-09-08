@@ -180,7 +180,8 @@ public interface RelationshipDAO extends GenericDAO<Relationship> {
      * @return total count
      * @throws SQLException if database error
      */
-    int countByRelationshipType(Context context, RelationshipType relationshipType, boolean archivedOnly) throws SQLException;
+    int countByRelationshipType(Context context, RelationshipType relationshipType, boolean archivedOnly)
+        throws SQLException;
 
     /**
      * This method returns a count of Relationship objects that have the given Item object

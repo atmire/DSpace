@@ -102,8 +102,7 @@ public class RelationshipDAOImpl extends AbstractHibernateDAO<Relationship> impl
 
     @Override
     public List<Relationship> findByRelationshipType(Context context, RelationshipType relationshipType,
-                                                     Integer limit, Integer offset, boolean archivedOnly) throws SQLException {
-
+        Integer limit, Integer offset, boolean archivedOnly) throws SQLException {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
         CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Relationship.class);
         Root<Relationship> relationshipRoot = criteriaQuery.from(Relationship.class);

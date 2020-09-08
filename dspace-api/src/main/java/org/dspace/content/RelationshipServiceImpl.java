@@ -553,7 +553,8 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     @Override
-    public int countByRelationshipType(Context context, RelationshipType relationshipType, boolean archivedOnly) throws SQLException {
+    public int countByRelationshipType(Context context, RelationshipType relationshipType, boolean archivedOnly)
+        throws SQLException {
         return relationshipDAO.countByRelationshipType(context, relationshipType, archivedOnly);
     }
 
