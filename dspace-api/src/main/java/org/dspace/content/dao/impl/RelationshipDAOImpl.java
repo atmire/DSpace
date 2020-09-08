@@ -15,6 +15,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.dspace.content.Item;
+import org.dspace.content.Item_;
 import org.dspace.content.Relationship;
 import org.dspace.content.RelationshipType;
 import org.dspace.content.Relationship_;
@@ -96,12 +97,12 @@ public class RelationshipDAOImpl extends AbstractHibernateDAO<Relationship> impl
     public List<Relationship> findByRelationshipType(Context context, RelationshipType relationshipType)
         throws SQLException {
 
-        return findByRelationshipType(context, relationshipType, -1, -1);
+        return findByRelationshipType(context, relationshipType, -1, -1, false);
     }
 
     @Override
     public List<Relationship> findByRelationshipType(Context context, RelationshipType relationshipType,
-                                                     Integer limit, Integer offset) throws SQLException {
+                                                     Integer limit, Integer offset, boolean archivedOnly) throws SQLException {
 
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
         CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Relationship.class);
@@ -109,6 +110,17 @@ public class RelationshipDAOImpl extends AbstractHibernateDAO<Relationship> impl
         criteriaQuery.select(relationshipRoot);
         criteriaQuery
             .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType), relationshipType));
+        if (archivedOnly) {
+            criteriaQuery
+                .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType), relationshipType),
+                    criteriaBuilder.equal(relationshipRoot.get(Relationship_.rightItem).get(
+                        Item_.IN_ARCHIVE), true),
+                    criteriaBuilder.equal(relationshipRoot.get(Relationship_.leftItem).get(
+                        Item_.IN_ARCHIVE), true));
+        } else {
+            criteriaQuery
+                .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType), relationshipType));
+        }
         return list(context, criteriaQuery, true, Relationship.class, limit, offset);
     }
 
@@ -132,25 +144,42 @@ public class RelationshipDAOImpl extends AbstractHibernateDAO<Relationship> impl
 
     @Override
     public List<Relationship> findByItemAndRelationshipType(Context context, Item item,
-                                                            RelationshipType relationshipType, boolean isLeft,
-                                                            Integer limit, Integer offset)
-            throws SQLException {
+        RelationshipType relationshipType, boolean isLeft, Integer limit, Integer offset, boolean archivedOnly)
+        throws SQLException {
 
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
         CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Relationship.class);
         Root<Relationship> relationshipRoot = criteriaQuery.from(Relationship.class);
         criteriaQuery.select(relationshipRoot);
         if (isLeft) {
-            criteriaQuery
+            if (archivedOnly) {
+                criteriaQuery
                     .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType),
-                            relationshipType),
-                           criteriaBuilder.equal(relationshipRoot.get(Relationship_.leftItem), item));
+                        relationshipType),
+                        criteriaBuilder.equal(relationshipRoot.get(Relationship_.leftItem), item),
+                        criteriaBuilder.equal(relationshipRoot.get(Relationship_.rightItem).get(
+                            Item_.IN_ARCHIVE), true));
+            } else {
+                criteriaQuery
+                    .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType),
+                        relationshipType),
+                        criteriaBuilder.equal(relationshipRoot.get(Relationship_.leftItem), item));
+            }
             criteriaQuery.orderBy(criteriaBuilder.asc(relationshipRoot.get(Relationship_.leftPlace)));
         } else {
-            criteriaQuery
+            if (archivedOnly) {
+                criteriaQuery
                     .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType),
-                            relationshipType),
-                            criteriaBuilder.equal(relationshipRoot.get(Relationship_.rightItem), item));
+                        relationshipType),
+                        criteriaBuilder.equal(relationshipRoot.get(Relationship_.rightItem), item),
+                        criteriaBuilder.equal(relationshipRoot.get(Relationship_.leftItem).get(
+                            Item_.IN_ARCHIVE), true));
+            } else {
+                criteriaQuery
+                    .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType),
+                        relationshipType),
+                        criteriaBuilder.equal(relationshipRoot.get(Relationship_.rightItem), item));
+            }
             criteriaQuery.orderBy(criteriaBuilder.asc(relationshipRoot.get(Relationship_.rightPlace)));
         }
         return list(context, criteriaQuery, true, Relationship.class, limit, offset);
@@ -180,14 +209,23 @@ public class RelationshipDAOImpl extends AbstractHibernateDAO<Relationship> impl
     }
 
     @Override
-    public int countByRelationshipType(Context context, RelationshipType relationshipType) throws SQLException {
-
+    public int countByRelationshipType(Context context, RelationshipType relationshipType, boolean archivedOnly)
+        throws SQLException {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
         CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Relationship.class);
         Root<Relationship> relationshipRoot = criteriaQuery.from(Relationship.class);
         criteriaQuery.select(relationshipRoot);
-        criteriaQuery
+        if (archivedOnly) {
+            criteriaQuery
+                .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType), relationshipType),
+                    criteriaBuilder.equal(relationshipRoot.get(Relationship_.leftItem).get(
+                        Item_.IN_ARCHIVE), true),
+                    criteriaBuilder.equal(relationshipRoot.get(Relationship_.rightItem).get(
+                        Item_.IN_ARCHIVE), true));
+        } else {
+            criteriaQuery
                 .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType), relationshipType));
+        }
         return count(context, criteriaQuery, criteriaBuilder, relationshipRoot);
     }
 
@@ -202,22 +240,40 @@ public class RelationshipDAOImpl extends AbstractHibernateDAO<Relationship> impl
 
     @Override
     public int countByItemAndRelationshipType(Context context, Item item, RelationshipType relationshipType,
-                                              boolean isLeft) throws SQLException {
+                                              boolean isLeft, boolean archivedOnly) throws SQLException {
 
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
         CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Relationship.class);
         Root<Relationship> relationshipRoot = criteriaQuery.from(Relationship.class);
         criteriaQuery.select(relationshipRoot);
         if (isLeft) {
-            criteriaQuery
-                .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType),
-                                             relationshipType),
-                       criteriaBuilder.equal(relationshipRoot.get(Relationship_.leftItem), item));
+            if (archivedOnly) {
+                criteriaQuery
+                    .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType),
+                        relationshipType),
+                        criteriaBuilder.equal(relationshipRoot.get(Relationship_.leftItem), item),
+                        criteriaBuilder.equal(relationshipRoot.get(Relationship_.rightItem).get(
+                            Item_.IN_ARCHIVE), true));
+            } else {
+                criteriaQuery
+                    .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType),
+                        relationshipType),
+                        criteriaBuilder.equal(relationshipRoot.get(Relationship_.leftItem), item));
+            }
         } else {
-            criteriaQuery
-                .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType),
-                                             relationshipType),
-                     criteriaBuilder.equal(relationshipRoot.get(Relationship_.rightItem), item));
+            if (archivedOnly) {
+                criteriaQuery
+                    .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType),
+                        relationshipType),
+                        criteriaBuilder.equal(relationshipRoot.get(Relationship_.rightItem), item),
+                        criteriaBuilder.equal(relationshipRoot.get(Relationship_.leftItem).get(
+                            Item_.IN_ARCHIVE), true));
+            } else {
+                criteriaQuery
+                    .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType),
+                        relationshipType),
+                        criteriaBuilder.equal(relationshipRoot.get(Relationship_.rightItem), item));
+            }
         }
         return count(context, criteriaQuery, criteriaBuilder, relationshipRoot);
     }

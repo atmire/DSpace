@@ -140,6 +140,22 @@ public interface RelationshipService extends DSpaceCRUDService<Relationship> {
             throws SQLException;
 
     /**
+     * This method returns a list of Relationships for which the leftItem or rightItem is equal to the given
+     * Item object and for which the RelationshipType object is equal to the relationshipType property
+     * @param context           The relevant DSpace context
+     * @param item              The Item object to be matched on the leftItem or rightItem for the relationship
+     * @param relationshipType  The RelationshipType object that will be used to check the Relationship on
+     * @param isLeft             Is the item left or right
+     * @param archivedOnly       Boolean on whether to only return relationships where related items are archived
+     * @return  The list of Relationship objects that have the given Item object as leftItem or rightItem and
+     *          for which the relationshipType property is equal to the given RelationshipType
+     * @throws SQLException If something goes wrong
+     */
+    public List<Relationship> findByItemAndRelationshipType(Context context, Item item,
+        RelationshipType relationshipType, boolean isLeft, int limit, int offset, boolean archivedOnly)
+        throws SQLException;
+
+    /**
      * This method will update the place for the Relationship and all other relationships found by the items and
      * relationship type of the given Relationship. It will give this Relationship the last place in both the
      * left and right place determined by querying for the list of leftRelationships and rightRelationships
@@ -190,6 +206,23 @@ public interface RelationshipService extends DSpaceCRUDService<Relationship> {
      */
     List<Relationship> findByRelationshipType(Context context, RelationshipType relationshipType, Integer limit,
                                               Integer offset) throws SQLException;
+
+    /**
+     * This method returns a list of Relationship objets for which the relationshipType property is equal to the given
+     * RelationshipType object
+     *
+     * @param context          The relevant DSpace context
+     * @param relationshipType The RelationshipType object that will be used to check the Relationship on
+     * @param limit            paging limit
+     * @param offset           paging offset
+     * @param archivedOnly     Boolean on whether to only retrieve relationships where left and right items are
+     *                         archived
+     * @return The list of Relationship objects for which the given RelationshipType object is equal
+     * to the relationshipType property
+     * @throws SQLException If something goes wrong
+     */
+    List<Relationship> findByRelationshipType(Context context, RelationshipType relationshipType, Integer limit,
+        Integer offset, boolean archivedOnly) throws SQLException;
 
     /**
      * This method is used to construct a Relationship object with all it's variables
@@ -271,6 +304,17 @@ public interface RelationshipService extends DSpaceCRUDService<Relationship> {
     int countByRelationshipType(Context context, RelationshipType relationshipType) throws SQLException;
 
     /**
+     * Count total number of relationships (rows in relationship table) by a relationship type
+     *
+     * @param context          context
+     * @param relationshipType relationship type to filter by
+     * @param archivedOnly     Boolean on whether to only count relationships where left and right items are archived
+     * @return total count
+     * @throws SQLException if database error
+     */
+    int countByRelationshipType(Context context, RelationshipType relationshipType, boolean archivedOnly) throws SQLException;
+
+    /**
      * This method returns a count of Relationship objects that have the given Item object
      * as a leftItem or a rightItem
      * @param context   The relevant DSpace context
@@ -294,6 +338,22 @@ public interface RelationshipService extends DSpaceCRUDService<Relationship> {
      */
     int countByItemAndRelationshipType(Context context, Item item, RelationshipType relationshipType, boolean isLeft)
             throws SQLException;
+
+    /**
+     * Count total number of relationships (rows in relationship table) by a relationship type and a boolean indicating
+     * whether the relationship should contain the item on the left side or not
+     *
+     * @param context          context
+     * @param relationshipType relationship type to filter by
+     * @param isLeft           Indicating whether the counted Relationships should have the given Item on the left
+     *                         side or not
+     * @param archivedOnly     Boolean on whether to only count relationships where related items are archived
+     * @return total count with the given parameters
+     * @throws SQLException if database error
+     */
+    int countByItemAndRelationshipType(Context context, Item item, RelationshipType relationshipType, boolean isLeft,
+        boolean archivedOnly)
+        throws SQLException;
 
     /**
      * Count total number of relationships (rows in relationship table)

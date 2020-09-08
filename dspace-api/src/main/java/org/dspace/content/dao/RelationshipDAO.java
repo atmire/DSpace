@@ -88,16 +88,19 @@ public interface RelationshipDAO extends GenericDAO<Relationship> {
      * This method returns a list of Relationship objects for the given RelationshipType object.
      * It will construct a list of all Relationship objects that have the given RelationshipType object
      * as the relationshipType property
-     * @param context           The relevant DSpace context
-     * @param relationshipType  The RelationshipType object to be checked on
-     * @param limit             paging limit
-     * @param offset            paging offset
-     * @return  A list of Relationship objects that have the given RelationshipType object as the
-     *          relationshipType property
+     *
+     * @param context          The relevant DSpace context
+     * @param relationshipType The RelationshipType object to be checked on
+     * @param limit            paging limit
+     * @param offset           paging offset
+     * @param archivedOnly     Boolean on whether to only retrieve relationships where left and right items are
+     *                         archived
+     * @return A list of Relationship objects that have the given RelationshipType object as the
+     * relationshipType property
      * @throws SQLException If something goes wrong
      */
     List<Relationship> findByRelationshipType(Context context, RelationshipType relationshipType,
-                                              Integer limit, Integer offset) throws SQLException;
+        Integer limit, Integer offset, boolean archivedOnly) throws SQLException;
 
     /**
      * This method returns a list of Relationship objects for the given RelationshipType object.
@@ -119,19 +122,20 @@ public interface RelationshipDAO extends GenericDAO<Relationship> {
      * This method returns a list of Relationship objects for the given RelationshipType object.
      * It will construct a list of all Relationship objects that have the given RelationshipType object
      * as the relationshipType property
-     * @param context           The relevant DSpace context
-     * @param relationshipType  The RelationshipType object to be checked on
-     * @param limit             paging limit
-     * @param offset            paging offset
-     * @param item              item to filter by
-     * @param isLeft            Is item left or right
-     * @return  A list of Relationship objects that have the given RelationshipType object as the
-     *          relationshipType property
+     *
+     * @param context          The relevant DSpace context
+     * @param relationshipType The RelationshipType object to be checked on
+     * @param limit            paging limit
+     * @param offset           paging offset
+     * @param item             item to filter by
+     * @param isLeft           Is item left or right
+     * @param archivedOnly     Boolean on whether to only count relationships where related items are archived
+     * @return A list of Relationship objects that have the given RelationshipType object as the
+     * relationshipType property
      * @throws SQLException If something goes wrong
      */
     List<Relationship> findByItemAndRelationshipType(Context context, Item item, RelationshipType relationshipType,
-                                                     boolean isLeft, Integer limit, Integer offset)
-            throws SQLException;
+        boolean isLeft, Integer limit, Integer offset, boolean archivedOnly) throws SQLException;
 
     /**
      * This method returns a list of Relationship objects for the given typeName
@@ -169,12 +173,14 @@ public interface RelationshipDAO extends GenericDAO<Relationship> {
     /**
      * Count total number of relationships (rows in relationship table) by a relationship type
      *
-     * @param context context
+     * @param context          context
      * @param relationshipType relationship type to filter by
+     * @param archivedOnly     Boolean on whether to only count relationships where left and right items are
+     *                         archived
      * @return total count
      * @throws SQLException if database error
      */
-    int countByRelationshipType(Context context, RelationshipType relationshipType) throws SQLException;
+    int countByRelationshipType(Context context, RelationshipType relationshipType, boolean archivedOnly) throws SQLException;
 
     /**
      * This method returns a count of Relationship objects that have the given Item object
@@ -192,15 +198,18 @@ public interface RelationshipDAO extends GenericDAO<Relationship> {
      * Count total number of relationships (rows in relationship table) by an item and a relationship type and a boolean
      * indicating whether the item should be the leftItem or the rightItem
      *
-     * @param context context
+     * @param context          context
      * @param relationshipType relationship type to filter by
-     * @param item item to filter by
-     * @param isLeft Indicating whether the counted Relationships should have the given Item on the left side or not
+     * @param item             item to filter by
+     * @param isLeft           Indicating whether the counted Relationships should have the given Item on the left
+     *                         side or not
+     * @param archivedOnly     Boolean on whether to only count relationships with related items that are archived
      * @return total count
      * @throws SQLException if database error
      */
-    int countByItemAndRelationshipType(Context context, Item item, RelationshipType relationshipType, boolean isLeft)
-            throws SQLException;
+    int countByItemAndRelationshipType(Context context, Item item, RelationshipType relationshipType, boolean isLeft,
+        boolean archivedOnly)
+        throws SQLException;
 
     /**
      * Count total number of relationships (rows in relationship table) given a typeName

@@ -492,7 +492,16 @@ public class RelationshipServiceImpl implements RelationshipService {
                                                             RelationshipType relationshipType, boolean isLeft,
                                                             int limit, int offset)
             throws SQLException {
-        return relationshipDAO.findByItemAndRelationshipType(context, item, relationshipType, isLeft, limit, offset);
+        return relationshipDAO.findByItemAndRelationshipType(context, item, relationshipType, isLeft, limit, offset,
+            false);
+    }
+
+    @Override
+    public List<Relationship> findByItemAndRelationshipType(Context context, Item item,
+        RelationshipType relationshipType, boolean isLeft, int limit, int offset, boolean archivedOnly)
+        throws SQLException {
+        return relationshipDAO
+            .findByItemAndRelationshipType(context, item, relationshipType, isLeft, limit, offset, archivedOnly);
     }
 
     @Override
@@ -506,7 +515,13 @@ public class RelationshipServiceImpl implements RelationshipService {
     public List<Relationship> findByRelationshipType(Context context, RelationshipType relationshipType, Integer limit,
                                                      Integer offset)
         throws SQLException {
-        return relationshipDAO.findByRelationshipType(context, relationshipType, limit, offset);
+        return relationshipDAO.findByRelationshipType(context, relationshipType, limit, offset, false);
+    }
+
+    @Override
+    public List<Relationship> findByRelationshipType(Context context, RelationshipType relationshipType, Integer limit,
+        Integer offset, boolean archivedOnly) throws SQLException {
+        return relationshipDAO.findByRelationshipType(context, relationshipType, limit, offset, archivedOnly);
     }
 
     @Override
@@ -534,13 +549,24 @@ public class RelationshipServiceImpl implements RelationshipService {
 
     @Override
     public int countByRelationshipType(Context context, RelationshipType relationshipType) throws SQLException {
-        return relationshipDAO.countByRelationshipType(context, relationshipType);
+        return relationshipDAO.countByRelationshipType(context, relationshipType, false);
+    }
+
+    @Override
+    public int countByRelationshipType(Context context, RelationshipType relationshipType, boolean archivedOnly) throws SQLException {
+        return relationshipDAO.countByRelationshipType(context, relationshipType, archivedOnly);
     }
 
     @Override
     public int countByItemAndRelationshipType(Context context, Item item, RelationshipType relationshipType,
                                               boolean isLeft) throws SQLException {
-        return relationshipDAO.countByItemAndRelationshipType(context, item, relationshipType, isLeft);
+        return relationshipDAO.countByItemAndRelationshipType(context, item, relationshipType, isLeft, false);
+    }
+
+    @Override
+    public int countByItemAndRelationshipType(Context context, Item item, RelationshipType relationshipType,
+        boolean isLeft, boolean archivedOnly) throws SQLException {
+        return relationshipDAO.countByItemAndRelationshipType(context, item, relationshipType, isLeft, archivedOnly);
     }
 
     @Override

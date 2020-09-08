@@ -335,12 +335,16 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
     @SearchRestMethod(name = "byLabel")
     public Page<RelationshipRest> findByLabel(@Parameter(value = "label", required = true) String label,
                                               @Parameter(value = "dso", required = false) UUID dsoId,
+                                              @Parameter(value = "archivedOnly", required = false) Boolean archivedOnly,
                                               Pageable pageable) throws SQLException {
         Context context = obtainContext();
 
         List<RelationshipType> relationshipTypeList =
             relationshipTypeService.findByLeftwardOrRightwardTypeName(context, label);
         List<Relationship> relationships = new LinkedList<>();
+        if (archivedOnly == null) {
+            archivedOnly = false;
+        }
         int total = 0;
         if (dsoId != null) {
 
@@ -354,15 +358,16 @@ public class RelationshipRestRepository extends DSpaceRestRepository<Relationshi
                 if (relationshipType.getLeftwardType().equalsIgnoreCase(label)) {
                     isLeft = true;
                 }
-                total += relationshipService.countByItemAndRelationshipType(context, item, relationshipType, isLeft);
+                total += relationshipService.countByItemAndRelationshipType(context, item, relationshipType, isLeft,
+                    archivedOnly);
                 relationships.addAll(relationshipService.findByItemAndRelationshipType(context, item, relationshipType,
-                        isLeft, pageable.getPageSize(), Math.toIntExact(pageable.getOffset())));
+                        isLeft, pageable.getPageSize(), Math.toIntExact(pageable.getOffset()), archivedOnly));
             }
         } else {
             for (RelationshipType relationshipType : relationshipTypeList) {
-                total += relationshipService.countByRelationshipType(context, relationshipType);
+                total += relationshipService.countByRelationshipType(context, relationshipType, archivedOnly);
                 relationships.addAll(relationshipService.findByRelationshipType(context, relationshipType,
-                        pageable.getPageSize(), Math.toIntExact(pageable.getOffset())));
+                        pageable.getPageSize(), Math.toIntExact(pageable.getOffset()), archivedOnly));
             }
         }
 

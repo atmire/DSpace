@@ -37,6 +37,7 @@ import org.dspace.app.rest.builder.EPersonBuilder;
 import org.dspace.app.rest.builder.ItemBuilder;
 import org.dspace.app.rest.builder.MetadataFieldBuilder;
 import org.dspace.app.rest.builder.RelationshipBuilder;
+import org.dspace.app.rest.builder.WorkspaceItemBuilder;
 import org.dspace.app.rest.matcher.PageMatcher;
 import org.dspace.app.rest.matcher.RelationshipMatcher;
 import org.dspace.app.rest.model.RelationshipRest;
@@ -50,6 +51,7 @@ import org.dspace.content.MetadataSchema;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.Relationship;
 import org.dspace.content.RelationshipType;
+import org.dspace.content.WorkspaceItem;
 import org.dspace.content.service.EntityTypeService;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.MetadataFieldService;
@@ -102,6 +104,9 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
 
     private Item publication1;
     private Item publication2;
+
+    private WorkspaceItem inSubmissionPublication1;
+    private WorkspaceItem inSubmissionPublication2;
 
     private RelationshipType isAuthorOfPublicationRelationshipType;
     private RelationshipType isOrgUnitOfPersonRelationshipType;
@@ -189,6 +194,22 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
                               .withIssueDate("2015-01-01")
                               .withRelationshipType("Project")
                               .build();
+
+
+        inSubmissionPublication1 = WorkspaceItemBuilder.createWorkspaceItem(context, col1)
+                                                       .withTitle("Workspace Item 1")
+                                                       .withIssueDate("2017-10-17")
+                                                       .withSubject("ExtraEntry")
+                                                       .withRelationshipType("Publication")
+                                                       .build();
+
+
+        inSubmissionPublication2 = WorkspaceItemBuilder.createWorkspaceItem(context, col1)
+                                                       .withTitle("Workspace Item 2")
+                                                       .withIssueDate("2020-10-17")
+                                                       .withSubject("Subject")
+                                                       .withRelationshipType("Publication")
+                                                       .build();
 
         isAuthorOfPublicationRelationshipType = relationshipTypeService
             .findbyTypesAndTypeName(context, entityTypeService.findByEntityType(context, "Publication"),
@@ -2248,6 +2269,289 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
                        RelationshipMatcher.matchRelationship(relationshipAuthorExtra),
                        RelationshipMatcher.matchRelationship(relationshipOrgunitExtra)
                    )))
+        ;
+    }
+
+    @Test
+    public void findRelationshipByLabelAndDSOTest_ArchivedOnly_off() throws Exception {
+        context.turnOffAuthorisationSystem();
+        RelationshipType isAuthorOfPublicationRelationshipType = relationshipTypeService
+            .findbyTypesAndTypeName(context, entityTypeService.findByEntityType(context, "Publication"),
+                entityTypeService.findByEntityType(context, "Person"),
+                "isAuthorOfPublication", "isPublicationOfAuthor");
+
+        // We're creating a Relationship of type isAuthorOfPublication between the two authors and the two in
+        // submission publication items
+        Relationship relationship1 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication1.getItem(), author1,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship2 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication2.getItem(), author1,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship3 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication1.getItem(), author2,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship4 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication2.getItem(), author2,
+                isAuthorOfPublicationRelationshipType).build();
+
+        context.restoreAuthSystemState();
+        // Perform a GET request to the searchByLabel endpoint, asking for Relationships of type isAuthorOfPublication
+        // With an extra parameter namely DSO which resolves to the first author
+        getClient().perform(get("/api/core/relationships/search/byLabel")
+            .param("label", "isPublicationOfAuthor")
+            .param("dso", author1.getID().toString())
+            .param("projection", "full"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.page",
+                       is(PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 1, 2))))
+                   .andExpect(jsonPath("$._embedded.relationships", containsInAnyOrder(
+                       RelationshipMatcher.matchRelationship(relationship1),
+                       RelationshipMatcher.matchRelationship(relationship2)
+                                                                                      )))
+        ;
+    }
+
+    @Test
+    public void findRelationshipByLabelAndDSOTest_ArchivedOnly_off_paginated() throws Exception {
+        context.turnOffAuthorisationSystem();
+        RelationshipType isAuthorOfPublicationRelationshipType = relationshipTypeService
+            .findbyTypesAndTypeName(context, entityTypeService.findByEntityType(context, "Publication"),
+                entityTypeService.findByEntityType(context, "Person"),
+                "isAuthorOfPublication", "isPublicationOfAuthor");
+
+        // We're creating a Relationship of type isAuthorOfPublication between the two authors and the two in
+        // submission publication items
+        Relationship relationship1 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication1.getItem(), author1,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship2 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication2.getItem(), author1,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship3 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication1.getItem(), author2,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship4 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication2.getItem(), author2,
+                isAuthorOfPublicationRelationshipType).build();
+
+        context.restoreAuthSystemState();
+        // Perform a GET request to the searchByLabel endpoint, asking for Relationships of type isAuthorOfPublication
+        // With an extra parameter namely DSO which resolves to the first author, with page size restriction 1
+        getClient().perform(get("/api/core/relationships/search/byLabel")
+            .param("label", "isPublicationOfAuthor")
+            .param("dso", author1.getID().toString())
+            .param("projection", "full")
+            .param("size", "1"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.page",
+                       is(PageMatcher.pageEntryWithTotalPagesAndElements(0, 1, 2, 2))))
+                   .andExpect(jsonPath("$._embedded.relationships", contains(
+                       RelationshipMatcher.matchRelationship(relationship1)
+                                                                                      )))
+        ;
+    }
+
+    @Test
+    public void findRelationshipByLabelAndDSOTest_ArchivedOnly_true() throws Exception {
+        context.turnOffAuthorisationSystem();
+        RelationshipType isAuthorOfPublicationRelationshipType = relationshipTypeService
+            .findbyTypesAndTypeName(context, entityTypeService.findByEntityType(context, "Publication"),
+                entityTypeService.findByEntityType(context, "Person"),
+                "isAuthorOfPublication", "isPublicationOfAuthor");
+
+        // We're creating a Relationship of type isAuthorOfPublication between the two authors and the two in
+        // submission publication items
+        Relationship relationship1 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication1.getItem(), author1,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship2 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication2.getItem(), author1,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship3 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication1.getItem(), author2,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship4 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication2.getItem(), author2,
+                isAuthorOfPublicationRelationshipType).build();
+
+        context.restoreAuthSystemState();
+        // Perform a GET request to the searchByLabel endpoint, asking for Relationships of type isAuthorOfPublication
+        // With an extra parameter namely DSO which resolves to the first author, with parameter archivedOnly set to
+        // true
+        getClient().perform(get("/api/core/relationships/search/byLabel")
+            .param("label", "isPublicationOfAuthor")
+            .param("dso", author1.getID().toString())
+            .param("projection", "full")
+            .param("archivedOnly", "true"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.page",
+                       is(PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 0, 0))))
+        ;
+    }
+
+    @Test
+    public void findRelationshipByLabelAndDSOTest_DSOInSubmission_OnlyArchived_Off() throws Exception {
+        context.turnOffAuthorisationSystem();
+        RelationshipType isAuthorOfPublicationRelationshipType = relationshipTypeService
+            .findbyTypesAndTypeName(context, entityTypeService.findByEntityType(context, "Publication"),
+                entityTypeService.findByEntityType(context, "Person"),
+                "isAuthorOfPublication", "isPublicationOfAuthor");
+
+        // We're creating a Relationship of type isAuthorOfPublication between the two authors and the two in
+        // submission publication items
+        Relationship relationship1 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication1.getItem(), author1,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship2 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication2.getItem(), author1,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship3 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication1.getItem(), author2,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship4 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication2.getItem(), author2,
+                isAuthorOfPublicationRelationshipType).build();
+
+        context.restoreAuthSystemState();
+        // Perform a GET request to the searchByLabel endpoint, asking for Relationships of type isAuthorOfPublication
+        // With an extra parameter namely DSO which resolves to the first in submission item
+        getClient().perform(get("/api/core/relationships/search/byLabel")
+            .param("label", "isAuthorOfPublication")
+            .param("dso", inSubmissionPublication1.getItem().getID().toString())
+            .param("projection", "full"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.page",
+                       is(PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 1, 2))))
+                   .andExpect(jsonPath("$._embedded.relationships", containsInAnyOrder(
+                       RelationshipMatcher.matchRelationship(relationship1),
+                       RelationshipMatcher.matchRelationship(relationship3)
+                                                                                      )))
+        ;
+    }
+
+    @Test
+    public void findRelationshipByLabelAndDSOTest_DSOInSubmission_OnlyArchived_Off_Paginated() throws Exception {
+        context.turnOffAuthorisationSystem();
+        RelationshipType isAuthorOfPublicationRelationshipType = relationshipTypeService
+            .findbyTypesAndTypeName(context, entityTypeService.findByEntityType(context, "Publication"),
+                entityTypeService.findByEntityType(context, "Person"),
+                "isAuthorOfPublication", "isPublicationOfAuthor");
+
+        // We're creating a Relationship of type isAuthorOfPublication between the two authors and the two in
+        // submission publication items
+        Relationship relationship1 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication1.getItem(), author1,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship2 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication2.getItem(), author1,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship3 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication1.getItem(), author2,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship4 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication2.getItem(), author2,
+                isAuthorOfPublicationRelationshipType).build();
+
+        context.restoreAuthSystemState();
+        // Perform a GET request to the searchByLabel endpoint, asking for Relationships of type isAuthorOfPublication
+        // With an extra parameter namely DSO which resolves to the first in submission item with page size
+        // restriction 1
+        getClient().perform(get("/api/core/relationships/search/byLabel")
+            .param("label", "isAuthorOfPublication")
+            .param("dso", inSubmissionPublication1.getItem().getID().toString())
+            .param("projection", "full")
+            .param("size", "1"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.page",
+                       is(PageMatcher.pageEntryWithTotalPagesAndElements(0, 1, 2, 2))))
+                   .andExpect(jsonPath("$._embedded.relationships", contains(
+                       RelationshipMatcher.matchRelationship(relationship3)
+                                                                            )))
+        ;
+    }
+
+    @Test
+    public void findRelationshipByLabelAndDSOTest_DSOInSubmission_ArchivedOnly_false() throws Exception {
+        context.turnOffAuthorisationSystem();
+        RelationshipType isAuthorOfPublicationRelationshipType = relationshipTypeService
+            .findbyTypesAndTypeName(context, entityTypeService.findByEntityType(context, "Publication"),
+                entityTypeService.findByEntityType(context, "Person"),
+                "isAuthorOfPublication", "isPublicationOfAuthor");
+
+        // We're creating a Relationship of type isAuthorOfPublication between the two authors and the two in
+        // submission publication items
+        Relationship relationship1 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication1.getItem(), author1,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship2 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication2.getItem(), author1,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship3 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication1.getItem(), author2,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship4 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication2.getItem(), author2,
+                isAuthorOfPublicationRelationshipType).build();
+
+        context.restoreAuthSystemState();
+        // Perform a GET request to the searchByLabel endpoint, asking for Relationships of type isAuthorOfPublication
+        // With an extra parameter namely DSO which resolves to the in submission item, with parameter archivedOnly
+        // set to false
+        getClient().perform(get("/api/core/relationships/search/byLabel")
+            .param("label", "isAuthorOfPublication")
+            .param("dso", inSubmissionPublication1.getItem().getID().toString())
+            .param("projection", "full")
+            .param("archivedOnly", "false"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.page",
+                       is(PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 1, 2))))
+                   .andExpect(jsonPath("$._embedded.relationships", containsInAnyOrder(
+                       RelationshipMatcher.matchRelationship(relationship1),
+                       RelationshipMatcher.matchRelationship(relationship3)
+                                                                                      )))
+        ;
+    }
+
+    @Test
+    public void findRelationshipByLabelAndDSOTest_DSOInSubmission_ArchivedOnly_true() throws Exception {
+        context.turnOffAuthorisationSystem();
+        RelationshipType isAuthorOfPublicationRelationshipType = relationshipTypeService
+            .findbyTypesAndTypeName(context, entityTypeService.findByEntityType(context, "Publication"),
+                entityTypeService.findByEntityType(context, "Person"),
+                "isAuthorOfPublication", "isPublicationOfAuthor");
+
+        // We're creating a Relationship of type isAuthorOfPublication between the two authors and the two in
+        // submission publication items
+        Relationship relationship1 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication1.getItem(), author1,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship2 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication2.getItem(), author1,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship3 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication1.getItem(), author2,
+                isAuthorOfPublicationRelationshipType).build();
+        Relationship relationship4 = RelationshipBuilder
+            .createRelationshipBuilder(context, inSubmissionPublication2.getItem(), author2,
+                isAuthorOfPublicationRelationshipType).build();
+
+        context.restoreAuthSystemState();
+        // Perform a GET request to the searchByLabel endpoint, asking for Relationships of type isAuthorOfPublication
+        // With an extra parameter namely DSO which resolves to the in submission item, with parameter archivedOnly
+        // set to true
+        getClient().perform(get("/api/core/relationships/search/byLabel")
+            .param("label", "isAuthorOfPublication")
+            .param("dso", inSubmissionPublication1.getItem().getID().toString())
+            .param("projection", "full")
+            .param("archivedOnly", "true"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.page",
+                       is(PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 1, 2))))
+                   .andExpect(jsonPath("$._embedded.relationships", containsInAnyOrder(
+                       RelationshipMatcher.matchRelationship(relationship1),
+                       RelationshipMatcher.matchRelationship(relationship3)
+                                                                                      )))
         ;
     }
 
