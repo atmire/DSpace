@@ -1312,17 +1312,18 @@
                     <required></required>
                 </field>
             </row>
-            <row>
-                <field>
-                    <dc-schema>dc</dc-schema>
-                    <dc-element>type</dc-element>
-                    <dc-qualifier>embargo</dc-qualifier>
-                    <repeatable>false</repeatable>
-                    <label>Set an optional embargo for making this Data File item available</label>
-                    <input-type value-pairs-name="embargo_types">dropdown</input-type>
-                    <hint>If an embargo is set, this data file item will not be available until the embargo expires.</hint>
-                </field>
-            </row>
+<!--            Dropdowns are currently broken in the UI-->
+<!--            <row>-->
+<!--                <field>-->
+<!--                    <dc-schema>dc</dc-schema>-->
+<!--                    <dc-element>type</dc-element>-->
+<!--                    <dc-qualifier>embargo</dc-qualifier>-->
+<!--                    <repeatable>false</repeatable>-->
+<!--                    <label>Set an optional embargo for making this Data File item available</label>-->
+<!--                    <input-type value-pairs-name="embargo_types">dropdown</input-type>-->
+<!--                    <hint>If an embargo is set, this data file item will not be available until the embargo expires.</hint>-->
+<!--                </field>-->
+<!--            </row>-->
             <row>
                 <field>
                     <dc-schema>dc</dc-schema>
