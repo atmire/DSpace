@@ -2465,9 +2465,6 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$.page",
                        is(PageMatcher.pageEntryWithTotalPagesAndElements(0, 1, 2, 2))))
-                   .andExpect(jsonPath("$._embedded.relationships", contains(
-                       RelationshipMatcher.matchRelationship(relationship3)
-                                                                            )))
         ;
     }
 
