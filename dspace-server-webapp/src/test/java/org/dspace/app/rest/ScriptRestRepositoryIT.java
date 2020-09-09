@@ -82,16 +82,18 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
         getClient(token).perform(get("/api/system/scripts"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$._embedded.scripts", containsInAnyOrder(
-                                ScriptMatcher.matchScript(scriptConfigurations.get(0).getName(),
-                                                          scriptConfigurations.get(0).getDescription()),
-                                ScriptMatcher.matchScript(scriptConfigurations.get(1).getName(),
-                                                          scriptConfigurations.get(1).getDescription()),
-                                ScriptMatcher.matchScript(scriptConfigurations.get(2).getName(),
-                                                          scriptConfigurations.get(2).getDescription()),
-                                ScriptMatcher.matchScript(scriptConfigurations.get(3).getName(),
-                                                          scriptConfigurations.get(3).getDescription()),
-                                ScriptMatcher.matchScript(scriptConfigurations.get(4).getName(),
-                                                          scriptConfigurations.get(4).getDescription())
+                            ScriptMatcher.matchScript(scriptConfigurations.get(0).getName(),
+                                                      scriptConfigurations.get(0).getDescription()),
+                            ScriptMatcher.matchScript(scriptConfigurations.get(1).getName(),
+                                                      scriptConfigurations.get(1).getDescription()),
+                            ScriptMatcher.matchScript(scriptConfigurations.get(2).getName(),
+                                                      scriptConfigurations.get(2).getDescription()),
+                            ScriptMatcher.matchScript(scriptConfigurations.get(3).getName(),
+                                                      scriptConfigurations.get(3).getDescription()),
+                            ScriptMatcher.matchScript(scriptConfigurations.get(4).getName(),
+                                scriptConfigurations.get(4).getDescription()),
+                            ScriptMatcher.matchScript(scriptConfigurations.get(5).getName(),
+                                                      scriptConfigurations.get(5).getDescription())
                         )));
 
     }
