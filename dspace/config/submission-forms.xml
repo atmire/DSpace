@@ -1243,36 +1243,48 @@
                     <required>At least one author (plain text or relationship) is required</required>
                 </relation-field>
             </row>
-
-            <row>
-                <relation-field>
-                    <relationship-type>isDataPackageOfDataFile</relationship-type>
-                    <search-configuration>dataPackage</search-configuration>
-                    <repeatable>true</repeatable>
-                    <label>Data Package</label>
-                    <hint>Select the Data Package related to this Data File.</hint>
-                </relation-field>
-            </row>
             <row>
                 <relation-field>
                     <relationship-type>isOrgUnitOfDataFile</relationship-type>
                     <search-configuration>orgunit</search-configuration>
                     <label>Organization</label>
                     <hint>Select the Organizational Unit related to this Data File.</hint>
+                    <required>At least one Organization is required</required>
                 </relation-field>
             </row>
             <row>
-                <relation-field>
-                    <relationship-type>isPublicationOfDataFile</relationship-type>
-                    <search-configuration>publication</search-configuration>
-                    <label>Publication</label>
-                    <hint>Select the Publication related to this Data File.</hint>
-                </relation-field>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>date</dc-element>
+                    <dc-qualifier>issued</dc-qualifier>
+                    <repeatable>false</repeatable>
+                    <label>Date of Issue</label>
+                    <style>col-sm-4</style>
+                    <input-type>date</input-type>
+                    <hint>Please give the date of previous publication or public distribution.
+                        You can leave out the day
+                        and/or month if they aren't applicable.
+                    </hint>
+                    <required>You must enter at least the year.</required>
+                </field>
             </row>
 
         </form>
 
         <form name="datafilepagetwo">
+
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>description</dc-element>
+                    <dc-qualifier>abstract</dc-qualifier>
+                    <repeatable>false</repeatable>
+                    <label>Abstract</label>
+                    <input-type>textarea</input-type>
+                    <hint>Please describe your data file. Include details such as the original source of the information (e.g., collected in the field, simulated electronically), software used to create the data file, and a description of any abbreviations (e.g., for column headings). If more than two paragraphs are required for adequate description, please upload a README file.</hint>
+                    <required></required>
+                </field>
+            </row>
             <row>
                 <field>
                     <dc-schema>prism</dc-schema>
@@ -1287,17 +1299,22 @@
                 </field>
             </row>
             <row>
-                <field>
-                    <dc-schema>dc</dc-schema>
-                    <dc-element>description</dc-element>
-                    <dc-qualifier></dc-qualifier>
-                    <repeatable>false</repeatable>
-                    <label>Description</label>
-                    <input-type>textarea</input-type>
-                    <hint>Please describe your data file. Include details such as the original source of the information (e.g., collected in the field, simulated electronically), software used to create the data file, and a description of any abbreviations (e.g., for column headings). If more than two paragraphs are required for adequate description, please upload a README file.</hint>
-                    <required></required>
-                </field>
+                <relation-field>
+                    <relationship-type>isDataPackageOfDataFile</relationship-type>
+                    <search-configuration>dataPackage</search-configuration>
+                    <repeatable>true</repeatable>
+                    <label>Data Package</label>
+                    <hint>Select the Data Package related to this Data File.</hint>
+                </relation-field>
             </row>
+<!--            <row>-->
+<!--                <relation-field>-->
+<!--                    <relationship-type>isPublicationOfDataFile</relationship-type>-->
+<!--                    <search-configuration>publication</search-configuration>-->
+<!--                    <label>Publication</label>-->
+<!--                    <hint>Select the Publication related to this Data File.</hint>-->
+<!--                </relation-field>-->
+<!--            </row>-->
             <row>
                 <field>
                     <dc-schema>dc</dc-schema>
@@ -1336,6 +1353,19 @@
                     <hint>Enter appropriate subject keywords or phrases. </hint>
                     <required></required>
                     <vocabulary>srsc</vocabulary>
+                </field>
+            </row>
+            <row>
+                <field>
+                    <dc-schema>dspace</dc-schema>
+                    <dc-element>reviewer</dc-element>
+                    <dc-qualifier>notes</dc-qualifier>
+                    <repeatable>false</repeatable>
+                    <label>Reviewer notes</label>
+                    <input-type>textarea</input-type>
+                    <hint>Private notes, visible for reviewers only</hint>
+                    <required></required>
+                    <visibility>workflow</visibility>
                 </field>
             </row>
         </form>
@@ -1381,6 +1411,10 @@
             <pair>
                 <displayed-value>ISBN</displayed-value>
                 <stored-value>isbn</stored-value>
+            </pair>
+            <pair>
+                <displayed-value>DOI</displayed-value>
+                <stored-value>doi</stored-value>
             </pair>
         </value-pairs>
 

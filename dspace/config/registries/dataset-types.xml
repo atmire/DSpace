@@ -23,5 +23,12 @@
         <scope_note></scope_note>
     </dc-type>
 
+    <dc-type>
+        <schema>dspace</schema>
+        <element>reviewer</element>
+        <qualifier>notes</qualifier>
+        <scope_note>Metadata field for items in the workflow, visible for reviewers only, and hidden from the full item view except for admins</scope_note>
+    </dc-type>
+
 
 </dspace-dc-types>
