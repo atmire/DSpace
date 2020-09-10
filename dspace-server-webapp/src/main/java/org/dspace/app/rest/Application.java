@@ -32,6 +32,7 @@ import org.springframework.web.context.request.RequestContextListener;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -139,14 +140,26 @@ public class Application extends SpringBootServletInitializer {
                             // Set Access-Control-Allow-Credentials to "true" and specify which origins are valid
                             // for our Access-Control-Allow-Origin header
                             .allowCredentials(corsAllowCredentials).allowedOrigins(corsAllowedOrigins)
-                            // Whitelist of request preflight headers allowed to be sent to us from the client
+                            // Allow list of request preflight headers allowed to be sent to us from the client
                             .allowedHeaders("Authorization", "Content-Type", "X-Requested-With", "accept", "Origin",
                                             "Access-Control-Request-Method", "Access-Control-Request-Headers",
                                             "X-On-Behalf-Of")
-                            // Whitelist of response headers allowed to be sent by us (the server)
+                            // Allow list of response headers allowed to be sent by us (the server)
                             .exposedHeaders("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials",
                                             "Authorization");
                 }
+            }
+
+            /**
+             * Add a new ResourceHandler to allow us to use WebJars.org to pull in web dependencies
+             * dynamically for HAL Browser, and access them off the /webjars path.
+             * @param registry ResourceHandlerRegistry
+             */
+            @Override
+            public void addResourceHandlers(ResourceHandlerRegistry registry) {
+                registry
+                    .addResourceHandler("/webjars/**")
+                    .addResourceLocations("/webjars/");
             }
 
             @Override

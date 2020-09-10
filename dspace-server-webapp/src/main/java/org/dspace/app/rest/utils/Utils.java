@@ -53,6 +53,7 @@ import org.dspace.app.rest.model.CommunityRest;
 import org.dspace.app.rest.model.LinkRest;
 import org.dspace.app.rest.model.LinksRest;
 import org.dspace.app.rest.model.ProcessRest;
+import org.dspace.app.rest.model.PropertyRest;
 import org.dspace.app.rest.model.ResourcePolicyRest;
 import org.dspace.app.rest.model.RestAddressableModel;
 import org.dspace.app.rest.model.RestModel;
@@ -263,6 +264,9 @@ public class Utils {
         }
         if (StringUtils.equals(modelPlural, "versionhistories")) {
             return VersionHistoryRest.NAME;
+        }
+        if (StringUtils.equals(modelPlural, "properties")) {
+            return PropertyRest.NAME;
         }
         return modelPlural.replaceAll("s$", "");
     }
@@ -519,7 +523,7 @@ public class Utils {
      * {@link CompositeProjection} and applied in order as described there.
      * </p><p>
      * In addition, any number of embeds may be specified by rel name via the {@code embed} parameter.
-     * When provided, these act as a whitelist of embeds that may be included in the response, as described
+     * When provided, these act as an "allow list" of embeds that may be included in the response, as described
      * and implemented by {@link EmbedRelsProjection}.
      * </p>
      *
