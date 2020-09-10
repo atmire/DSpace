@@ -1237,7 +1237,7 @@
                 <ref bean="searchFilterIssued" />
                 <ref bean="searchFilterContentInOriginalBundle"/>
                 <ref bean="searchFilterFileNameInOriginalBundle" />
-                <ref bean="searchFilterFileDescriptionInOriginalBundle" />
+                <ref bean="searchFilterIsOrgUnitOfDataFileRelation"/>
                 <ref bean="searchFilterEntityType"/>
             </list>
         </property>
@@ -2238,6 +2238,18 @@
         <property name="metadataFields">
             <list>
                 <value>relation.isOrgUnitOfProject</value>
+            </list>
+        </property>
+        <property name="isOpenByDefault" value="false"/>
+        <property name="pageSize" value="10"/>
+    </bean>
+
+    <bean id="searchFilterIsOrgUnitOfDataFileRelation" class="org.dspace.discovery.configuration.DiscoverySearchFilter">
+
+        <property name="indexFieldName" value="isOrgUnitOfDataFile"/>
+        <property name="metadataFields">
+            <list>
+                <value>relation.isOrgUnitOfDataFile</value>
             </list>
         </property>
         <property name="isOpenByDefault" value="false"/>
