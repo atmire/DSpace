@@ -107,8 +107,6 @@ public class RelationshipDAOImpl extends AbstractHibernateDAO<Relationship> impl
         CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Relationship.class);
         Root<Relationship> relationshipRoot = criteriaQuery.from(Relationship.class);
         criteriaQuery.select(relationshipRoot);
-        criteriaQuery
-            .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType), relationshipType));
         if (archivedOnly) {
             criteriaQuery
                 .where(criteriaBuilder.equal(relationshipRoot.get(Relationship_.relationshipType), relationshipType),
