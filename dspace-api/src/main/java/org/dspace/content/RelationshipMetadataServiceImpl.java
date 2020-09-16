@@ -308,6 +308,9 @@ public class RelationshipMetadataServiceImpl implements RelationshipMetadataServ
      * @param context the current context
      */
     public void buildTypeIds(Context context) throws SQLException {
+        if (virtualMetadataPopulator.getTypeIds() != null) {
+            return;
+        }
         Map<String, Map<String, Integer>> typeIds = new HashMap<>();
         for (EntityType entityType : entityTypeService.findAll(context)) {
             Map<String, Integer> typeMap = new HashMap<String, Integer>();
