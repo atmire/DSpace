@@ -290,8 +290,8 @@ public class RelationshipServiceImplTest {
         relationship = getRelationship(leftItem, rightItem, testRel, 0,0);
 
         // Mock the state of objects utilized in update() to meet the success criteria of the invocation
-        when(itemService.getMetadata(leftItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
-        when(itemService.getMetadata(rightItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
+        when(itemService.getMetadata(leftItem, "relationship", "type", null, Item.ANY, false)).thenReturn(metsList);
+        when(itemService.getMetadata(rightItem, "relationship", "type", null, Item.ANY, false)).thenReturn(metsList);
         when(authorizeService.authorizeActionBoolean(context, relationship.getLeftItem(),
                 Constants.WRITE)).thenReturn(true);
 
