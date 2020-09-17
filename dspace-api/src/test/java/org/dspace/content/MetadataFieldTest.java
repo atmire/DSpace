@@ -97,8 +97,7 @@ public class MetadataFieldTest extends AbstractUnitTest {
                             element, qualifier, scopeNote);
                 context.restoreAuthSystemState();
             }
-
-            this.mf.setScopeNote(scopeNote);
+            metadataFieldService.setScopeNote(context, this.mf, scopeNote);
 
             // Initialize our spy of the autowired (global) authorizeService bean.
             // This allows us to customize the bean's method return values in tests below
@@ -147,7 +146,7 @@ public class MetadataFieldTest extends AbstractUnitTest {
     @Test
     public void testSetElement() {
         String elem = "newelem";
-        mf.setElement(elem);
+        metadataFieldService.setElement(context, mf, elem);
         assertThat("testSetElement 0", mf.getElement(), equalTo(elem));
     }
 
@@ -173,7 +172,7 @@ public class MetadataFieldTest extends AbstractUnitTest {
     @Test
     public void testSetQualifier() {
         String qual = "qualif";
-        mf.setQualifier(qual);
+        metadataFieldService.setQualifier(context, mf, qual);
         assertThat("testSetQualifier 0", mf.getQualifier(), equalTo(qual));
     }
 
@@ -194,7 +193,7 @@ public class MetadataFieldTest extends AbstractUnitTest {
         when(authorizeServiceSpy.isAdmin(context)).thenReturn(true);
 
         MetadataSchema newSchema = metadataSchemaService.create(context, "testSetSchema", "testSetSchemaNS");
-        mf.setMetadataSchema(newSchema);
+        metadataFieldService.setSchema(context, mf, newSchema);
         assertThat("testSetSchemaID 0", mf.getMetadataSchema(), equalTo(newSchema));
     }
 
@@ -212,7 +211,7 @@ public class MetadataFieldTest extends AbstractUnitTest {
     @Test
     public void testSetScopeNote() {
         String scn = "new scope note";
-        mf.setScopeNote(scn);
+        metadataFieldService.setScopeNote(context, mf, scn);
         assertThat("testSetScopeNote 0", mf.getScopeNote(), equalTo(scn));
     }
 
@@ -349,8 +348,8 @@ public class MetadataFieldTest extends AbstractUnitTest {
         String qual = qualifier;
         MetadataField m = metadataFieldService.create(context, dcSchema, elem, qual, null);
 
-        m.setElement(elem);
-        m.setQualifier(qual);
+        metadataFieldService.setElement(context, m, elem);
+        metadataFieldService.setQualifier(context, m, qual);
         metadataFieldService.update(context, m);
         fail("Exception expected");
     }

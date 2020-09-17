@@ -89,7 +89,7 @@ public class RelationshipServiceImpl implements RelationshipService {
                 // for a proper place allocation
                 Relationship relationshipToReturn = relationshipDAO.create(context, relationship);
                 updatePlaceInRelationship(context, relationshipToReturn);
-                update(context, relationshipToReturn);
+                relationshipDAO.save(context, relationshipToReturn);
                 return relationshipToReturn;
             } else {
                 throw new AuthorizeException(
@@ -172,6 +172,9 @@ public class RelationshipServiceImpl implements RelationshipService {
     @Override
     public void updateItem(Context context, Item relatedItem)
         throws SQLException, AuthorizeException {
+        // This method is primarily impacted by
+        // metadataFieldService.findByElement(context, metadataSchema, metadataElement, metadataQualifier)
+        // performance
         relatedItem.setMetadataModified();
         itemService.update(context, relatedItem);
     }
@@ -233,6 +236,10 @@ public class RelationshipServiceImpl implements RelationshipService {
     private boolean verifyMaxCardinality(Context context, Item itemToProcess,
                                          Integer maxCardinality,
                                          RelationshipType relationshipType) throws SQLException {
+        if (maxCardinality == null) {
+            //no need to check the relationships
+            return true;
+        }
         List<Relationship> rightRelationships = findByItemAndRelationshipType(context, itemToProcess, relationshipType,
                                                                               false);
         if (maxCardinality != null && rightRelationships.size() >= maxCardinality) {
@@ -242,7 +249,8 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     private boolean verifyEntityTypes(Item itemToProcess, EntityType entityTypeToProcess) {
-        List<MetadataValue> list = itemService.getMetadata(itemToProcess, "relationship", "type", null, Item.ANY);
+        List<MetadataValue> list = itemService.getMetadata(itemToProcess, "relationship", "type",
+                                                           null, Item.ANY, false);
         if (list.isEmpty()) {
             return false;
         }
@@ -282,6 +290,13 @@ public class RelationshipServiceImpl implements RelationshipService {
         });
         return list;
     }
+
+//    @Override
+//    public List<Relationship> findByItemAndRelationshipTypeIds(Context context, Item item,
+//                                                               Set<Integer> relationshipTypeIds,
+//                                                               Integer limit, Integer offset) throws SQLException {
+//        return relationshipDAO.findByItemAndRelationshipTypeIds(context, item, relationshipTypeIds, limit, offset);
+//    }
 
     @Override
     public List<Relationship> findAll(Context context) throws SQLException {

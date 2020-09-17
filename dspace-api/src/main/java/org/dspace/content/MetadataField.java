@@ -95,7 +95,7 @@ public class MetadataField implements ReloadableEntity<Integer> {
      *
      * @param element new value for element
      */
-    public void setElement(String element) {
+    protected void setElement(String element) {
         this.element = element;
     }
 
@@ -113,7 +113,7 @@ public class MetadataField implements ReloadableEntity<Integer> {
      *
      * @param qualifier new value for qualifier
      */
-    public void setQualifier(String qualifier) {
+    protected void setQualifier(String qualifier) {
         this.qualifier = qualifier;
     }
 
@@ -131,7 +131,7 @@ public class MetadataField implements ReloadableEntity<Integer> {
      *
      * @param scopeNote new value for scope note
      */
-    public void setScopeNote(String scopeNote) {
+    protected void setScopeNote(String scopeNote) {
         this.scopeNote = scopeNote;
     }
 
@@ -149,7 +149,7 @@ public class MetadataField implements ReloadableEntity<Integer> {
      *
      * @param metadataSchema new value for key
      */
-    public void setMetadataSchema(MetadataSchema metadataSchema) {
+    protected void setMetadataSchema(MetadataSchema metadataSchema) {
         this.metadataSchema = metadataSchema;
     }
 

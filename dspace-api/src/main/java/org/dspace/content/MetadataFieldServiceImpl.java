@@ -11,7 +11,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -55,6 +57,8 @@ public class MetadataFieldServiceImpl implements MetadataFieldService {
     @Autowired
     protected SiteService siteService;
 
+    private static Map<String, MetadataField> cachedFields = new HashMap();
+
     protected MetadataFieldServiceImpl() {
 
     }
@@ -85,6 +89,7 @@ public class MetadataFieldServiceImpl implements MetadataFieldService {
 
         log.info(LogManager.getHeader(context, "create_metadata_field",
                                       "metadata_field_id=" + metadataField.getID()));
+        cachedFields.clear();
         // Update the index of type metadatafield
         this.triggerEventToUpdateIndex(context, metadataField.getID());
         return metadataField;
@@ -104,7 +109,15 @@ public class MetadataFieldServiceImpl implements MetadataFieldService {
     @Override
     public MetadataField findByElement(Context context, String metadataSchemaName, String element, String qualifier)
         throws SQLException {
-        return metadataFieldDAO.findByElement(context, metadataSchemaName, element, qualifier);
+        String key = metadataSchemaName + "." + element + "." + qualifier;
+        if (cachedFields.containsKey(key)) {
+            return cachedFields.get(key);
+        }
+        MetadataField metadataField = metadataFieldDAO.findByElement(context, metadataSchemaName, element, qualifier);
+        if (metadataField != null) {
+            cachedFields.put(key, metadataField);
+        }
+        return metadataField;
     }
 
     @Override
@@ -159,6 +172,8 @@ public class MetadataFieldServiceImpl implements MetadataFieldService {
                                       "metadata_field_id=" + metadataField.getID() + "element=" + metadataField
                                           .getElement()
                                           + "qualifier=" + metadataField.getQualifier()));
+        cachedFields.clear();
+
         // Update the index of type metadatafield
         this.triggerEventToUpdateIndex(context, metadataField.getID());
     }
@@ -189,8 +204,48 @@ public class MetadataFieldServiceImpl implements MetadataFieldService {
 
         log.info(LogManager.getHeader(context, "delete_metadata_field",
                                       "metadata_field_id=" + metadataField.getID()));
+        cachedFields.clear();
+
         // Update the index of type metadatafield
         this.triggerEventToUpdateIndex(context, metadataField.getID());
+    }
+
+    @Override
+    public void setSchema(Context context, MetadataField metadataField, MetadataSchema schema) {
+        String key = metadataField.getMetadataSchema().getName() + "." + metadataField.getElement() + "." +
+            metadataField.getQualifier();
+        metadataField.setMetadataSchema(schema);
+        cachedFields.remove(key);
+        key = metadataField.getMetadataSchema().getName() + "." + metadataField.getElement() + "." +
+            metadataField.getQualifier();
+        cachedFields.put(key, metadataField);
+    }
+
+    @Override
+    public void setElement(Context context, MetadataField metadataField, String element) {
+        String key = metadataField.getMetadataSchema().getName() + "." + metadataField.getElement() + "." +
+            metadataField.getQualifier();
+        metadataField.setElement(element);
+        cachedFields.remove(key);
+        key = metadataField.getMetadataSchema().getName() + "." + metadataField.getElement() + "." +
+            metadataField.getQualifier();
+        cachedFields.put(key, metadataField);
+    }
+
+    @Override
+    public void setQualifier(Context context, MetadataField metadataField, String qualifier) {
+        String key = metadataField.getMetadataSchema().getName() + "." + metadataField.getElement() + "." +
+            metadataField.getQualifier();
+        metadataField.setQualifier(qualifier);
+        cachedFields.remove(key);
+        key = metadataField.getMetadataSchema().getName() + "." + metadataField.getElement() + "." +
+            metadataField.getQualifier();
+        cachedFields.put(key, metadataField);
+    }
+
+    @Override
+    public void setScopeNote(Context context, MetadataField metadataField, String scopeNote) {
+        metadataField.setScopeNote(scopeNote);
     }
 
     /**

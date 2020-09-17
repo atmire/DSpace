@@ -129,4 +129,12 @@ public interface MetadataFieldService {
      * @throws AuthorizeException if authorization error
      */
     public void delete(Context context, MetadataField metadataField) throws SQLException, AuthorizeException;
+
+    void setSchema(Context context, MetadataField metadataField, MetadataSchema schema);
+
+    void setElement(Context context, MetadataField metadataField, String element);
+
+    void setQualifier(Context context, MetadataField metadataField, String qualifier);
+
+    void setScopeNote(Context context, MetadataField metadataField, String scopeNote);
 }
