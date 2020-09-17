@@ -195,6 +195,7 @@ public class MetadataFieldTest extends AbstractUnitTest {
 
         MetadataSchema newSchema = metadataSchemaService.create(context, "testSetSchema", "testSetSchemaNS");
         mf.setMetadataSchema(newSchema);
+        // the cached object has been adjusted, the cache should be cleared
         assertThat("testSetSchemaID 0", mf.getMetadataSchema(), equalTo(newSchema));
     }
 

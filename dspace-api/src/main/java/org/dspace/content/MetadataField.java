@@ -97,6 +97,7 @@ public class MetadataField implements ReloadableEntity<Integer> {
      */
     public void setElement(String element) {
         this.element = element;
+        MetadataFieldServiceImpl.clearCache();
     }
 
     /**
@@ -115,6 +116,7 @@ public class MetadataField implements ReloadableEntity<Integer> {
      */
     public void setQualifier(String qualifier) {
         this.qualifier = qualifier;
+        MetadataFieldServiceImpl.clearCache();
     }
 
     /**
@@ -133,6 +135,7 @@ public class MetadataField implements ReloadableEntity<Integer> {
      */
     public void setScopeNote(String scopeNote) {
         this.scopeNote = scopeNote;
+        MetadataFieldServiceImpl.clearCache();
     }
 
     /**
@@ -151,6 +154,7 @@ public class MetadataField implements ReloadableEntity<Integer> {
      */
     public void setMetadataSchema(MetadataSchema metadataSchema) {
         this.metadataSchema = metadataSchema;
+        MetadataFieldServiceImpl.clearCache();
     }
 
 

@@ -89,10 +89,14 @@ public class MetadataFieldServiceImpl implements MetadataFieldService {
 
         log.info(LogManager.getHeader(context, "create_metadata_field",
                                       "metadata_field_id=" + metadataField.getID()));
-        cachedFields.clear();
+        clearCache();
         // Update the index of type metadatafield
         this.triggerEventToUpdateIndex(context, metadataField.getID());
         return metadataField;
+    }
+
+    public static void clearCache() {
+        cachedFields.clear();
     }
 
     @Override
@@ -172,7 +176,7 @@ public class MetadataFieldServiceImpl implements MetadataFieldService {
                                       "metadata_field_id=" + metadataField.getID() + "element=" + metadataField
                                           .getElement()
                                           + "qualifier=" + metadataField.getQualifier()));
-        cachedFields.clear();
+        clearCache();
 
         // Update the index of type metadatafield
         this.triggerEventToUpdateIndex(context, metadataField.getID());
@@ -204,7 +208,7 @@ public class MetadataFieldServiceImpl implements MetadataFieldService {
 
         log.info(LogManager.getHeader(context, "delete_metadata_field",
                                       "metadata_field_id=" + metadataField.getID()));
-        cachedFields.clear();
+        clearCache();
 
         // Update the index of type metadatafield
         this.triggerEventToUpdateIndex(context, metadataField.getID());

@@ -212,8 +212,8 @@ public class RelationshipServiceImplTest {
         when(metsList.get(0).getValue()).thenReturn("Entitylabel");
         when(relationshipService
                 .findByItemAndRelationshipType(context, leftItem, testRel, true)).thenReturn(leftTypelist);
-        when(itemService.getMetadata(leftItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
-        when(itemService.getMetadata(rightItem, "relationship", "type", null, Item.ANY)).thenReturn(metsList);
+        when(itemService.getMetadata(leftItem, "relationship", "type", null, Item.ANY, false)).thenReturn(metsList);
+        when(itemService.getMetadata(rightItem, "relationship", "type", null, Item.ANY, false)).thenReturn(metsList);
         when(relationshipDAO.create(any(), any())).thenReturn(relationship);
 
         // The reported Relationship should match our defined relationship
