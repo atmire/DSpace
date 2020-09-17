@@ -290,14 +290,7 @@ public class RelationshipServiceImpl implements RelationshipService {
         });
         return list;
     }
-
-//    @Override
-//    public List<Relationship> findByItemAndRelationshipTypeIds(Context context, Item item,
-//                                                               Set<Integer> relationshipTypeIds,
-//                                                               Integer limit, Integer offset) throws SQLException {
-//        return relationshipDAO.findByItemAndRelationshipTypeIds(context, item, relationshipTypeIds, limit, offset);
-//    }
-
+    
     @Override
     public List<Relationship> findAll(Context context) throws SQLException {
         return findAll(context, -1, -1);
