@@ -89,7 +89,7 @@ public class RelationshipServiceImpl implements RelationshipService {
                 // for a proper place allocation
                 Relationship relationshipToReturn = relationshipDAO.create(context, relationship);
                 updatePlaceInRelationship(context, relationshipToReturn);
-                relationshipDAO.save(context, relationshipToReturn);
+                update(context, relationshipToReturn);
                 return relationshipToReturn;
             } else {
                 throw new AuthorizeException(
@@ -172,9 +172,6 @@ public class RelationshipServiceImpl implements RelationshipService {
     @Override
     public void updateItem(Context context, Item relatedItem)
         throws SQLException, AuthorizeException {
-        // This method is primarily impacted by
-        // metadataFieldService.findByElement(context, metadataSchema, metadataElement, metadataQualifier)
-        // performance
         relatedItem.setMetadataModified();
         itemService.update(context, relatedItem);
     }
@@ -290,7 +287,7 @@ public class RelationshipServiceImpl implements RelationshipService {
         });
         return list;
     }
-    
+
     @Override
     public List<Relationship> findAll(Context context) throws SQLException {
         return findAll(context, -1, -1);

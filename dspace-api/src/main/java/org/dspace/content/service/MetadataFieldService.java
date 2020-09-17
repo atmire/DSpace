@@ -130,11 +130,39 @@ public interface MetadataFieldService {
      */
     public void delete(Context context, MetadataField metadataField) throws SQLException, AuthorizeException;
 
+    /**
+     * Set the schema record key.
+     *
+     * @param context       dspace context
+     * @param metadataField metadata field
+     * @param schema        new value for key
+     */
     void setSchema(Context context, MetadataField metadataField, MetadataSchema schema);
 
+    /**
+     * Set the element name.
+     *
+     * @param context       dspace context
+     * @param metadataField metadata field
+     * @param element new value for element
+     */
     void setElement(Context context, MetadataField metadataField, String element);
 
+    /**
+     * Set the qualifier.
+     *
+     * @param context       dspace context
+     * @param metadataField metadata field
+     * @param qualifier new value for qualifier
+     */
     void setQualifier(Context context, MetadataField metadataField, String qualifier);
 
+    /**
+     * Set the scope note.
+     *
+     * @param context       dspace context
+     * @param metadataField metadata field
+     * @param scopeNote new value for scope note
+     */
     void setScopeNote(Context context, MetadataField metadataField, String scopeNote);
 }
