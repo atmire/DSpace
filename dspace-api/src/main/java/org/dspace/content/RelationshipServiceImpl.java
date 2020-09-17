@@ -234,6 +234,10 @@ public class RelationshipServiceImpl implements RelationshipService {
     private boolean verifyMaxCardinality(Context context, Item itemToProcess,
                                          Integer maxCardinality,
                                          RelationshipType relationshipType) throws SQLException {
+        if (maxCardinality == null) {
+            //no need to check the relationships
+            return true;
+        }
         List<Relationship> rightRelationships = findByItemAndRelationshipType(context, itemToProcess, relationshipType,
                                                                               false);
         if (maxCardinality != null && rightRelationships.size() >= maxCardinality) {
@@ -243,7 +247,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     private boolean verifyEntityTypes(Item itemToProcess, EntityType entityTypeToProcess) {
-        List<MetadataValue> list = itemService.getMetadata(itemToProcess, "relationship", "type", null, Item.ANY);
+        List<MetadataValue> list = itemService.getMetadata(itemToProcess, "relationship", "type", null, Item.ANY, false);
         if (list.isEmpty()) {
             return false;
         }
