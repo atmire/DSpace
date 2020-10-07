@@ -54,7 +54,6 @@ import org.dspace.xmlworkflow.service.XmlWorkflowService;
 import org.dspace.xmlworkflow.storedcomponents.XmlWorkflowItem;
 import org.hamcrest.Matchers;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -303,11 +302,7 @@ public class DeleteEPersonSubmitterIT extends AbstractControllerIntegrationTest 
                         .andExpect(status().isNotFound());
     }
 
-    @Ignore
     @Test
-    /**
-     * TODO: This test currently fails with a status 500
-     */
     public void testWorkflowItemSubmitterDelete() throws Exception {
         context.turnOffAuthorisationSystem();
 
