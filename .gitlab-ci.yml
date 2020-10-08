@@ -10,7 +10,7 @@ cache:
   key: shared-maven-cache
   paths:
     - .m2/repository
-    - target/
+#    - target/ => no use in caching target dirs
 
 test:
   stage: test
