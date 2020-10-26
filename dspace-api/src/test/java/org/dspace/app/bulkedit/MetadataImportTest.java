@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.AbstractIntegrationTest;
 import org.dspace.app.launcher.ScriptLauncher;
@@ -40,6 +41,7 @@ import org.dspace.content.service.RelationshipTypeService;
 import org.dspace.content.service.WorkspaceItemService;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class MetadataImportTest extends AbstractIntegrationTest {
 
@@ -202,5 +204,25 @@ public class MetadataImportTest extends AbstractIntegrationTest {
         Files.delete(Paths.get(testFileLocation));
         context.commit();
         context.restoreAuthSystemState();
+    }
+
+    @Test(expected = ParseException.class)
+    public void metadataImportWithoutEPersonParameterTest()
+        throws IllegalAccessException, InstantiationException, ParseException {
+        String fileLocation = new File(testProps.get("test.importcsv").toString()).getAbsolutePath();
+        String[] args = new String[] {"metadata-import", "-f", fileLocation, "-s"};
+        TestDSpaceRunnableHandler testDSpaceRunnableHandler = new TestDSpaceRunnableHandler();
+
+        ScriptService scriptService = ScriptServiceFactory.getInstance().getScriptService();
+        ScriptConfiguration scriptConfiguration = scriptService.getScriptConfiguration(args[0]);
+
+        DSpaceRunnable script = null;
+        if (scriptConfiguration != null) {
+            script = scriptService.createDSpaceRunnableForScriptConfiguration(scriptConfiguration);
+        }
+        if (script != null) {
+            script.initialize(args, testDSpaceRunnableHandler, null);
+            script.run();
+        }
     }
 }
