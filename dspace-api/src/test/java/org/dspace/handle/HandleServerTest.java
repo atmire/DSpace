@@ -33,5 +33,6 @@ public class HandleServerTest
         Main main = new Main(new File(testProps.getProperty("test.handle.dir")), configTable);
         main.initialize();
         //just test there's no exception
+        main.start();
     }
 }
