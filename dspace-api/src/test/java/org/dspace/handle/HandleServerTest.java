@@ -24,7 +24,7 @@ public class HandleServerTest
         StreamTable configTable = new StreamTable();
         InputStream old = System.in;
         try {
-            System.setIn(getClass().getResourceAsStream("config.dct"));
+            System.setIn(getClass().getResourceAsStream("setup.dct"));
             SimpleSetup.main(new String[]{testProps.getProperty("test.handle.dir")});
         } finally {
             System.setIn(old);
