@@ -7,14 +7,14 @@
  */
 package org.dspace.handle;
 
+import java.io.File;
+import java.io.InputStream;
+
 import net.cnri.util.StreamTable;
 import net.handle.server.Main;
 import net.handle.server.SimpleSetup;
 import org.dspace.AbstractIntegrationTestWithDatabase;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.InputStream;
 
 public class HandleServerTest
         extends AbstractIntegrationTestWithDatabase {
@@ -29,7 +29,7 @@ public class HandleServerTest
         } finally {
             System.setIn(old);
         }
-        configTable.readFromFile(testProps.getProperty("test.handle.dir")+"/config.dct");
+        configTable.readFromFile(testProps.getProperty("test.handle.dir") + "/config.dct");
         Main main = new Main(new File(testProps.getProperty("test.handle.dir")), configTable);
         main.initialize();
         //just test there's no exception
