@@ -9,10 +9,12 @@ package org.dspace.handle;
 
 import net.cnri.util.StreamTable;
 import net.handle.server.Main;
+import net.handle.server.SimpleSetup;
 import org.dspace.AbstractIntegrationTestWithDatabase;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.InputStream;
 
 public class HandleServerTest
         extends AbstractIntegrationTestWithDatabase {
@@ -20,6 +22,13 @@ public class HandleServerTest
     @Test
     public void testStartHandleServer() throws Exception {
         StreamTable configTable = new StreamTable();
+        InputStream old = System.in;
+        try {
+            System.setIn(getClass().getResourceAsStream("config.dct"));
+            SimpleSetup.main(new String[]{testProps.getProperty("test.handle.dir")});
+        } finally {
+            System.setIn(old);
+        }
         configTable.readFromFile(testProps.getProperty("test.handle.dir")+"/config.dct");
         Main main = new Main(new File(testProps.getProperty("test.handle.dir")), configTable);
         main.initialize();
