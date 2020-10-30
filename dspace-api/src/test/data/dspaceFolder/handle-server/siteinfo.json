@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "protocolVersion": "2.11",
+  "serialNumber": 1,
+  "primarySite": true,
+  "multiPrimary": false,
+  "attributes": [
+    {
+      "name": "desc",
+      "value": "Test Handle Server"
+    }
+  ],
+  "servers": [
+    {
+      "serverId": 1,
+      "address": "127.0.0.1",
+      "publicKey": {
+        "format": "key",
+        "value": {
+          "kty": "RSA",
+          "n": "gnbXtJmzwckV8dKcjuxFz9JOeleLKV8CS6OvreJ-OAvIvgWl9gzU7-jM5rf1sr57afVrU3NgBEgVXuJLcAaLaRhPNBh9Tc9lqPGhQM2slb46iou9ruqthGAkAgRq3GxmXKcv440H8sMaG0Y0R2jyU_Tu_yrhYpWV1-FCwokLV6_AtiNy86x-h9pK0lwq2oYndtHxZAtmCiS12Y2j0Y2e0kYt02T3GLkbrpLNH2qyC_TDVeXK-I7Q8rsI7h8HXPCIki7uT6f_SI-U-e58thGbgCW0fzBVlGG1TV3vzbEJTBYbWaUDYncfr7lh9vhkV65BHUi4Um_LfFRymInmr28BgQ",
+          "e": "AQAB"
+        }
+      },
+      "interfaces": [
+        {
+          "query": true,
+          "admin": true,
+          "protocol": "TCP",
+          "port": 2641
+        }
+      ]
+    }
+  ]
+}
