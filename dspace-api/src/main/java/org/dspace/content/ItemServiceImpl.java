@@ -231,6 +231,12 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
     }
 
     @Override
+    public Iterator<Item> findBySubmitter(Context context, EPerson eperson, boolean retrieveAllItems)
+        throws SQLException {
+        return itemDAO.findBySubmitter(context, eperson, retrieveAllItems);
+    }
+
+    @Override
     public Iterator<Item> findBySubmitterDateSorted(Context context, EPerson eperson, Integer limit)
         throws SQLException {
 
@@ -1327,7 +1333,7 @@ prevent the generation of resource policy entry values with null dspace_object a
         if (StringUtils.equals(schema, MetadataSchemaEnum.RELATION.getName()) && !StringUtils.equals(element, "type")) {
 
             List<RelationshipMetadataValue> relationMetadata = relationshipMetadataService
-                .getRelationshipMetadata(item, false);
+                .getRelationshipMetadata(item, enableVirtualMetadata);
             List<MetadataValue> listToReturn = new LinkedList<>();
             for (MetadataValue metadataValue : relationMetadata) {
                 if (StringUtils.equals(metadataValue.getMetadataField().getElement(), element)) {
