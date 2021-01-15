@@ -12,6 +12,7 @@ import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static org.dspace.app.rest.matcher.MetadataMatcher.matchMetadata;
 import static org.dspace.app.rest.matcher.MetadataMatcher.matchMetadataDoesNotExist;
 import static org.dspace.core.Constants.WRITE;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -2823,5 +2824,83 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
 
     }
 
+    @Test
+    public void deleteItemWithMinRelationshipsAndVirtualMetadataTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        //1. A community with one collection.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                .withName("Parent Community")
+                .build();
+        Collection col1 = CollectionBuilder
+                .createCollection(context, parentCommunity).withName("Collection 1").build();
+
+        Item author1 = ItemBuilder.createItem(context, col1)
+                .withTitle("Author1")
+                .withIssueDate("2017-10-17")
+                .withAuthor("Smith, Donald")
+                .withPersonIdentifierLastName("Smith")
+                .withPersonIdentifierFirstName("Donald")
+                .withRelationshipType("Person")
+                .build();
+
+        Item publication1 = ItemBuilder.createItem(context, col1)
+                .withTitle("Publication1")
+                .withAuthor("Testy, TEst")
+                .withIssueDate("2015-01-01")
+                .withRelationshipType("Publication")
+                .build();
+
+        EntityType publication = EntityTypeBuilder.createEntityTypeBuilder(context, "Publication").build();
+        EntityType person = EntityTypeBuilder.createEntityTypeBuilder(context, "Person").build();
+
+
+        RelationshipType isAuthorOfPublication = RelationshipTypeBuilder
+                .createRelationshipTypeBuilder(context, publication, person, "isAuthorOfPublication",
+                        "isPublicationOfAuthor", 0, null, 1,
+                        null).withCopyToLeft(true).withCopyToRight(true).build();
+
+        Relationship relationship1 = RelationshipBuilder
+                .createRelationshipBuilder(context, publication1, author1, isAuthorOfPublication).build();
+
+        context.restoreAuthSystemState();
+
+        String token = getAuthToken(admin.getEmail(), password);
+
+        //The publication contains the author's name
+        getClient(token).perform(get("/api/core/items/" + publication1.getID()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.metadata", allOf(
+                        matchMetadata("dc.contributor.author", "Testy, TEst"),
+                        matchMetadata("dc.contributor.author", "Smith, Donald"))));
+
+        getClient(token).perform(get("/api/core/relationships/" + relationship1.getID()))
+                .andExpect(status().is(200));
+        getClient(token).perform(delete("/api/core/relationships/" + relationship1.getID()))
+                .andExpect(status().is(400));
+        //The relationship still exists
+        getClient(token).perform(get("/api/core/relationships/" + relationship1.getID()))
+                .andExpect(status().is(200));
+
+        //Delete public item
+        getClient(token).perform(delete("/api/core/items/" + author1.getID())
+                .param("copyVirtualMetadata", "configured"))
+                .andExpect(status().is(204));
+        //The item has been deleted
+        getClient(token).perform(get("/api/core/items/" + author1.getID()))
+                .andExpect(status().is(404));
+        //The relationship has been deleted
+        getClient(token).perform(get("/api/core/relationships/" + relationship1.getID()))
+                .andExpect(status().is(404));
+
+        //The publication still contains the author's name
+        getClient(token).perform(get("/api/core/items/" + publication1.getID()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.metadata", allOf(
+                        matchMetadata("dc.contributor.author", "Testy, TEst"),
+                        matchMetadata("dc.contributor.author", "Smith, Donald"))));
+
+    }
 
 }
