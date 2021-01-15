@@ -2859,7 +2859,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         RelationshipType isAuthorOfPublication = RelationshipTypeBuilder
                 .createRelationshipTypeBuilder(context, publication, person, "isAuthorOfPublication",
                         "isPublicationOfAuthor", 0, null, 1,
-                        null).withCopyToLeft(true).withCopyToRight(true).build();
+                        null).withCopyToLeft(true).withCopyToRight(false).build();
 
         Relationship relationship1 = RelationshipBuilder
                 .createRelationshipBuilder(context, publication1, author1, isAuthorOfPublication).build();
