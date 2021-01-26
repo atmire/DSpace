@@ -307,9 +307,9 @@ public class MetadataFieldRestRepository extends DSpaceRestRepository<MetadataFi
             throw new ResourceNotFoundException("metadata field with id: " + id + " not found");
         }
 
-        metadataField.setElement(metadataFieldRest.getElement());
-        metadataField.setQualifier(metadataFieldRest.getQualifier());
-        metadataField.setScopeNote(metadataFieldRest.getScopeNote());
+        metadataFieldService.setElement(context, metadataField, metadataFieldRest.getElement());
+        metadataFieldService.setQualifier(context, metadataField, metadataFieldRest.getQualifier());
+        metadataFieldService.setScopeNote(context, metadataField, metadataFieldRest.getScopeNote());
 
         try {
             metadataFieldService.update(context, metadataField);
