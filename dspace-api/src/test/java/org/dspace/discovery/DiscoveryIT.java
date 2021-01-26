@@ -57,7 +57,6 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
                                                                      IndexingService.class);
 
 
-    @Ignore
     @Test
     public void deleteWorkspaceItemSolrRecordAfterDeletionFromDbTest() throws Exception {
         context.turnOffAuthorisationSystem();
@@ -90,7 +89,6 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         assertEquals(0, discoverResult.getTotalSearchResults());
     }
 
-    @Ignore
     @Test
     public void deleteWorkspaceItemSolrRecordAfterDeletionFromDbTestn() throws Exception {
         context.turnOffAuthorisationSystem();
