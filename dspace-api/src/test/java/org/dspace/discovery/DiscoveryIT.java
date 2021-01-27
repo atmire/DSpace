@@ -33,7 +33,6 @@ import org.dspace.xmlworkflow.state.Workflow;
 import org.dspace.xmlworkflow.storedcomponents.ClaimedTask;
 import org.dspace.xmlworkflow.storedcomponents.XmlWorkflowItem;
 import org.dspace.xmlworkflow.storedcomponents.service.ClaimedTaskService;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
