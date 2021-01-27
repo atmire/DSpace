@@ -69,6 +69,7 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
                                                           .withAbstract("headache")
                                                           .build();
         context.restoreAuthSystemState();
+        context.dispatchEvents();
 
         DiscoverQuery discoverQuery = new DiscoverQuery();
         discoverQuery.setQuery("*:*");
@@ -89,8 +90,13 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         assertEquals(0, discoverResult.getTotalSearchResults());
     }
 
+    /**
+     * This method tests whether the SOLR core gets updated correctly when a workflow task is claimed and returned to
+     * the pool.
+     * @throws Exception
+     */
     @Test
-    public void deleteWorkspaceItemSolrRecordAfterDeletionFromDbTestn() throws Exception {
+    public void deleteWorkflowItemSolrRecordAfterDeletionfromDbTest() throws Exception {
         context.turnOffAuthorisationSystem();
         Community community = CommunityBuilder.createCommunity(context)
                                               .withName("Parent Community")
@@ -122,6 +128,7 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         context.dispatchEvents();
         indexer.commit();
 
+        // Verify that one PoolTask is present in solr
         assertSearchQuery(IndexablePoolTask.TYPE, 1);
 
         context.turnOffAuthorisationSystem();
@@ -135,10 +142,7 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         context.dispatchEvents();
         indexer.commit();
 
-        context.turnOffAuthorisationSystem();
-        ItemBuilder.createItem(context, collection).build();
-        context.restoreAuthSystemState();
-
+        // After claiming a task, verify that are no Pool Tasks present in solr, and that one Claimed Task is present
         assertSearchQuery(IndexablePoolTask.TYPE, 0);
         assertSearchQuery(IndexableClaimedTask.TYPE, 1);
 
@@ -146,10 +150,8 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         context.dispatchEvents();
         indexer.commit();
 
-        context.turnOffAuthorisationSystem();
-        ItemBuilder.createItem(context, collection).build();
-        context.restoreAuthSystemState();
-
+        // After returning the claimed task to the pool, verify that there is again one Pool Task
+        // and no Claimed Task present Solr
         assertSearchQuery(IndexablePoolTask.TYPE, 1);
         assertSearchQuery(IndexableClaimedTask.TYPE, 0);
 
