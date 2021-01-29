@@ -573,9 +573,9 @@ public class MetadataRegistryResource extends Resource {
             writeStats(siteService.findSite(context), UsageEvent.Action.UPDATE, user_ip, user_agent, xforwardedfor,
                        headers, request, context);
 
-            dspaceField.setElement(field.getElement());
-            dspaceField.setQualifier(field.getQualifier());
-            dspaceField.setScopeNote(field.getDescription());
+            metadataFieldService.setElement(context, dspaceField, field.getElement());
+            metadataFieldService.setQualifier(context, dspaceField, field.getQualifier());
+            metadataFieldService.setScopeNote(context, dspaceField, field.getDescription());
             metadataFieldService.update(context, dspaceField);
 
             context.complete();
