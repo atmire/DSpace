@@ -95,12 +95,16 @@ public class MetadataFieldDAOImpl extends AbstractHibernateDAO<MetadataField> im
             } catch (Throwable e) {
                 //log.error
             }
-            if (metadataField != null &&
-                    (metadataField.getMetadataSchema().getName() + "." + metadataField.getElement() +
-                            "." + metadataField.getQualifier()).equals(key)) {
-                return metadataField;
-            } else {
-                cachedFields.remove(key);
+            try {
+                if (metadataField != null &&
+                        (metadataField.getMetadataSchema().getName() + "." + metadataField.getElement() +
+                                "." + metadataField.getQualifier()).equals(key)) {
+                    return metadataField;
+                } else {
+                    cachedFields.remove(key);
+                }
+            } catch (Throwable e) {
+                cachedFields.clear();
             }
         }
 
