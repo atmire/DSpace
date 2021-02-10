@@ -88,10 +88,15 @@ public class MetadataFieldDAOImpl extends AbstractHibernateDAO<MetadataField> im
         String key = metadataSchema + "." + element + "." + qualifier;
         if (cachedFields.containsKey(key)) {
             Session session = getHibernateSession(context);
-            MetadataField metadataField = session.load(MetadataField.class, cachedFields.get(key));
+            MetadataField metadataField = null;
+            try {
+                metadataField = session.load(MetadataField.class, cachedFields.get(key));
+            } catch (Exception e) {
+                //log.error
+            }
             if (metadataField != null &&
-                    (metadataField.getMetadataSchema().getName() + "." + metadataField.getElement() +
-                            "." + metadataField.getQualifier()).equals(key)) {
+                    key.endsWith("." + metadataField.getElement() +
+                            "." + metadataField.getQualifier())) {
                 return metadataField;
             } else {
                 cachedFields.remove(key);
