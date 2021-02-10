@@ -35,10 +35,12 @@ import org.jdom.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 
 /**
  * Abstract Test class that will initialize the in-memory database
  */
+@Ignore
 public class AbstractIntegrationTestWithDatabase extends AbstractDSpaceIntegrationTest {
     /**
      * log4j category
