@@ -42,4 +42,5 @@ public interface MetadataFieldDAO extends GenericDAO<MetadataField> {
     public List<MetadataField> findAllInSchema(Context context, MetadataSchema metadataSchema)
         throws SQLException;
 
+    public void clearCache();
 }

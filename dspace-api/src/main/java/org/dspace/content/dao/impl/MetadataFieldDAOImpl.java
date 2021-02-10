@@ -189,4 +189,9 @@ public class MetadataFieldDAOImpl extends AbstractHibernateDAO<MetadataField> im
 
         return list(query);
     }
+
+    @Override
+    public void clearCache() {
+        cachedFields.clear();
+    }
 }

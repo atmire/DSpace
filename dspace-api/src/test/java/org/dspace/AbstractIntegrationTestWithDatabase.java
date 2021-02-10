@@ -20,6 +20,7 @@ import org.dspace.authority.MockAuthoritySolrServiceImpl;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.builder.AbstractBuilder;
 import org.dspace.content.Community;
+import org.dspace.content.service.MetadataFieldService;
 import org.dspace.core.Context;
 import org.dspace.core.I18nUtil;
 import org.dspace.discovery.MockSolrSearchCore;
@@ -178,6 +179,7 @@ public class AbstractIntegrationTestWithDatabase extends AbstractDSpaceIntegrati
             cleanupContext();
 
             ServiceManager serviceManager = DSpaceServicesFactory.getInstance().getServiceManager();
+            serviceManager.getServiceByName(null, MetadataFieldService.class).clearCache();
             // Clear the search core.
             MockSolrSearchCore searchService = serviceManager
                     .getServiceByName(null, MockSolrSearchCore.class);

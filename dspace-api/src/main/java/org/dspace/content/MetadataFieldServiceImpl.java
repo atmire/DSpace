@@ -224,4 +224,8 @@ public class MetadataFieldServiceImpl implements MetadataFieldService {
         return metadataFieldDAO.find(context, fieldId, metadataSchema, element, qualifier) != null;
     }
 
+    @Override
+    public void clearCache() {
+        metadataFieldDAO.clearCache();
+    }
 }

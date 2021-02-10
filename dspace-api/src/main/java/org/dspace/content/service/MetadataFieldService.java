@@ -129,4 +129,6 @@ public interface MetadataFieldService {
      * @throws AuthorizeException if authorization error
      */
     public void delete(Context context, MetadataField metadataField) throws SQLException, AuthorizeException;
+
+    public void clearCache();
 }
