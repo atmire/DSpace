@@ -11,6 +11,7 @@ import static org.junit.Assert.fail;
 
 import java.sql.SQLException;
 
+import com.google.common.base.Throwables;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.launcher.ScriptLauncher;
@@ -90,7 +91,7 @@ public class AbstractIntegrationTestWithDatabase extends AbstractDSpaceIntegrati
             log.error("Error initializing database", se);
             fail("Error initializing database: " + se.getMessage()
                      + (se.getCause() == null ? "" : ": " + se.getCause().getMessage())
-                     + (se.getStackTrace() == null ? "" : ": " + se.getStackTrace()));
+                     + (se.getStackTrace() == null ? "" : ": " + Throwables.getStackTraceAsString(se)));
         }
     }
 
