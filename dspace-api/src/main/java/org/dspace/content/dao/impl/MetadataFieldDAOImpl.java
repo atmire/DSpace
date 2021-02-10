@@ -96,8 +96,8 @@ public class MetadataFieldDAOImpl extends AbstractHibernateDAO<MetadataField> im
                 //log.error
             }
             if (metadataField != null &&
-                    key.endsWith("." + metadataField.getElement() +
-                            "." + metadataField.getQualifier())) {
+                    (metadataField.getMetadataSchema().getName() + "." + metadataField.getElement() +
+                            "." + metadataField.getQualifier()).equals(key)) {
                 return metadataField;
             } else {
                 cachedFields.remove(key);

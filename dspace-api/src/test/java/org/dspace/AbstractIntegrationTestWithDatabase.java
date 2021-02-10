@@ -35,12 +35,10 @@ import org.jdom.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 
 /**
  * Abstract Test class that will initialize the in-memory database
  */
-@Ignore
 public class AbstractIntegrationTestWithDatabase extends AbstractDSpaceIntegrationTest {
     /**
      * log4j category
@@ -89,10 +87,10 @@ public class AbstractIntegrationTestWithDatabase extends AbstractDSpaceIntegrati
             // Update/Initialize the database to latest version (via Flyway)
             DatabaseUtils.updateDatabase();
         } catch (SQLException se) {
-            se.printStackTrace();
             log.error("Error initializing database", se);
             fail("Error initializing database: " + se.getMessage()
-                     + (se.getCause() == null ? "" : ": " + se.getCause().getMessage()));
+                     + (se.getCause() == null ? "" : ": " + se.getCause().getMessage())
+                     + (se.getStackTrace() == null ? "" : ": " + se.getStackTrace()));
         }
     }
 
