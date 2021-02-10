@@ -128,7 +128,7 @@ public class MetadataFieldDAOImpl extends AbstractHibernateDAO<MetadataField> im
         query.setHint("org.hibernate.cacheable", Boolean.TRUE);
 
         MetadataField metadataField = singleResult(query);
-        if (metadataField != null) {
+        if (metadataField != null && metadataField.getElement().equals("test")) {
             cachedFields.put(key, metadataField.getID());
         }
         return metadataField;
