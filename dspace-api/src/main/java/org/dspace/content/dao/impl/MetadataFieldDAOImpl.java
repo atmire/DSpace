@@ -91,7 +91,7 @@ public class MetadataFieldDAOImpl extends AbstractHibernateDAO<MetadataField> im
             MetadataField metadataField = null;
             try {
                 metadataField = session.load(MetadataField.class, cachedFields.get(key));
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 //log.error
             }
             if (metadataField != null &&
