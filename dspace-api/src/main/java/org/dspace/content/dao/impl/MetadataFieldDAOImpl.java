@@ -38,6 +38,7 @@ import org.hibernate.Session;
 public class MetadataFieldDAOImpl extends AbstractHibernateDAO<MetadataField> implements MetadataFieldDAO {
 
     private static Map<String, Integer> cachedFields = new HashMap();
+    private boolean addToCache = true;
 
     protected MetadataFieldDAOImpl() {
         super();
@@ -128,7 +129,7 @@ public class MetadataFieldDAOImpl extends AbstractHibernateDAO<MetadataField> im
         query.setHint("org.hibernate.cacheable", Boolean.TRUE);
 
         MetadataField metadataField = singleResult(query);
-        if (metadataField != null && metadataField.getElement().equals("test")) {
+        if (metadataField != null && addToCache) {
             cachedFields.put(key, metadataField.getID());
         }
         return metadataField;
