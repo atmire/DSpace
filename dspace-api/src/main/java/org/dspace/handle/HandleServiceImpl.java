@@ -7,6 +7,10 @@
  */
 package org.dspace.handle;
 
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.dspace.core.Constants.ITEM;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +19,14 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.dspace.content.DSpaceObject;
+import org.dspace.content.Item;
 import org.dspace.content.service.SiteService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
+import org.dspace.discovery.DiscoverQuery;
+import org.dspace.discovery.DiscoverResult;
+import org.dspace.discovery.SearchService;
+import org.dspace.discovery.SearchServiceException;
 import org.dspace.handle.dao.HandleDAO;
 import org.dspace.handle.service.HandleService;
 import org.dspace.services.ConfigurationService;
@@ -57,6 +66,9 @@ public class HandleServiceImpl implements HandleService {
     @Autowired
     protected SiteService siteService;
 
+    @Autowired
+    protected SearchService searchService;
+
     /**
      * Public Constructor
      */
@@ -70,6 +82,45 @@ public class HandleServiceImpl implements HandleService {
 
         if (dbhandle == null) {
             return null;
+        }
+
+        if (dbhandle.getDSpaceObject().getType() == ITEM) {
+            Item item = (Item) dbhandle.getDSpaceObject();
+
+            DiscoverQuery entityQuery = new DiscoverQuery();
+            entityQuery.setQuery("search.uniqueid:\"Item-" + item.getID() + "\" and entityType:*");
+            entityQuery.addSearchField("entityType");
+
+            DiscoverResult discoverResult;
+            try {
+                discoverResult = searchService.search(context, entityQuery);
+            } catch (SearchServiceException e) {
+                log.error("Failed getting entitytype through solr for item " + item.getID(), e);
+                throw new RuntimeException(e);
+            }
+
+            List<String> entityTypes;
+            String entityType;
+            if (isNotEmpty(discoverResult.getIndexableObjects())
+                    && isNotEmpty((
+                            entityTypes = discoverResult
+                                    .getSearchDocument(discoverResult.getIndexableObjects().get(0))
+                                    .get(0)
+                                    .getSearchFieldValues("entityType")
+                    ))
+                    && isNotBlank((
+                            entityType = entityTypes.get(0)
+                    ))
+            ) {
+                return configurationService.getProperty("dspace.ui.url")
+                        + "/entities/"
+                        + entityType + "/"
+                        + item.getID();
+            } else {
+                return configurationService.getProperty("dspace.ui.url")
+                        + "/items/"
+                        + item.getID();
+            }
         }
 
         String url = configurationService.getProperty("dspace.ui.url")
