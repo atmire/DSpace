@@ -7,11 +7,14 @@
  */
 package org.dspace.app.rest.utils;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -24,9 +27,9 @@ import org.dspace.content.Bitstream;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.Item;
 import org.dspace.content.Site;
+import org.dspace.content.service.ItemService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
-import org.dspace.handle.service.HandleService;
 import org.dspace.statistics.Dataset;
 import org.dspace.statistics.content.DatasetDSpaceObjectGenerator;
 import org.dspace.statistics.content.DatasetTimeGenerator;
@@ -47,7 +50,7 @@ import org.springframework.stereotype.Component;
 public class UsageReportUtils {
 
     @Autowired
-    private HandleService handleService;
+    private ItemService itemService;
 
     public static final String TOTAL_VISITS_REPORT_ID = "TotalVisits";
     public static final String TOTAL_VISITS_PER_MONTH_REPORT_ID = "TotalVisitsPerMonth";
@@ -151,10 +154,10 @@ public class UsageReportUtils {
             UsageReportPointDsoTotalVisitsRest totalVisitPoint = new UsageReportPointDsoTotalVisitsRest();
             totalVisitPoint.setType("item");
             String urlOfItem = dataset.getColLabelsAttrs().get(i).get("url");
-            if (urlOfItem != null) {
-                String handle = StringUtils.substringAfterLast(urlOfItem, "handle/");
-                if (handle != null) {
-                    DSpaceObject dso = handleService.resolveToObject(context, handle);
+            if (isNotBlank(urlOfItem)) {
+                String id = StringUtils.substringAfterLast(urlOfItem, "/");
+                if (isNotBlank(id)) {
+                    DSpaceObject dso = itemService.find(context, UUID.fromString(id));
                     totalVisitPoint.setId(dso != null ? dso.getID().toString() : urlOfItem);
                     totalVisitPoint.setLabel(dso != null ? dso.getName() : urlOfItem);
                     totalVisitPoint.addValue("views", Integer.valueOf(dataset.getMatrix()[0][i]));
