@@ -33,6 +33,7 @@ import org.dspace.app.rest.converter.CollectionConverter;
 import org.dspace.app.rest.matcher.CollectionMatcher;
 import org.dspace.app.rest.matcher.CommunityMatcher;
 import org.dspace.app.rest.matcher.HalMatcher;
+import org.dspace.app.rest.matcher.ItemMatcher;
 import org.dspace.app.rest.matcher.MetadataMatcher;
 import org.dspace.app.rest.matcher.PageMatcher;
 import org.dspace.app.rest.model.CollectionRest;
@@ -47,9 +48,12 @@ import org.dspace.builder.CollectionBuilder;
 import org.dspace.builder.CommunityBuilder;
 import org.dspace.builder.EPersonBuilder;
 import org.dspace.builder.GroupBuilder;
+import org.dspace.builder.ItemBuilder;
 import org.dspace.builder.ResourcePolicyBuilder;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
+import org.dspace.content.Item;
+import org.dspace.content.service.CollectionService;
 import org.dspace.core.Constants;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
@@ -72,6 +76,9 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
 
     @Autowired
     GroupService groupService;
+
+    @Autowired
+    CollectionService collectionService;
 
     @Test
     public void findAllTest() throws Exception {
@@ -244,7 +251,23 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                            CollectionMatcher.matchCollectionEntrySpecificEmbedProjection(col2.getName(), col2.getID(),
                                                                                 col2.getHandle())
                        )
-                   )));
+                   )))
+                   .andExpect(jsonPath("$._links.first.href", Matchers.allOf(
+                              Matchers.containsString("/api/core/collections?"),
+                              Matchers.containsString("page=0"), Matchers.containsString("size=1"))))
+                   .andExpect(jsonPath("$._links.self.href", Matchers.allOf(
+                              Matchers.containsString("/api/core/collections?"),
+                              Matchers.containsString("size=1"))))
+                   .andExpect(jsonPath("$._links.next.href", Matchers.allOf(
+                              Matchers.containsString("/api/core/collections?"),
+                              Matchers.containsString("page=1"), Matchers.containsString("size=1"))))
+                   .andExpect(jsonPath("$._links.last.href", Matchers.allOf(
+                              Matchers.containsString("/api/core/collections?"),
+                              Matchers.containsString("page=1"), Matchers.containsString("size=1"))))
+                   .andExpect(jsonPath("$.page.size", is(1)))
+                   .andExpect(jsonPath("$.page.totalElements", is(2)))
+                   .andExpect(jsonPath("$.page.number", is(0)))
+                   ;
 
         getClient().perform(get("/api/core/collections")
                                 .param("size", "1")
@@ -262,7 +285,22 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                            CollectionMatcher.matchCollectionEntrySpecificEmbedProjection(col1.getName(), col1.getID(),
                                                                                 col1.getHandle())
                        )
-                   )));
+                   )))
+                   .andExpect(jsonPath("$._links.first.href", Matchers.allOf(
+                              Matchers.containsString("/api/core/collections?"),
+                              Matchers.containsString("page=0"), Matchers.containsString("size=1"))))
+                   .andExpect(jsonPath("$._links.prev.href", Matchers.allOf(
+                              Matchers.containsString("/api/core/collections?"),
+                              Matchers.containsString("page=0"), Matchers.containsString("size=1"))))
+                   .andExpect(jsonPath("$._links.self.href", Matchers.allOf(
+                              Matchers.containsString("/api/core/collections?"),
+                              Matchers.containsString("page=1"), Matchers.containsString("size=1"))))
+                   .andExpect(jsonPath("$._links.last.href", Matchers.allOf(
+                              Matchers.containsString("/api/core/collections?"),
+                              Matchers.containsString("page=1"), Matchers.containsString("size=1"))))
+                   .andExpect(jsonPath("$.page.size", is(1)))
+                   .andExpect(jsonPath("$.page.totalElements", is(2)))
+                   .andExpect(jsonPath("$.page.number", is(1)));
     }
 
 
@@ -1862,6 +1900,18 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                             CollectionMatcher.matchProperties(col2.getName(), col2.getID(), col2.getHandle())
                             )))
                  .andExpect(jsonPath("$._embedded.collections").value(Matchers.hasSize(2)))
+                 .andExpect(jsonPath("$._links.first.href", Matchers.allOf(
+                         Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                         Matchers.containsString("page=0"), Matchers.containsString("size=2"))))
+                 .andExpect(jsonPath("$._links.self.href", Matchers.allOf(
+                         Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                         Matchers.containsString("page=0"), Matchers.containsString("size=2"))))
+                 .andExpect(jsonPath("$._links.next.href", Matchers.allOf(
+                         Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                         Matchers.containsString("page=1"), Matchers.containsString("size=2"))))
+                 .andExpect(jsonPath("$._links.last.href", Matchers.allOf(
+                         Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                         Matchers.containsString("page=3"), Matchers.containsString("size=2"))))
                  .andExpect(jsonPath("$.page.size", is(2)))
                  .andExpect(jsonPath("$.page.totalPages", is(4)))
                  .andExpect(jsonPath("$.page.number", is(0)))
@@ -1877,6 +1927,21 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                            CollectionMatcher.matchProperties(col4.getName(), col4.getID(), col4.getHandle())
                            )))
                 .andExpect(jsonPath("$._embedded.collections").value(Matchers.hasSize(2)))
+                .andExpect(jsonPath("$._links.first.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=0"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.prev.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=0"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.self.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=1"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.next.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=2"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.last.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=3"), Matchers.containsString("size=2"))))
                 .andExpect(jsonPath("$.page.size", is(2)))
                 .andExpect(jsonPath("$.page.totalPages", is(4)))
                 .andExpect(jsonPath("$.page.number", is(1)))
@@ -1892,6 +1957,21 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                            CollectionMatcher.matchProperties(col6.getName(), col6.getID(), col6.getHandle())
                            )))
                 .andExpect(jsonPath("$._embedded.collections").value(Matchers.hasSize(2)))
+                .andExpect(jsonPath("$._links.first.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=0"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.prev.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=1"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.self.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=2"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.next.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=3"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.last.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=3"), Matchers.containsString("size=2"))))
                 .andExpect(jsonPath("$.page.size", is(2)))
                 .andExpect(jsonPath("$.page.totalPages", is(4)))
                 .andExpect(jsonPath("$.page.number", is(2)))
@@ -1908,6 +1988,21 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                            CollectionMatcher.matchProperties(col6.getName(), col6.getID(), col6.getHandle())
                            )))
                 .andExpect(jsonPath("$._embedded.collections").value(Matchers.hasSize(3)))
+                .andExpect(jsonPath("$._links.first.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=0"), Matchers.containsString("size=3"))))
+                .andExpect(jsonPath("$._links.prev.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=0"), Matchers.containsString("size=3"))))
+                .andExpect(jsonPath("$._links.self.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=1"), Matchers.containsString("size=3"))))
+                .andExpect(jsonPath("$._links.next.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=2"), Matchers.containsString("size=3"))))
+                .andExpect(jsonPath("$._links.last.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("page=2"), Matchers.containsString("size=3"))))
                 .andExpect(jsonPath("$.page.size", is(3)))
                 .andExpect(jsonPath("$.page.totalPages", is(3)))
                 .andExpect(jsonPath("$.page.number", is(1)))
@@ -1958,6 +2053,22 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                         hasJsonPath("$.type", is("collection")))
                         ))
                 .andExpect(jsonPath("$._embedded.collections").value(Matchers.hasSize(2)))
+                .andExpect(jsonPath("$._links.first.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("query=sample"),
+                        Matchers.containsString("page=0"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.self.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("query=sample"),
+                        Matchers.containsString("page=0"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.next.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("query=sample"),
+                        Matchers.containsString("page=1"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.last.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("query=sample"),
+                        Matchers.containsString("page=2"), Matchers.containsString("size=2"))))
                 .andExpect(jsonPath("$.page.size", is(2)))
                 .andExpect(jsonPath("$.page.totalPages", is(3)))
                 .andExpect(jsonPath("$.page.number", is(0)))
@@ -1973,6 +2084,26 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                         hasJsonPath("$.type", is("collection")))
                         ))
                 .andExpect(jsonPath("$._embedded.collections").value(Matchers.hasSize(2)))
+                .andExpect(jsonPath("$._links.first.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("query=sample"),
+                        Matchers.containsString("page=0"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.prev.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("query=sample"),
+                        Matchers.containsString("page=0"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.self.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("query=sample"),
+                        Matchers.containsString("page=1"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.next.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("query=sample"),
+                        Matchers.containsString("page=2"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.last.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("query=sample"),
+                        Matchers.containsString("page=2"), Matchers.containsString("size=2"))))
                 .andExpect(jsonPath("$.page.size", is(2)))
                 .andExpect(jsonPath("$.page.totalPages", is(3)))
                 .andExpect(jsonPath("$.page.number", is(1)))
@@ -1988,6 +2119,22 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                         hasJsonPath("$.type", is("collection")))
                         ))
                 .andExpect(jsonPath("$._embedded.collections").value(Matchers.hasSize(1)))
+                .andExpect(jsonPath("$._links.first.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("query=sample"),
+                        Matchers.containsString("page=0"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.prev.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("query=sample"),
+                        Matchers.containsString("page=1"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.self.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("query=sample"),
+                        Matchers.containsString("page=2"), Matchers.containsString("size=2"))))
+                .andExpect(jsonPath("$._links.last.href", Matchers.allOf(
+                        Matchers.containsString("/api/core/collections/search/findSubmitAuthorized?"),
+                        Matchers.containsString("query=sample"),
+                        Matchers.containsString("page=2"), Matchers.containsString("size=2"))))
                 .andExpect(jsonPath("$.page.size", is(2)))
                 .andExpect(jsonPath("$.page.totalPages", is(3)))
                 .andExpect(jsonPath("$.page.number", is(2)))
@@ -2157,5 +2304,197 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                 .andExpect(jsonPath("$.page.number", is(2)))
                 .andExpect(jsonPath("$.page.totalElements", is(5)));
     }
+
+    @Test
+    public void findOneTestWithEmbedsNoPageSize() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+
+        Collection collection = CollectionBuilder.createCollection(context, parentCommunity)
+                                                 .withName("Collection")
+                                                 .build();
+
+        Collection mappedCollection = CollectionBuilder.createCollection(context, parentCommunity)
+                                                       .withName("Mapped Collection")
+                                                       .build();
+
+        Item item0 = ItemBuilder.createItem(context, collection).withTitle("Item 0").build();
+        Item item1 = ItemBuilder.createItem(context, collection).withTitle("Item 1").build();
+        Item item2 = ItemBuilder.createItem(context, collection).withTitle("Item 2").build();
+        Item item3 = ItemBuilder.createItem(context, collection).withTitle("Item 3").build();
+        Item item4 = ItemBuilder.createItem(context, collection).withTitle("Item 4").build();
+        Item item5 = ItemBuilder.createItem(context, collection).withTitle("Item 5").build();
+        Item item6 = ItemBuilder.createItem(context, collection).withTitle("Item 6").build();
+        Item item7 = ItemBuilder.createItem(context, collection).withTitle("Item 7").build();
+        Item item8 = ItemBuilder.createItem(context, collection).withTitle("Item 8").build();
+        Item item9 = ItemBuilder.createItem(context, collection).withTitle("Item 9").build();
+
+        collectionService.addItem(context, mappedCollection, item0);
+        collectionService.addItem(context, mappedCollection, item1);
+        collectionService.addItem(context, mappedCollection, item2);
+        collectionService.addItem(context, mappedCollection, item3);
+        collectionService.addItem(context, mappedCollection, item4);
+        collectionService.addItem(context, mappedCollection, item5);
+        collectionService.addItem(context, mappedCollection, item6);
+        collectionService.addItem(context, mappedCollection, item7);
+        collectionService.addItem(context, mappedCollection, item8);
+        collectionService.addItem(context, mappedCollection, item9);
+
+        collectionService.update(context, mappedCollection);
+
+        context.restoreAuthSystemState();
+
+        getClient().perform(get("/api/core/collections/" + mappedCollection.getID())
+                                    .param("embed", "mappedItems"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$", CollectionMatcher.matchCollection(mappedCollection)))
+                   .andExpect(jsonPath("$._embedded.mappedItems._embedded.mappedItems", Matchers.containsInAnyOrder(
+                           ItemMatcher.matchItemProperties(item0),
+                           ItemMatcher.matchItemProperties(item1),
+                           ItemMatcher.matchItemProperties(item2),
+                           ItemMatcher.matchItemProperties(item3),
+                           ItemMatcher.matchItemProperties(item4),
+                           ItemMatcher.matchItemProperties(item5),
+                           ItemMatcher.matchItemProperties(item6),
+                           ItemMatcher.matchItemProperties(item7),
+                           ItemMatcher.matchItemProperties(item8),
+                           ItemMatcher.matchItemProperties(item9)
+                   )))
+                   .andExpect(jsonPath("$._links.self.href",
+                                       Matchers.containsString("/api/core/collections/" + mappedCollection.getID())))
+                   .andExpect(jsonPath("$._embedded.mappedItems.page.size", is(20)))
+                   .andExpect(jsonPath("$._embedded.mappedItems.page.totalElements", is(10)));
+    }
+
+
+    @Test
+    public void findOneTestWithEmbedsWithPageSize() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+
+        Collection collection = CollectionBuilder.createCollection(context, parentCommunity)
+                                                 .withName("Collection")
+                                                 .build();
+
+        Collection mappedCollection = CollectionBuilder.createCollection(context, parentCommunity)
+                                                       .withName("Mapped Collection")
+                                                       .build();
+
+        Item item0 = ItemBuilder.createItem(context, collection).withTitle("Item 0").build();
+        Item item1 = ItemBuilder.createItem(context, collection).withTitle("Item 1").build();
+        Item item2 = ItemBuilder.createItem(context, collection).withTitle("Item 2").build();
+        Item item3 = ItemBuilder.createItem(context, collection).withTitle("Item 3").build();
+        Item item4 = ItemBuilder.createItem(context, collection).withTitle("Item 4").build();
+        Item item5 = ItemBuilder.createItem(context, collection).withTitle("Item 5").build();
+        Item item6 = ItemBuilder.createItem(context, collection).withTitle("Item 6").build();
+        Item item7 = ItemBuilder.createItem(context, collection).withTitle("Item 7").build();
+        Item item8 = ItemBuilder.createItem(context, collection).withTitle("Item 8").build();
+        Item item9 = ItemBuilder.createItem(context, collection).withTitle("Item 9").build();
+
+        collectionService.addItem(context, mappedCollection, item0);
+        collectionService.addItem(context, mappedCollection, item1);
+        collectionService.addItem(context, mappedCollection, item2);
+        collectionService.addItem(context, mappedCollection, item3);
+        collectionService.addItem(context, mappedCollection, item4);
+        collectionService.addItem(context, mappedCollection, item5);
+        collectionService.addItem(context, mappedCollection, item6);
+        collectionService.addItem(context, mappedCollection, item7);
+        collectionService.addItem(context, mappedCollection, item8);
+        collectionService.addItem(context, mappedCollection, item9);
+
+        collectionService.update(context, mappedCollection);
+
+        context.restoreAuthSystemState();
+
+        getClient().perform(get("/api/core/collections/" + mappedCollection.getID())
+                                    .param("embed", "mappedItems")
+                                    .param("embed.size", "mappedItems=5"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$", CollectionMatcher.matchCollection(mappedCollection)))
+                   .andExpect(jsonPath("$._embedded.mappedItems._embedded.mappedItems", Matchers.containsInAnyOrder(
+                           ItemMatcher.matchItemProperties(item0),
+                           ItemMatcher.matchItemProperties(item1),
+                           ItemMatcher.matchItemProperties(item2),
+                           ItemMatcher.matchItemProperties(item3),
+                           ItemMatcher.matchItemProperties(item4)
+                   )))
+                   .andExpect(jsonPath("$._links.self.href",
+                                       Matchers.containsString("/api/core/collections/" + mappedCollection.getID())))
+                   .andExpect(jsonPath("$._embedded.mappedItems.page.size", is(5)))
+                   .andExpect(jsonPath("$._embedded.mappedItems.page.totalElements", is(10)));
+    }
+
+
+    @Test
+    public void findOneTestWithEmbedsWithInvalidPageSize() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+
+        Collection collection = CollectionBuilder.createCollection(context, parentCommunity)
+                                                 .withName("Collection")
+                                                 .build();
+
+        Collection mappedCollection = CollectionBuilder.createCollection(context, parentCommunity)
+                                                       .withName("Mapped Collection")
+                                                       .build();
+
+        Item item0 = ItemBuilder.createItem(context, collection).withTitle("Item 0").build();
+        Item item1 = ItemBuilder.createItem(context, collection).withTitle("Item 1").build();
+        Item item2 = ItemBuilder.createItem(context, collection).withTitle("Item 2").build();
+        Item item3 = ItemBuilder.createItem(context, collection).withTitle("Item 3").build();
+        Item item4 = ItemBuilder.createItem(context, collection).withTitle("Item 4").build();
+        Item item5 = ItemBuilder.createItem(context, collection).withTitle("Item 5").build();
+        Item item6 = ItemBuilder.createItem(context, collection).withTitle("Item 6").build();
+        Item item7 = ItemBuilder.createItem(context, collection).withTitle("Item 7").build();
+        Item item8 = ItemBuilder.createItem(context, collection).withTitle("Item 8").build();
+        Item item9 = ItemBuilder.createItem(context, collection).withTitle("Item 9").build();
+
+        collectionService.addItem(context, mappedCollection, item0);
+        collectionService.addItem(context, mappedCollection, item1);
+        collectionService.addItem(context, mappedCollection, item2);
+        collectionService.addItem(context, mappedCollection, item3);
+        collectionService.addItem(context, mappedCollection, item4);
+        collectionService.addItem(context, mappedCollection, item5);
+        collectionService.addItem(context, mappedCollection, item6);
+        collectionService.addItem(context, mappedCollection, item7);
+        collectionService.addItem(context, mappedCollection, item8);
+        collectionService.addItem(context, mappedCollection, item9);
+
+        collectionService.update(context, mappedCollection);
+
+        context.restoreAuthSystemState();
+
+        getClient().perform(get("/api/core/collections/" + mappedCollection.getID())
+                                    .param("embed", "mappedItems")
+                                    .param("embed.size", "mappedItems=invalidPage"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$", CollectionMatcher.matchCollection(mappedCollection)))
+                   .andExpect(jsonPath("$._embedded.mappedItems._embedded.mappedItems", Matchers.containsInAnyOrder(
+                           ItemMatcher.matchItemProperties(item0),
+                           ItemMatcher.matchItemProperties(item1),
+                           ItemMatcher.matchItemProperties(item2),
+                           ItemMatcher.matchItemProperties(item3),
+                           ItemMatcher.matchItemProperties(item4),
+                           ItemMatcher.matchItemProperties(item5),
+                           ItemMatcher.matchItemProperties(item6),
+                           ItemMatcher.matchItemProperties(item7),
+                           ItemMatcher.matchItemProperties(item8),
+                           ItemMatcher.matchItemProperties(item9)
+                   )))
+                   .andExpect(jsonPath("$._links.self.href",
+                                       Matchers.containsString("/api/core/collections/" + mappedCollection.getID())))
+                   .andExpect(jsonPath("$._embedded.mappedItems.page.size", is(20)))
+                   .andExpect(jsonPath("$._embedded.mappedItems.page.totalElements", is(10)));
+    }
+
 
 }
