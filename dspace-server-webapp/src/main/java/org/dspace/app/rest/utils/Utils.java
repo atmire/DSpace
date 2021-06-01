@@ -108,7 +108,7 @@ public class Utils {
     /**
      * The default page size, if unspecified in the request.
      */
-    private static final int DEFAULT_PAGE_SIZE = 20;
+    public static final int DEFAULT_PAGE_SIZE = 20;
 
     /**
      * The maximum number of embed levels to allow.
@@ -560,8 +560,10 @@ public class Utils {
             projections.add(converter.getProjection(projectionName));
         }
 
+
         if (!embedRels.isEmpty()) {
-            projections.add(new EmbedRelsProjection(embedRels));
+            Set<String> embedSizes = new HashSet<>(getValues(servletRequest, "embed.size"));
+            projections.add(new EmbedRelsProjection(embedRels, embedSizes));
         }
 
         if (projections.isEmpty()) {
@@ -689,7 +691,8 @@ public class Utils {
             Method method = requireMethod(linkRepository.getClass(), linkRest.method());
             Object contentId = getContentIdForLinkMethod(resource.getContent(), method);
             try {
-                Object linkedObject = method.invoke(linkRepository, null, contentId, null, projection);
+                Object linkedObject = method.invoke(linkRepository, null, contentId,
+                                                    projection.getPagingOptions(rel, resource, oldLinks), projection);
                 resource.embedResource(rel, wrapForEmbedding(resource, linkedObject, link, oldLinks));
             } catch (InvocationTargetException e) {
                 // This will be thrown from the LinkRepository if a Resource has been requested that'll try to embed
