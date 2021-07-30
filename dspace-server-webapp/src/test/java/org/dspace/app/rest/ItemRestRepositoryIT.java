@@ -62,6 +62,7 @@ import org.dspace.builder.ItemBuilder;
 import org.dspace.builder.RelationshipBuilder;
 import org.dspace.builder.RelationshipTypeBuilder;
 import org.dspace.builder.ResourcePolicyBuilder;
+import org.dspace.builder.WorkflowItemBuilder;
 import org.dspace.builder.WorkspaceItemBuilder;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
@@ -73,8 +74,10 @@ import org.dspace.content.Relationship;
 import org.dspace.content.RelationshipType;
 import org.dspace.content.WorkspaceItem;
 import org.dspace.content.service.CollectionService;
+import org.dspace.core.Constants;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
+import org.dspace.workflow.WorkflowItem;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -170,8 +173,17 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
         Community child1 = CommunityBuilder.createSubCommunity(context, parentCommunity)
                                            .withName("Sub Community")
                                            .build();
-        Collection col1 = CollectionBuilder.createCollection(context, child1).withName("Collection 1").build();
-        Collection col2 = CollectionBuilder.createCollection(context, child1).withName("Collection 2").build();
+        // Create one Collection with an enabled "reviewer" Workflow step. This lets us create a WorkflowItem below.
+        Collection col1 = CollectionBuilder.createCollection(context, child1)
+                                           .withName("Collection 1")
+                                           .withWorkflowGroup("reviewer", admin)
+                                           .build();
+        // Create a second Collection with a template Item. This is used to ensure that Template Items are
+        // NOT counted/listed in this endpoint.
+        Collection col2 = CollectionBuilder.createCollection(context, child1)
+                                           .withName("Collection 2")
+                                           .withTemplateItem()
+                                           .build();
 
         //2. Three public items that are readable by Anonymous with different subjects
         Item publicItem1 = ItemBuilder.createItem(context, col1)
@@ -196,6 +208,24 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                                       .withSubject("ExtraEntry")
                                       .build();
 
+        // Create a Workspace Item (which in turn creates an Item with "in_archive=false")
+        // This is only created to prove that WorkspaceItems are NOT counted/listed in this endpoint
+        WorkspaceItem workspaceItem = WorkspaceItemBuilder.createWorkspaceItem(context, col2)
+                .withTitle("In Progress Item")
+                .withIssueDate("2018-02-05")
+                .withAuthor("Doe, Jane").withAuthor("Smith, Jennifer")
+                .build();
+        Item itemInWorkspace = workspaceItem.getItem();
+
+        // Also create a Workflow Item (in the workflow-enabled Collection), to ensure WorkflowItems are
+        // NOT counted/listed in this endpoint
+        WorkflowItem workflowItem = WorkflowItemBuilder.createWorkflowItem(context, col1)
+                .withTitle("Item in Workflow")
+                .withIssueDate("2019-06-03")
+                .withAuthor("Smith, Jennifer").withAuthor("Doe, John")
+                .build();
+        Item itemInWorkflow = workflowItem.getItem();
+
         context.restoreAuthSystemState();
         String token = getAuthToken(admin.getEmail(), password);
 
@@ -211,7 +241,12 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                    .andExpect(jsonPath("$._embedded.items", Matchers.not(
                            Matchers.contains(
                                ItemMatcher.matchItemWithTitleAndDateIssued(publicItem3,
-                                       "Public item 3", "2016-02-13")
+                                       "Public item 3", "2016-02-13"),
+                               ItemMatcher.matchItemWithTitleAndDateIssued(itemInWorkspace,
+                                       "In Progress Item", "2018-02-05"),
+                               ItemMatcher.matchItemWithTitleAndDateIssued(itemInWorkflow,
+                                       "Item in Workflow", "2019-06-03"),
+                               ItemMatcher.matchItemProperties(col2.getTemplateItem())
                            )
                    )))
                    .andExpect(jsonPath("$._links.first.href", Matchers.allOf(
@@ -244,7 +279,12 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                            ItemMatcher.matchItemWithTitleAndDateIssued(publicItem1,
                                    "Public item 1", "2017-10-17"),
                            ItemMatcher.matchItemWithTitleAndDateIssued(publicItem2,
-                                   "Public item 2", "2016-02-13")
+                                   "Public item 2", "2016-02-13"),
+                           ItemMatcher.matchItemWithTitleAndDateIssued(itemInWorkspace,
+                                   "In Progress Item", "2018-02-05"),
+                           ItemMatcher.matchItemWithTitleAndDateIssued(itemInWorkflow,
+                                   "Item in Workflow", "2019-06-03"),
+                           ItemMatcher.matchItemProperties(col2.getTemplateItem())
                        )
                    )))
                    .andExpect(jsonPath("$._links.first.href", Matchers.allOf(
@@ -1260,7 +1300,7 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    public void deleteOneArchivedTest() throws Exception {
+    public void deleteOneArchivedTestAsSystemAdmin() throws Exception {
         context.turnOffAuthorisationSystem();
 
         //** GIVEN **
@@ -1313,8 +1353,164 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
                    .andExpect(status().is(404));
 
         //Trying to get deleted item bitstream should fail with 404
-        getClient().perform(get("/api/core/biststreams/" + bitstream.getID()))
+        // NOTE: it currently does not work without an admin token
+        String adminToken = getAuthToken(admin.getEmail(), password);
+        getClient(adminToken).perform(get("/api/core/bitstreams/" + bitstream.getID()))
                    .andExpect(status().is(404));
+    }
+
+    @Test
+    public void deleteOneArchivedTestAsCollectionAdmin() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        // A collection administrator
+        EPerson col1Admin = EPersonBuilder.createEPerson(context)
+            .withCanLogin(true)
+            .withEmail("col1admin@email.com")
+            .withPassword(password)
+            .withNameInMetadata("Col1", "Admin")
+            .build();
+
+        // A community with one collection.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+            .withName("Parent Community")
+            .build();
+        Collection col1 = CollectionBuilder
+            .createCollection(context, parentCommunity)
+            .withName("Collection 1")
+            .withAdminGroup(col1Admin)
+            .build();
+
+        // One public item, one workspace item and one template item.
+        Item publicItem = ItemBuilder.createItem(context, col1)
+            .withTitle("Public item 1")
+            .withIssueDate("2017-10-17")
+            .withAuthor("Smith, Donald").withAuthor("Doe, John")
+            .withSubject("ExtraEntry")
+            .build();
+
+        //Add a bitstream to an item
+        String bitstreamContent = "ThisIsSomeDummyText";
+        Bitstream bitstream = null;
+        try (InputStream is = IOUtils.toInputStream(bitstreamContent, CharEncoding.UTF_8)) {
+            bitstream = BitstreamBuilder.
+                createBitstream(context, publicItem, is)
+                .withName("Bitstream1")
+                .withMimeType("text/plain")
+                .build();
+        }
+
+        context.restoreAuthSystemState();
+        // Check publicItem creation
+        getClient().perform(get("/api/core/items/" + publicItem.getID()))
+            .andExpect(status().isOk());
+
+        // Check publicItem bitstream creation (shuold be stored in bundle)
+        getClient().perform(get("/api/core/items/" + publicItem.getID() + "/bundles"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(contentType))
+            .andExpect(jsonPath("$._links.self.href", Matchers
+                .containsString("/api/core/items/" + publicItem.getID() + "/bundles")));
+
+        String token = getAuthToken(col1Admin.getEmail(), password);
+
+        //Delete public item
+        getClient(token).perform(delete("/api/core/items/" + publicItem.getID()))
+            .andExpect(status().is(204));
+
+        //Trying to get deleted item should fail with 404
+        getClient().perform(get("/api/core/items/" + publicItem.getID()))
+            .andExpect(status().is(404));
+
+        //Trying to get deleted item bitstream should fail with 404
+        // NOTE: it currently does not work without an admin token
+        String adminToken = getAuthToken(admin.getEmail(), password);
+        getClient(adminToken).perform(get("/api/core/bitstreams/" + bitstream.getID()))
+            .andExpect(status().is(404));
+    }
+
+    @Test
+    public void deleteOneArchivedTestAsOtherCollectionAdmin() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        //** GIVEN **
+        // two collection administrators
+        EPerson col1Admin = EPersonBuilder.createEPerson(context)
+            .withCanLogin(true)
+            .withEmail("col1admin@email.com")
+            .withPassword(password)
+            .withNameInMetadata("Col1", "Admin")
+            .build();
+
+        EPerson col2Admin = EPersonBuilder.createEPerson(context)
+            .withCanLogin(true)
+            .withEmail("col2admin@email.com")
+            .withPassword(password)
+            .withNameInMetadata("Col2", "Admin")
+            .build();
+
+        // A community with two collections.
+        parentCommunity = CommunityBuilder.createCommunity(context)
+            .withName("Parent Community")
+            .build();
+        Collection col1 = CollectionBuilder
+            .createCollection(context, parentCommunity)
+            .withName("Collection 1")
+            .withAdminGroup(col1Admin)
+            .build();
+        CollectionBuilder
+            .createCollection(context, parentCommunity)
+            .withName("Collection 2")
+            .withAdminGroup(col2Admin)
+            .build();
+
+        // One public item, one workspace item and one template item in the first collection.
+        Item publicItem = ItemBuilder.createItem(context, col1)
+            .withTitle("Public item 1")
+            .withIssueDate("2017-10-17")
+            .withAuthor("Smith, Donald").withAuthor("Doe, John")
+            .withSubject("ExtraEntry")
+            .build();
+
+        //Add a bitstream to an item in the first collection
+        String bitstreamContent = "ThisIsSomeDummyText";
+        Bitstream bitstream = null;
+        try (InputStream is = IOUtils.toInputStream(bitstreamContent, CharEncoding.UTF_8)) {
+            bitstream = BitstreamBuilder.
+                createBitstream(context, publicItem, is)
+                .withName("Bitstream1")
+                .withMimeType("text/plain")
+                .build();
+        }
+
+        context.restoreAuthSystemState();
+
+        // Check publicItem creation
+        getClient().perform(get("/api/core/items/" + publicItem.getID()))
+            .andExpect(status().isOk());
+
+        // Check publicItem bitstream creation (should be stored in bundle)
+        getClient().perform(get("/api/core/items/" + publicItem.getID() + "/bundles"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(contentType))
+            .andExpect(jsonPath("$._links.self.href", Matchers
+                .containsString("/api/core/items/" + publicItem.getID() + "/bundles")));
+
+        // the admin of collection 2 will try to delete an item of collection 1
+        String token = getAuthToken(col2Admin.getEmail(), password);
+
+        // trying to delete the public item should fail
+        getClient(token).perform(delete("/api/core/items/" + publicItem.getID()))
+            .andExpect(status().isForbidden());
+
+        // the item should still exist
+        getClient().perform(get("/api/core/items/" + publicItem.getID()))
+            .andExpect(status().isOk());
+
+        // the bitstream should still exist
+        getClient().perform(get("/api/core/bitstreams/" + bitstream.getID()))
+            .andExpect(status().isOk());
     }
 
     @Test
@@ -3572,6 +3768,318 @@ public class ItemRestRepositoryIT extends AbstractControllerIntegrationTest {
             .createRelationshipBuilder(context, publication1, author2, isAuthorOfPublication).build();
 
         context.restoreAuthSystemState();
+    }
+
+    @Test
+    public void findWithdrawnItemTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity)
+                                           .withName("Collection 1").build();
+
+        Item item = ItemBuilder.createItem(context, col1)
+                               .withTitle("Public item 1")
+                               .withIssueDate("2017-10-17")
+                               .withAuthor("Doe, John")
+                               .withSubject("ExtraEntry")
+                               .build();
+
+        context.restoreAuthSystemState();
+
+        String tokenAdmin = getAuthToken(admin.getEmail(), password);
+        String tokenEperson = getAuthToken(eperson.getEmail(), password);
+
+        List<Operation> ops = new ArrayList<Operation>();
+        ReplaceOperation replaceOperation = new ReplaceOperation("/withdrawn", true);
+        ops.add(replaceOperation);
+        String patchBody = getPatchContent(ops);
+
+        // check item status
+        getClient(tokenAdmin).perform(get("/api/core/items/" + item.getID()))
+                             .andExpect(status().isOk())
+                             .andExpect(jsonPath("$.uuid", Matchers.is(item.getID().toString())))
+                             .andExpect(jsonPath("$.withdrawn", Matchers.is(false)))
+                             .andExpect(jsonPath("$.inArchive", Matchers.is(true)));
+
+        // withdraw item
+        getClient(tokenAdmin).perform(patch("/api/core/items/" + item.getID())
+                             .content(patchBody)
+                             .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
+                             .andExpect(status().isOk())
+                             .andExpect(jsonPath("$.uuid", Matchers.is(item.getID().toString())))
+                             .andExpect(jsonPath("$.withdrawn", Matchers.is(true)))
+                             .andExpect(jsonPath("$.inArchive", Matchers.is(false)));
+
+        // admins should be able to get the full information about withdrawn items
+        getClient(tokenAdmin).perform(get("/api/core/items/" + item.getID())
+                 .param("projection", "full"))
+                 .andExpect(status().isOk())
+                 .andExpect(jsonPath("$", ItemMatcher.matchFullEmbeds()))
+                 .andExpect(jsonPath("$.uuid", Matchers.is(item.getID().toString())))
+                 .andExpect(jsonPath("$.withdrawn", Matchers.is(true)))
+                 .andExpect(jsonPath("$.inArchive", Matchers.is(false)))
+                 .andExpect(jsonPath("$._links.self.href",
+                     Matchers.containsString("/api/core/items/" + item.getID().toString())))
+                 .andExpect(jsonPath("$._links.bundles.href",
+                     Matchers.containsString("/api/core/items/" + item.getID().toString() + "/bundles")))
+                 .andExpect(jsonPath("$._links.mappedCollections.href",
+                     Matchers.containsString("/api/core/items/" + item.getID().toString() + "/mappedCollections")))
+                 .andExpect(jsonPath("$._links.owningCollection.href",
+                     Matchers.containsString("/api/core/items/" + item.getID().toString() + "/owningCollection")))
+                 .andExpect(jsonPath("$._links.relationships.href",
+                     Matchers.containsString("/api/core/items/" + item.getID().toString() + "/relationships")))
+                 .andExpect(jsonPath("$._links.version.href",
+                     Matchers.containsString("/api/core/items/" + item.getID().toString() + "/version")))
+                 .andExpect(jsonPath("$._links.templateItemOf.href",
+                     Matchers.containsString("/api/core/items/" + item.getID().toString() + "/templateItemOf")));
+
+        getClient(tokenAdmin).perform(get("/api/core/items/" + item.getID() + "/owningCollection")
+                             .param("projection", "full"))
+                             .andExpect(status().isOk())
+                             .andExpect(jsonPath("$", CollectionMatcher.matchCollectionEntryFullProjection(
+                                        col1.getName(), col1.getID(), col1.getHandle())));;
+
+        // try to spoof information as a logged in eperson using embedding, verify that no embedds are included
+        getClient(tokenEperson).perform(get("/api/core/items/" + item.getID())
+                 .param("projection", "full"))
+                 .andExpect(status().isOk())
+                 .andExpect(jsonPath("$", HalMatcher.matchNoEmbeds()))
+                 .andExpect(jsonPath("$.uuid", Matchers.is(item.getID().toString())))
+                 .andExpect(jsonPath("$.name", Matchers.is(item.getName())))
+                 .andExpect(jsonPath("$.handle", Matchers.is(item.getHandle())))
+                 .andExpect(jsonPath("$.metadata").isEmpty())
+                 .andExpect(jsonPath("$.withdrawn", Matchers.is(true)))
+                 .andExpect(jsonPath("$.inArchive", Matchers.is(false)))
+                 .andExpect(jsonPath("$._links.self.href",
+                     Matchers.containsString("/api/core/items/" + item.getID().toString())))
+                 .andExpect(jsonPath("$._links.bundles.href",
+                     Matchers.containsString("/api/core/items/" + item.getID().toString() + "/bundles")))
+                 .andExpect(jsonPath("$._links.mappedCollections.href",
+                     Matchers.containsString("/api/core/items/" + item.getID().toString() + "/mappedCollections")))
+                 .andExpect(jsonPath("$._links.owningCollection.href",
+                     Matchers.containsString("/api/core/items/" + item.getID().toString() + "/owningCollection")))
+                 .andExpect(jsonPath("$._links.relationships.href",
+                     Matchers.containsString("/api/core/items/" + item.getID().toString() + "/relationships")))
+                 .andExpect(jsonPath("$._links.version.href",
+                     Matchers.containsString("/api/core/items/" + item.getID().toString() + "/version")))
+                 .andExpect(jsonPath("$._links.templateItemOf.href",
+                     Matchers.containsString("/api/core/items/" + item.getID().toString() + "/templateItemOf")));
+
+
+        // access to linked resources should be denied
+        getClient(tokenEperson).perform(get("/api/core/items/" + item.getID() + "/owningCollection"))
+                               .andExpect(status().isForbidden());
+
+        // try to spoof information as anonymous user using embedding, verify that no embedds are included
+        getClient().perform(get("/api/core/items/" + item.getID())
+                   .param("projection", "full"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$", HalMatcher.matchNoEmbeds()))
+                   .andExpect(jsonPath("$.uuid", Matchers.is(item.getID().toString())))
+                   .andExpect(jsonPath("$.name", Matchers.is(item.getName())))
+                   .andExpect(jsonPath("$.handle", Matchers.is(item.getHandle())))
+                   .andExpect(jsonPath("$.metadata").isEmpty())
+                   .andExpect(jsonPath("$.withdrawn", Matchers.is(true)))
+                   .andExpect(jsonPath("$.inArchive", Matchers.is(false)))
+                   .andExpect(jsonPath("$._links.self.href",
+                       Matchers.containsString("/api/core/items/" + item.getID().toString())))
+                   .andExpect(jsonPath("$._links.self.href",
+                       Matchers.containsString("/api/core/items/" + item.getID().toString())))
+                   .andExpect(jsonPath("$._links.bundles.href",
+                       Matchers.containsString("/api/core/items/" + item.getID().toString() + "/bundles")))
+                   .andExpect(jsonPath("$._links.mappedCollections.href",
+                       Matchers.containsString("/api/core/items/" + item.getID().toString() + "/mappedCollections")))
+                   .andExpect(jsonPath("$._links.owningCollection.href",
+                       Matchers.containsString("/api/core/items/" + item.getID().toString() + "/owningCollection")))
+                   .andExpect(jsonPath("$._links.relationships.href",
+                       Matchers.containsString("/api/core/items/" + item.getID().toString() + "/relationships")))
+                   .andExpect(jsonPath("$._links.version.href",
+                       Matchers.containsString("/api/core/items/" + item.getID().toString() + "/version")))
+                   .andExpect(jsonPath("$._links.templateItemOf.href",
+                       Matchers.containsString("/api/core/items/" + item.getID().toString() + "/templateItemOf")));
+
+        // access to linked resources should be denied
+        getClient().perform(get("/api/core/items/" + item.getID() + "/owningCollection"))
+                   .andExpect(status().isUnauthorized());
+
+    }
+
+    @Test
+    public void thumbnailEndpointTest() throws Exception {
+        // Given an Item
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity)
+                                           .withName("Collection 1").build();
+
+        Item item = ItemBuilder.createItem(context, col1)
+                                      .withTitle("Test item -- thumbnail")
+                                      .withIssueDate("2017-10-17")
+                                      .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                                      .build();
+
+        Bundle originalBundle = BundleBuilder.createBundle(context, item)
+                                             .withName(Constants.DEFAULT_BUNDLE_NAME)
+                                             .build();
+        Bundle thumbnailBundle = BundleBuilder.createBundle(context, item)
+                                              .withName("THUMBNAIL")
+                                              .build();
+
+        InputStream is = IOUtils.toInputStream("dummy", "utf-8");
+
+        // With two ORIGINAL Bitstreams with matching THUMBNAIL Bitstreams
+        BitstreamBuilder.createBitstream(context, originalBundle, is)
+                        .withName("test1.pdf")
+                        .withMimeType("application/pdf")
+                        .build();
+        BitstreamBuilder.createBitstream(context, originalBundle, is)
+                        .withName("test2.pdf")
+                        .withMimeType("application/pdf")
+                        .build();
+        Bitstream thumbnail = BitstreamBuilder.createBitstream(context, thumbnailBundle, is)
+                                              .withName("test1.pdf.jpg")
+                                              .withMimeType("image/jpeg")
+                                              .build();
+        BitstreamBuilder.createBitstream(context, thumbnailBundle, is)
+                        .withName("test2.pdf.jpg")
+                        .withMimeType("image/jpeg")
+                        .build();
+
+        context.restoreAuthSystemState();
+
+        String tokenAdmin = getAuthToken(admin.getEmail(), password);
+
+        // Item's thumbnail endpoint should return the first ORIGINAL Bitstream's thumbnail
+        getClient(tokenAdmin).perform(get("/api/core/items/" + item.getID() + "/thumbnail"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.uuid", Matchers.is(thumbnail.getID().toString())))
+                   .andExpect(jsonPath("$.type", is("bitstream")));
+    }
+
+    @Test
+    public void thumbnailEndpointMultipleThumbnailsWithPrimaryBitstreamTest() throws Exception {
+        // Given an Item
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity)
+                                           .withName("Collection 1").build();
+
+        Item item = ItemBuilder.createItem(context, col1)
+                               .withTitle("Test item -- thumbnail")
+                               .withIssueDate("2017-10-17")
+                               .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                               .build();
+
+        Bundle originalBundle = BundleBuilder.createBundle(context, item)
+                                             .withName(Constants.DEFAULT_BUNDLE_NAME)
+                                             .build();
+        Bundle thumbnailBundle = BundleBuilder.createBundle(context, item)
+                                              .withName("THUMBNAIL")
+                                              .build();
+
+        InputStream is = IOUtils.toInputStream("dummy", "utf-8");
+
+        // With two ORIGINAL Bitstreams with matching THUMBNAIL Bitstreams
+        BitstreamBuilder.createBitstream(context, originalBundle, is)
+                        .withName("test1.pdf")
+                        .withMimeType("application/pdf")
+                        .build();
+        BitstreamBuilder.createBitstream(context, originalBundle, is)
+                        .withName("test2.pdf")
+                        .withMimeType("application/pdf")
+                        .build();
+        Bitstream primaryBitstream = BitstreamBuilder.createBitstream(context, originalBundle, is)
+                                                     .withName("test3.pdf")
+                                                     .withMimeType("application/pdf")
+                                                     .build();
+
+        BitstreamBuilder.createBitstream(context, thumbnailBundle, is)
+                                              .withName("test1.pdf.jpg")
+                                              .withMimeType("image/jpeg")
+                                              .build();
+        BitstreamBuilder.createBitstream(context, thumbnailBundle, is)
+                                              .withName("test2.pdf.jpg")
+                                              .withMimeType("image/jpeg")
+                                              .build();
+        Bitstream primaryThumbnail = BitstreamBuilder.createBitstream(context, thumbnailBundle, is)
+                                                     .withName("test3.pdf.jpg")
+                                                     .withMimeType("image/jpeg")
+                                                     .build();
+        // and a primary Bitstream (not the first)
+        originalBundle.setPrimaryBitstreamID(primaryBitstream);
+
+        context.restoreAuthSystemState();
+
+        // Item's thumbnail endpoint should link to the primary Bitstream's thumbnail
+        getClient().perform(get("/api/core/items/" + item.getID() + "/thumbnail"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.uuid", Matchers.is(primaryThumbnail.getID().toString())))
+                   .andExpect(jsonPath("$.type", is("bitstream")));
+    }
+
+    @Test
+    public void thumbnailEndpointItemWithoutThumbnailsTest() throws Exception {
+        // Given an Item
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity)
+                                           .withName("Collection 1").build();
+
+        Item item = ItemBuilder.createItem(context, col1)
+                               .withTitle("Test item -- thumbnail")
+                               .withIssueDate("2017-10-17")
+                               .withAuthor("Smith, Donald").withAuthor("Doe, John")
+                               .build();
+
+        Bundle originalBundle = BundleBuilder.createBundle(context, item)
+                                             .withName(Constants.DEFAULT_BUNDLE_NAME)
+                                             .build();
+
+        // With an Empty THUMBNAIL Bundle
+        Bundle thumbnailBundle = BundleBuilder.createBundle(context, item)
+                                              .withName("THUMBNAIL")
+                                              .build();
+
+        InputStream is = IOUtils.toInputStream("dummy", "utf-8");
+
+        BitstreamBuilder.createBitstream(context, originalBundle, is)
+                        .withName("test.pdf")
+                        .withMimeType("application/pdf")
+                        .build();
+
+        context.restoreAuthSystemState();
+
+        // Should fail with HTTP 204
+        getClient().perform(get("/api/core/items/" + item.getID() + "/thumbnail"))
+                   .andExpect(status().isNoContent());
+
+        // With a THUMBNAIL bitstream that doesn't match the ORIGINAL Bitstream's name
+        context.turnOffAuthorisationSystem();
+        BitstreamBuilder.createBitstream(context, thumbnailBundle, is)
+                        .withName("random.pdf.jpg")
+                        .withMimeType("image/jpeg")
+                        .build();
+        context.restoreAuthSystemState();
+
+        // Should still fail with HTTP 204
+        getClient().perform(get("/api/core/items/" + item.getID() + "/thumbnail"))
+                   .andExpect(status().isNoContent());
     }
 
 }
