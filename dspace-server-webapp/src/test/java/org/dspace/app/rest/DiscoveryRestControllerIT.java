@@ -7,12 +7,14 @@
  */
 package org.dspace.app.rest;
 
+import static com.google.common.net.UrlEscapers.urlPathSegmentEscaper;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyOrNullString;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -55,6 +57,7 @@ import org.dspace.content.Item;
 import org.dspace.content.WorkspaceItem;
 import org.dspace.content.authority.Choices;
 import org.dspace.content.authority.service.MetadataAuthorityService;
+import org.dspace.discovery.configuration.DiscoverySortFieldConfiguration;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
 import org.dspace.services.ConfigurationService;
@@ -988,12 +991,72 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                        SearchFilterMatcher.isJournalOfPublicationRelation()
                    )))
                    //These sortOptions need to be present as it's the default in the configuration
-                   .andExpect(jsonPath("$.sortOptions", containsInAnyOrder(
-                       SortOptionMatcher.titleSortOption(),
-                       SortOptionMatcher.dateIssuedSortOption(),
-                       SortOptionMatcher.dateAccessionedSortOption(),
-                       SortOptionMatcher.scoreSortOption()
+                   .andExpect(jsonPath("$.sortOptions", contains(
+                       SortOptionMatcher.sortOptionMatcher(
+                                         "score", DiscoverySortFieldConfiguration.SORT_ORDER.desc.name()),
+                       SortOptionMatcher.sortOptionMatcher(
+                                         "dc.title", DiscoverySortFieldConfiguration.SORT_ORDER.asc.name()),
+                       SortOptionMatcher.sortOptionMatcher(
+                                         "dc.date.issued", DiscoverySortFieldConfiguration.SORT_ORDER.desc.name()),
+                       SortOptionMatcher.sortOptionMatcher(
+                                         "dc.date.accessioned", DiscoverySortFieldConfiguration.SORT_ORDER.desc.name())
                    )));
+    }
+
+    @Test
+    public void checkSortOrderInPersonOrOrgunitConfigurationTest() throws Exception {
+        getClient().perform(get("/api/discover/search")
+                   .param("configuration", "personOrOrgunit"))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.type", is("discover")))
+                   .andExpect(jsonPath("$._links.objects.href", containsString("api/discover/search/objects")))
+                   .andExpect(jsonPath("$._links.self.href", containsString("api/discover/search")))
+                   .andExpect(jsonPath("$.sortOptions", contains(
+                       SortOptionMatcher.sortOptionMatcher("dspace.entity.type",
+                                         DiscoverySortFieldConfiguration.SORT_ORDER.desc.name()),
+                       SortOptionMatcher.sortOptionMatcher("organization.legalName",
+                                         DiscoverySortFieldConfiguration.SORT_ORDER.asc.name()),
+                       SortOptionMatcher.sortOptionMatcher("organisation.address.addressCountry",
+                                         DiscoverySortFieldConfiguration.SORT_ORDER.asc.name()),
+                       SortOptionMatcher.sortOptionMatcher("organisation.address.addressLocality",
+                                         DiscoverySortFieldConfiguration.SORT_ORDER.asc.name()),
+                       SortOptionMatcher.sortOptionMatcher("organisation.foundingDate",
+                                         DiscoverySortFieldConfiguration.SORT_ORDER.desc.name()),
+                       SortOptionMatcher.sortOptionMatcher("dc.date.accessioned",
+                                         DiscoverySortFieldConfiguration.SORT_ORDER.desc.name()),
+                       SortOptionMatcher.sortOptionMatcher("person.familyName",
+                                         DiscoverySortFieldConfiguration.SORT_ORDER.asc.name()),
+                       SortOptionMatcher.sortOptionMatcher("person.givenName",
+                                         DiscoverySortFieldConfiguration.SORT_ORDER.asc.name()),
+                       SortOptionMatcher.sortOptionMatcher("person.birthDate",
+                                         DiscoverySortFieldConfiguration.SORT_ORDER.desc.name())
+                    )));
+    }
+
+    @Test
+    public void discoverSearchByFieldNotConfiguredTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context)
+                                          .withName("Parent Community")
+                                          .build();
+
+        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity)
+                                           .withName("Collection 1")
+                                           .build();
+
+        ItemBuilder.createItem(context, col1)
+                   .withTitle("Test")
+                   .withIssueDate("2010-10-17")
+                   .withAuthor("Testing, Works")
+                   .withSubject("ExtraEntry").build();
+
+        context.restoreAuthSystemState();
+
+        getClient().perform(get("/api/discover/search/objects")
+                   .param("sort", "dc.date.accessioned, ASC")
+                   .param("configuration", "workspace"))
+                   .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
@@ -1077,6 +1140,58 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                 //There always needs to be a self link
                 .andExpect(jsonPath("$._links.self.href", containsString("/api/discover/search/objects")))
         ;
+    }
+
+    @Test
+    public void discoverSearchObjectsWithSpecialCharacterTest() throws Exception {
+
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context).build();
+        Collection collection = CollectionBuilder.createCollection(context, parentCommunity).build();
+        ItemBuilder.createItem(context, collection)
+                .withAuthor("DSpace & friends")
+                .build();
+
+        context.restoreAuthSystemState();
+
+        getClient().perform(
+                get("/api/discover/search/objects")
+                        .param("sort", "score,DESC")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.facets", hasItem(allOf(
+                        hasJsonPath("$.name", is("author")),
+                        hasJsonPath("$._embedded.values", hasItem(
+                                hasJsonPath("$._links.search.href", containsString("DSpace%20%26%20friends"))
+                        ))
+                ))));
+    }
+
+    @Test
+    public void discoverSearchBrowsesWithSpecialCharacterTest() throws Exception {
+
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder.createCommunity(context).build();
+        Collection collection = CollectionBuilder.createCollection(context, parentCommunity).build();
+        ItemBuilder.createItem(context, collection)
+                .withAuthor("DSpace & friends")
+                .build();
+
+        context.restoreAuthSystemState();
+
+        getClient().perform(
+                get("/api/discover/browses/author/entries")
+                        .param("sort", "default,ASC")
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.entries", hasItem(allOf(
+                        hasJsonPath("$.value", is("DSpace & friends")),
+                        hasJsonPath("$._links.items.href", containsString("DSpace%20%26%20friends"))
+                ))));
     }
 
     @Test
@@ -5178,6 +5293,137 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
     }
 
     @Test
+    public void discoverSearchObjectsTestForAdministrativeViewWithFiltersEquals() throws Exception {
+
+        context.turnOffAuthorisationSystem();
+
+        parentCommunity = CommunityBuilder
+                .createCommunity(context)
+                .withName("Parent Community")
+                .build();
+        Community child1 = CommunityBuilder
+                .createSubCommunity(context, parentCommunity)
+                .withName("Sub Community")
+                .build();
+        Collection col1 = CollectionBuilder
+                .createCollection(context, child1)
+                .withName("Collection 1")
+                .build();
+        Collection col2 = CollectionBuilder
+                .createCollection(context, child1)
+                .withName("Collection 2")
+                .build();
+
+        ItemBuilder.createItem(context, col1)
+                .withTitle("Public Test Item")
+                .withIssueDate("2010-10-17")
+                .withAuthor("Smith, Donald")
+                .withSubject("ExtraEntry")
+                .build();
+
+        ItemBuilder.createItem(context, col2)
+                .withTitle("Withdrawn Test Item")
+                .withIssueDate("1990-02-13")
+                .withAuthor("Smith, Maria")
+                .withAuthor("Doe, Jane")
+                .withSubject("ExtraEntry")
+                .withdrawn()
+                .build();
+
+        ItemBuilder.createItem(context, col2)
+                .withTitle("Private Test Item")
+                .withIssueDate("2010-02-13")
+                .withAuthor("Smith, Maria")
+                .withAuthor("Doe, Jane")
+                .withSubject("AnotherTest")
+                .withSubject("ExtraEntry")
+                .makeUnDiscoverable()
+                .build();
+
+        context.restoreAuthSystemState();
+
+        String adminToken = getAuthToken(admin.getEmail(), password);
+
+        getClient(adminToken)
+                .perform(get("/api/discover/search/objects")
+                        .param("configuration", "administrativeView")
+                        .param("query", "Test")
+                        .param("f.withdrawn", "true,equals")
+                )
+
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.type", is("discover")))
+                .andExpect(jsonPath("$._embedded.searchResult.page", is(
+                        PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 1, 1)
+                )))
+                .andExpect(jsonPath("$._embedded.searchResult._embedded.objects",
+                        Matchers.contains(
+                                SearchResultMatcher.matchOnItemName("item", "items", "Withdrawn Test Item")
+                        )
+                ))
+                .andExpect(jsonPath("$._links.self.href", containsString("/api/discover/search/objects")));
+
+        getClient(adminToken)
+                .perform(get("/api/discover/search/objects")
+                        .param("configuration", "administrativeView")
+                        .param("query", "Test")
+                        .param("f.withdrawn", "false,equals")
+                )
+
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.type", is("discover")))
+                .andExpect(jsonPath("$._embedded.searchResult.page", is(
+                        PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 1, 2)
+                )))
+                .andExpect(jsonPath("$._embedded.searchResult._embedded.objects",
+                        Matchers.containsInAnyOrder(
+                                SearchResultMatcher.matchOnItemName("item", "items", "Public Test Item"),
+                                SearchResultMatcher.matchOnItemName("item", "items", "Private Test Item")
+                        )
+                ))
+                .andExpect(jsonPath("$._links.self.href", containsString("/api/discover/search/objects")));
+
+        getClient(adminToken)
+                .perform(get("/api/discover/search/objects")
+                        .param("configuration", "administrativeView")
+                        .param("query", "Test")
+                        .param("f.discoverable", "true,equals")
+                )
+
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.type", is("discover")))
+                .andExpect(jsonPath("$._embedded.searchResult.page", is(
+                        PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 1, 2)
+                )))
+                .andExpect(jsonPath("$._embedded.searchResult._embedded.objects",
+                        Matchers.containsInAnyOrder(
+                                SearchResultMatcher.matchOnItemName("item", "items", "Public Test Item"),
+                                SearchResultMatcher.matchOnItemName("item", "items", "Withdrawn Test Item")
+                        )
+                ))
+                .andExpect(jsonPath("$._links.self.href", containsString("/api/discover/search/objects")));
+
+        getClient(adminToken)
+                .perform(get("/api/discover/search/objects")
+                        .param("configuration", "administrativeView")
+                        .param("query", "Test")
+                        .param("f.discoverable", "false,equals")
+                )
+
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.type", is("discover")))
+                .andExpect(jsonPath("$._embedded.searchResult.page", is(
+                        PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 1, 1)
+                )))
+                .andExpect(jsonPath("$._embedded.searchResult._embedded.objects",
+                        Matchers.contains(
+                                SearchResultMatcher.matchOnItemName("item", "items", "Private Test Item")
+                        )
+                ))
+                .andExpect(jsonPath("$._links.self.href", containsString("/api/discover/search/objects")));
+    }
+
+    @Test
     public void discoverSearchPoolTaskObjectsTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
@@ -5519,7 +5765,9 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                    .andExpect(jsonPath("$._embedded.values[0].label", is("Smith, Donald")))
                    .andExpect(jsonPath("$._embedded.values[0].count", is(1)))
                    .andExpect(jsonPath("$._embedded.values[0]._links.search.href",
-                        containsString("api/discover/search/objects?query=Donald&f.author=Smith, Donald,equals")))
+                        containsString("api/discover/search/objects?query=Donald&f.author=" +
+                                urlPathSegmentEscaper().escape("Smith, Donald,equals")
+                        )))
                    .andExpect(jsonPath("$._embedded.values").value(Matchers.hasSize(1)));
 
     }
@@ -5572,7 +5820,9 @@ public class DiscoveryRestControllerIT extends AbstractControllerIntegrationTest
                    .andExpect(jsonPath("$._embedded.values[0].label", is("2017 - 2020")))
                    .andExpect(jsonPath("$._embedded.values[0].count", is(3)))
                    .andExpect(jsonPath("$._embedded.values[0]._links.search.href",
-                        containsString("api/discover/search/objects?dsoType=Item&f.dateIssued=[2017 TO 2020],equals")))
+                        containsString("api/discover/search/objects?dsoType=Item&f.dateIssued=" +
+                                urlPathSegmentEscaper().escape("[2017 TO 2020],equals")
+                        )))
                    .andExpect(jsonPath("$._embedded.values").value(Matchers.hasSize(1)));
 
     }
