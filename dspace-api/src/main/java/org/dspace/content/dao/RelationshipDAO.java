@@ -215,4 +215,30 @@ public interface RelationshipDAO extends GenericDAO<Relationship> {
      */
     int countByTypeName(Context context, String typeName)
             throws SQLException;
+
+    /**
+     * Count the total number of relationships between item 1 and item 2 regardless of relationship type.
+     * This method does not does not care which item is on the left or right side of the relationship.
+     * @param context the DSpace context.
+     * @param item1 item 1.
+     * @param item2 item 2.
+     * @return number of relationships.
+     * @throws SQLException if database error.
+     */
+    int countByRelatedItems(Context context, Item item1, Item item2) throws SQLException;
+
+    /**
+     * Count the total number of relationships between item 1 and item 2 for the given relationship type.
+     * @param context the DSpace context.
+     * @param item1 item 1.
+     * @param item2 item 2.
+     * @param relationshipType the relationship type that needs to be counted.
+     * @param isLeft true if item 1 is on the left-hand side of the relationship, false otherwise.
+     * @return number of relationships.
+     * @throws SQLException if database error.
+     */
+    int countByRelatedItems(
+        Context context, Item item1, Item item2, RelationshipType relationshipType, boolean isLeft
+    ) throws SQLException;
+
 }
