@@ -7,7 +7,9 @@
  */
 package org.dspace.app.rest.projection;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.dspace.app.rest.model.LinkRest;
 import org.dspace.app.rest.model.RestAddressableModel;
@@ -24,7 +26,7 @@ import org.springframework.hateoas.Link;
  */
 public class CompositeProjection extends AbstractProjection {
 
-    public final static String NAME = "composite";
+    public static final String NAME = "composite";
 
     private final List<Projection> projections;
 
@@ -80,5 +82,17 @@ public class CompositeProjection extends AbstractProjection {
             }
         }
         return true;
+    }
+
+    @Override
+    public Map<String, List<String>> getProjectionParametersForHalLink(
+        Class<RestAddressableModel> restAddressableModelClass) {
+
+        Map<String, List<String>> mapProjectionParams = new HashMap<>();
+        for (Projection projection : projections) {
+            mapProjectionParams.putAll(
+                projection.getProjectionParametersForHalLink(restAddressableModelClass));
+        }
+        return mapProjectionParams;
     }
 }

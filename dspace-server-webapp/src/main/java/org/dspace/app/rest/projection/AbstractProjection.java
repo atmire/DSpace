@@ -7,6 +7,10 @@
  */
 package org.dspace.app.rest.projection;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.dspace.app.rest.model.LinkRest;
 import org.dspace.app.rest.model.RestAddressableModel;
 import org.dspace.app.rest.model.RestModel;
@@ -51,6 +55,12 @@ public abstract class AbstractProjection implements Projection {
     public PageRequest getPagingOptions(String rel, HALResource<? extends RestAddressableModel> resource,
                                         Link... oldLinks) {
         return null;
+    }
+
+    @Override
+    public Map<String, List<String>> getProjectionParametersForHalLink(
+        Class<RestAddressableModel> restAddressableModelClass) {
+        return new HashMap<>();
     }
 
 }

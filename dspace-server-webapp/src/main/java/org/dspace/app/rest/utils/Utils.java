@@ -115,6 +115,11 @@ public class Utils {
      */
     private static final int EMBED_MAX_LEVELS = 10;
 
+    /**
+     * The key for the query parameter for projection
+     */
+    public static final String PROJECTION_PARAM_NAME = "projection";
+
     @Autowired
     ApplicationContext applicationContext;
 
@@ -551,7 +556,7 @@ public class Utils {
      */
     public Projection obtainProjection() {
         ServletRequest servletRequest = requestService.getCurrentRequest().getServletRequest();
-        List<String> projectionNames = getValues(servletRequest, "projection");
+        List<String> projectionNames = getValues(servletRequest, PROJECTION_PARAM_NAME);
         Set<String> embedRels = new HashSet<>(getValues(servletRequest, "embed"));
 
         List<Projection> projections = new ArrayList<>();
@@ -624,7 +629,7 @@ public class Utils {
         });
     }
 
-    private List<LinkRest> getLinkRests(Class<? extends RestAddressableModel> restClass) {
+    public List<LinkRest> getLinkRests(Class<? extends RestAddressableModel> restClass) {
         List<LinkRest> list = new ArrayList<>();
         LinksRest linksAnnotation = restClass.getDeclaredAnnotation(LinksRest.class);
         if (linksAnnotation != null) {
@@ -923,47 +928,27 @@ public class Utils {
     }
 
     /**
-    * Get the rest object associated with the specified URI
-    *
-    * @param context the DSpace context
-    * @param uri     the uri of a {@link BaseObjectRest}
-    * @return the {@link BaseObjectRest} identified by the provided uri
-    * @throws SQLException             if a database error occur
-    * @throws IllegalArgumentException if the uri is not valid
-    */
-    public BaseObjectRest getBaseObjectRestFromUri(Context context, String uri) throws SQLException {
-        String dspaceUrl = configurationService.getProperty("dspace.server.url");
+     * Get the {@link DSpaceRestRepository} associated with the given URI
+     *
+     * @param uri The uri of a {@link BaseObjectRest}
+     * @return The {@link DSpaceRestRepository} corresponding to the provided uri
+     * @throws IllegalArgumentException if the uri is not valid
+     */
+    public DSpaceRestRepository getRepositoryFromUri(String uri) {
+        String[] uriParts = this.getUriParts(uri);
+        return this.getRepositoryFromUriParts(uriParts, uri);
+    }
 
-        // Convert strings to URL objects.
-        // Do this early to check that inputs are well-formed.
-        URL dspaceUrlObject;
-        URL requestUrlObject;
-        try {
-            dspaceUrlObject = new URL(dspaceUrl);
-            requestUrlObject = new URL(uri);
-        } catch (MalformedURLException ex) {
-            throw new IllegalArgumentException(
-                    String.format("Configuration '%s' or request '%s' is malformed", dspaceUrl, uri));
-        }
-
-        // Check whether the URI could be valid.
-        if (!urlIsPrefixOf(dspaceUrl, uri)) {
-            throw new IllegalArgumentException("the supplied uri is not ours: " + uri);
-        }
-
-        // Extract from the URI the category, model and id components.
-        // They start after the dspaceUrl/api/{apiCategory}/{apiModel}/{id}
-        int dspacePathLength = StringUtils.split(dspaceUrlObject.getPath(), '/').length;
-        String[] requestPath = StringUtils.split(requestUrlObject.getPath(), '/');
-        String[] uriParts = Arrays.copyOfRange(requestPath, dspacePathLength,
-                requestPath.length);
-        if ("api".equalsIgnoreCase(uriParts[0])) {
-            uriParts = Arrays.copyOfRange(uriParts, 1, uriParts.length);
-        }
-        if (uriParts.length != 3) {
-            throw new IllegalArgumentException("the supplied uri lacks required path elements: " + uri);
-        }
-
+    /**
+     * Get the {@link DSpaceRestRepository} associated with the given URI (with uriParts already determined)
+     *
+     * @param uriParts The uri already split into parts
+     * @param uri The uri of a {@link BaseObjectRest}
+     * @return The {@link DSpaceRestRepository} corresponding to the provided uri
+     * @throws IllegalArgumentException if the uri is not for a repository of type ReloadableEntityObjectRepository
+     * or if the there was no repository found for this uri
+     */
+    private DSpaceRestRepository getRepositoryFromUriParts(String[] uriParts, String uri) {
         DSpaceRestRepository repository;
         try {
             repository = getResourceRepository(uriParts[0], uriParts[1]);
@@ -973,7 +958,21 @@ public class Utils {
         } catch (RepositoryNotFoundException e) {
             throw new IllegalArgumentException("the repository for the URI '" + uri + "' was not found", e);
         }
+        return repository;
+    }
 
+    /**
+    * Get the rest object associated with the specified URI
+    *
+    * @param context the DSpace context
+    * @param uri     the uri of a {@link BaseObjectRest}
+    * @return the {@link BaseObjectRest} identified by the provided uri
+    * @throws IllegalArgumentException if the uri is not valid
+    */
+    public BaseObjectRest getBaseObjectRestFromUri(Context context, String uri) {
+        String[] uriParts = this.getUriParts(uri);
+
+        DSpaceRestRepository repository = getRepositoryFromUri(uri);
         Serializable pk;
         try {
             // cast the string id in the uriParts to the real pk class
@@ -988,5 +987,49 @@ public class Utils {
         } finally {
             context.restoreAuthSystemState();
         }
+    }
+
+    /**
+     * Splits the given URI into parts: category, modal and id (stats after the dspaceUrl/api)
+     *
+     * @param uri The URI to be split into parts
+     * @return The relevant parts of the URI: category, modal and id
+     */
+    private String[] getUriParts(String uri) {
+        String dspaceUrl = configurationService.getProperty("dspace.server.url");
+
+        // Convert strings to URL objects.
+        // Do this early to check that inputs are well-formed.
+        URL dspaceUrlObject;
+        URL requestUrlObject;
+        try {
+            dspaceUrlObject = new URL(dspaceUrl);
+            requestUrlObject = new URL(uri);
+        } catch (MalformedURLException ex) {
+            throw new IllegalArgumentException(
+                String.format("Configuration '%s' or request '%s' is malformed", dspaceUrl, uri));
+        }
+
+        // Check whether the URI could be valid.
+        if (!urlIsPrefixOf(dspaceUrl, uri)) {
+            throw new IllegalArgumentException("the supplied uri is not ours: " + uri);
+        }
+
+        // Extract from the URI the category, model and id components.
+        // They start after the dspaceUrl/api/{apiCategory}/{apiModel}/{id}
+        int dspacePathLength = StringUtils.split(dspaceUrlObject.getPath(), '/').length;
+        String[] requestPath = StringUtils.split(requestUrlObject.getPath(), '/');
+        String[] uriParts = Arrays.copyOfRange(requestPath, dspacePathLength,
+            requestPath.length);
+        if ("api".equalsIgnoreCase(uriParts[0])) {
+            uriParts = Arrays.copyOfRange(uriParts, 1, uriParts.length);
+        }
+        if ("api".equalsIgnoreCase(uriParts[0])) {
+            uriParts = Arrays.copyOfRange(uriParts, 1, uriParts.length);
+        }
+        if (uriParts.length != 3) {
+            throw new IllegalArgumentException("the supplied uri lacks required path elements: " + uri);
+        }
+        return uriParts;
     }
 }

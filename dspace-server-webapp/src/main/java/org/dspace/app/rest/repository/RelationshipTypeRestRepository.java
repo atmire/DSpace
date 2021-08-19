@@ -30,7 +30,8 @@ import org.springframework.stereotype.Component;
  * This is the repository that is responsible to manage RelationshipType Rest objects
  */
 @Component(RelationshipTypeRest.CATEGORY + "." + RelationshipTypeRest.NAME)
-public class RelationshipTypeRestRepository extends DSpaceRestRepository<RelationshipTypeRest, Integer> {
+public class RelationshipTypeRestRepository extends DSpaceRestRepository<RelationshipTypeRest, Integer>
+        implements ReloadableEntityObjectRepository<RelationshipType, Integer> {
 
     @Autowired
     private RelationshipTypeService relationshipTypeService;
@@ -103,5 +104,15 @@ public class RelationshipTypeRestRepository extends DSpaceRestRepository<Relatio
     @Override
     public Class<RelationshipTypeRest> getDomainClass() {
         return RelationshipTypeRest.class;
+    }
+
+    @Override
+    public RelationshipType findDomainObjectByPk(Context context, Integer id) throws SQLException {
+        return relationshipTypeService.find(context, id);
+    }
+
+    @Override
+    public Class<Integer> getPKClass() {
+        return Integer.class;
     }
 }

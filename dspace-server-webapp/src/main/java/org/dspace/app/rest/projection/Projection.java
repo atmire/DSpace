@@ -7,6 +7,8 @@
  */
 package org.dspace.app.rest.projection;
 
+import java.util.List;
+import java.util.Map;
 import javax.persistence.Entity;
 
 import org.dspace.app.rest.model.LinkRest;
@@ -147,4 +149,15 @@ public interface Projection {
      */
     PageRequest getPagingOptions(String rel, HALResource<? extends RestAddressableModel> resource,
                                  Link... oldLinks);
+
+    /**
+     * Get the query parameters map to be added to the HAL link for this projection
+     * These query parameters are assumed to be relevant based on the user's query. They are also assumed to be
+     * relevant for the given restAddressableModelClass.
+     *
+     * @param restAddressableModelClass The class of the object of the link we're optionally adding projection query
+     *                                  parameters to
+     * @return The query parameters map to be added to the HAL link for this projection
+     */
+    Map<String, List<String>> getProjectionParametersForHalLink(Class<RestAddressableModel> restAddressableModelClass);
 }
