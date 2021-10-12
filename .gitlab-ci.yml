@@ -16,3 +16,15 @@ test:
   stage: test
   script:
     - mvn $MAVEN_CLI_OPTS clean install license:check -DskipUnitTests=false -DskipIntegrationTests=false -P !assembly -B -V -Dsurefire.rerunFailingTestsCount=2
+  artifacts:
+      when: always
+      reports:
+        junit:
+          - dspace-api/target/surefire-reports/TEST*.xml
+          - dspace-api/target/failsafe-reports/TEST*.xml
+          - dspace-services/target/surefire-reports/TEST*.xml
+          - dspace-server-webapp/target/surefire-reports/TEST*.xml
+          - dspace-server-webapp/target/failsafe-reports/TEST*.xml
+          - dspace/modules/additions/target/failsafe-reports/TEST*.xml
+          - dspace/modules/server/target/failsafe-reports/TEST*.xml
+          - dspace-oai/target/surefire-reports/TEST*.xml
