@@ -7,6 +7,7 @@
  */
 package org.dspace.storage;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
@@ -36,88 +37,91 @@ public class LoggingInputstream extends InputStream {
     }
 
     @Override
-    public int read() {
+    public int read() throws IOException {
         this.log.info(String.format("READING the %s with UUID %s", this.getClass().toString(), this.uuid.toString()));
-        return 0;
+        return this.inputStream.read();
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
         this.log.info(String.format("CLOSING the %s with UUID %s", this.getClass().toString(), this.uuid.toString()));
+        this.inputStream.close();
     }
 
     @Override
-    public int read(byte[] b) {
+    public int read(byte[] b) throws IOException {
         this.log.debug(String.format("READING (read(byte[])) the %s with UUID %s", this.getClass().toString(),
             this.uuid.toString()));
-        return 0;
+        return this.inputStream.read(b);
     }
 
     @Override
-    public int read(byte[] b, int off, int len) {
+    public int read(byte[] b, int off, int len) throws IOException {
         this.log.debug(String.format("READING (read(byte[], int, int)) the %s with UUID %s", this.getClass().toString(),
             this.uuid.toString()));
-        return 0;
+        return this.inputStream.read(b, off, len);
     }
 
     @Override
-    public byte[] readAllBytes() {
+    public byte[] readAllBytes() throws IOException {
         this.log.debug(String.format("READING (readAllBytes()) the %s with UUID %s", this.getClass().toString(),
             this.uuid.toString()));
-        return new byte[0];
+        return this.inputStream.readAllBytes();
     }
 
     @Override
-    public byte[] readNBytes(int len) {
+    public byte[] readNBytes(int len) throws IOException {
         this.log.debug(String.format("READING (readNBytes(int)) the %s with UUID %s", this.getClass().toString(),
             this.uuid.toString()));
-        return new byte[0];
+        return this.inputStream.readNBytes(len);
     }
 
     @Override
-    public int readNBytes(byte[] b, int off, int len) {
+    public int readNBytes(byte[] b, int off, int len) throws IOException {
         this.log.debug(String.format("READING (readNBytes(byte[], int, int)) the %s with UUID %s",
             this.getClass().toString(), this.uuid.toString()));
-        return 0;
+        return this.inputStream.readNBytes(b, off, len);
     }
 
     @Override
-    public long skip(long n) {
+    public long skip(long n) throws IOException {
         this.log.debug(String.format("SKIPPING (skip(long)) the %s with UUID %s",
             this.getClass().toString(), this.uuid.toString()));
-        return 0;
+        return this.inputStream.skip(n);
     }
 
     @Override
-    public int available() {
+    public int available() throws IOException {
         this.log.debug(String.format("AVAILABLE (available()) the %s with UUID %s",
             this.getClass().toString(), this.uuid.toString()));
-        return 0;
+        return this.inputStream.available();
     }
 
     @Override
     public synchronized void mark(int readlimit) {
         this.log.debug(String.format("MARK (mark(int)) the %s with UUID %s",
             this.getClass().toString(), this.uuid.toString()));
+        this.inputStream.mark(readlimit);
     }
 
     @Override
-    public synchronized void reset() {
+    public synchronized void reset() throws IOException {
         this.log.debug(String.format("RESET (reset()) the %s with UUID %s",
             this.getClass().toString(), this.uuid.toString()));
+        this.inputStream.reset();
     }
 
     @Override
     public boolean markSupported() {
         this.log.debug(String.format("MARK SUPPORTED (markSupported()) the %s with UUID %s",
             this.getClass().toString(), this.uuid.toString()));
-        return false;
+        return this.inputStream.markSupported();
     }
 
     @Override
-    public long transferTo(OutputStream out) {
+    public long transferTo(OutputStream out) throws IOException {
         this.log.debug(String.format("TRANSFER TO (transferTo(OutputStream)) the %s with UUID %s",
             this.getClass().toString(), this.uuid.toString()));
-        return 0;
+        return this.inputStream.transferTo(out);
     }
 }
