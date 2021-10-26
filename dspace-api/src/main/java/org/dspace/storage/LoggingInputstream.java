@@ -30,10 +30,16 @@ public class LoggingInputstream extends InputStream {
         this.uuid = UUID.randomUUID();
         this.inputStream = inputStream;
         this.log.info(String.format("CREATING the %s with UUID %s", this.getClass().toString(), this.uuid.toString()));
+        this.logNrLinesStackTrace(10);
+    }
+
+    private void logNrLinesStackTrace(int nrOfLines) {
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-        for (int i = 0; i < 10; i++) {
-            this.log.info(stackTraceElements[i].toString());
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i <= nrOfLines; i++) {
+            stringBuilder.append(stackTraceElements[i].toString() + "\n");
         }
+        this.log.info(stringBuilder.toString());
     }
 
     @Override
@@ -45,6 +51,7 @@ public class LoggingInputstream extends InputStream {
     @Override
     public void close() throws IOException {
         this.log.info(String.format("CLOSING the %s with UUID %s", this.getClass().toString(), this.uuid.toString()));
+        this.logNrLinesStackTrace(10);
         this.inputStream.close();
     }
 
