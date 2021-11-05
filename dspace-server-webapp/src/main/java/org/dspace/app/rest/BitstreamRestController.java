@@ -118,7 +118,6 @@ public class BitstreamRestController {
         String mimetype = format.getMIMEType();
         String name = getBitstreamName(bit, format);
 
-        Pair<InputStream, Long> bitstreamTuple = getBitstreamInputStreamAndSize(context, bit);
 
         if (StringUtils.isBlank(request.getHeader("Range"))) {
             //We only log a download request when serving a request without Range header. This is because
@@ -131,18 +130,16 @@ public class BitstreamRestController {
                     bit));
         }
 
-        // Pipe the bits
-        InputStream is = bitstreamTuple.getLeft();
         try {
             HttpHeadersInitializer httpHeadersInitializer = HttpHeadersInitializer
-                    .fromInputStream(is)
-                    .withBufferSize(BUFFER_SIZE)
-                    .withFileName(name)
-                    .withLength(bitstreamTuple.getRight())
-                    .withChecksum(bit.getChecksum())
-                    .withMimetype(mimetype)
-                    .with(request)
-                    .with(response);
+                .fromInputStream(bitstreamService.retrieve(context, bit))
+                .withBufferSize(BUFFER_SIZE)
+                .withFileName(name)
+                .withLength(bit.getSizeBytes())
+                .withChecksum(bit.getChecksum())
+                .withMimetype(mimetype)
+                .with(request)
+                .with(response);
 
             if (lastModified != null) {
                 httpHeadersInitializer.withLastModified(lastModified);
@@ -150,13 +147,13 @@ public class BitstreamRestController {
 
             //Determine if we need to send the file as a download or if the browser can open it inline
             long dispositionThreshold = configurationService.getLongProperty("webui.content_disposition_threshold");
-            if (dispositionThreshold >= 0 && bitstreamTuple.getRight() > dispositionThreshold) {
+            if (dispositionThreshold >= 0 && bit.getSizeBytes() > dispositionThreshold) {
                 httpHeadersInitializer.withDisposition(HttpHeadersInitializer.CONTENT_DISPOSITION_ATTACHMENT);
             }
 
 
             org.dspace.app.rest.utils.BitstreamResource bitstreamResource =
-                new org.dspace.app.rest.utils.BitstreamResource(is, name, uuid, bit.getSizeBytes());
+                new org.dspace.app.rest.utils.BitstreamResource(bit, name, uuid, bit.getSizeBytes(), context.getCurrentUser().getID());
 
             //We have all the data we need, close the connection to the database so that it doesn't stay open during
             //download/streaming
@@ -171,9 +168,7 @@ public class BitstreamRestController {
         } catch (ClientAbortException ex) {
             log.debug("Client aborted the request before the download was completed. " +
                           "Client is probably switching to a Range request.", ex);
-            is.close();
         } catch (Exception e) {
-            is.close();
             throw e;
         }
         return null;

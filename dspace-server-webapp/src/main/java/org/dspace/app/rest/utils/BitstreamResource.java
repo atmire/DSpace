@@ -9,8 +9,16 @@ package org.dspace.app.rest.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.UUID;
 
+import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.Bitstream;
+import org.dspace.content.service.BitstreamService;
+import org.dspace.core.Context;
+import org.dspace.eperson.EPerson;
+import org.dspace.eperson.service.EPersonService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.AbstractResource;
 
 /**
@@ -21,16 +29,24 @@ import org.springframework.core.io.AbstractResource;
  */
 public class BitstreamResource extends AbstractResource {
 
-    private InputStream inputStream;
+    private Bitstream bitstream;
     private String name;
     private UUID uuid;
     private long sizeBytes;
+    private UUID currentUserUUID;
 
-    public BitstreamResource(InputStream inputStream, String name, UUID uuid, long sizeBytes) {
-        this.inputStream = inputStream;
+    @Autowired
+    private BitstreamService bitstreamService;
+
+    @Autowired
+    private EPersonService ePersonService;
+
+    public BitstreamResource(Bitstream bitstream, String name, UUID uuid, long sizeBytes, UUID currentUserUUID) {
+        this.bitstream = bitstream;
         this.name = name;
         this.uuid = uuid;
         this.sizeBytes = sizeBytes;
+        this.currentUserUUID = currentUserUUID;
     }
 
     @Override
@@ -40,7 +56,22 @@ public class BitstreamResource extends AbstractResource {
 
     @Override
     public InputStream getInputStream() throws IOException {
-        return inputStream;
+        Context context = new Context();
+        try {
+            EPerson currentUser = ePersonService.find(context, currentUserUUID);
+            context.setCurrentUser(currentUser);
+            return bitstreamService.retrieve(context, bitstream);
+        } catch (SQLException|AuthorizeException throwables) {
+           throw new IOException(throwables);
+
+        } finally {
+            try {
+                context.complete();
+            } catch (SQLException e) {
+                throw new IOException(e);
+            }
+        }
+
     }
 
     @Override
