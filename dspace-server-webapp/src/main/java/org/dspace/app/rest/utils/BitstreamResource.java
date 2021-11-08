@@ -14,9 +14,11 @@ import java.util.UUID;
 
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Bitstream;
+import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
+import org.dspace.eperson.factory.EPersonServiceFactory;
 import org.dspace.eperson.service.EPersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.AbstractResource;
@@ -36,10 +38,10 @@ public class BitstreamResource extends AbstractResource {
     private UUID currentUserUUID;
 
     @Autowired
-    private BitstreamService bitstreamService;
+    private BitstreamService bitstreamService = ContentServiceFactory.getInstance().getBitstreamService();
 
     @Autowired
-    private EPersonService ePersonService;
+    private EPersonService ePersonService = EPersonServiceFactory.getInstance().getEPersonService();
 
     public BitstreamResource(Bitstream bitstream, String name, UUID uuid, long sizeBytes, UUID currentUserUUID) {
         this.bitstream = bitstream;

@@ -38,6 +38,7 @@ import org.dspace.content.service.BitstreamFormatService;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.core.Context;
 import org.dspace.disseminate.service.CitationDocumentService;
+import org.dspace.eperson.EPerson;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.EventService;
 import org.dspace.usage.UsageEvent;
@@ -132,8 +133,7 @@ public class BitstreamRestController {
         }
 
         try {
-            HttpHeadersInitializer httpHeadersInitializer = HttpHeadersInitializer
-                .fromInputStream(bitstreamService.retrieve(context, bit))
+            HttpHeadersInitializer httpHeadersInitializer = new HttpHeadersInitializer()
                 .withBufferSize(BUFFER_SIZE)
                 .withFileName(name)
                 .withLength(bit.getSizeBytes())
