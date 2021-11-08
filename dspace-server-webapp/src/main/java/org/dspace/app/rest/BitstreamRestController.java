@@ -108,6 +108,7 @@ public class BitstreamRestController {
         Context context = ContextUtil.obtainContext(request);
 
         Bitstream bit = bitstreamService.find(context, uuid);
+        EPerson currentUser = context.getCurrentUser();
         if (bit == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;
@@ -152,8 +153,9 @@ public class BitstreamRestController {
             }
 
 
+
             org.dspace.app.rest.utils.BitstreamResource bitstreamResource =
-                new org.dspace.app.rest.utils.BitstreamResource(bit, name, uuid, bit.getSizeBytes(), context.getCurrentUser().getID());
+                new org.dspace.app.rest.utils.BitstreamResource(bit, name, uuid, bit.getSizeBytes(), currentUser != null?currentUser.getID():null);
 
             //We have all the data we need, close the connection to the database so that it doesn't stay open during
             //download/streaming
