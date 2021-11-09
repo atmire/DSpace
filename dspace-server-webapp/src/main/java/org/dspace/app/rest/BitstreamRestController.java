@@ -109,7 +109,15 @@ public class BitstreamRestController {
         Context context = ContextUtil.obtainContext(request);
 
         Bitstream bit = bitstreamService.find(context, uuid);
+        if (bit == null){
+            throw new ResourceNotFoundException();
+        }
         EPerson currentUser = context.getCurrentUser();
+
+        if (citationDocumentService.isCitationEnabledForBitstream(bit, context)){
+            citationDocumentService.makeCitedDocument(context, bit);
+        }
+
         if (bit == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;
@@ -119,7 +127,6 @@ public class BitstreamRestController {
         BitstreamFormat format = bit.getFormat(context);
         String mimetype = format.getMIMEType();
         String name = getBitstreamName(bit, format);
-
 
         if (StringUtils.isBlank(request.getHeader("Range"))) {
             //We only log a download request when serving a request without Range header. This is because

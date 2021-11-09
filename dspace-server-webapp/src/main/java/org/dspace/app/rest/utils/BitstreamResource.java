@@ -17,10 +17,11 @@ import org.dspace.content.Bitstream;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.core.Context;
+import org.dspace.disseminate.factory.DisseminateServiceFactory;
+import org.dspace.disseminate.service.CitationDocumentService;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.factory.EPersonServiceFactory;
 import org.dspace.eperson.service.EPersonService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.AbstractResource;
 
 /**
@@ -37,11 +38,10 @@ public class BitstreamResource extends AbstractResource {
     private long sizeBytes;
     private UUID currentUserUUID;
 
-    @Autowired
     private BitstreamService bitstreamService = ContentServiceFactory.getInstance().getBitstreamService();
-
-    @Autowired
     private EPersonService ePersonService = EPersonServiceFactory.getInstance().getEPersonService();
+    private CitationDocumentService citationDocumentService = DisseminateServiceFactory.getInstance()
+        .getCitationDocumentService();
 
     public BitstreamResource(Bitstream bitstream, String name, UUID uuid, long sizeBytes, UUID currentUserUUID) {
         this.bitstream = bitstream;
@@ -62,18 +62,26 @@ public class BitstreamResource extends AbstractResource {
         try {
             EPerson currentUser = ePersonService.find(context, currentUserUUID);
             context.setCurrentUser(currentUser);
-            return bitstreamService.retrieve(context, bitstream);
-        } catch (SQLException|AuthorizeException throwables) {
-           throw new IOException(throwables);
+            InputStream out = null;
 
-        } finally {
+            if (citationDocumentService.isCitationEnabledForBitstream(bitstream, context)) {
+                out = citationDocumentService.makeCitedDocument(context, bitstream).getLeft();
+            } else {
+                out = bitstreamService.retrieve(context, bitstream);
+            }
+
+            return out;
+        }
+        catch (SQLException | AuthorizeException e){
+            throw new IOException(e);
+        }
+        finally {
             try {
                 context.complete();
             } catch (SQLException e) {
                 throw new IOException(e);
             }
         }
-
     }
 
     @Override
