@@ -17,11 +17,11 @@ import org.dspace.content.Bitstream;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.core.Context;
-import org.dspace.disseminate.factory.DisseminateServiceFactory;
 import org.dspace.disseminate.service.CitationDocumentService;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.factory.EPersonServiceFactory;
 import org.dspace.eperson.service.EPersonService;
+import org.dspace.utils.DSpace;
 import org.springframework.core.io.AbstractResource;
 
 /**
@@ -40,8 +40,9 @@ public class BitstreamResource extends AbstractResource {
 
     private BitstreamService bitstreamService = ContentServiceFactory.getInstance().getBitstreamService();
     private EPersonService ePersonService = EPersonServiceFactory.getInstance().getEPersonService();
-    private CitationDocumentService citationDocumentService = DisseminateServiceFactory.getInstance()
-        .getCitationDocumentService();
+    private CitationDocumentService citationDocumentService =
+        new DSpace().getServiceManager()
+            .getServiceByName("CitationDocumentServiceToUse", CitationDocumentService.class);
 
     public BitstreamResource(Bitstream bitstream, String name, UUID uuid, long sizeBytes, UUID currentUserUUID) {
         this.bitstream = bitstream;
@@ -65,17 +66,15 @@ public class BitstreamResource extends AbstractResource {
             InputStream out = null;
 
             if (citationDocumentService.isCitationEnabledForBitstream(bitstream, context)) {
-                out = citationDocumentService.makeCitedDocument(context, bitstream).getLeft();
+                out = citationDocumentService.getCitedDocument(context, bitstream);
             } else {
                 out = bitstreamService.retrieve(context, bitstream);
             }
 
             return out;
-        }
-        catch (SQLException | AuthorizeException e){
+        } catch (SQLException | AuthorizeException e) {
             throw new IOException(e);
-        }
-        finally {
+        } finally {
             try {
                 context.complete();
             } catch (SQLException e) {

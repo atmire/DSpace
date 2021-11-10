@@ -12,7 +12,6 @@ import static org.dspace.app.rest.utils.RegexUtils.REGEX_REQUESTMAPPING_IDENTIFI
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +21,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.catalina.connector.ClientAbortException;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.converter.ConverterService;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
@@ -114,10 +112,6 @@ public class BitstreamRestController {
         }
         EPerson currentUser = context.getCurrentUser();
 
-        if (citationDocumentService.isCitationEnabledForBitstream(bit, context)){
-            citationDocumentService.makeCitedDocument(context, bit);
-        }
-
         if (bit == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;
@@ -159,10 +153,17 @@ public class BitstreamRestController {
                 httpHeadersInitializer.withDisposition(HttpHeadersInitializer.CONTENT_DISPOSITION_ATTACHMENT);
             }
 
+            long filesize;
+            if (citationDocumentService.isCitationEnabledForBitstream(bit, context)) {
+                filesize = citationDocumentService.getCitedDocumentLength(context, bit);
+            }
+            else{
+                filesize = bit.getSizeBytes();
+            }
 
 
             org.dspace.app.rest.utils.BitstreamResource bitstreamResource =
-                new org.dspace.app.rest.utils.BitstreamResource(bit, name, uuid, bit.getSizeBytes(), currentUser != null?currentUser.getID():null);
+                new org.dspace.app.rest.utils.BitstreamResource(bit, name, uuid, filesize, currentUser != null?currentUser.getID():null);
 
             //We have all the data we need, close the connection to the database so that it doesn't stay open during
             //download/streaming
@@ -181,30 +182,6 @@ public class BitstreamRestController {
             throw e;
         }
         return null;
-    }
-
-    private Pair<InputStream, Long> getBitstreamInputStreamAndSize(Context context, Bitstream bit)
-        throws SQLException, IOException, AuthorizeException {
-
-        if (citationDocumentService.isCitationEnabledForBitstream(bit, context)) {
-            return generateBitstreamWithCitation(context, bit);
-        } else {
-            return Pair.of(bitstreamService.retrieve(context, bit),bit.getSizeBytes());
-        }
-    }
-
-    private Pair<InputStream, Long> generateBitstreamWithCitation(Context context, Bitstream bitstream)
-        throws SQLException, IOException, AuthorizeException {
-        //Create the cited document
-        Pair<InputStream, Long> citationDocument = citationDocumentService.makeCitedDocument(context, bitstream);
-        if (citationDocument.getLeft() == null) {
-            log.error("CitedDocument was null");
-        } else {
-            if (log.isDebugEnabled()) {
-                log.debug("CitedDocument was ok, has size " + citationDocument.getRight());
-            }
-        }
-        return citationDocument;
     }
 
     private String getBitstreamName(Bitstream bit, BitstreamFormat format) {
