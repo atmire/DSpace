@@ -42,7 +42,7 @@ public class BitstreamResource extends AbstractResource {
     private EPersonService ePersonService = EPersonServiceFactory.getInstance().getEPersonService();
     private CitationDocumentService citationDocumentService =
         new DSpace().getServiceManager()
-            .getServiceByName("CitationDocumentServiceToUse", CitationDocumentService.class);
+            .getServicesByType(CitationDocumentService.class).get(0);
 
     public BitstreamResource(Bitstream bitstream, String name, UUID uuid, long sizeBytes, UUID currentUserUUID) {
         this.bitstream = bitstream;
