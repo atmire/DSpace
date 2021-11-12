@@ -107,7 +107,7 @@ public class BitstreamRestController {
         Context context = ContextUtil.obtainContext(request);
 
         Bitstream bit = bitstreamService.find(context, uuid);
-        if (bit == null){
+        if (bit == null) {
             throw new ResourceNotFoundException();
         }
         EPerson currentUser = context.getCurrentUser();
@@ -156,14 +156,14 @@ public class BitstreamRestController {
             long filesize;
             if (citationDocumentService.isCitationEnabledForBitstream(bit, context)) {
                 filesize = citationDocumentService.getCitedDocumentLength(context, bit);
-            }
-            else{
+            } else {
                 filesize = bit.getSizeBytes();
             }
 
 
             org.dspace.app.rest.utils.BitstreamResource bitstreamResource =
-                new org.dspace.app.rest.utils.BitstreamResource(bit, name, uuid, filesize, currentUser != null?currentUser.getID():null);
+                new org.dspace.app.rest.utils.BitstreamResource(
+                    bit, name, uuid, filesize, currentUser != null ? currentUser.getID() : null);
 
             //We have all the data we need, close the connection to the database so that it doesn't stay open during
             //download/streaming

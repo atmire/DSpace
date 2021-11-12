@@ -319,12 +319,11 @@ public class CitationDocumentServiceImpl implements CitationDocumentService, Ini
             PDPage coverPage = new PDPage(citationPageFormat);
             generateCoverPage(context, document, coverPage, item);
             addCoverPageToDocument(document, sourceDocument, coverPage);
-            try (ByteArrayOutputStream out = new ByteArrayOutputStream()){
+            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
                 document.save(out);
                 return out.toByteArray();
             }
-        }
-        finally {
+        } finally {
             sourceDocument.close();
             document.close();
         }
