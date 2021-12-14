@@ -5315,7 +5315,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
 
         MetadataFieldName issnFieldName = new MetadataFieldName("dc", "identifier", "issn");
         MetadataFieldName isbnFieldName = new MetadataFieldName("dc", "identifier", "isbn");
-        MetadataFieldName urlfieldName = new MetadataFieldName("dc", "identifier", "url");
+        MetadataFieldName citationFieldName = new MetadataFieldName("dc", "identifier", "citation");
 
         WorkspaceItem workspaceItem1 = WorkspaceItemBuilder.createWorkspaceItem(context, collection)
             .withTitle("test workspace item 1")
@@ -5331,7 +5331,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         WorkspaceItem workspaceItem3 = WorkspaceItemBuilder.createWorkspaceItem(context, collection)
             .withTitle("test workspace item 3")
             .build();
-        itemService.setMetadataSingleValue(context, workspaceItem3.getItem(), urlfieldName, null, "url");
+        itemService.setMetadataSingleValue(context, workspaceItem3.getItem(),citationFieldName, null, "citation");
 
         context.restoreAuthSystemState();
 
@@ -5348,7 +5348,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
             .andExpect(status().isOk())
             .andExpect(jsonPath(errorPath).doesNotExist());
 
-        getClient(authToken).perform(get(workspaceItemsUri + workspaceItem3.getItem()))
+        getClient(authToken).perform(get(workspaceItemsUri + workspaceItem3.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors[?(@.message=='error.validation.required')]",
                 Matchers.contains(
