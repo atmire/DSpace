@@ -38,7 +38,7 @@
         <jetty.version>9.4.41.v20210516</jetty.version>
         <log4j.version>2.15.0</log4j.version>
         <pdfbox-version>2.0.24</pdfbox-version>
-        <poi-version>3.17</poi-version>
+        <poi-version>4.1.1</poi-version>
         <slf4j.version>1.7.25</slf4j.version>
 
         <!--=== SERVER WEBAPP DEPENDENCIES ===-->
@@ -112,7 +112,7 @@
                             </goals>
                             <configuration>
                                 <rules>
-                                    <DependencyConvergence />
+                                    <DependencyConvergence/>
                                 </rules>
                             </configuration>
                         </execution>
@@ -1372,7 +1372,7 @@
             <dependency>
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
-                <version>1.10</version>
+                <version>1.13</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -1658,12 +1658,12 @@
             <dependency>
                 <groupId>com.google.apis</groupId>
                 <artifactId>google-api-services-analytics</artifactId>
-                <version>v3-rev145-1.23.0</version>
+                <version>v3-rev158-1.24.1</version>
             </dependency>
             <dependency>
                 <groupId>com.google.api-client</groupId>
                 <artifactId>google-api-client</artifactId>
-                <version>1.23.0</version>
+                <version>1.24.1</version>
             </dependency>
             <dependency>
                 <groupId>com.google.http-client</groupId>
