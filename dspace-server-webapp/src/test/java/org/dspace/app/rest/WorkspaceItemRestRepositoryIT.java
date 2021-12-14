@@ -64,9 +64,11 @@ import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.dspace.content.EntityType;
 import org.dspace.content.Item;
+import org.dspace.content.MetadataFieldName;
 import org.dspace.content.Relationship;
 import org.dspace.content.RelationshipType;
 import org.dspace.content.WorkspaceItem;
+import org.dspace.content.service.ItemService;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
 import org.dspace.eperson.factory.EPersonServiceFactory;
@@ -84,7 +86,8 @@ import org.springframework.test.web.servlet.MvcResult;
  *
  */
 public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegrationTest {
-
+    @Autowired
+    private ItemService itemService;
     @Autowired
     private ConfigurationService configurationService;
 
@@ -5304,24 +5307,53 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         context.turnOffAuthorisationSystem();
         Community community = CommunityBuilder.createCommunity(context).build();
         Collection collection = CollectionBuilder.createCollection(context, community, "123456789/qualdrop-test")
-                                                 .withName("Test name")
-                                                 .build();
+            .withName("Test name")
+            .build();
 
         //disable file upload mandatory
         configurationService.setProperty("webui.submit.upload.required", false);
 
-        WorkspaceItem workspaceItem1 = WorkspaceItemBuilder.createWorkspaceItem(context, collection)
-                                                           .withTitle("test workspace item 1")
-                                                           .build();
+        MetadataFieldName issnFieldName = new MetadataFieldName("dc", "identifier", "issn");
+        MetadataFieldName isbnFieldName = new MetadataFieldName("dc", "identifier", "isbn");
+        MetadataFieldName urlfieldName = new MetadataFieldName("dc", "identifier", "url");
 
-        // itemService.setMetadataSingleValue(context, workspaceItem1.getItem(), "dc", "identifier", "issn", null, "12");
+        WorkspaceItem workspaceItem1 = WorkspaceItemBuilder.createWorkspaceItem(context, collection)
+            .withTitle("test workspace item 1")
+            .build();
+        itemService.setMetadataSingleValue(context, workspaceItem1.getItem(), issnFieldName, null, "12");
+
+        WorkspaceItem workspaceItem2 = WorkspaceItemBuilder.createWorkspaceItem(context, collection)
+            .withTitle("test workspace item 2")
+            .build();
+        itemService.setMetadataSingleValue(context, workspaceItem2.getItem(), issnFieldName, null, "13");
+        itemService.setMetadataSingleValue(context, workspaceItem2.getItem(), isbnFieldName, null, "14");
+
+        WorkspaceItem workspaceItem3 = WorkspaceItemBuilder.createWorkspaceItem(context, collection)
+            .withTitle("test workspace item 3")
+            .build();
+        itemService.setMetadataSingleValue(context, workspaceItem3.getItem(), urlfieldName, null, "url");
 
         context.restoreAuthSystemState();
 
         String authToken = getAuthToken(admin.getEmail(), password);
-        getClient(authToken).perform(get("/api/submission/workspaceitems/" + workspaceItem1.getID()))
-                            .andExpect(status().isOk())
-                            .andExpect(jsonPath("$.errors").doesNotExist());
 
+
+        String workspaceItemsUri = "/api/submission/workspaceitems/";
+        String errorPath = "$.errors";
+        getClient(authToken).perform(get(workspaceItemsUri + workspaceItem1.getID()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(errorPath).doesNotExist());
+
+        getClient(authToken).perform(get(workspaceItemsUri + workspaceItem2.getID()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(errorPath).doesNotExist());
+
+        getClient(authToken).perform(get(workspaceItemsUri + workspaceItem3.getItem()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.errors[?(@.message=='error.validation.required')]",
+                Matchers.contains(
+                    hasJsonPath("$.paths", Matchers.contains(
+                        hasJsonPath("$", Matchers.is("/sections/qualdroptest/dc.identifier"))
+                    )))));
     }
 }
