@@ -27,7 +27,7 @@ import org.dspace.core.Context;
  */
 public class SiteDAOImpl extends AbstractHibernateDAO<Site> implements SiteDAO {
 
-    private static UUID cachedSiteId;
+    private UUID cachedSiteId;
 
     protected SiteDAOImpl() {
         super();
