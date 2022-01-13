@@ -69,6 +69,9 @@ public class Item extends DSpaceObject implements DSpaceObjectLegacySupport {
     @Column(name = "withdrawn")
     private boolean withdrawn = false;
 
+    @Column(name = "sorting_number", insertable = false, updatable = false)
+    private Integer sorting_number;
+
     @Column(name = "last_modified", columnDefinition = "timestamp with time zone")
     @Temporal(TemporalType.TIMESTAMP)
     private Date lastModified = new Date();
