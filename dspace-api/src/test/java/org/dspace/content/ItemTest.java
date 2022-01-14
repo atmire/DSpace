@@ -69,10 +69,12 @@ public class ItemTest extends AbstractDSpaceObjectTest {
      */
     private Item it;
 
+    private List<Item> items = new ArrayList<>();
+
     private MetadataSchemaService metadataSchemaService = ContentServiceFactory.getInstance()
-                                                                               .getMetadataSchemaService();
+        .getMetadataSchemaService();
     private BitstreamFormatService bitstreamFormatService = ContentServiceFactory.getInstance()
-                                                                                 .getBitstreamFormatService();
+        .getBitstreamFormatService();
     private MetadataFieldService metadataFieldService = ContentServiceFactory.getInstance().getMetadataFieldService();
 
     private Collection collection;
@@ -103,6 +105,7 @@ public class ItemTest extends AbstractDSpaceObjectTest {
             this.collection = collectionService.create(context, owningCommunity);
             WorkspaceItem workspaceItem = workspaceItemService.create(context, collection, true);
             this.it = installItemService.installItem(context, workspaceItem);
+            items.add(it);
             this.dspaceObject = it;
             context.restoreAuthSystemState();
 
@@ -140,7 +143,9 @@ public class ItemTest extends AbstractDSpaceObjectTest {
     public void destroy() {
         context.turnOffAuthorisationSystem();
         try {
-            itemService.delete(context, it);
+            for (Item item : items) {
+                itemService.delete(context, item);
+            }
         } catch (Exception e) {
             // ignore
         }
@@ -212,6 +217,47 @@ public class ItemTest extends AbstractDSpaceObjectTest {
             }
         }
         assertTrue("testFindAll 1", added);
+    }
+
+    /**
+     * Test to check whether items get returned in the same order as they are creaeted. This should be the case since
+     * they get a sorting number on creation and should be sorted based on this
+     *
+     * @throws SQLException
+     * @throws AuthorizeException
+     * @throws IOException
+     */
+    @Test
+    public void testFindAllSorting() throws SQLException, AuthorizeException, IOException {
+        createTestItems();
+
+        Iterator<Item> allItems = itemService.findAll(context);
+        for (Item item : items) {
+            assertEquals(item, allItems.next());
+        }
+        assertFalse(allItems.hasNext());
+    }
+
+    private void createTestItems() throws AuthorizeException, SQLException {
+        // not using builder since they aren't working in a DSpaceObjectTest
+        context.turnOffAuthorisationSystem();
+        for (int i = 0; i < 15; i++) {
+            WorkspaceItem wsi = workspaceItemService.create(context, collection, true);
+            installItemService.installItem(context, wsi);
+            items.add(wsi.getItem());
+        }
+        context.restoreAuthSystemState();
+    }
+
+    @Test
+    public void testFindAllSortingOffsetLimit() throws SQLException, AuthorizeException {
+        createTestItems();
+        Iterator<Item> allItems = itemService.findAll(context, items.size(), 0);
+        for (Item item: items){
+            Item toCompare = allItems.next();
+            assertEquals(item, toCompare);
+        }
+        assertFalse(allItems.hasNext());
     }
 
     /**
