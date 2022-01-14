@@ -55,14 +55,14 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
 
     @Override
     public Iterator<Item> findAll(Context context, boolean archived) throws SQLException {
-        Query query = createQuery(context, "FROM Item WHERE inArchive=:in_archive ORDER BY id");
+        Query query = createQuery(context, "FROM Item WHERE inArchive=:in_archive ORDER BY sorting_number");
         query.setParameter("in_archive", archived);
         return iterate(query);
     }
 
     @Override
     public Iterator<Item> findAll(Context context, boolean archived, int limit, int offset) throws SQLException {
-        Query query = createQuery(context, "FROM Item WHERE inArchive=:in_archive ORDER BY id");
+        Query query = createQuery(context, "FROM Item WHERE inArchive=:in_archive ORDER BY sorting_number");
         query.setParameter("in_archive", archived);
         query.setFirstResult(offset);
         query.setMaxResults(limit);
@@ -73,7 +73,7 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
     @Override
     public Iterator<Item> findAll(Context context, boolean archived, boolean withdrawn) throws SQLException {
         Query query = createQuery(context,
-                "FROM Item WHERE inArchive=:in_archive or withdrawn=:withdrawn ORDER BY id");
+                "FROM Item WHERE inArchive=:in_archive or withdrawn=:withdrawn ORDER BY sorting_number");
         query.setParameter("in_archive", archived);
         query.setParameter("withdrawn", withdrawn);
         return iterate(query);
@@ -91,7 +91,7 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
         if (lastModified != null) {
             queryStr.append(" AND last_modified > :last_modified");
         }
-        queryStr.append(" ORDER BY i.id");
+        queryStr.append(" ORDER BY i.sorting_number");
 
         Query query = createQuery(context, queryStr.toString());
         query.setParameter("in_archive", archived);
@@ -336,7 +336,7 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
     @Override
     public Iterator<Item> findAllByCollection(Context context, Collection collection) throws SQLException {
         Query query = createQuery(context,
-                "select i from Item i join i.collections c WHERE :collection IN c ORDER BY i.id");
+                "select i from Item i join i.collections c WHERE :collection IN c ORDER BY i.sorting_number");
         query.setParameter("collection", collection);
 
         return iterate(query);
@@ -346,7 +346,7 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
     public Iterator<Item> findAllByCollection(Context context, Collection collection, Integer limit, Integer offset)
         throws SQLException {
         Query query = createQuery(context,
-                "select i from Item i join i.collections c WHERE :collection IN c ORDER BY i.id");
+                "select i from Item i join i.collections c WHERE :collection IN c ORDER BY i.sorting_number");
         query.setParameter("collection", collection);
 
         if (offset != null) {

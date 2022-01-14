@@ -215,6 +215,44 @@ public class ItemTest extends AbstractDSpaceObjectTest {
     }
 
     /**
+     * Test to check whether items get returned in the same order as they are creaeted. This should be the case since
+     * they get a sorting number on creation and should be sorted based on this
+     *
+     * @throws SQLException
+     * @throws AuthorizeException
+     * @throws IOException
+     */
+    @Test
+    public void testFindAllSorting() throws SQLException, AuthorizeException, IOException {
+        context.turnOffAuthorisationSystem();
+
+        // not using builder since they aren't working in a DSpaceObjectTest
+        List<Item> items = new ArrayList<>();
+        items.add(this.it);
+        for (int i = 0; i < 15; i++) {
+            WorkspaceItem wsi = workspaceItemService.create(context, collection, true);
+            installItemService.installItem(context, wsi);
+            items.add(wsi.getItem());
+        }
+        context.restoreAuthSystemState();
+
+        Iterator<Item> allItems = itemService.findAll(context);
+        for (Item item : items) {
+            assertEquals(item, allItems.next());
+        }
+        assertFalse(allItems.hasNext());
+
+        //cleaning up test items
+        context.turnOffAuthorisationSystem();
+        for (Item item : items) {
+            if (item != it) {
+                itemService.delete(context, item);
+            }
+        }
+        context.restoreAuthSystemState();
+    }
+
+    /**
      * Test of findBySubmitter method, of class Item.
      */
     @Test
