@@ -63,7 +63,7 @@ public class BitstreamResource extends AbstractResource {
         try {
             EPerson currentUser = ePersonService.find(context, currentUserUUID);
             context.setCurrentUser(currentUser);
-            InputStream out = null;
+            InputStream out;
 
             if (citationDocumentService.isCitationEnabledForBitstream(bitstream, context)) {
                 out = citationDocumentService.getCitedDocument(context, bitstream);

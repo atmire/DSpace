@@ -34,7 +34,6 @@ import org.dspace.content.Bitstream;
 import org.dspace.core.Utils;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
-import org.dspace.storage.LoggingInputstream;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -154,8 +153,7 @@ public class S3BitStoreService implements BitStoreService {
         String key = getFullKey(bitstream.getInternalId());
         try {
             S3Object object = s3Service.getObject(new GetObjectRequest(bucketName, key));
-            InputStream is = object.getObjectContent();
-            return (object != null) ? new LoggingInputstream(is) : null;
+            return (object != null) ? object.getObjectContent() : null;
         } catch (AmazonClientException e) {
             log.error("get(" + key + ")", e);
             throw new IOException(e);
