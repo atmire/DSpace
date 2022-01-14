@@ -6,4 +6,6 @@
 -- http://www.dspace.org/license/
 --
 
-alter table item add sorting_number serial not null;
+create sequence item_sorting_number_seq;
+alter table item add sorting_number integer default nextval('item_sorting_number_seq');
+alter sequence item_sorting_number_seq owned by item.sorting_number

@@ -18,11 +18,14 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -34,6 +37,8 @@ import org.dspace.content.service.ItemService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
+import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.GenerationTime;
 import org.hibernate.proxy.HibernateProxyHelper;
 
 /**
@@ -70,6 +75,8 @@ public class Item extends DSpaceObject implements DSpaceObjectLegacySupport {
     private boolean withdrawn = false;
 
     @Column(name = "sorting_number", insertable = false, updatable = false)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "item_sorting_number_seq")
+    @SequenceGenerator(name = "item_sorting_number_seq", sequenceName = "item_sorting_number_seq", allocationSize = 1)
     private Integer sorting_number;
 
     @Column(name = "last_modified", columnDefinition = "timestamp with time zone")
@@ -154,6 +161,9 @@ public class Item extends DSpaceObject implements DSpaceObjectLegacySupport {
         return withdrawn;
     }
 
+    public Integer getSorting_number() {
+        return sorting_number;
+    }
 
     /**
      * Set an item to be withdrawn, do NOT make this method public, use itemService().withdraw() to withdraw an item

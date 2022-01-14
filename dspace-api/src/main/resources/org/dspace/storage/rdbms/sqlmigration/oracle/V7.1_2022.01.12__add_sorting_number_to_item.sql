@@ -11,4 +11,5 @@
 -- http://www.dspace.org/license/
 --
 
-alter table item add sorting_number INTEGER NOT NULL AUTO_INCREMENT;
+create sequence item_sorting_number_seq;
+alter table item add sorting_number INTEGER DEFAULT item_sorting_number_seq.NEXTVAL;
