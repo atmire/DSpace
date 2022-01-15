@@ -53,7 +53,7 @@
         <!--=== OTHER MODULE-SPECIFIC DEPENDENCIES ===-->
         <!-- PIN Jena to 2.x until both RDF and SWORDv2 can be updated to Jena 3. Requires package renaming, see
              https://jena.apache.org/documentation/migrate_jena2_jena3.html -->
-        <jena.version>2.13.0</jena.version>
+        <jena.version>3.17.0</jena.version>
         <!-- Used by (now obsolete) 'dspace-rest' WAR -->
         <jersey.version>2.30.1</jersey.version>
 
@@ -112,7 +112,7 @@
                             </goals>
                             <configuration>
                                 <rules>
-                                    <DependencyConvergence />
+                                    <DependencyConvergence/>
                                 </rules>
                             </configuration>
                         </execution>
@@ -1255,7 +1255,7 @@
             <dependency>
                 <groupId>org.apache.tika</groupId>
                 <artifactId>tika-parsers</artifactId>
-                <version>1.24.1</version>
+                <version>1.25</version>
                 <!-- Exclude a few tika-parsers dependencies that we already use, with slightly different versions -->
                 <exclusions>
                     <exclusion>
@@ -1662,22 +1662,22 @@
             <dependency>
                 <groupId>com.google.apis</groupId>
                 <artifactId>google-api-services-analytics</artifactId>
-                <version>v3-rev145-1.23.0</version>
+                <version>v3-rev20190807-1.32.1</version>
             </dependency>
             <dependency>
                 <groupId>com.google.api-client</groupId>
                 <artifactId>google-api-client</artifactId>
-                <version>1.23.0</version>
+                <version>1.32.1</version>
             </dependency>
             <dependency>
                 <groupId>com.google.http-client</groupId>
                 <artifactId>google-http-client</artifactId>
-                <version>1.23.0</version>
+                <version>1.40.0</version>
             </dependency>
             <dependency>
                 <groupId>com.google.http-client</groupId>
                 <artifactId>google-http-client-jackson2</artifactId>
-                <version>1.23.0</version>
+                <version>1.40.0</version>
                 <exclusions>
                     <exclusion>
                         <artifactId>jackson-core</artifactId>
