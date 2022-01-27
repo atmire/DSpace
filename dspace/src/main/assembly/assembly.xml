@@ -42,12 +42,13 @@
             <exclude>LICENSE_HEADER</exclude>
          </excludes>
       </fileSet>
-      <!-- If local.cfg is in the root folder, copy it to config folder -->
+      <!-- If machine.cfg and shared.cfg is in the root folder, copy it to config folder -->
       <fileSet>
          <directory>..</directory>
          <outputDirectory>config</outputDirectory>
          <includes>
-            <include>local.cfg</include>
+            <include>machine.cfg</include>
+            <include>shared.cfg</include>
          </includes>
          <filtered>true</filtered>
       </fileSet>

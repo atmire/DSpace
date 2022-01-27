@@ -60,7 +60,8 @@ Common usage:
 
     <!-- Default configurations to use.  This may be overridden. -->
     <!-- First, the default localized config file -->
-    <property name="local-config" value="config/local.cfg" />
+    <property name="machine-config" value="config/machine.cfg" />
+    <property name="shared-config" value="config/shared.cfg" />
     <!-- Next, the default dspace.cfg -->
     <property name="config" value="config/dspace.cfg" />
     <property name="irus-config" value="config/modules/irus-statistics.cfg" />
@@ -72,7 +73,8 @@ Common usage:
     <!-- Load the configurations -->
     <!-- In Ant, properties are immutable, so the first one "wins". In this case,
          we load the local.cfg FIRST, so that its settings are used by default. -->
-    <property file="${local-config}" />
+    <property file="${machine-config}" />
+    <property file="${shared-config}" />
     <property file="${config}" />
     <property file="${irus-config}" />
 

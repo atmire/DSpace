@@ -32,8 +32,8 @@ nb-configuration.xml
 /*.properties
 !/build.properties
 
-# Ignore a local.cfg file in root folder, if it exists
-/local.cfg
+# Ignore a machine.cfg file in root folder, if it exists
+/machine.cfg
 # Also ignore it under dspace/config
 /dspace/config/local.cfg
 
