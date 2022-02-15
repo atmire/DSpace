@@ -181,6 +181,20 @@
                     <required></required>
                 </field>
             </row>
+
+            <row>
+                <field>
+                    <dc-schema>dc</dc-schema>
+                    <dc-element>description</dc-element>
+                    <dc-qualifier>provenance</dc-qualifier>
+                    <repeatable>true</repeatable>
+                    <label>Provenance</label>
+                    <input-type>onebox</input-type>
+                    <hint></hint>
+                    <required></required>
+                    <visibility>workflow</visibility>
+                </field>
+            </row>
         </form>
 
         <!-- Form which defines the second page/section of the "traditional" DSpace submission process,
