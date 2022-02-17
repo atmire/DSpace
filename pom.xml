@@ -420,6 +420,7 @@
                          Individual Maven projects may choose to override these defaults. -->
                     <excludes>
                         <exclude>src/main/java/com/atmire/**</exclude>
+                        <exclude>src/test/java/com/atmire/**</exclude>
                         <exclude>**/src/test/resources/**</exclude>
                         <exclude>**/src/test/data/**</exclude>
                         <exclude>**/src/main/license/**</exclude>
@@ -463,6 +464,7 @@
                     <!--Just check headers of everything in the /src directory -->
                     <includes>
                         <include>src/main/java/com/atmire/**</include>
+                        <include>src/test/java/com/atmire/**</include>
                     </includes>
                     <!--Use all default exclusions for IDE files & Maven files, see:
                         http://mycila.mathieu.photography/license-maven-plugin/ -->
