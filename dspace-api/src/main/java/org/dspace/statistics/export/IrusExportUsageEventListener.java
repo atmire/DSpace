@@ -7,7 +7,10 @@
  */
 package org.dspace.statistics.export;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.UUID;
+import javax.annotation.Resource;
 
 import org.apache.logging.log4j.Logger;
 import org.dspace.content.Bitstream;
@@ -21,6 +24,7 @@ import org.dspace.statistics.export.processor.ItemEventProcessor;
 import org.dspace.usage.AbstractUsageEventListener;
 import org.dspace.usage.UsageEvent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.TaskExecutor;
 
 /**
  * Class to receive usage events and send corresponding data to IRUS
@@ -31,6 +35,9 @@ public class IrusExportUsageEventListener extends AbstractUsageEventListener {
 
     @Autowired
     ConfigurationService configurationService;
+
+    @Resource(name = "dspaceRunnableThreadExecutor")
+    TaskExecutor taskExecutor;
 
     /**
      * Receives an event and processes to create a URL to send to IRUS when certain conditions are met
@@ -49,27 +56,43 @@ public class IrusExportUsageEventListener extends AbstractUsageEventListener {
                     if (ue.getObject() instanceof Item) {
                         ItemEventProcessor itemEventProcessor = new ItemEventProcessor(context, ue.getRequest(),
                                                                                        (Item) ue.getObject());
-                        itemEventProcessor.processEvent();
+                        taskExecutor.execute(() -> {
+                            try {
+                                itemEventProcessor.processEvent();
+                            } catch (SQLException | IOException e) {
+                                handleException(e, ue);
+                            }
+                        });
                     } else if (ue.getObject() instanceof Bitstream) {
 
                         BitstreamEventProcessor bitstreamEventProcessor =
                                 new BitstreamEventProcessor(context, ue.getRequest(), (Bitstream) ue.getObject());
-                        bitstreamEventProcessor.processEvent();
+                        taskExecutor.execute(() -> {
+                            try {
+                                bitstreamEventProcessor.processEvent();
+                            } catch (SQLException | IOException e) {
+                                handleException(e, ue);
+                            }
+                        });
                     }
                 } catch (Exception e) {
-                    UUID id;
-                    id = ue.getObject().getID();
-
-                    int type;
-                    try {
-                        type = ue.getObject().getType();
-                    } catch (Exception e1) {
-                        type = -1;
-                    }
-                    log.error(LogManager.getHeader(ue.getContext(), "Error while processing export of use event",
-                                                   "Id: " + id + " type: " + type), e);
+                    handleException(e, ue);
                 }
             }
         }
+    }
+
+    private void handleException(Exception e, UsageEvent ue) {
+        UUID id;
+        id = ue.getObject().getID();
+
+        int type;
+        try {
+            type = ue.getObject().getType();
+        } catch (Exception e1) {
+            type = -1;
+        }
+        log.error(LogManager.getHeader(ue.getContext(), "Error while processing export of use event",
+                                       "Id: " + id + " type: " + type), e);
     }
 }
