@@ -11,6 +11,7 @@ import static com.jayway.jsonpath.JsonPath.read;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static org.dspace.app.rest.matcher.MetadataMatcher.matchMetadata;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -312,16 +313,16 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                                 WorkspaceItemMatcher.matchItemWithTitleAndDateIssued(workspaceItem2, "Workspace Item 2",
                                         "2016-02-13"))))
                 .andExpect(jsonPath("$._embedded.workspaceitems",
-                        Matchers.not(Matchers.contains(WorkspaceItemMatcher
+                        Matchers.not(contains(WorkspaceItemMatcher
                                 .matchItemWithTitleAndDateIssued(workspaceItem3, "Workspace Item 3", "2016-02-13")))));
 
         getClient(token).perform(get("/api/submission/workspaceitems").param("size", "2").param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._embedded.workspaceitems",
-                        Matchers.contains(WorkspaceItemMatcher.matchItemWithTitleAndDateIssued(workspaceItem3,
+                        contains(WorkspaceItemMatcher.matchItemWithTitleAndDateIssued(workspaceItem3,
                                 "Workspace Item 3", "2016-02-13"))))
                 .andExpect(jsonPath("$._embedded.workspaceitems",
-                        Matchers.not(Matchers.contains(
+                        Matchers.not(contains(
                                 WorkspaceItemMatcher.matchItemWithTitleAndDateIssued(workspaceItem1, "Workspace Item 1",
                                         "2017-10-17"),
                                 WorkspaceItemMatcher.matchItemWithTitleAndDateIssued(workspaceItem2, "Workspace Item 2",
@@ -706,7 +707,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                             WorkspaceItemMatcher.matchItemWithTitleAndDateIssued(workspaceItem2, "Workspace Item 2",
                                     "2016-02-13"))))
             .andExpect(jsonPath("$._embedded.workspaceitems",
-                    Matchers.not(Matchers.contains(WorkspaceItemMatcher
+                    Matchers.not(contains(WorkspaceItemMatcher
                             .matchItemWithTitleAndDateIssued(workspaceItem3, "Workspace Item 3", "2016-02-13")))))
             .andExpect(jsonPath("$.page.size", is(20)))
             .andExpect(jsonPath("$.page.totalElements", is(2)));
@@ -719,10 +720,10 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .param("uuid", submitter1.getID().toString()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.workspaceitems",
-                    Matchers.contains(WorkspaceItemMatcher.matchItemWithTitleAndDateIssued(workspaceItem2,
+                    contains(WorkspaceItemMatcher.matchItemWithTitleAndDateIssued(workspaceItem2,
                             "Workspace Item 2", "2016-02-13"))))
             .andExpect(jsonPath("$._embedded.workspaceitems",
-                    Matchers.not(Matchers.contains(
+                    Matchers.not(contains(
                             WorkspaceItemMatcher.matchItemWithTitleAndDateIssued(workspaceItem1, "Workspace Item 1",
                                     "2017-10-17"),
                             WorkspaceItemMatcher.matchItemWithTitleAndDateIssued(workspaceItem3, "Workspace Item 3",
@@ -737,7 +738,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .param("uuid", submitter2.getID().toString()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.workspaceitems",
-                    Matchers.contains(
+                    contains(
                             WorkspaceItemMatcher.matchItemWithTitleAndDateIssued(workspaceItem3, "Workspace Item 3",
                                     "2016-02-13"))))
             .andExpect(jsonPath("$.page.size", is(20)))
@@ -1805,10 +1806,12 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         WorkspaceItem workspaceItem1 = WorkspaceItemBuilder.createWorkspaceItem(context, col1)
                 .withTitle("Workspace Item 1")
                 .withIssueDate("2017-10-17")
+                .grantLicense()
                 .build();
 
         WorkspaceItem workspaceItem2 = WorkspaceItemBuilder.createWorkspaceItem(context, col1)
                 .withTitle("Workspace Item 2")
+                .grantLicense()
                 .build();
 
         //disable file upload mandatory
@@ -1827,8 +1830,8 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         getClient(authToken).perform(get("/api/submission/workspaceitems/" + workspaceItem2.getID()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.errors[?(@.message=='error.validation.required')]",
-                        Matchers.contains(
-                                hasJsonPath("$.paths", Matchers.contains(
+                        contains(
+                                hasJsonPath("$.paths", contains(
                                         hasJsonPath("$", Matchers.is("/sections/traditionalpageone/dc.date.issued"))
                                 )))))
         ;
@@ -1841,7 +1844,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 // title and dateissued are required in the first panel
                 // the json path with a @ selector always return an array
                 .andExpect(jsonPath("$.errors[?(@.message=='error.validation.required')]",
-                        Matchers.contains(
+                        contains(
                                 hasJsonPath("$.paths", Matchers.containsInAnyOrder(
                                         hasJsonPath("$", Matchers.is("/sections/traditionalpageone/dc.title")),
                                         hasJsonPath("$", Matchers.is("/sections/traditionalpageone/dc.date.issued"))
@@ -1877,6 +1880,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .withTitle("Workspace Item 1")
                 .withIssueDate("2017-10-17")
                 .withSubject("ExtraEntry")
+                .grantLicense()
                 .build();
 
         //disable file upload mandatory
@@ -2169,6 +2173,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .withTitle("Workspace Item 1")
                 .withIssueDate("2017-10-17")
                 .withSubject("ExtraEntry")
+                .grantLicense()
                 .build();
 
         WorkspaceItem witemMultipleSubjects = WorkspaceItemBuilder.createWorkspaceItem(context, col1)
@@ -2178,6 +2183,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .withSubject("Subject2")
                 .withSubject("Subject3")
                 .withSubject("Subject4")
+                .grantLicense()
                 .build();
 
         WorkspaceItem witemWithTitleDateAndSubjects = WorkspaceItemBuilder.createWorkspaceItem(context, col1)
@@ -2187,6 +2193,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .withSubject("Subject2")
                 .withSubject("Subject3")
                 .withSubject("Subject4")
+                .grantLicense()
                 .build();
 
         context.restoreAuthSystemState();
@@ -2201,8 +2208,8 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$.errors[?(@.message=='error.validation.required')]",
-                                Matchers.contains(hasJsonPath("$.paths",
-                                        Matchers.contains(
+                                contains(hasJsonPath("$.paths",
+                                        contains(
                                                 hasJsonPath("$",
                                                         Matchers.is("/sections/traditionalpageone/dc.title")))))))
                             .andExpect(jsonPath("$",
@@ -2214,8 +2221,8 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors[?(@.message=='error.validation.required')]",
-                    Matchers.contains(
-                            hasJsonPath("$.paths", Matchers.contains(
+                    contains(
+                            hasJsonPath("$.paths", contains(
                                     hasJsonPath("$", Matchers.is("/sections/traditionalpageone/dc.title"))
                             )))))
             .andExpect(jsonPath("$",
@@ -2449,6 +2456,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         WorkspaceItem witem = WorkspaceItemBuilder.createWorkspaceItem(context, col1)
                 .withIssueDate("2017-10-17")
                 .withSubject("ExtraEntry")
+                .grantLicense()
                 .build();
 
         //disable file upload mandatory
@@ -2660,6 +2668,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         WorkspaceItem witem = WorkspaceItemBuilder.createWorkspaceItem(context, col1)
                 .withTitle("Test WorkspaceItem")
                 .withIssueDate("2017-10-17")
+                .grantLicense()
                 .build();
 
         //disable file upload mandatory
@@ -3065,7 +3074,9 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .content(patchBody)
                 .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                             .andExpect(status().isOk())
-                            .andExpect(jsonPath("$.errors").doesNotExist())
+                            .andExpect(jsonPath("$.errors[?(@.message=='error.validation.license.notgranted')]",
+                                contains( hasJsonPath("$.paths",
+                                    contains(hasJsonPath("$", is("/sections/license")))))))
                             .andExpect(jsonPath("$.sections.license.granted",
                                     is(false)))
                             .andExpect(jsonPath("$.sections.license.acceptanceDate").isEmpty())
@@ -3075,7 +3086,9 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         // verify that the patch changes have been persisted
         getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem.getID()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.errors").doesNotExist())
+            .andExpect(jsonPath("$.errors[?(@.message=='error.validation.license.notgranted')]",
+                    contains( hasJsonPath("$.paths",
+                        contains(hasJsonPath("$", is("/sections/license")))))))
             .andExpect(jsonPath("$.sections.license.granted",
                     is(false)))
             .andExpect(jsonPath("$.sections.license.acceptanceDate").isEmpty())
@@ -3091,7 +3104,9 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .content(patchBody)
                 .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                             .andExpect(status().isOk())
-                            .andExpect(jsonPath("$.errors").doesNotExist())
+                            .andExpect(jsonPath("$.errors[?(@.message=='error.validation.license.notgranted')]",
+                                    contains( hasJsonPath("$.paths",
+                                        contains(hasJsonPath("$", is("/sections/license")))))))
                             .andExpect(jsonPath("$.sections.license.granted",
                                     is(false)))
                             .andExpect(jsonPath("$.sections.license.acceptanceDate").isEmpty())
@@ -3101,7 +3116,9 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         // verify that the patch changes have been persisted
         getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem2.getID()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.errors").doesNotExist())
+            .andExpect(jsonPath("$.errors[?(@.message=='error.validation.license.notgranted')]",
+                    contains( hasJsonPath("$.paths",
+                        contains(hasJsonPath("$", is("/sections/license")))))))
             .andExpect(jsonPath("$.sections.license.granted",
                     is(false)))
             .andExpect(jsonPath("$.sections.license.acceptanceDate").isEmpty())
@@ -3117,7 +3134,9 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .content(patchBody)
                 .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                             .andExpect(status().isOk())
-                            .andExpect(jsonPath("$.errors").doesNotExist())
+                            .andExpect(jsonPath("$.errors[?(@.message=='error.validation.license.notgranted')]",
+                                contains( hasJsonPath("$.paths",
+                                    contains(hasJsonPath("$", is("/sections/license")))))))
                             .andExpect(jsonPath("$.sections.license.granted",
                                     is(false)))
                             .andExpect(jsonPath("$.sections.license.acceptanceDate").isEmpty())
@@ -3127,7 +3146,9 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         // verify that the patch changes have been persisted
         getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem3.getID()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.errors").doesNotExist())
+            .andExpect(jsonPath("$.errors[?(@.message=='error.validation.license.notgranted')]",
+                    contains( hasJsonPath("$.paths",
+                        contains(hasJsonPath("$", is("/sections/license")))))))
             .andExpect(jsonPath("$.sections.license.granted",
                     is(false)))
             .andExpect(jsonPath("$.sections.license.acceptanceDate").isEmpty())
@@ -3143,7 +3164,10 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .content(patchBody)
                 .contentType(MediaType.APPLICATION_JSON_PATCH_JSON))
                             .andExpect(status().isOk())
-                            .andExpect(jsonPath("$.errors").doesNotExist())
+                            .andExpect(
+                                jsonPath("$.errors[?(@.message=='error.validation.license.notgranted')]",
+                                    contains( hasJsonPath("$.paths",
+                                        contains(hasJsonPath("$", is("/sections/license")))))))
                             .andExpect(jsonPath("$.sections.license.granted",
                                     is(false)))
                             .andExpect(jsonPath("$.sections.license.acceptanceDate").isEmpty())
@@ -3153,7 +3177,9 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         // verify that the patch changes have been persisted
         getClient(authToken).perform(get("/api/submission/workspaceitems/" + witem4.getID()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.errors").doesNotExist())
+            .andExpect(jsonPath("$.errors[?(@.message=='error.validation.license.notgranted')]",
+                contains( hasJsonPath("$.paths",
+                    contains(hasJsonPath("$", is("/sections/license")))))))
             .andExpect(jsonPath("$.sections.license.granted",
                     is(false)))
             .andExpect(jsonPath("$.sections.license.acceptanceDate").isEmpty())
@@ -3481,6 +3507,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         WorkspaceItem witem = WorkspaceItemBuilder.createWorkspaceItem(context, col1)
                 .withTitle("WorkspaceItem")
                 .withIssueDate("2019-10-27")
+                .grantLicense()
                 .build();
 
         InputStream pdf = getClass().getResourceAsStream("simple-article.pdf");
@@ -3520,6 +3547,7 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         WorkspaceItem witem = WorkspaceItemBuilder.createWorkspaceItem(context, col1)
             .withTitle("Test WorkspaceItem")
             .withIssueDate("2017-10-17")
+            .grantLicense()
             .build();
 
         InputStream pdf = getClass().getResourceAsStream("simple-article.pdf");
@@ -3570,8 +3598,8 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors").isNotEmpty())
             .andExpect(jsonPath("$.errors[?(@.message=='error.validation.filerequired')]",
-                Matchers.contains(
-                    hasJsonPath("$.paths", Matchers.contains(
+                contains(
+                    hasJsonPath("$.paths", contains(
                         hasJsonPath("$", Matchers.is("/sections/upload"))
                     )))));
     }
@@ -5351,8 +5379,8 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         getClient(authToken).perform(get(workspaceItemsUri + workspaceItem3.getID()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.errors[?(@.message=='error.validation.required')]",
-                Matchers.contains(
-                    hasJsonPath("$.paths", Matchers.contains(
+                contains(
+                    hasJsonPath("$.paths", contains(
                         hasJsonPath("$", Matchers.is("/sections/qualdroptest/dc.identifier"))
                     )))));
     }

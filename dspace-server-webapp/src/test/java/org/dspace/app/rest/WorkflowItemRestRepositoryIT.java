@@ -766,6 +766,7 @@ public class WorkflowItemRestRepositoryIT extends AbstractControllerIntegrationT
             WorkspaceItem wsitem = WorkspaceItemBuilder.createWorkspaceItem(context, col1)
                     .withTitle("Submission Item")
                     .withIssueDate("2017-10-17")
+                    .grantLicense()
                     .build();
 
             context.restoreAuthSystemState();
@@ -924,6 +925,7 @@ public class WorkflowItemRestRepositoryIT extends AbstractControllerIntegrationT
             .withIssueDate("2017-10-17")
             .withAuthor("Smith, Donald").withAuthor("Doe, John")
             .withSubject("ExtraEntry")
+            .grantLicense()
             .build();
         claimedTask.setStepID("editstep");
         claimedTask.setActionID("editaction");
@@ -1051,6 +1053,7 @@ public class WorkflowItemRestRepositoryIT extends AbstractControllerIntegrationT
             .withTitle("Workflow Item 1")
             .withIssueDate("2017-10-17")
             .withSubject("ExtraEntry")
+            .grantLicense()
             .build();
         claimedTask.setStepID("editstep");
         claimedTask.setActionID("editaction");
@@ -1120,6 +1123,7 @@ public class WorkflowItemRestRepositoryIT extends AbstractControllerIntegrationT
             .withIssueDate("2017-10-17")
             .withAuthor("Smith, Donald").withAuthor("Doe, John")
             .withSubject("ExtraEntry")
+            .grantLicense()
             .build();
         claimedTask.setStepID("editstep");
         claimedTask.setActionID("editaction");
@@ -1132,6 +1136,7 @@ public class WorkflowItemRestRepositoryIT extends AbstractControllerIntegrationT
             .withSubject("Subject2")
             .withSubject("Subject3")
             .withSubject("Subject4")
+            .grantLicense()
             .build();
         claimedTask2.setStepID("editstep");
         claimedTask2.setActionID("editaction");
@@ -1144,6 +1149,7 @@ public class WorkflowItemRestRepositoryIT extends AbstractControllerIntegrationT
             .withSubject("Subject2")
             .withSubject("Subject3")
             .withSubject("Subject4")
+            .grantLicense()
             .build();
         claimedTask3.setStepID("editstep");
         claimedTask3.setActionID("editaction");
@@ -1318,6 +1324,7 @@ public class WorkflowItemRestRepositoryIT extends AbstractControllerIntegrationT
         ClaimedTask claimedTask = ClaimedTaskBuilder.createClaimedTask(context, col1, eperson)
             .withIssueDate("2017-10-17")
             .withSubject("ExtraEntry")
+            .grantLicense()
             .build();
         claimedTask.setStepID("editstep");
         claimedTask.setActionID("editaction");
@@ -1388,6 +1395,7 @@ public class WorkflowItemRestRepositoryIT extends AbstractControllerIntegrationT
             .withIssueDate("2017-10-17")
             .withAuthor("Smith, Donald").withAuthor("Doe, John")
             .withSubject("ExtraEntry")
+            .grantLicense()
             .build();
         claimedTask.setStepID("editstep");
         claimedTask.setActionID("editaction");
