@@ -27,6 +27,7 @@ import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
+import org.hibernate.annotations.Where;
 import org.hibernate.proxy.HibernateProxyHelper;
 
 /**
@@ -41,6 +42,10 @@ import org.hibernate.proxy.HibernateProxyHelper;
  */
 @Entity
 @Table(name = "bitstream")
+// NOTE: When a bitstream is set to deleted = true in the database, hibernate will pretend it's not there.
+//       This means deleted bitstreams won't be visible to (most) Java code and the user,
+//       regardless of whether an entry exists in table bundle2bitstream.
+@Where(clause = "deleted = false")
 public class Bitstream extends DSpaceObject implements DSpaceObjectLegacySupport {
 
     /**
