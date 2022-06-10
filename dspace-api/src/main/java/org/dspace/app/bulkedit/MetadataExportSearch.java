@@ -39,6 +39,7 @@ import org.dspace.scripts.DSpaceRunnable;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
 import org.dspace.utils.DSpace;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Metadata exporter to allow the batch export of metadata from a discovery search into a file
@@ -53,7 +54,8 @@ public class MetadataExportSearch extends DSpaceRunnable<MetadataExportSearchScr
     private boolean hasScope = false;
     private String query;
 
-    private SearchService searchService = SearchUtils.getSearchService();
+    @Autowired
+    private SearchService searchService;
     private MetadataDSpaceCsvExportService metadataDSpaceCsvExportService =
         new DSpace().getServiceManager().getServiceByName(
             MetadataDSpaceCsvExportServiceImpl.class.getCanonicalName(), MetadataDSpaceCsvExportService.class);
