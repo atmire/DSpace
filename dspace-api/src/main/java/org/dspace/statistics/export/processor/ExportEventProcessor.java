@@ -35,6 +35,7 @@ import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
 import org.dspace.statistics.export.factory.OpenURLTrackerLoggerServiceFactory;
 import org.dspace.statistics.export.service.OpenUrlService;
+import org.springframework.core.task.TaskExecutor;
 
 /**
  * Abstract export event processor that contains all shared logic to handle both Items and Bitstreams
@@ -59,6 +60,9 @@ public abstract class ExportEventProcessor {
             = ContentServiceFactory.getInstance().getItemService();
     private final OpenUrlService openUrlService
             = OpenURLTrackerLoggerServiceFactory.getInstance().getOpenUrlService();
+    private final TaskExecutor taskExecutor
+            = DSpaceServicesFactory.getInstance().getServiceManager().getServiceByName(
+                "dspaceRunnableThreadExecutor", TaskExecutor.class);
 
     private final Context context;
     private final HttpServletRequest request;
@@ -90,14 +94,21 @@ public abstract class ExportEventProcessor {
      * @throws SQLException
      */
     protected void processObject(String urlParameters) throws IOException, SQLException {
-        String baseUrl;
-        if (StringUtils.equals(configurationService.getProperty("irus.statistics.tracker.environment"), "production")) {
-            baseUrl = configurationService.getProperty("irus.statistics.tracker.produrl");
-        } else {
-            baseUrl = configurationService.getProperty("irus.statistics.tracker.testurl");
-        }
+        taskExecutor.execute(() -> {
+            try {
+                String baseUrl;
+                if (StringUtils.equals(configurationService.getProperty("irus.statistics.tracker.environment"),
+                    "production")) {
+                    baseUrl = configurationService.getProperty("irus.statistics.tracker.produrl");
+                } else {
+                    baseUrl = configurationService.getProperty("irus.statistics.tracker.testurl");
+                }
 
-        openUrlService.processUrl(context, baseUrl + "?" + urlParameters);
+                openUrlService.processUrl(context, baseUrl + "?" + urlParameters);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     /**
