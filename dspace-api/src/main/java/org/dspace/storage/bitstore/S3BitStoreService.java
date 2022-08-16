@@ -25,6 +25,10 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
+import com.amazonaws.services.s3.transfer.Upload;
+import com.amazonaws.services.s3.transfer.model.UploadResult;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -185,17 +189,30 @@ public class S3BitStoreService implements BitStoreService {
         try {
             FileUtils.copyInputStreamToFile(in, scratchFile);
             long contentLength = scratchFile.length();
+            String eTag;
 
             PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, key, scratchFile);
-            PutObjectResult putObjectResult = s3Service.putObject(putObjectRequest);
+
+            // a single PUT has a hard limit of 5 GB
+            // it is recommended to use the TransferManager for files larger than 100 MB
+            // according to https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html
+            if (contentLength > (100 * FileUtils.ONE_MB)) {
+                TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3Service).build();
+                Upload upload = transferManager.upload(putObjectRequest);
+                UploadResult uploadResult = upload.waitForUploadResult();
+                eTag = uploadResult.getETag();
+            } else {
+                PutObjectResult putObjectResult = s3Service.putObject(putObjectRequest);
+                eTag = putObjectResult.getETag();
+            }
 
             bitstream.setSizeBytes(contentLength);
-            bitstream.setChecksum(putObjectResult.getETag());
+            bitstream.setChecksum(eTag);
             bitstream.setChecksumAlgorithm(CSA);
 
             scratchFile.delete();
 
-        } catch (AmazonClientException | IOException e) {
+        } catch (AmazonClientException | IOException | InterruptedException e) {
             log.error("put(" + bitstream.getInternalId() + ", is)", e);
             throw new IOException(e);
         } finally {
