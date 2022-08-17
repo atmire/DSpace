@@ -42,7 +42,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.content.Bitstream;
 import org.dspace.core.Utils;
-import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -84,9 +83,11 @@ public class S3BitStoreService implements BitStoreService {
      */
     private AmazonS3 s3Service = null;
 
-    private static final ConfigurationService configurationService
-            = DSpaceServicesFactory.getInstance().getConfigurationService();
     public S3BitStoreService() {
+    }
+
+    void setS3Service(AmazonS3 s3Service) {
+        this.s3Service = s3Service;
     }
 
     /**
@@ -109,7 +110,7 @@ public class S3BitStoreService implements BitStoreService {
         // bucket name
         if (StringUtils.isEmpty(bucketName)) {
             // get hostname of DSpace UI to use to name bucket
-            String hostname = Utils.getHostName(configurationService.getProperty("dspace.ui.url"));
+            String hostname = Utils.getHostName(DSpaceServicesFactory.getInstance().getConfigurationService().getProperty("dspace.ui.url"));
             bucketName = "dspace-asset-" + hostname;
             log.warn("S3 BucketName is not configured, setting default: " + bucketName);
         }
@@ -197,10 +198,7 @@ public class S3BitStoreService implements BitStoreService {
             // it is recommended to use the TransferManager for files larger than 100 MB
             // according to https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html
             if (contentLength > (100 * FileUtils.ONE_MB)) {
-                TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3Service).build();
-                Upload upload = transferManager.upload(putObjectRequest);
-                UploadResult uploadResult = upload.waitForUploadResult();
-                eTag = uploadResult.getETag();
+                eTag = multipartUpload(putObjectRequest);
             } else {
                 PutObjectResult putObjectResult = s3Service.putObject(putObjectRequest);
                 eTag = putObjectResult.getETag();
@@ -220,6 +218,15 @@ public class S3BitStoreService implements BitStoreService {
                 scratchFile.delete();
             }
         }
+    }
+
+    protected String multipartUpload(PutObjectRequest putObjectRequest) throws InterruptedException {
+        String eTag;
+        TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3Service).build();
+        Upload upload = transferManager.upload(putObjectRequest);
+        UploadResult uploadResult = upload.waitForUploadResult();
+        eTag = uploadResult.getETag();
+        return eTag;
     }
 
     /**
@@ -389,7 +396,7 @@ public class S3BitStoreService implements BitStoreService {
         store.s3Service.setRegion(usEast1);
 
         // get hostname of DSpace UI to use to name bucket
-        String hostname = Utils.getHostName(configurationService.getProperty("dspace.ui.url"));
+        String hostname = Utils.getHostName(DSpaceServicesFactory.getInstance().getConfigurationService().getProperty("dspace.ui.url"));
         //Bucketname should be lowercase
         store.bucketName = "dspace-asset-" + hostname + ".s3test";
         store.s3Service.createBucket(store.bucketName);
