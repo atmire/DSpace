@@ -42,6 +42,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.content.Bitstream;
 import org.dspace.core.Utils;
+import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -110,7 +111,8 @@ public class S3BitStoreService implements BitStoreService {
         // bucket name
         if (StringUtils.isEmpty(bucketName)) {
             // get hostname of DSpace UI to use to name bucket
-            String hostname = Utils.getHostName(DSpaceServicesFactory.getInstance().getConfigurationService().getProperty("dspace.ui.url"));
+            ConfigurationService configurationService = DSpaceServicesFactory.getInstance().getConfigurationService();
+            String hostname = Utils.getHostName(configurationService.getProperty("dspace.ui.url"));
             bucketName = "dspace-asset-" + hostname;
             log.warn("S3 BucketName is not configured, setting default: " + bucketName);
         }
@@ -396,7 +398,8 @@ public class S3BitStoreService implements BitStoreService {
         store.s3Service.setRegion(usEast1);
 
         // get hostname of DSpace UI to use to name bucket
-        String hostname = Utils.getHostName(DSpaceServicesFactory.getInstance().getConfigurationService().getProperty("dspace.ui.url"));
+        ConfigurationService configurationService = DSpaceServicesFactory.getInstance().getConfigurationService();
+        String hostname = Utils.getHostName(configurationService.getProperty("dspace.ui.url"));
         //Bucketname should be lowercase
         store.bucketName = "dspace-asset-" + hostname + ".s3test";
         store.s3Service.createBucket(store.bucketName);
