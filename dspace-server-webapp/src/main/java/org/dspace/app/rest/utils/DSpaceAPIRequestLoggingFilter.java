@@ -10,6 +10,7 @@ package org.dspace.app.rest.utils;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
+import com.lyncode.xoai.util.Base64Utils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.ThreadContext;
 import org.dspace.services.ConfigurationService;
@@ -35,6 +36,8 @@ import org.springframework.web.filter.AbstractRequestLoggingFilter;
 public class DSpaceAPIRequestLoggingFilter extends AbstractRequestLoggingFilter {
     @Autowired
     private ConfigurationService configurationService;
+
+    private static final String HEADER_X_CORRELATION_ID = "x-correlation-id";
 
     @Override
     protected boolean shouldLog(HttpServletRequest request) {
@@ -69,8 +72,8 @@ public class DSpaceAPIRequestLoggingFilter extends AbstractRequestLoggingFilter 
     @Override
     protected void beforeRequest(HttpServletRequest request, String message) {
         ThreadContext.put("requestID", UUID.randomUUID().toString()); // Add the fishtag;
-        String clientID = request.getHeader("x-correlation-id");
-        if (StringUtils.isBlank(clientID)) {
+        String clientID = request.getHeader(HEADER_X_CORRELATION_ID);
+        if (!checkIfCorrelationIDHeaderIsUUID(clientID)) {
             clientID = "unknown";
         }
         ThreadContext.put("correlationID", clientID);
@@ -82,6 +85,29 @@ public class DSpaceAPIRequestLoggingFilter extends AbstractRequestLoggingFilter 
             }
         }
         logger.info(message + " originated from " + referrer);
+    }
+
+    /**
+     * Verify the given string, coming from header {@link this#HEADER_X_CORRELATION_ID}, contains just a UUID.
+     * Since this value gets set on {@link ThreadContext} of log4j and is thus vulnerable to the log4j 'jndi:ldap'
+     * vulnerability
+     * See https://jfrog.com/blog/log4shell-0-day-vulnerability-all-you-need-to-know/#appendix-c
+     * @param clientID  Value from header {@link this#HEADER_X_CORRELATION_ID}, expected to contain UUID
+     * @return  True if given string from header {@link this#HEADER_X_CORRELATION_ID} contains only UUID, otherwise
+     * false
+     */
+    private boolean checkIfCorrelationIDHeaderIsUUID(String clientID) {
+        if (StringUtils.isBlank(clientID)) {
+            return false;
+        }
+        try {
+            UUID.fromString(clientID);
+            return true;
+        } catch (IllegalArgumentException e) {
+            logger.warn(String.format("A request was done with header %s which contained something else than a UUID; " +
+                "Base64 encoded header:%n%s", HEADER_X_CORRELATION_ID, Base64Utils.encode(clientID)));
+            return false;
+        }
     }
 
     @Override
