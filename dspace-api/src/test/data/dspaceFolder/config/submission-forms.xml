@@ -143,7 +143,7 @@
          <type-bind>Technical Report</type-bind>
          <input-type>series</input-type>
          <hint>Enter the series and number assigned to this item by your community.</hint>
-         <required></required>
+         <required>Required!!!</required>
        </field>
      </row>
      <row>
