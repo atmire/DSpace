@@ -58,9 +58,9 @@
                     <dc-qualifier>author</dc-qualifier>
                     <repeatable>true</repeatable>
                     <label>Author</label>
-                    <input-type>onebox</input-type>
+                    <input-type>name</input-type>
                     <hint>Enter the author's name (Family name, Given names).</hint>
-                    <required></required>
+                    <required>You must specify at least one author</required>
                 </field>
             </row>
             <row>
@@ -255,10 +255,10 @@
                         <dc-schema>dc</dc-schema>
                         <dc-element>contributor</dc-element>
                         <dc-qualifier>author</dc-qualifier>
-                        <input-type>onebox</input-type>
+                        <input-type>name</input-type>
                     </linked-metadata-field>
                     <externalsources>orcid</externalsources>
-                    <required></required>
+                    <required>You must specify at least one author</required>
                     <!-- You may choose to validate author names via a Regular Expression if it's appropriate for
                          your institution. The below regex requires a comma to be present in the author field.
                          However, this is disabled by default to support organizations as authors, etc. -->
