@@ -133,29 +133,33 @@ public class IIIFCacheEventConsumer implements Consumer {
     @Override
     public void end(Context ctx) throws Exception {
         // Get the eviction service beans.
-        ManifestsCacheEvictService manifestsCacheEvictService = CacheEvictBeanLocator.getManifestsCacheEvictService();
-        CanvasCacheEvictService canvasCacheEvictService = CacheEvictBeanLocator.getCanvasCacheEvictService();
+        try {
 
-        if (manifestsCacheEvictService != null) {
-            if (clearAll) {
-                manifestsCacheEvictService.evictAllCacheValues();
-            } else {
-                for (DSpaceObject dso : toEvictFromManifestCache) {
-                    UUID uuid = dso.getID();
-                    manifestsCacheEvictService.evictSingleCacheValue(uuid.toString());
+            ManifestsCacheEvictService manifestsCacheEvictService =
+                    CacheEvictBeanLocator.getManifestsCacheEvictService();
+            CanvasCacheEvictService canvasCacheEvictService = CacheEvictBeanLocator.getCanvasCacheEvictService();
+
+            if (manifestsCacheEvictService != null) {
+                if (clearAll) {
+                    manifestsCacheEvictService.evictAllCacheValues();
+                } else {
+                    for (DSpaceObject dso : toEvictFromManifestCache) {
+                        UUID uuid = dso.getID();
+                        manifestsCacheEvictService.evictSingleCacheValue(uuid.toString());
+                    }
                 }
             }
-        }
-        if (canvasCacheEvictService != null) {
-            for (DSpaceObject dso : toEvictFromCanvasCache) {
-                UUID uuid = dso.getID();
-                canvasCacheEvictService.evictSingleCacheValue(uuid.toString());
+            if (canvasCacheEvictService != null) {
+                for (DSpaceObject dso : toEvictFromCanvasCache) {
+                    UUID uuid = dso.getID();
+                    canvasCacheEvictService.evictSingleCacheValue(uuid.toString());
+                }
             }
+        } finally {
+            clearAll = false;
+            toEvictFromManifestCache.clear();
+            toEvictFromCanvasCache.clear();
         }
-
-        clearAll = false;
-        toEvictFromManifestCache.clear();
-        toEvictFromCanvasCache.clear();
     }
 
     @Override
