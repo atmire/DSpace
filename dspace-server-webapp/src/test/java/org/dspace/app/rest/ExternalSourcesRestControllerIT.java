@@ -167,7 +167,8 @@ public class ExternalSourcesRestControllerIT extends AbstractControllerIntegrati
                    .andExpect(jsonPath("$._embedded.externalsources", Matchers.hasItems(
                               ExternalSourceMatcher.matchExternalSource(journalProviders.get(0)),
                               ExternalSourceMatcher.matchExternalSource(journalProviders.get(1)),
-                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(2))
+                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(2)),
+                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(3))
                               )))
                    .andExpect(jsonPath("$.page.totalElements", Matchers.is(journalProviders.size())));
     }
@@ -205,7 +206,8 @@ public class ExternalSourcesRestControllerIT extends AbstractControllerIntegrati
                    .param("size", String.valueOf(pageSize)))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$._embedded.externalsources", Matchers.contains(
-                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(2))
+                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(2)),
+                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(3))
                               )))
                    .andExpect(jsonPath("$.page.totalPages", Matchers.is(numberOfPages)))
                    .andExpect(jsonPath("$.page.totalElements", Matchers.is(numJournalProviders)));

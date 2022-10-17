@@ -438,7 +438,7 @@ public class EntityTypeRestRepositoryIT extends AbstractEntityIntegrationTest {
             ((AbstractExternalDataProvider) externalDataService.getExternalDataProvider("mock"))
                     .setSupportedEntityTypes(null);
             ((AbstractExternalDataProvider) externalDataService.getExternalDataProvider("pubmed"))
-                    .setSupportedEntityTypes(Arrays.asList("Publication", "none"));
+                    .setSupportedEntityTypes(null);
         }
 
     }
