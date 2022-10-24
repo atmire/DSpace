@@ -16,6 +16,13 @@
      https://commons.apache.org/proper/commons-configuration/userguide/howto_combinedbuilder.html
 -->
 <configuration>
+    <header>
+        <providers>
+            <provider
+                    config-tag="dspaceenv"
+                    config-class="org.dspace.servicemanager.config.DSpaceEnvironmentConfigurationBuilderProvider" />
+        </providers>
+    </header>
     <!-- Configurations in this section override one another.
          Earlier values take precedence, and override any values in later config files -->
     <override>
@@ -26,10 +33,13 @@
         <system/>
         <!-- Load Environment variables (does not automatically reload) -->
         <env/>
+        <dspaceenv/>
         <properties fileName="local.cfg" throwExceptionOnMissing="false" config-name="shared" config-optional="true"
             encoding="UTF-8" config-reload="true" reloadingRefreshDelay="5000"/>
         <!-- Load test local.properties (for unit testing). Configured to check for reload every 2 seconds -->
         <properties fileName="local.properties" encoding="UTF-8" throwExceptionOnMissing="true" config-name="local"
                     config-reload="true" reloadingRefreshDelay="2000"/>
+        <properties fileName="dspace.cfg" throwExceptionOnMissing="true" encoding="UTF-8" config-reload="true"
+                    reloadingRefreshDelay="5000"/>
     </override>
 </configuration>

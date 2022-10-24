@@ -1,0 +1,13 @@
+dspace.shortname = dspace7
+
+dspace.dir=/home/dspace/dspace
+
+dspace.server.url = http://localhost:8080/server
+dspace.ui.url = http://localhost:4000
+
+# URL for connecting to database
+#    * Postgres template: jdbc:postgresql://localhost:5432/dspace
+#    * Oracle template: jdbc:oracle:thin:@//localhost:1521/xe
+db.url = jdbc:postgresql://localhost:5432/dspace-${dspace.shortname}
+
+solr.server = http://localhost:8983/solr

@@ -36,10 +36,10 @@
         -->
         <dspaceenv/>
 
-        <!-- Allow user to override any configs in a local.cfg -->
-        <!-- Any properties in this config will override defaults in dspace.cfg (or any included *.cfg file) -->
-        <!-- Check for reload every 5 seconds (5,000ms) -->
-        <properties fileName="local.cfg" throwExceptionOnMissing="false" config-name="local" config-optional="true"
+        <properties fileName="machine.cfg" throwExceptionOnMissing="false" config-name="machine" config-optional="true"
+                    encoding="UTF-8" config-reload="true" reloadingRefreshDelay="5000"/>
+
+        <properties fileName="shared.cfg" throwExceptionOnMissing="false" config-name="shared" config-optional="true"
                     encoding="UTF-8" config-reload="true" reloadingRefreshDelay="5000"/>
 
         <!-- Load our dspace.cfg (which in turn loads all module configs via "include=" statements) -->
