@@ -145,15 +145,15 @@ public class ExternalSourcesRestControllerIT extends AbstractControllerIntegrati
 
     @Test
     public void findExternalSourcesByEntityTypeTest() throws Exception {
-        List<ExternalDataProvider> publicationProviders =
-                externalDataService.getExternalDataProvidersForEntityType("Publication");
-        List<ExternalDataProvider> journalProviders =
-                externalDataService.getExternalDataProvidersForEntityType("Journal");
+        List<ExternalDataProvider> publicationProviders = externalDataService
+            .getExternalDataProvidersForEntityType("TestPublication");
+        List<ExternalDataProvider> journalProviders = externalDataService
+            .getExternalDataProvidersForEntityType("TestJournal");
 
         getClient().perform(get("/api/integration/externalsources/search/findByEntityType")
-                   .param("entityType", "Publication"))
+                   .param("entityType", "TestPublication"))
                    .andExpect(status().isOk())
-                   // Expect *at least* 3 Publication sources
+                   // Expect *at least* 2 Publication sources
                    .andExpect(jsonPath("$._embedded.externalsources", Matchers.hasItems(
                               ExternalSourceMatcher.matchExternalSource(publicationProviders.get(0)),
                               ExternalSourceMatcher.matchExternalSource(publicationProviders.get(1))
@@ -161,14 +161,12 @@ public class ExternalSourcesRestControllerIT extends AbstractControllerIntegrati
                    .andExpect(jsonPath("$.page.totalElements", Matchers.is(publicationProviders.size())));
 
         getClient().perform(get("/api/integration/externalsources/search/findByEntityType")
-                   .param("entityType", "Journal"))
+                   .param("entityType", "TestJournal"))
                    .andExpect(status().isOk())
-                   // Expect *at least* 5 Journal sources
+                   // Expect *at least* 2 Journal sources
                    .andExpect(jsonPath("$._embedded.externalsources", Matchers.hasItems(
                               ExternalSourceMatcher.matchExternalSource(journalProviders.get(0)),
-                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(1)),
-                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(2)),
-                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(3))
+                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(1))
                               )))
                    .andExpect(jsonPath("$.page.totalElements", Matchers.is(journalProviders.size())));
     }
@@ -181,33 +179,31 @@ public class ExternalSourcesRestControllerIT extends AbstractControllerIntegrati
 
     @Test
     public void findExternalSourcesByEntityTypePaginationTest() throws Exception {
-        List<ExternalDataProvider> journalProviders =
-                externalDataService.getExternalDataProvidersForEntityType("Journal");
+        List<ExternalDataProvider> journalProviders = externalDataService
+            .getExternalDataProvidersForEntityType("TestJournal");
         int numJournalProviders = journalProviders.size();
 
-        // If we return 2 per page, determine number of pages we expect
-        int pageSize = 2;
+        // If we return 1 per page, determine number of pages we expect
+        int pageSize = 1;
         int numberOfPages = (int) Math.ceil((double) numJournalProviders / pageSize);
 
         getClient().perform(get("/api/integration/externalsources/search/findByEntityType")
-                   .param("entityType", "Journal")
+                   .param("entityType", "TestJournal")
                    .param("size", String.valueOf(pageSize)))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$._embedded.externalsources", Matchers.contains(
-                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(0)),
-                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(1))
+                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(0))
                               )))
                    .andExpect(jsonPath("$.page.totalPages", Matchers.is(numberOfPages)))
                    .andExpect(jsonPath("$.page.totalElements", Matchers.is(numJournalProviders)));
 
         getClient().perform(get("/api/integration/externalsources/search/findByEntityType")
-                   .param("entityType", "Journal")
+                   .param("entityType", "TestJournal")
                    .param("page", "1")
                    .param("size", String.valueOf(pageSize)))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$._embedded.externalsources", Matchers.contains(
-                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(2)),
-                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(3))
+                              ExternalSourceMatcher.matchExternalSource(journalProviders.get(1))
                               )))
                    .andExpect(jsonPath("$.page.totalPages", Matchers.is(numberOfPages)))
                    .andExpect(jsonPath("$.page.totalElements", Matchers.is(numJournalProviders)));
@@ -217,10 +213,18 @@ public class ExternalSourcesRestControllerIT extends AbstractControllerIntegrati
     public void findSupportedEntityTypesOfAnExternalDataProviderTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
-        EntityType publication = EntityTypeBuilder.createEntityTypeBuilder(context, "Publication").build();
-        EntityType orgUnit = EntityTypeBuilder.createEntityTypeBuilder(context, "OrgUnit").build();
-        EntityType project = EntityTypeBuilder.createEntityTypeBuilder(context, "Project").build();
-        EntityType funding = EntityTypeBuilder.createEntityTypeBuilder(context, "Funding").build();
+        EntityType publication = EntityTypeBuilder
+            .createEntityTypeBuilder(context, "TestPublication")
+            .build();
+        EntityType orgUnit = EntityTypeBuilder
+            .createEntityTypeBuilder(context, "TestOrgUnit")
+            .build();
+        EntityType project = EntityTypeBuilder
+            .createEntityTypeBuilder(context, "TestProject")
+            .build();
+        EntityType funding = EntityTypeBuilder
+            .createEntityTypeBuilder(context, "TestFunding")
+            .build();
 
         context.restoreAuthSystemState();
 
@@ -228,9 +232,9 @@ public class ExternalSourcesRestControllerIT extends AbstractControllerIntegrati
 
         try {
             ((AbstractExternalDataProvider) externalDataService.getExternalDataProvider("mock"))
-                               .setSupportedEntityTypes(Arrays.asList("Publication", "OrgUnit"));
+                .setSupportedEntityTypes(Arrays.asList("TestPublication", "TestOrgUnit"));
             ((AbstractExternalDataProvider) externalDataService.getExternalDataProvider("pubmed"))
-                       .setSupportedEntityTypes(Arrays.asList("Project","Publication", "Funding"));
+                .setSupportedEntityTypes(Arrays.asList("TestProject", "TestPublication", "TestFunding"));
 
             getClient(tokenAdmin).perform(get("/api/integration/externalsources/mock/entityTypes"))
                                  .andExpect(status().isOk())
@@ -260,7 +264,9 @@ public class ExternalSourcesRestControllerIT extends AbstractControllerIntegrati
     public void findSupportedEntityTypesOfAnExternalDataProviderNotFoundTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
-        EntityTypeBuilder.createEntityTypeBuilder(context, "Publication").build();
+        EntityTypeBuilder
+            .createEntityTypeBuilder(context, "TestPublication")
+            .build();
 
         context.restoreAuthSystemState();
 
@@ -285,9 +291,15 @@ public class ExternalSourcesRestControllerIT extends AbstractControllerIntegrati
     public void findSupportedEntityTypesOfAnExternalDataProviderPaginationTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
-        EntityType publication = EntityTypeBuilder.createEntityTypeBuilder(context, "Publication").build();
-        EntityType orgUnit = EntityTypeBuilder.createEntityTypeBuilder(context, "OrgUnit").build();
-        EntityType project = EntityTypeBuilder.createEntityTypeBuilder(context, "Project").build();
+        EntityType publication = EntityTypeBuilder
+            .createEntityTypeBuilder(context, "TestPublication")
+            .build();
+        EntityType orgUnit = EntityTypeBuilder
+            .createEntityTypeBuilder(context, "TestOrgUnit")
+            .build();
+        EntityType project = EntityTypeBuilder
+            .createEntityTypeBuilder(context, "TestProject")
+            .build();
 
         context.restoreAuthSystemState();
 
@@ -295,7 +307,7 @@ public class ExternalSourcesRestControllerIT extends AbstractControllerIntegrati
 
         try {
             ((AbstractExternalDataProvider) externalDataService.getExternalDataProvider("mock"))
-                    .setSupportedEntityTypes(Arrays.asList("Publication", "OrgUnit", "Project"));
+                .setSupportedEntityTypes(Arrays.asList("TestPublication", "TestOrgUnit", "TestProject"));
 
             getClient(tokenAdmin).perform(get("/api/integration/externalsources/mock/entityTypes")
                                  .param("size", "2"))
