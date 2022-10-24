@@ -358,10 +358,18 @@ public class EntityTypeRestRepositoryIT extends AbstractEntityIntegrationTest {
     public void findAllByAuthorizedExternalSource() throws Exception {
         context.turnOffAuthorisationSystem();
 
-        EntityType publication = entityTypeService.findByEntityType(context, "Publication");
-        EntityType orgUnit = entityTypeService.findByEntityType(context, "OrgUnit");
-        EntityType project = entityTypeService.findByEntityType(context, "Project");
-        EntityType funding = EntityTypeBuilder.createEntityTypeBuilder(context, "Funding").build();
+        EntityType publication = EntityTypeBuilder
+            .createEntityTypeBuilder(context, "TestPublication")
+            .build();
+        EntityType orgUnit = EntityTypeBuilder
+            .createEntityTypeBuilder(context, "TestOrgUnit")
+            .build();
+        EntityType project = EntityTypeBuilder
+            .createEntityTypeBuilder(context, "TestProject")
+            .build();
+        EntityType funding = EntityTypeBuilder
+            .createEntityTypeBuilder(context, "TestFunding")
+            .build();
 
         Community rootCommunity = CommunityBuilder.createCommunity(context)
                                                   .withName("Parent Community")
@@ -413,26 +421,28 @@ public class EntityTypeRestRepositoryIT extends AbstractEntityIntegrationTest {
 
         try {
             ((AbstractExternalDataProvider) externalDataService.getExternalDataProvider("mock"))
-                    .setSupportedEntityTypes(Arrays.asList("Publication"));
+                    .setSupportedEntityTypes(Arrays.asList("TestPublication"));
             ((AbstractExternalDataProvider) externalDataService.getExternalDataProvider("pubmed"))
-                    .setSupportedEntityTypes(Arrays.asList("Publication"));
+                    .setSupportedEntityTypes(Arrays.asList("TestPublication"));
 
             // these are similar to the previous checks but now we have restricted the mock and pubmed providers
             // to support only publication, this mean that there are no providers suitable for funding
             getClient(token).perform(get("/api/core/entitytypes/search/findAllByAuthorizedExternalSource"))
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$._embedded.entitytypes", containsInAnyOrder(
+                                       EntityTypeMatcher.matchEntityTypeEntry(funding),
                                        EntityTypeMatcher.matchEntityTypeEntry(publication),
                                        EntityTypeMatcher.matchEntityTypeEntry(project))))
-                            .andExpect(jsonPath("$.page.totalElements", Matchers.is(2)));
+                            .andExpect(jsonPath("$.page.totalElements", Matchers.is(3)));
 
             getClient(adminToken).perform(get("/api/core/entitytypes/search/findAllByAuthorizedExternalSource"))
                                  .andExpect(status().isOk())
                                  .andExpect(jsonPath("$._embedded.entitytypes", containsInAnyOrder(
+                                            EntityTypeMatcher.matchEntityTypeEntry(funding),
                                             EntityTypeMatcher.matchEntityTypeEntry(project),
                                             EntityTypeMatcher.matchEntityTypeEntry(orgUnit),
                                             EntityTypeMatcher.matchEntityTypeEntry(publication))))
-                                 .andExpect(jsonPath("$.page.totalElements", Matchers.is(3)));
+                                 .andExpect(jsonPath("$.page.totalElements", Matchers.is(4)));
 
         } finally {
             ((AbstractExternalDataProvider) externalDataService.getExternalDataProvider("mock"))
