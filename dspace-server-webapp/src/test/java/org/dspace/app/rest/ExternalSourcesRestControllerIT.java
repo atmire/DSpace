@@ -36,6 +36,7 @@ public class ExternalSourcesRestControllerIT extends AbstractControllerIntegrati
 
     @Test
     public void findAllExternalSources() throws Exception {
+        Integer expectedTotal = externalDataService.getExternalDataProviders().size();
         getClient().perform(get("/api/integration/externalsources"))
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$._embedded.externalsources", Matchers.hasItems(
@@ -53,7 +54,7 @@ public class ExternalSourcesRestControllerIT extends AbstractControllerIntegrati
                                 ExternalSourceMatcher.matchExternalSource(
                                         "openAIREFunding", "openAIREFunding", false)
                             )))
-                            .andExpect(jsonPath("$.page.totalElements", Matchers.is(9)));
+                            .andExpect(jsonPath("$.page.totalElements", Matchers.is(expectedTotal)));
     }
 
     @Test
