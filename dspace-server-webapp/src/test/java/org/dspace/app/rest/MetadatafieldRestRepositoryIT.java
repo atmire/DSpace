@@ -77,8 +77,12 @@ public class MetadatafieldRestRepositoryIT extends AbstractControllerIntegration
     public void findAll() throws Exception {
 
         context.turnOffAuthorisationSystem();
+        MetadataSchema metadataSchema = MetadataSchemaBuilder
+            .createMetadataSchema(context, "AaaSchema", "AaaSchema").build();
         MetadataField metadataField = MetadataFieldBuilder
-            .createMetadataField(context, "AnElement", "AQualifier", "AScopeNote").build();
+            .createMetadataField(context, metadataSchema, "AaanElement", "AQualifier", "AScopeNote").build();
+        MetadataFieldBuilder
+            .createMetadataField(context, metadataSchema, "AaanElement", "BQualifier", "BScopeNote").build();
         context.restoreAuthSystemState();
 
         getClient().perform(get("/api/core/metadatafields")
@@ -86,8 +90,8 @@ public class MetadatafieldRestRepositoryIT extends AbstractControllerIntegration
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.metadatafields", Matchers.hasItems(
-                       MetadataFieldMatcher.matchMetadataFieldByKeys("dc", "title", null),
-                       MetadataFieldMatcher.matchMetadataFieldByKeys("dc", "date", "issued"))
+                       MetadataFieldMatcher.matchMetadataField(metadataField),
+                       MetadataFieldMatcher.matchMetadataFieldByKeys("AaaSchema", "AaanElement", "BQualifier"))
                                       ))
                    .andExpect(jsonPath("$._links.first.href", Matchers.containsString("/api/core/metadatafields")))
                    .andExpect(jsonPath("$._links.self.href", Matchers.containsString("/api/core/metadatafields")))
@@ -129,7 +133,15 @@ public class MetadatafieldRestRepositoryIT extends AbstractControllerIntegration
     public void findBySchema() throws Exception {
 
         context.turnOffAuthorisationSystem();
-        MetadataSchema schema = MetadataSchemaBuilder.createMetadataSchema(context, "ASchema",
+        MetadataSchema dcSchema = metadataSchemaService.find(context, "dc");
+        List<MetadataField> alphabeticDCMdFields =
+            ContentServiceFactory.getInstance()
+                .getMetadataFieldService()
+                .findAllInSchema(context, dcSchema).stream()
+                .sorted(Comparator.comparing(mdf -> mdf.toString('.')))
+                .collect(Collectors.toList());
+
+        MetadataSchema schema = MetadataSchemaBuilder.createMetadataSchema(context, "AaaSchema",
             "http://www.dspace.org/ns/aschema").build();
 
         MetadataField metadataField = MetadataFieldBuilder
@@ -142,8 +154,8 @@ public class MetadatafieldRestRepositoryIT extends AbstractControllerIntegration
                    .andExpect(status().isOk())
                    .andExpect(content().contentType(contentType))
                    .andExpect(jsonPath("$._embedded.metadatafields", Matchers.hasItems(
-                       MetadataFieldMatcher.matchMetadataFieldByKeys("dc", "title", null),
-                       MetadataFieldMatcher.matchMetadataFieldByKeys("dc", "date", "issued"))
+                       MetadataFieldMatcher.matchMetadataField(alphabeticDCMdFields.get(0)),
+                       MetadataFieldMatcher.matchMetadataField(alphabeticDCMdFields.get(1)))
                                       ))
                    .andExpect(jsonPath("$.page.size", is(100)));
 
