@@ -61,7 +61,7 @@ public class IndexingUtils {
      * @return A list of admin group IDs
      * @throws SQLException if database error
      */
-    static List<UUID> findTransitiveAdminGroupIds(Context context, Community community) throws SQLException {
+    static List<UUID> findInheritedAdminGroupIds(Context context, Community community) throws SQLException {
         return getAncestorCommunities(context, community).stream()
             .filter(parent -> parent.getAdministrators() != null)
             .map(parent -> parent.getAdministrators().getID())
@@ -78,13 +78,13 @@ public class IndexingUtils {
      * @return A list of admin group IDs
      * @throws SQLException if database error
      */
-    static List<UUID> findTransitiveAdminGroupIds(Context context, Collection collection) throws SQLException {
+    static List<UUID> findInheritedAdminGroupIds(Context context, Collection collection) throws SQLException {
         List<UUID> ids = new ArrayList<>();
         if (collection.getAdministrators() != null) {
             ids.add(collection.getAdministrators().getID());
         }
         for (Community community : collection.getCommunities()) {
-            for (UUID id : findTransitiveAdminGroupIds(context, community)) {
+            for (UUID id : findInheritedAdminGroupIds(context, community)) {
                 ids.add(id);
             }
         }

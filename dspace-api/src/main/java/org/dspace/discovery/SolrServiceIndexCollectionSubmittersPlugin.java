@@ -8,7 +8,7 @@
 package org.dspace.discovery;
 
 import static org.dspace.discovery.IndexingUtils.findDirectlyAuthorizedGroupAndEPersonPrefixedIds;
-import static org.dspace.discovery.IndexingUtils.findTransitiveAdminGroupIds;
+import static org.dspace.discovery.IndexingUtils.findInheritedAdminGroupIds;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -48,7 +48,7 @@ public class SolrServiceIndexCollectionSubmittersPlugin implements SolrServiceIn
                     // Community.
                     // TODO: Strictly speaking we should also check for epersons who received admin rights directly,
                     //       without being part of the admin group. Finding them may be a lot slower though.
-                    for (UUID unprefixedId : findTransitiveAdminGroupIds(context, col)) {
+                    for (UUID unprefixedId : findInheritedAdminGroupIds(context, col)) {
                         document.addField("submit", "g" + unprefixedId);
                     }
 
