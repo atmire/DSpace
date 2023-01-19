@@ -938,16 +938,18 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
     }
 
     @Override
-    public List<Collection> findCollectionsWithSubmit(Context context, String q, Community community,
-                                                      int offset, int limit)
-        throws SQLException, SearchServiceException {
+    public List<Collection> findCollectionsWithPermission(
+        Context context, String permission, String q, Community community, int offset, int limit
+    ) throws SQLException, SearchServiceException {
 
         List<Collection> collections = new ArrayList<>();
         DiscoverQuery discoverQuery = new DiscoverQuery();
         discoverQuery.setDSpaceObjectFilter(IndexableCollection.TYPE);
         discoverQuery.setStart(offset);
         discoverQuery.setMaxResults(limit);
-        DiscoverResult resp = retrieveCollectionsWithSubmit(context, discoverQuery, null, community, q);
+        DiscoverResult resp = retrieveCollectionsWithPermission(
+            context, permission, discoverQuery, null, community, q
+        );
         for (IndexableObject solrCollections : resp.getIndexableObjects()) {
             Collection c = ((IndexableCollection) solrCollections).getIndexedObject();
             collections.add(c);
@@ -956,22 +958,26 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
     }
 
     @Override
-    public int countCollectionsWithSubmit(Context context, String q, Community community)
+    public int countCollectionsWithPermission(Context context, String permission, String q, Community community)
         throws SQLException, SearchServiceException {
 
         DiscoverQuery discoverQuery = new DiscoverQuery();
         discoverQuery.setMaxResults(0);
         discoverQuery.setDSpaceObjectFilter(IndexableCollection.TYPE);
-        DiscoverResult resp = retrieveCollectionsWithSubmit(context, discoverQuery, null, community, q);
+        DiscoverResult resp = retrieveCollectionsWithPermission(
+            context, permission, discoverQuery, null, community, q
+        );
         return (int)resp.getTotalSearchResults();
     }
 
     /**
-     * Finds all Indexed Collections where the current user has submit rights. If the user is an Admin,
+     * Finds all Indexed Collections where the current user has the given permission. If the user is an Admin,
      * this is all Indexed Collections. Otherwise, it includes those collections where
-     * an indexed "submit" policy lists either the eperson or one of the eperson's groups
+     * an indexed policy lists either the eperson or one of the eperson's groups
      *
      * @param context                    DSpace context
+     * @param permission                 String representing the user permission we're filtering on.
+     *                                   See Constants.INDEX_* for examples.
      * @param discoverQuery
      * @param entityType                 limit the returned collection to those related to given entity type
      * @param community                  parent community, could be null
@@ -982,7 +988,10 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
      * @throws SQLException              if something goes wrong
      * @throws SearchServiceException    if search error
      */
-    private DiscoverResult retrieveCollectionsWithSubmit(Context context, DiscoverQuery discoverQuery,
+    private DiscoverResult retrieveCollectionsWithPermission(
+        Context context,
+        String permission,
+        DiscoverQuery discoverQuery,
         String entityType, Community community, String q)
         throws SQLException, SearchServiceException {
 
@@ -993,7 +1002,7 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
             if (currentUser != null) {
                 userId = currentUser.getID().toString();
             }
-            query.append("submit:(e").append(userId);
+            query.append(permission + ":(e").append(userId);
 
             Set<Group> groups = groupService.allMemberGroupsSet(context, currentUser);
             for (Group group : groups) {
@@ -1019,16 +1028,17 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
     }
 
     @Override
-    public List<Collection> findCollectionsWithSubmit(Context context, String q, Community community, String entityType,
-                                                      int offset, int limit)
-        throws SQLException, SearchServiceException {
+    public List<Collection> findCollectionsWithPermission(
+        Context context, String permission, String q, Community community, String entityType, int offset, int limit
+    ) throws SQLException, SearchServiceException {
         List<Collection> collections = new ArrayList<>();
         DiscoverQuery discoverQuery = new DiscoverQuery();
         discoverQuery.setDSpaceObjectFilter(IndexableCollection.TYPE);
         discoverQuery.setStart(offset);
         discoverQuery.setMaxResults(limit);
-        DiscoverResult resp = retrieveCollectionsWithSubmit(context, discoverQuery,
-                entityType, community, q);
+        DiscoverResult resp = retrieveCollectionsWithPermission(
+            context, permission, discoverQuery, entityType, community, q
+        );
         for (IndexableObject solrCollections : resp.getIndexableObjects()) {
             Collection c = ((IndexableCollection) solrCollections).getIndexedObject();
             collections.add(c);
@@ -1037,12 +1047,15 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
     }
 
     @Override
-    public int countCollectionsWithSubmit(Context context, String q, Community community, String entityType)
-            throws SQLException, SearchServiceException {
+    public int countCollectionsWithPermission(
+        Context context, String permission, String q, Community community, String entityType
+    ) throws SQLException, SearchServiceException {
         DiscoverQuery discoverQuery = new DiscoverQuery();
         discoverQuery.setMaxResults(0);
         discoverQuery.setDSpaceObjectFilter(IndexableCollection.TYPE);
-        DiscoverResult resp = retrieveCollectionsWithSubmit(context, discoverQuery, entityType, community, q);
+        DiscoverResult resp = retrieveCollectionsWithPermission(
+            context, permission, discoverQuery, entityType, community, q
+        );
         return (int) resp.getTotalSearchResults();
     }
 

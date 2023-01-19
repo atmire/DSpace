@@ -377,6 +377,7 @@ public interface CollectionService
      * This means that results may be stale or outdated until https://github.com/DSpace/DSpace/issues/2853 is resolved"
      *
      * @param context    DSpace Context
+     * @param permission
      * @param q          limit the returned collection to those with metadata values matching the query terms.
      *                   The terms are used to make also a prefix query on SOLR so it can be used to implement
      *                   an autosuggest feature over the collection name
@@ -388,9 +389,9 @@ public interface CollectionService
      * @throws SQLException           if something goes wrong
      * @throws SearchServiceException if search error
      */
-    public List<Collection> findCollectionsWithSubmit(Context context, String q, Community community,
-                                                      String entityType, int offset, int limit)
-        throws SQLException, SearchServiceException;
+    public List<Collection> findCollectionsWithPermission(
+        Context context, String permission, String q, Community community, String entityType, int offset, int limit
+    ) throws SQLException, SearchServiceException;
 
     /**
      * Returns Collections for which the current user has 'submit' privileges.
@@ -399,20 +400,21 @@ public interface CollectionService
      * This means that results may be stale or outdated until
      * https://github.com/DSpace/DSpace/issues/2853 is resolved"
      *
-     * @param context   DSpace Context
-     * @param q         limit the returned collection to those with metadata values matching the query terms.
-     *                  The terms are used to make also a prefix query on SOLR so it can be used to implement
-     *                  an autosuggest feature over the collection name
-     * @param community parent community
-     * @param offset    the position of the first result to return
-     * @param limit     paging limit
+     * @param context    DSpace Context
+     * @param permission
+     * @param q          limit the returned collection to those with metadata values matching the query terms.
+     *                   The terms are used to make also a prefix query on SOLR so it can be used to implement
+     *                   an autosuggest feature over the collection name
+     * @param community  parent community
+     * @param offset     the position of the first result to return
+     * @param limit      paging limit
      * @return discovery search result objects
      * @throws SQLException           if something goes wrong
      * @throws SearchServiceException if search error
      */
-    public List<Collection> findCollectionsWithSubmit(Context context, String q, Community community,
-                                                      int offset, int limit)
-        throws SQLException, SearchServiceException;
+    public List<Collection> findCollectionsWithPermission(
+        Context context, String permission, String q, Community community, int offset, int limit
+    ) throws SQLException, SearchServiceException;
 
     /**
      * Counts the number of Collection for which the current user has 'submit' privileges.
@@ -421,16 +423,17 @@ public interface CollectionService
      * This means that results may be stale or outdated until
      * https://github.com/DSpace/DSpace/issues/2853 is resolved."
      *
-     * @param context   DSpace Context
-     * @param q         limit the returned collection to those with metadata values matching the query terms.
-     *                  The terms are used to make also a prefix query on SOLR so it can be used to implement
-     *                  an autosuggest feature over the collection name
-     * @param community parent community
+     * @param context    DSpace Context
+     * @param permission
+     * @param q          limit the returned collection to those with metadata values matching the query terms.
+     *                   The terms are used to make also a prefix query on SOLR so it can be used to implement
+     *                   an autosuggest feature over the collection name
+     * @param community  parent community
      * @return total collections found
      * @throws SQLException           if something goes wrong
      * @throws SearchServiceException if search error
      */
-    public int countCollectionsWithSubmit(Context context, String q, Community community)
+    public int countCollectionsWithPermission(Context context, String permission, String q, Community community)
         throws SQLException, SearchServiceException;
 
     /**
@@ -441,6 +444,7 @@ public interface CollectionService
      * https://github.com/DSpace/DSpace/issues/2853 is resolved."
      *
      * @param context    DSpace Context
+     * @param permission
      * @param q          limit the returned collection to those with metadata values matching the query terms.
      *                   The terms are used to make also a prefix query on SOLR so it can be used to implement
      *                   an autosuggest feature over the collection name
@@ -450,7 +454,7 @@ public interface CollectionService
      * @throws SQLException           if something goes wrong
      * @throws SearchServiceException if search error
      */
-    public int countCollectionsWithSubmit(Context context, String q, Community community, String entityType)
-        throws SQLException, SearchServiceException;
-
+    public int countCollectionsWithPermission(
+        Context context, String permission, String q, Community community, String entityType
+    ) throws SQLException, SearchServiceException;
 }

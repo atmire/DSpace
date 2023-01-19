@@ -51,7 +51,7 @@ public class SolrServiceIndexDSOEditorsPlugin implements SolrServiceIndexPlugin 
             indexResourcePolicies(context, dso, document);
         } catch (SQLException e) {
             log.error(LogHelper.getHeader(context, "Error while indexing resource policies",
-                errorMessage(dso)));
+                "For DSpaceObject with UUID = " + dso.getID()));
         }
     }
 
@@ -70,7 +70,7 @@ public class SolrServiceIndexDSOEditorsPlugin implements SolrServiceIndexPlugin 
             }
         } else {
             for (UUID unprefixedID : findComColInheritedAdminGroupIds(context, dso)) {
-                document.addField("edit", "g" + unprefixedID);
+                document.addField(Constants.INDEX_EDIT, "g" + unprefixedID);
             }
         }
     }
@@ -84,7 +84,7 @@ public class SolrServiceIndexDSOEditorsPlugin implements SolrServiceIndexPlugin 
             authorizeService, context, dso, new int[] {Constants.WRITE, Constants.ADMIN}
         );
         for (String prefixedId : prefixedIds) {
-            document.addField("edit", prefixedId);
+            document.addField(Constants.INDEX_EDIT, prefixedId);
         }
     }
 
@@ -96,9 +96,5 @@ public class SolrServiceIndexDSOEditorsPlugin implements SolrServiceIndexPlugin 
         } else {
             return List.of();
         }
-    }
-
-    private String errorMessage(DSpaceObject dso) {
-        return "TODO";
     }
 }

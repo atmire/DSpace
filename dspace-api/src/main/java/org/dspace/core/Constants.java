@@ -125,6 +125,16 @@ public class Constants {
     public static final int REMOVE = 4;
 
     /**
+     * Keyword used in the SOLR index to mark an EPerson or Group to have editing rights on a DSO.
+     */
+    public static final String INDEX_EDIT = "edit";
+
+    /**
+     * Keyword used in the SOLR index to mark an EPerson or Group to have submission rights on a DSO.
+     */
+    public static final String INDEX_SUBMIT = "submit";
+
+    /**
      * Action of performing workflow step 1
      */
     public static final int WORKFLOW_STEP_1 = 5;
