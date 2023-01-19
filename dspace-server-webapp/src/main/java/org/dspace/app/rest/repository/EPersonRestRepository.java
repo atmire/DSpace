@@ -157,7 +157,7 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     private EPersonRest createAndReturn(Context context, EPersonRest epersonRest, String token)
         throws AuthorizeException, SQLException {
         if (!AuthorizeUtil.authorizeNewAccountRegistration(context, requestService
-            .getCurrentRequest().getHttpServletRequest())) {
+            .getCurrentRequest().getHttpServletRequest(), epersonRest.getEmail())) {
             throw new DSpaceBadRequestException(
                 "Registration is disabled, you are not authorized to create a new Authorization");
         }

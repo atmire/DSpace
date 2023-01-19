@@ -38,11 +38,8 @@ public class EPersonRegistrationFeature implements AuthorizationFeature {
         if (!(object instanceof SiteRest)) {
             return false;
         }
-        if (!AuthorizeUtil.authorizeNewAccountRegistration(context,
-                                                      requestService.getCurrentRequest().getHttpServletRequest())) {
-            return false;
-        }
-        return true;
+        return AuthorizeUtil.authorizeNewAccountRegistration(
+            context, requestService.getCurrentRequest().getHttpServletRequest(), null);
     }
 
     @Override

@@ -101,7 +101,7 @@ public class RegistrationRestRepository extends DSpaceRestRepository<Registratio
             }
         } else {
             try {
-                if (!AuthorizeUtil.authorizeNewAccountRegistration(context, request)) {
+                if (!AuthorizeUtil.authorizeNewAccountRegistration(context, request, registrationRest.getEmail())) {
                     throw new AccessDeniedException(
                         "Registration is disabled, you are not authorized to create a new Authorization");
                 }

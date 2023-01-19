@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.logging.log4j.Logger;
 import org.dspace.authenticate.factory.AuthenticateServiceFactory;
+import org.dspace.authenticate.service.AuthenticationService;
 import org.dspace.authorize.AuthorizeConfiguration;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.ResourcePolicy;
@@ -617,19 +618,23 @@ public class AuthorizeUtil {
      * account or not
      * @param context   The relevant DSpace context
      * @param request   The current request
+     * @param username  The email address that wants to register or null if you want to check if Anonymous users can
+     *                  register
      * @return          A boolean indicating whether the current user can register a new account or not
      * @throws SQLException If something goes wrong
      */
-    public static boolean authorizeNewAccountRegistration(Context context, HttpServletRequest request)
+    public static boolean authorizeNewAccountRegistration(Context context, HttpServletRequest request, String username)
         throws SQLException {
         if (DSpaceServicesFactory.getInstance().getConfigurationService()
                                  .getBooleanProperty("user.registration", true)) {
-            // This allowSetPassword is currently the only mthod that would return true only when it's
+            // This allowSetPassword is currently the only method that would return true only when it's
             // actually expected to be returning true.
             // For example the LDAP canSelfRegister will return true due to auto-register, while that
             // does not imply a new user can register explicitly
-            return AuthenticateServiceFactory.getInstance().getAuthenticationService()
-                                             .allowSetPassword(context, request, null);
+            AuthenticationService authenticationService = AuthenticateServiceFactory.getInstance()
+                .getAuthenticationService();
+            return authenticationService.allowSetPassword(context, request, username) &&
+                authenticationService.canSelfRegister(context, request, username);
         }
         return false;
     }
