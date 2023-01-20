@@ -1080,21 +1080,24 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
      * this is all Indexed Items. Otherwise, it includes those Items where
      * an indexed "submit" policy lists either the eperson or one of the eperson's groups
      *
-     * @param context                    DSpace context
+     * @param context       DSpace context
+     * @param authorization
      * @param discoverQuery
-     * @return                           discovery search result objects
-     * @throws SQLException              if something goes wrong
-     * @throws SearchServiceException    if search error
+     * @return discovery search result objects
+     * @throws SQLException           if something goes wrong
+     * @throws SearchServiceException if search error
      */
-    private DiscoverResult retrieveItemsWithEdit(Context context, DiscoverQuery discoverQuery, String q)
-        throws SQLException, SearchServiceException {
+    private DiscoverResult retrieveAuthorizedViaIndex(
+        Context context, String authorization, DiscoverQuery discoverQuery, String q
+    ) throws SQLException, SearchServiceException {
+        discoverQuery.setDSpaceObjectFilter(IndexableItem.TYPE);
         EPerson currentUser = context.getCurrentUser();
         if (!authorizeService.isAdmin(context)) {
             String userId = currentUser != null ? "e" + currentUser.getID().toString() : "e";
             Stream<String> groupIds = groupService.allMemberGroupsSet(context, currentUser).stream()
                 .map(group -> "g" + group.getID());
             String query = Stream.concat(Stream.of(userId), groupIds)
-                .collect(Collectors.joining(" OR ", "edit:(", ")"));
+                .collect(Collectors.joining(" OR ", authorization + ":(", ")"));
             discoverQuery.addFilterQueries(query);
         }
         if (StringUtils.isNotBlank(q)) {
@@ -1104,24 +1107,23 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
     }
 
     @Override
-    public List<Item> findItemsWithEdit(Context context, String q, int offset, int limit)
+    public List<Item> findAuthorizedViaIndex(Context context, String authorization, String q, int offset, int limit)
         throws SQLException, SearchServiceException {
         DiscoverQuery discoverQuery = new DiscoverQuery();
-        discoverQuery.setDSpaceObjectFilter(IndexableItem.TYPE);
         discoverQuery.setStart(offset);
         discoverQuery.setMaxResults(limit);
-        DiscoverResult resp = retrieveItemsWithEdit(context, discoverQuery, q);
+        DiscoverResult resp = retrieveAuthorizedViaIndex(context, authorization, discoverQuery, q);
         return resp.getIndexableObjects().stream()
             .map(solrItems -> ((IndexableItem) solrItems).getIndexedObject())
             .collect(Collectors.toList());
     }
 
     @Override
-    public int countItemsWithEdit(Context context, String q) throws SQLException, SearchServiceException {
+    public int countAuthorizedViaIndex(Context context, String authorization, String q)
+        throws SQLException, SearchServiceException {
         DiscoverQuery discoverQuery = new DiscoverQuery();
         discoverQuery.setMaxResults(0);
-        discoverQuery.setDSpaceObjectFilter(IndexableItem.TYPE);
-        DiscoverResult resp = retrieveItemsWithEdit(context, discoverQuery, q);
+        DiscoverResult resp = retrieveAuthorizedViaIndex(context, authorization, discoverQuery, q);
         return (int) resp.getTotalSearchResults();
     }
 

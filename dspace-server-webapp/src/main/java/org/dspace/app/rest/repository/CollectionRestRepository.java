@@ -182,10 +182,10 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
                     CommunityRest.CATEGORY + "." + CommunityRest.NAME + " with id: " + communityUuid
                         + " not found");
             }
-            List<Collection> collections = cs.findCollectionsWithPermission(context, Constants.INDEX_SUBMIT, q,
+            List<Collection> collections = cs.findAuthorizedViaIndex(context, Constants.INDEX_SUBMIT, q,
                 com,
                 Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
-            int tot = cs.countCollectionsWithPermission(context, Constants.INDEX_SUBMIT, q, com);
+            int tot = cs.countAuthorizedViaIndex(context, Constants.INDEX_SUBMIT, q, com);
             return converter.toRestPage(collections, pageable, tot , utils.obtainProjection());
         } catch (SQLException | SearchServiceException e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -200,7 +200,7 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
      * @throws SearchServiceException
      */
     @SearchRestMethod(name = "findEditAuthorized")
-    public Page<CollectionRest> findCollectionsWithEdit(@Parameter(value = "query") String q, Pageable pageable)
+    public Page<CollectionRest> findEditAuthorized(@Parameter(value = "query") String q, Pageable pageable)
         throws SearchServiceException {
         return findCollectionsWithPermission(q, pageable, Constants.INDEX_EDIT);
     }
@@ -215,12 +215,12 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
         throws SearchServiceException {
         try {
             Context context = obtainContext();
-            List<Collection> collections = cs.findCollectionsWithPermission(
+            List<Collection> collections = cs.findAuthorizedViaIndex(
                 context, permission, q, null,
                 Math.toIntExact(pageable.getOffset()),
                 Math.toIntExact(pageable.getPageSize())
             );
-            int tot = cs.countCollectionsWithPermission(context, permission, q, null);
+            int tot = cs.countAuthorizedViaIndex(context, permission, q, null);
             return converter.toRestPage(collections, pageable, tot, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -265,11 +265,11 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
             if (entityType == null) {
                 throw new ResourceNotFoundException("There was no entityType found with label: " + entityTypeLabel);
             }
-            List<Collection> collections = cs.findCollectionsWithPermission(
+            List<Collection> collections = cs.findAuthorizedViaIndex(
                 context, Constants.INDEX_SUBMIT, query, null, entityTypeLabel,
                 Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize())
             );
-            int tot = cs.countCollectionsWithPermission(
+            int tot = cs.countAuthorizedViaIndex(
                 context, Constants.INDEX_SUBMIT, query, null, entityTypeLabel
             );
             return converter.toRestPage(collections, pageable, tot, utils.obtainProjection());
@@ -306,9 +306,9 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
                     CommunityRest.CATEGORY + "." + CommunityRest.NAME + " with id: " + communityUuid + " not found");
             }
             List<Collection> collections =
-                cs.findCollectionsWithPermission(context, Constants.INDEX_SUBMIT, query, community, entityTypeLabel,
+                cs.findAuthorizedViaIndex(context, Constants.INDEX_SUBMIT, query, community, entityTypeLabel,
                 Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
-            int total = cs.countCollectionsWithPermission(
+            int total = cs.countAuthorizedViaIndex(
                 context, Constants.INDEX_SUBMIT, query, community, entityTypeLabel
             );
             return converter.toRestPage(collections, pageable, total, utils.obtainProjection());

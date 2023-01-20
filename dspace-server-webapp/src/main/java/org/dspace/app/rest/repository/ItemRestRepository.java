@@ -372,10 +372,10 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
         throws SearchServiceException {
         try {
             Context context = obtainContext();
-            List<Item> items = itemService.findItemsWithEdit(context, q,
+            List<Item> items = itemService.findAuthorizedViaIndex(context, "edit", q,
                 Math.toIntExact(pageable.getOffset()),
-                                                             Math.toIntExact(pageable.getPageSize()));
-            int tot = itemService.countItemsWithEdit(context, q);
+                Math.toIntExact(pageable.getPageSize()));
+            int tot = itemService.countAuthorizedViaIndex(context, "edit", q);
             return converter.toRestPage(items, pageable, tot, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);

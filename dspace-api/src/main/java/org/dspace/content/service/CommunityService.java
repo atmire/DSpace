@@ -291,5 +291,11 @@ public interface CommunityService extends DSpaceObjectService<Community>, DSpace
 
     public List<Community> findAuthorizedGroupMapped(Context context, List<Integer> actions) throws SQLException;
 
+    public List<Community> findAuthorizedViaIndex(
+        Context context, String authorization, String q, int offset, int pageSize
+    );
+
+    public int countAuthorizedViaIndex(Context context, String authorization, String q);
+
     int countTotal(Context context) throws SQLException;
 }

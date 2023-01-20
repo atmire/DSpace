@@ -68,7 +68,7 @@ public class CanManageMappingsFeature implements AuthorizationFeature {
                 return false;
             }
             try {
-                Optional<Collection> collections = collectionService.findCollectionsWithPermission(
+                Optional<Collection> collections = collectionService.findAuthorizedViaIndex(
                     context, Constants.INDEX_SUBMIT,
                         StringUtils.EMPTY, null, 0, Integer.MAX_VALUE)
                                             .stream()

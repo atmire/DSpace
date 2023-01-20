@@ -38,6 +38,7 @@ import org.dspace.content.Bitstream;
 import org.dspace.content.Community;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.CommunityService;
+import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.discovery.DiscoverQuery;
 import org.dspace.discovery.DiscoverResult;
@@ -230,6 +231,24 @@ public class CommunityRestRepository extends DSpaceObjectRestRepository<Communit
         } catch (SearchServiceException | SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    @SearchRestMethod(name = "findEditAuthorized")
+    public Page<CommunityRest> findEditAuthorized(@Parameter(value = "query") String q, Pageable pageable)
+        throws SearchServiceException {
+        return findCommunitiesWithPermission(q, pageable, Constants.INDEX_EDIT);
+    }
+
+    private Page<CommunityRest> findCommunitiesWithPermission(String q, Pageable pageable, String authorization)
+        throws SearchServiceException {
+        Context context = obtainContext();
+        List<Community> communities = cs.findAuthorizedViaIndex(
+            context, authorization, q,
+            Math.toIntExact(pageable.getOffset()),
+            Math.toIntExact(pageable.getPageSize())
+        );
+        int tot = cs.countAuthorizedViaIndex(context, authorization, q);
+        return converter.toRestPage(communities, pageable, tot, utils.obtainProjection());
     }
 
     @Override

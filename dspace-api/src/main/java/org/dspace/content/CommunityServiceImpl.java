@@ -15,6 +15,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.MissingResourceException;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -34,6 +36,12 @@ import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.core.I18nUtil;
 import org.dspace.core.LogHelper;
+import org.dspace.discovery.DiscoverQuery;
+import org.dspace.discovery.DiscoverResult;
+import org.dspace.discovery.SearchService;
+import org.dspace.discovery.SearchServiceException;
+import org.dspace.discovery.indexobject.IndexableCommunity;
+import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
 import org.dspace.eperson.service.GroupService;
 import org.dspace.event.Event;
@@ -73,6 +81,8 @@ public class CommunityServiceImpl extends DSpaceObjectServiceImpl<Community> imp
     protected SiteService siteService;
     @Autowired(required = true)
     protected IdentifierService identifierService;
+    @Autowired
+    protected SearchService searchService;
 
     protected CommunityServiceImpl() {
         super();
@@ -634,6 +644,36 @@ public class CommunityServiceImpl extends DSpaceObjectServiceImpl<Community> imp
     @Override
     public List<Community> findAuthorizedGroupMapped(Context context, List<Integer> actions) throws SQLException {
         return communityDAO.findAuthorizedByGroup(context, context.getCurrentUser(), actions);
+    }
+
+    private DiscoverResult retrieveAuthorizedViaIndex(Context context, String authorization,
+                                                      DiscoverQuery discoverQuery, String q)
+        throws SQLException, SearchServiceException {
+        discoverQuery.setDSpaceObjectFilter(IndexableCommunity.TYPE);
+        EPerson currentUser = context.getCurrentUser();
+        if (!authorizeService.isAdmin(context)) {
+            String userId = currentUser != null ? "e" + currentUser.getID().toString() : "e";
+            Stream<String> groupIds = groupService.allMemberGroupsSet(context, currentUser).stream()
+                .map(group -> "g" + group.getID());
+            String query = Stream.concat(Stream.of(userId), groupIds)
+                .collect(Collectors.joining(" OR ", authorization + ":(", ")"));
+            discoverQuery.addFilterQueries(query);
+        }
+        if (StringUtils.isNotBlank(q)) {
+            discoverQuery.setQuery(q);
+        }
+        return searchService.search(context, discoverQuery);
+    }
+
+    @Override
+    public List<Community> findAuthorizedViaIndex(Context context, String authorization, String q, int offset,
+                                                  int pageSize) {
+        return null;
+    }
+
+    @Override
+    public int countAuthorizedViaIndex(Context context, String authorization, String q) {
+        return 0;
     }
 
     @Override
