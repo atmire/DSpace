@@ -72,6 +72,24 @@ public class DiscoverQuery {
 
     private String discoveryConfigurationName;
 
+    /**
+     * Case-insensitively parses "asc" to SORT_ORDER.asc and "desc" to SORT_ORDER.desc.
+     * @param sortOrder A string that should match (case-insensitive) either "asc" or "desc"
+     *                  (else an exception is thrown).
+     * @return The matching SORT_ORDER value.
+     * @throws IllegalArgumentException when sortOrder matches neither "asc" nor "desc" (case-insensitive).
+     */
+    public static SORT_ORDER parseSortOrder(String sortOrder) throws IllegalArgumentException {
+        if ("asc".equalsIgnoreCase(sortOrder)) {
+            return DiscoverQuery.SORT_ORDER.asc;
+        } else if ("desc".equalsIgnoreCase(sortOrder)) {
+            return DiscoverQuery.SORT_ORDER.desc;
+        } else {
+            throw new IllegalArgumentException(sortOrder + " is not a valid sort order");
+        }
+    }
+
+
     public DiscoverQuery() {
         //Initialize all our lists
         this.filterQueries = new ArrayList<>();

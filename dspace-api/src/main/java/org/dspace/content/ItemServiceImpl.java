@@ -1105,12 +1105,16 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
     }
 
     @Override
-    public List<Item> findItemsWithEdit(Context context, String q, int offset, int limit)
-        throws SQLException, SearchServiceException {
+    public List<Item> findItemsWithEdit(Context context, String q, int offset, int limit,
+                                        String sortBy, String sortOrder)
+        throws SQLException, SearchServiceException, IllegalArgumentException {
         DiscoverQuery discoverQuery = new DiscoverQuery();
         discoverQuery.setDSpaceObjectFilter(IndexableItem.TYPE);
         discoverQuery.setStart(offset);
         discoverQuery.setMaxResults(limit);
+        if (sortBy != null && sortOrder != null) {
+            discoverQuery.setSortField(sortBy, DiscoverQuery.parseSortOrder(sortOrder));
+        }
         DiscoverResult resp = retrieveItemsWithEdit(context, discoverQuery, q);
         return resp.getIndexableObjects().stream()
             .map(solrItems -> ((IndexableItem) solrItems).getIndexedObject())

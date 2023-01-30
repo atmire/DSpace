@@ -776,11 +776,15 @@ public interface ItemService
      * @param q       limit the returned items to those matching this query
      * @param offset  page offset
      * @param limit   page size limit
+     * @param sortBy     field to sort by (can be null)
+     * @param sortOrder  order in which to return sorted results - either "ASC" or "DESC"
+     *                   (should be null if sortBy is also null)
      * @return list of items for which the current user has editing rights
      * @throws SQLException
      * @throws SearchServiceException
      */
-    public List<Item> findItemsWithEdit(Context context, String q, int offset, int limit)
+    public List<Item> findItemsWithEdit(Context context, String q, int offset, int limit,
+                                        String sortBy, String sortOrder)
         throws SQLException, SearchServiceException;
 
     /**

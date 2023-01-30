@@ -30,6 +30,7 @@ import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.BundleRest;
 import org.dspace.app.rest.model.ItemRest;
+import org.dspace.app.rest.model.SearchResultsRest;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.rest.repository.handler.service.UriListHandlerService;
 import org.dspace.authorize.AuthorizeException;
@@ -373,12 +374,18 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
         throws SearchServiceException {
         try {
             Context context = obtainContext();
-            List<Item> items = itemService.findItemsWithEdit(context, q,
+            SearchResultsRest.Sorting sorting = SearchResultsRest.Sorting.fromPage(pageable);
+            List<Item> items = itemService.findItemsWithEdit(
+                context,
+                q,
                 Math.toIntExact(pageable.getOffset()),
-                                                             Math.toIntExact(pageable.getPageSize()));
+                Math.toIntExact(pageable.getPageSize()),
+                sorting != null ? sorting.getBy() : null,
+                sorting != null ? sorting.getOrder() : null
+            );
             int tot = itemService.countItemsWithEdit(context, q);
             return converter.toRestPage(items, pageable, tot, utils.obtainProjection());
-        } catch (SQLException e) {
+        } catch (SQLException | SearchServiceException | IllegalArgumentException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }

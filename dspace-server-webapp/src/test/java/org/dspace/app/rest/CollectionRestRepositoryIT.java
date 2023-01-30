@@ -1925,8 +1925,10 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
 
         String tokenAdmin = getAuthToken(admin.getEmail(), password);
         getClient(tokenAdmin).perform(get("/api/core/collections/search/findSubmitAuthorized")
-                 .param("page", "0")
-                 .param("size", "2"))
+                     .param("page", "0")
+                     .param("size", "2")
+                     .param("sort", "dc.title_sort")
+                     .param("dc.title_sort.dir", "asc"))
                  .andExpect(status().isOk())
                  .andExpect(content().contentType(contentType))
                  .andExpect(jsonPath("$._embedded.collections", Matchers.containsInAnyOrder(
@@ -1952,8 +1954,10 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                  .andExpect(jsonPath("$.page.totalElements", is(7)));
 
         getClient(tokenAdmin).perform(get("/api/core/collections/search/findSubmitAuthorized")
-                .param("page", "1")
-                .param("size", "2"))
+                    .param("page", "1")
+                    .param("size", "2")
+                    .param("sort", "dc.title_sort")
+                    .param("dc.title_sort.dir", "asc"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))
                 .andExpect(jsonPath("$._embedded.collections", Matchers.containsInAnyOrder(
@@ -1982,8 +1986,10 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                 .andExpect(jsonPath("$.page.totalElements", is(7)));
 
         getClient(tokenAdmin).perform(get("/api/core/collections/search/findSubmitAuthorized")
-                .param("page", "2")
-                .param("size", "2"))
+                    .param("page", "2")
+                    .param("size", "2")
+                    .param("sort", "dc.title_sort")
+                    .param("dc.title_sort.dir", "asc"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))
                 .andExpect(jsonPath("$._embedded.collections", Matchers.containsInAnyOrder(
@@ -2012,8 +2018,10 @@ public class CollectionRestRepositoryIT extends AbstractControllerIntegrationTes
                 .andExpect(jsonPath("$.page.totalElements", is(7)));
 
         getClient(tokenAdmin).perform(get("/api/core/collections/search/findSubmitAuthorized")
-                .param("page", "1")
-                .param("size", "3"))
+                    .param("page", "1")
+                    .param("size", "3")
+                    .param("sort", "dc.title_sort")
+                    .param("dc.title_sort.dir", "asc"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))
                 .andExpect(jsonPath("$._embedded.collections", Matchers.containsInAnyOrder(

@@ -384,12 +384,15 @@ public interface CollectionService
      * @param entityType limit the returned collection to those related to given entity type
      * @param offset     the position of the first result to return
      * @param limit      paging limit
+     * @param sortBy     field to sort by (can be null)
+     * @param sortOrder  order in which to return sorted results - either "ASC" or "DESC"
+     *                   (should be null if sortBy is also null)
      * @return discovery search result objects
      * @throws SQLException           if something goes wrong
      * @throws SearchServiceException if search error
      */
-    public List<Collection> findCollectionsWithSubmit(Context context, String q, Community community,
-                                                      String entityType, int offset, int limit)
+    public List<Collection> findCollectionsWithSubmit(Context context, String q, Community community, String entityType,
+                                                      int offset, int limit, String sortBy, String sortOrder)
         throws SQLException, SearchServiceException;
 
     /**
@@ -406,12 +409,15 @@ public interface CollectionService
      * @param community parent community
      * @param offset    the position of the first result to return
      * @param limit     paging limit
+     * @param sortBy     field to sort by (can be null)
+     * @param sortOrder  order in which to return sorted results - either "ASC" or "DESC"
+     *                   (should be null if sortBy is also null)
      * @return discovery search result objects
      * @throws SQLException           if something goes wrong
      * @throws SearchServiceException if search error
      */
     public List<Collection> findCollectionsWithSubmit(Context context, String q, Community community,
-                                                      int offset, int limit)
+                                                      int offset, int limit, String sortBy, String sortOrder)
         throws SQLException, SearchServiceException;
 
     /**

@@ -71,7 +71,7 @@ public class CanManageMappingsFeature implements AuthorizationFeature {
                 Optional<Collection> collections = collectionService.findCollectionsWithSubmit(
                     context,
                     StringUtils.EMPTY,
-                    null, 0, Integer.MAX_VALUE)
+                    null, 0, Integer.MAX_VALUE, null, null)
                                             .stream()
                                             .filter(c -> !c.getID().equals(item.getOwningCollection().getID()))
                                             .filter(c -> {

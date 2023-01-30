@@ -938,24 +938,6 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
     }
 
     @Override
-    public List<Collection> findCollectionsWithSubmit(Context context, String q, Community community,
-                                                      int offset, int limit)
-        throws SQLException, SearchServiceException {
-
-        List<Collection> collections = new ArrayList<>();
-        DiscoverQuery discoverQuery = new DiscoverQuery();
-        discoverQuery.setDSpaceObjectFilter(IndexableCollection.TYPE);
-        discoverQuery.setStart(offset);
-        discoverQuery.setMaxResults(limit);
-        DiscoverResult resp = retrieveCollectionsWithSubmit(context, discoverQuery, null, community, q);
-        for (IndexableObject solrCollections : resp.getIndexableObjects()) {
-            Collection c = ((IndexableCollection) solrCollections).getIndexedObject();
-            collections.add(c);
-        }
-        return collections;
-    }
-
-    @Override
     public int countCollectionsWithSubmit(Context context, String q, Community community)
         throws SQLException, SearchServiceException {
 
@@ -1020,21 +1002,31 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
 
     @Override
     public List<Collection> findCollectionsWithSubmit(Context context, String q, Community community, String entityType,
-                                                      int offset, int limit)
+                                                      int offset, int limit, String sortBy, String sortOrder)
         throws SQLException, SearchServiceException {
         List<Collection> collections = new ArrayList<>();
         DiscoverQuery discoverQuery = new DiscoverQuery();
         discoverQuery.setDSpaceObjectFilter(IndexableCollection.TYPE);
         discoverQuery.setStart(offset);
         discoverQuery.setMaxResults(limit);
-        DiscoverResult resp = retrieveCollectionsWithSubmit(context, discoverQuery,
-                entityType, community, q);
+        if (sortBy != null && sortOrder != null) {
+            discoverQuery.setSortField(sortBy, DiscoverQuery.parseSortOrder(sortOrder));
+        }
+        DiscoverResult resp = retrieveCollectionsWithSubmit(context, discoverQuery, entityType, community, q);
         for (IndexableObject solrCollections : resp.getIndexableObjects()) {
             Collection c = ((IndexableCollection) solrCollections).getIndexedObject();
             collections.add(c);
         }
         return collections;
     }
+
+    @Override
+    public List<Collection> findCollectionsWithSubmit(Context context, String q, Community community,
+                                                      int offset, int limit, String sortBy, String sortOrder)
+        throws SQLException, SearchServiceException {
+        return findCollectionsWithSubmit(context, q, community, null, offset, limit, sortBy, sortOrder);
+    }
+
 
     @Override
     public int countCollectionsWithSubmit(Context context, String q, Community community, String entityType)
