@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,7 +16,7 @@ import java.util.List;
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
-public class ErrorRest {
+public class ErrorRest implements Serializable {
 
     private String message;
 

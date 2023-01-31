@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 
@@ -18,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
-public class AccessConditionOptionRest {
+public class AccessConditionOptionRest implements Serializable {
 
     private String name;
 

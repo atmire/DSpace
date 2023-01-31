@@ -8,6 +8,7 @@
 
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -16,7 +17,7 @@ import java.util.List;
  *
  * @author Andrea Bollini (andrea.bollini at 4science.it)
  */
-public class SubmissionFormRowRest {
+public class SubmissionFormRowRest implements Serializable {
     /**
      * The list of fields in the row
      */

@@ -8,6 +8,8 @@
 
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
@@ -18,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  * @author Andrea Bollini (andrea.bollini at 4science.it)
  */
 @JsonInclude(value = Include.NON_NULL)
-public class SubmissionFormInputTypeRest {
+public class SubmissionFormInputTypeRest implements Serializable {
     private String type;
     private String regex;
 

@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
+import org.dspace.app.rest.cache.RestRepositoryCacheable;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
@@ -80,6 +81,7 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
 
     @Override
     @PreAuthorize("hasPermission(#id, 'BITSTREAM', 'METADATA_READ')")
+    @RestRepositoryCacheable
     public BitstreamRest findOne(Context context, UUID id) {
         Bitstream bit = null;
         try {

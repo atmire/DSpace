@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -14,7 +15,7 @@ import java.util.List;
  * for the SubmissionCCLicenseRest class.
  * Refer to {@link org.dspace.license.CCLicenseField} for explanation of the properties
  */
-public class SubmissionCCLicenseFieldRest {
+public class SubmissionCCLicenseFieldRest implements Serializable {
 
     private String id;
 

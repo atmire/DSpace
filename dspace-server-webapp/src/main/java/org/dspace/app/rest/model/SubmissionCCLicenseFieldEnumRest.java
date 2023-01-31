@@ -7,12 +7,14 @@
  */
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
+
 /**
  * This class is the REST representation of the CCLicenseFieldEnum model object and acts as a data sub object
  * for the SubmissionCCLicenseFieldRest class.
  * Refer to {@link org.dspace.license.CCLicenseFieldEnum} for explanation of the properties
  */
-public class SubmissionCCLicenseFieldEnumRest {
+public class SubmissionCCLicenseFieldEnumRest implements Serializable {
 
     private String id;
     private String label;

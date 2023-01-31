@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.dspace.app.rest.cache.RestRepositoryCacheable;
 import org.dspace.app.rest.converter.DiscoverConfigurationConverter;
 import org.dspace.app.rest.converter.DiscoverFacetConfigurationConverter;
 import org.dspace.app.rest.converter.DiscoverFacetResultsConverter;
@@ -79,6 +80,7 @@ public class DiscoveryRestRepository extends AbstractDSpaceRestRepository {
     @Autowired
     private DiscoverFacetsConverter discoverFacetsConverter;
 
+    @RestRepositoryCacheable
     public SearchConfigurationRest getSearchConfiguration(final String dsoScope, final String configuration) {
         Context context = obtainContext();
 
@@ -89,6 +91,7 @@ public class DiscoveryRestRepository extends AbstractDSpaceRestRepository {
         return discoverConfigurationConverter.convert(discoveryConfiguration, utils.obtainProjection());
     }
 
+    @RestRepositoryCacheable
     public SearchResultsRest getSearchObjects(final String query, final List<String> dsoTypes, final String dsoScope,
                                               final String configuration,
                                               final List<SearchFilter> searchFilters, final Pageable page,
@@ -116,6 +119,7 @@ public class DiscoveryRestRepository extends AbstractDSpaceRestRepository {
                      discoveryConfiguration, projection);
     }
 
+    @RestRepositoryCacheable
     public FacetConfigurationRest getFacetsConfiguration(final String dsoScope, final String configuration) {
         Context context = obtainContext();
 
@@ -130,6 +134,7 @@ public class DiscoveryRestRepository extends AbstractDSpaceRestRepository {
         return discoverSearchSupportConverter.convert();
     }
 
+    @RestRepositoryCacheable
     public FacetResultsRest getFacetObjects(String facetName, String prefix, String query, List<String> dsoTypes,
             String dsoScope, final String configuration, List<SearchFilter> searchFilters, Pageable page)
                     throws SearchServiceException {
@@ -150,6 +155,7 @@ public class DiscoveryRestRepository extends AbstractDSpaceRestRepository {
         return facetResultsRest;
     }
 
+    @RestRepositoryCacheable
     public SearchResultsRest getAllFacets(String query, List<String> dsoTypes, String dsoScope, String configuration,
                                           List<SearchFilter> searchFilters) {
 

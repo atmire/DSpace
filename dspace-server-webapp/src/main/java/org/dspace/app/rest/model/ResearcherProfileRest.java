@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
@@ -85,7 +86,7 @@ public class ResearcherProfileRest extends BaseObjectRest<UUID> {
      * @author Luca Giamminonni (luca.giamminonni at 4science.it)
      *
      */
-    public static class OrcidSynchronizationRest {
+    public static class OrcidSynchronizationRest implements Serializable {
 
         private String mode;
 

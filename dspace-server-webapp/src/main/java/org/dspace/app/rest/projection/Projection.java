@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.projection;
 
+import java.io.Serializable;
 import javax.persistence.Entity;
 
 import org.dspace.app.rest.model.LinkRest;
@@ -58,7 +59,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * See {@link Utils#obtainProjection()}.
  */
-public interface Projection {
+public interface Projection extends Serializable {
 
     /**
      * The default projection.

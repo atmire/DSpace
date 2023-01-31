@@ -8,6 +8,7 @@
 
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -18,7 +19,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  *
  * @author Andrea Bollini (andrea.bollini at 4science.it)
  */
-public class SubmissionVisibilityRest {
+public class SubmissionVisibilityRest implements Serializable {
     /**
      * The visibility to apply within the main scope
      */

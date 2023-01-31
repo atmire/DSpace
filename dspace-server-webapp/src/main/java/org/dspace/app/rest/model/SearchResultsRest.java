@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -65,7 +66,7 @@ public class SearchResultsRest extends DiscoveryResultsRest {
         return facets;
     }
 
-    public static class AppliedFilter {
+    public static class AppliedFilter implements Serializable {
 
         private String filter;
         private String operator;
@@ -115,7 +116,7 @@ public class SearchResultsRest extends DiscoveryResultsRest {
         }
     }
 
-    public static class Sorting {
+    public static class Sorting implements Serializable {
         private String by;
         private String order;
 

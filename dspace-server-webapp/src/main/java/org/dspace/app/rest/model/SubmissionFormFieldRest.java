@@ -8,6 +8,7 @@
 
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +25,7 @@ import org.dspace.submit.model.LanguageFormField;
  * @author Andrea Bollini (andrea.bollini at 4science.it)
  */
 @JsonInclude(value = Include.NON_NULL)
-public class SubmissionFormFieldRest {
+public class SubmissionFormFieldRest implements Serializable {
     /**
      * The SubmissionFormInputType for this field
      */

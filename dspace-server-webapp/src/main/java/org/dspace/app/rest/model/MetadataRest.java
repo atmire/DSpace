@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.SortedMap;
@@ -19,7 +20,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 /**
  * Rest representation of a map of metadata keys to ordered lists of values.
  */
-public class MetadataRest {
+public class MetadataRest implements Serializable {
 
     @JsonAnySetter
     private SortedMap<String, List<MetadataValueRest>> map = new TreeMap();

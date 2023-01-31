@@ -7,12 +7,14 @@
  */
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
+
 import org.apache.commons.lang3.StringUtils;
 
 /**
  * This class serves as a REST representation for a paramater with a value given to the script
  */
-public class ParameterValueRest {
+public class ParameterValueRest implements Serializable {
 
     /**
      * The name of the parameter

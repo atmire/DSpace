@@ -7,10 +7,12 @@
  */
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
+
 /**
  * This class serves as a REST representation for a script parameter
  */
-public class ParameterRest {
+public class ParameterRest implements Serializable {
 
     /**
      * The name of the parameter

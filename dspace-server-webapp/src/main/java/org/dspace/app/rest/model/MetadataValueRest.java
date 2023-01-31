@@ -8,13 +8,15 @@
 package org.dspace.app.rest.model;
 
 
+import java.io.Serializable;
+
 /**
  * An embeddable representation of the Metadata to use in with DSpace REST
  * Resource
  *
  * @author Luigi Andrea Pascarelli (luigiandrea.pascarelli at 4science.it)
  */
-public class MetadataValueRest {
+public class MetadataValueRest implements Serializable {
 
     String value;
 

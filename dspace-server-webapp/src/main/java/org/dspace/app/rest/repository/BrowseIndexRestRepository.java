@@ -10,6 +10,7 @@ package org.dspace.app.rest.repository;
 import java.util.Arrays;
 import java.util.List;
 
+import org.dspace.app.rest.cache.RestRepositoryCacheable;
 import org.dspace.app.rest.model.BrowseIndexRest;
 import org.dspace.browse.BrowseException;
 import org.dspace.browse.BrowseIndex;
@@ -29,6 +30,7 @@ public class BrowseIndexRestRepository extends DSpaceRestRepository<BrowseIndexR
 
     @Override
     @PreAuthorize("permitAll()")
+    @RestRepositoryCacheable
     public BrowseIndexRest findOne(Context context, String name) {
         BrowseIndexRest bi = null;
         BrowseIndex bix;
@@ -44,6 +46,7 @@ public class BrowseIndexRestRepository extends DSpaceRestRepository<BrowseIndexR
     }
 
     @Override
+    @RestRepositoryCacheable
     public Page<BrowseIndexRest> findAll(Context context, Pageable pageable) {
         try {
             List<BrowseIndex> indexes = Arrays.asList(BrowseIndex.getBrowseIndices());

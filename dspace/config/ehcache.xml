@@ -62,8 +62,23 @@
         </resources>
     </cache-template>
 
+    <cache-template name="rest-default">
+        <listeners>
+        </listeners>
+        <resources>
+            <heap>3000</heap>
+            <offheap unit="MB">500</offheap>
+        </resources>
+    </cache-template>
+
     <cache alias="manifests" uses-template="iiif-default"/>
     <cache alias="canvasdimensions" uses-template="iiif-canvas"/>
     <cache alias="sherpa.searchByJournalISSN" uses-template="sherpa-default"/>
+
+    <cache alias="rest-repository" uses-template="rest-default">
+        <expiry>
+            <ttl unit="seconds">15</ttl>
+        </expiry>
+    </cache>
 
 </config>

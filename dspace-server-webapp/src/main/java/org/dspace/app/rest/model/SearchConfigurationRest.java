@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -103,7 +104,7 @@ public class SearchConfigurationRest extends BaseObjectRest<String> {
     }
 
 
-    public static class Filter {
+    public static class Filter implements Serializable {
         private String filter;
         private boolean hasFacets = false;
         private String type;
@@ -215,7 +216,7 @@ public class SearchConfigurationRest extends BaseObjectRest<String> {
                 .toHashCode();
         }
 
-        public static class Operator {
+        public static class Operator implements Serializable {
             private String operator;
 
             public Operator(String operator) {
@@ -241,7 +242,7 @@ public class SearchConfigurationRest extends BaseObjectRest<String> {
         }
     }
 
-    public static class SortOption {
+    public static class SortOption implements Serializable {
 
         //TODO Remove this ignore when the proper actualName gets added through the bean ID
         @JsonIgnore

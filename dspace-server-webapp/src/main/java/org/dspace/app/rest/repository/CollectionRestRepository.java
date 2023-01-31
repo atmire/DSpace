@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
+import org.dspace.app.rest.cache.RestRepositoryCacheable;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.GroupHasPendingWorkflowTasksException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
@@ -142,6 +143,7 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
     }
 
     @Override
+    @RestRepositoryCacheable
     public Page<CollectionRest> findAll(Context context, Pageable pageable) {
         try {
             if (authorizeService.isAdmin(context)) {

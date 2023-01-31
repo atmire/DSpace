@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -105,7 +106,7 @@ public class BrowseIndexRest extends BaseObjectRest<String> {
         return RestResourceController.class;
     }
 
-    static public class SortOption {
+    static public class SortOption implements Serializable {
         private String name;
         private String metadata;
 

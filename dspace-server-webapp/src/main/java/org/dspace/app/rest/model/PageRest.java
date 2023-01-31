@@ -7,10 +7,12 @@
  */
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
+
 /**
  * This class is a REST representation for the Page object that is used for Pagination
  */
-public class PageRest {
+public class PageRest implements Serializable {
 
     private int size;
     private int totalElements;

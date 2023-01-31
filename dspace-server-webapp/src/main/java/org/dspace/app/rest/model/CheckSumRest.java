@@ -8,13 +8,15 @@
 
 package org.dspace.app.rest.model;
 
+import java.io.Serializable;
+
 /**
  * The CheckSum REST Resource. It is not addressable directly, only used as
  * inline object in the Bitstream resource
  *
  * @author Andrea Bollini (andrea.bollini at 4science.it)
  */
-public class CheckSumRest {
+public class CheckSumRest implements Serializable {
     String checkSumAlgorithm;
     String value;
 

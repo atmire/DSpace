@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
+import org.dspace.app.rest.cache.RestRepositoryCacheable;
 import org.dspace.app.rest.model.SiteRest;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.authorize.AuthorizeException;
@@ -44,6 +45,7 @@ public class SiteRestRepository extends DSpaceObjectRestRepository<Site, SiteRes
 
     @Override
     @PreAuthorize("permitAll()")
+    @RestRepositoryCacheable
     public SiteRest findOne(Context context, UUID id) {
         Site site = null;
         try {
@@ -58,6 +60,7 @@ public class SiteRestRepository extends DSpaceObjectRestRepository<Site, SiteRes
     }
 
     @Override
+    @RestRepositoryCacheable
     public Page<SiteRest> findAll(Context context, Pageable pageable) {
         try {
             List<Site> sites = Arrays.asList(sitesv.findSite(context));
