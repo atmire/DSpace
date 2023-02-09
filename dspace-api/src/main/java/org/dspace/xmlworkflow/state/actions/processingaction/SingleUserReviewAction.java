@@ -120,11 +120,8 @@ public class SingleUserReviewAction extends ProcessingAction {
      */
     private ActionResult processDecline(Context c, XmlWorkflowItem wfi)
         throws SQLException, IOException, AuthorizeException, WorkflowException {
-        EPerson user = c.getCurrentUser();
         c.turnOffAuthorisationSystem();
-        XmlWorkflowService xmlWorkflowService = XmlWorkflowServiceFactory.getInstance().getXmlWorkflowService();
-        WorkspaceItem workspaceItem = xmlWorkflowService.abort(c, wfi, user);
-        xmlWorkflowService.start(c, workspaceItem);
+        xmlWorkflowService.restartWorkflow(c, wfi, c.getCurrentUser(), this.getProvenanceStartId());
         c.restoreAuthSystemState();
         return new ActionResult(ActionResult.TYPE.TYPE_SUBMISSION_PAGE);
     }
