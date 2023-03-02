@@ -387,7 +387,7 @@ public class BitstreamStorageServiceImpl implements BitstreamStorageService, Ini
      *                            to perform a particular action.
      */
     public void migrate(Context context, Integer assetstoreSource, Integer assetstoreDestination, boolean deleteOld,
-                        Integer batchCommitSize) throws IOException, SQLException, AuthorizeException {
+                        Integer batchCommitSize, Integer limit) throws IOException, SQLException, AuthorizeException {
         //Find all the bitstreams on the old source, copy it to new destination, update store_number, save, remove old
         Iterator<Bitstream> allBitstreamsInSource = bitstreamService.findByStoreNumber(context, assetstoreSource);
         Integer processedCounter = 0;
@@ -416,6 +416,11 @@ public class BitstreamStorageServiceImpl implements BitstreamStorageService, Ini
             if ((processedCounter % batchCommitSize) == 0) {
                 log.info("Migration Commit Checkpoint: " + processedCounter);
                 context.dispatchEvents();
+            }
+
+            if (limit > 0 && processedCounter % limit == 0) {
+                log.info("Migration limit for current session reached: " + processedCounter);
+                break;
             }
         }
 
