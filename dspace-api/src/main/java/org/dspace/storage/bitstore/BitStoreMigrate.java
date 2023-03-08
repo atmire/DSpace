@@ -62,6 +62,7 @@ public class BitStoreMigrate {
                               "Delete file from losing assetstore. (Default: Keep bitstream in old assetstore)");
             options.addOption("p", "print", false, "Print out current assetstore information");
             options.addOption("s", "size", true, "Batch commit size. (Default: 1, commit after each file transfer)");
+            options.addOption("l", "limit", true, "Max amount of files to process in one session - quits script after");
             options.addOption("h", "help", false, "Help");
 
             try {
@@ -103,8 +104,14 @@ public class BitStoreMigrate {
                     batchCommitSize = Integer.parseInt(line.getOptionValue('s'));
                 }
 
+                // When limit is set to 0 (default), it'll attempt to process ALL files
+                Integer limit = 0;
+                if (line.hasOption('l')) {
+                    limit = Integer.parseInt(line.getOptionValue('l'));
+                }
+
                 bitstreamStorageService
-                    .migrate(context, sourceAssetstore, destinationAssetstore, deleteOld, batchCommitSize);
+                    .migrate(context, sourceAssetstore, destinationAssetstore, deleteOld, batchCommitSize, limit);
             } else {
                 printHelp(options);
                 System.exit(0);
