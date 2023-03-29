@@ -11,3 +11,11 @@ dspace.ui.url = http://localhost:4000
 db.url = jdbc:postgresql://localhost:5432/dspace-${dspace.shortname}
 
 solr.server = http://localhost:8983/solr
+
+# Enable the Text Extractor & ImageMagick based thumbnails by default
+filter.plugins = Text Extractor
+filter.plugins = ImageMagick Image Thumbnail
+filter.plugins = ImageMagick PDF Thumbnail
+
+thumbnail.maxwidth  = 300
+thumbnail.maxheight = 300
