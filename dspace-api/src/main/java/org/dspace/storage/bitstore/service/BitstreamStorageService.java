@@ -172,13 +172,14 @@ public interface BitstreamStorageService {
      * @param assetstoreDestination destination assetstore
      * @param deleteOld             whether to delete files from the source assetstore after migration
      * @param batchCommitSize       batch size
+     * @param limit                 max amount of files to process in the current session
      * @throws IOException        A general class of exceptions produced by failed or interrupted I/O operations.
      * @throws SQLException       An exception that provides information on a database access error or other errors.
      * @throws AuthorizeException Exception indicating the current user of the context does not have permission
      *                            to perform a particular action.
      */
     public void migrate(Context context, Integer assetstoreSource, Integer assetstoreDestination, boolean deleteOld,
-                        Integer batchCommitSize) throws IOException, SQLException, AuthorizeException;
+                        Integer batchCommitSize, Integer limit) throws IOException, SQLException, AuthorizeException;
 
 
     /**

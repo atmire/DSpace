@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
+       default-lazy-init="true">
+
+    <bean class="org.dspace.external.provider.impl.MockDataProvider" init-method="init">
+        <property name="sourceIdentifier" value="mock"/>
+    </bean>
+
+    <!-- SHERPA data providers set up to use mock SHERPA service -->
+    <bean class="org.dspace.external.provider.impl.SHERPAv2JournalISSNDataProvider" init-method="init">
+        <property name="sourceIdentifier" value="sherpaJournalIssn"/>
+        <property name="sherpaService" ref="org.dspace.app.sherpa.MockSHERPAService"/>
+        <property name="supportedEntityTypes">
+            <list>
+                <value>TestJournal</value>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.dspace.external.provider.impl.SHERPAv2JournalDataProvider" init-method="init">
+        <property name="sourceIdentifier" value="sherpaJournal"/>
+        <property name="sherpaService" ref="org.dspace.app.sherpa.MockSHERPAService"/>
+        <property name="supportedEntityTypes">
+            <list>
+                <value>TestJournal</value>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.dspace.external.provider.impl.SHERPAv2PublisherDataProvider" init-method="init">
+        <property name="sourceIdentifier" value="sherpaPublisher"/>
+        <property name="sherpaService" ref="org.dspace.app.sherpa.MockSHERPAService"/>
+        <property name="supportedEntityTypes">
+            <list>
+                <value>TestOrgUnit</value>
+                <value>TestPerson</value>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="orcidRestConnector" class="org.dspace.external.OrcidRestConnector">
+        <constructor-arg value="${orcid.api-url}"/>
+    </bean>
+
+    <bean id="orcidPublicationDataProvider" class="org.dspace.external.provider.impl.OrcidPublicationDataProvider">
+        <property name="sourceIdentifier" value="orcidWorks"/>
+        <property name="fieldMapping" ref="orcidPublicationDataProviderFieldMapping"/>
+        <property name="supportedEntityTypes">
+            <list>
+                <value>TestPublication</value>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="pubmedLiveImportDataProvider" class="org.dspace.external.provider.impl.LiveImportDataProvider">
+        <property name="metadataSource" ref="pubmedImportService"/>
+        <property name="sourceIdentifier" value="pubmed"/>
+        <property name="recordIdMetadata" value="dc.identifier.other"/>
+        <property name="supportedEntityTypes">
+            <list>
+                <value>TestPublication</value>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="scopusLiveImportDataProvider" class="org.dspace.external.provider.impl.LiveImportDataProvider">
+        <property name="metadataSource" ref="ScopusImportService"/>
+        <property name="sourceIdentifier" value="scopus"/>
+        <property name="recordIdMetadata" value="dc.identifier.scopus"/>
+        <property name="supportedEntityTypes">
+            <list>
+                <value>TestPublication</value>
+            </list>
+        </property>
+    </bean>
+
+</beans>
