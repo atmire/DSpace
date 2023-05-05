@@ -231,7 +231,7 @@ public class DSpaceCsrfTokenRepositoryTest {
     }
 
     @Test
-    public void loadToken() {
+    public void loadTokenOnlyCookie() {
         CsrfToken generateToken = this.repository.generateToken(this.request);
 
         this.request
@@ -240,10 +240,49 @@ public class DSpaceCsrfTokenRepositoryTest {
 
         CsrfToken loadToken = this.repository.loadToken(this.request);
 
+        assertThat(loadToken).isNull();
+    }
+
+    @Test
+    public void loadTokenOnlyHeader() {
+        CsrfToken generateToken = this.repository.generateToken(this.request);
+
+        this.request.addHeader(DSpaceCsrfTokenRepository.DEFAULT_CSRF_HEADER_NAME, generateToken.getToken());
+
+        CsrfToken loadToken = this.repository.loadToken(this.request);
+
+        assertThat(loadToken).isNull();
+    }
+
+    @Test
+    public void loadTokenCookieAndHeaderMismatch() {
+        CsrfToken generateToken = this.repository.generateToken(this.request);
+
+        this.request.addHeader(DSpaceCsrfTokenRepository.DEFAULT_CSRF_HEADER_NAME, "mismatching-token");
+        this.request
+                .setCookies(new Cookie(DSpaceCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME,
+                        generateToken.getToken()));
+
+        CsrfToken loadToken = this.repository.loadToken(this.request);
+
+        assertThat(loadToken).isNull();
+    }
+
+    @Test
+    public void loadTokenCookieAndHeaderMatch() {
+        CsrfToken generateToken = this.repository.generateToken(this.request);
+
+        this.request.addHeader(DSpaceCsrfTokenRepository.DEFAULT_CSRF_HEADER_NAME, generateToken.getToken());
+        this.request
+                .setCookies(new Cookie(DSpaceCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME,
+                        generateToken.getToken()));
+
+        CsrfToken loadToken = this.repository.loadToken(this.request);
+
         assertThat(loadToken).isNotNull();
         assertThat(loadToken.getHeaderName()).isEqualTo(generateToken.getHeaderName());
         assertThat(loadToken.getParameterName())
-            .isEqualTo(generateToken.getParameterName());
+                .isEqualTo(generateToken.getParameterName());
         assertThat(loadToken.getToken()).isNotEmpty();
     }
 
@@ -257,6 +296,7 @@ public class DSpaceCsrfTokenRepositoryTest {
         this.repository.setParameterName(parameterName);
         this.repository.setCookieName(cookieName);
 
+        this.request.addHeader(headerName, value);
         this.request.setCookies(new Cookie(cookieName, value));
 
         CsrfToken loadToken = this.repository.loadToken(this.request);
