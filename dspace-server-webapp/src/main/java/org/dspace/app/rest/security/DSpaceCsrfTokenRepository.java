@@ -139,10 +139,10 @@ public class DSpaceCsrfTokenRepository implements CsrfTokenRepository {
     @Override
     public CsrfToken loadToken(HttpServletRequest request) {
         Cookie cookie = WebUtils.getCookie(request, this.cookieName);
-        if (cookie == null) {
+        String token = request.getHeader(this.headerName);
+        if (cookie == null || StringUtils.isEmpty(token) || !token.equals(cookie.getValue())) {
             return null;
         }
-        String token = cookie.getValue();
         if (!StringUtils.hasLength(token)) {
             return null;
         }
