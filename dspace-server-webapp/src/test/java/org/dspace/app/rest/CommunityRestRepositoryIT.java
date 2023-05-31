@@ -16,8 +16,11 @@ import static org.dspace.app.rest.matcher.MetadataMatcher.matchMetadataStringEnd
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.springframework.data.rest.webmvc.RestMediaTypes.TEXT_URI_LIST_VALUE;
+import static org.springframework.http.MediaType.parseMediaType;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -39,8 +42,11 @@ import org.dspace.app.rest.matcher.HalMatcher;
 import org.dspace.app.rest.matcher.MetadataMatcher;
 import org.dspace.app.rest.matcher.PageMatcher;
 import org.dspace.app.rest.model.CommunityRest;
+import org.dspace.app.rest.model.GroupRest;
 import org.dspace.app.rest.model.MetadataRest;
 import org.dspace.app.rest.model.MetadataValueRest;
+import org.dspace.app.rest.model.patch.Operation;
+import org.dspace.app.rest.model.patch.ReplaceOperation;
 import org.dspace.app.rest.projection.Projection;
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
 import org.dspace.app.rest.test.MetadataPatchSuite;
@@ -53,6 +59,8 @@ import org.dspace.builder.GroupBuilder;
 import org.dspace.builder.ResourcePolicyBuilder;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
+import org.dspace.content.Item;
+import org.dspace.content.MetadataSchemaEnum;
 import org.dspace.content.service.CommunityService;
 import org.dspace.core.Constants;
 import org.dspace.eperson.EPerson;
@@ -1932,6 +1940,78 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
         runPatchMetadataTests(eperson, 403);
     }
 
+    @Test
+    public void patchReplaceMultipleDescriptionCommunity() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        List<String> communityDescriptions = List.of(
+            "FIRST",
+            "SECOND",
+            "THIRD"
+        );
+
+        parentCommunity =
+            CommunityBuilder.createCommunity(context)
+                .withName("Parent Community")
+                .build();
+
+        this.communityService
+            .addMetadata(
+                context, parentCommunity,
+                MetadataSchemaEnum.DC.getName(), "description", null,
+                Item.ANY, communityDescriptions
+            );
+
+        context.restoreAuthSystemState();
+        String token = getAuthToken(admin.getEmail(), password);
+
+        getClient(token)
+            .perform(get("/api/core/communities/" + parentCommunity.getID()))
+            .andExpect(status().isOk())
+            .andExpect(
+                jsonPath("$.metadata",
+                    Matchers.allOf(
+                        MetadataMatcher.matchMetadata("dc.description", communityDescriptions.get(0), 0),
+                        MetadataMatcher.matchMetadata("dc.description", communityDescriptions.get(1), 1),
+                        MetadataMatcher.matchMetadata("dc.description", communityDescriptions.get(2), 2)
+                    )
+                )
+            );
+
+        List<Operation> ops = List.of(
+            new ReplaceOperation("/metadata/dc.description/0", communityDescriptions.get(2)),
+            new ReplaceOperation("/metadata/dc.description/1", communityDescriptions.get(0)),
+            new ReplaceOperation("/metadata/dc.description/2", communityDescriptions.get(1))
+        );
+        String requestBody = getPatchContent(ops);
+        getClient(token)
+            .perform(patch("/api/core/communities/" + parentCommunity.getID())
+            .content(requestBody)
+            .contentType(javax.ws.rs.core.MediaType.APPLICATION_JSON_PATCH_JSON))
+            .andExpect(status().isOk())
+            .andExpect(
+                 jsonPath("$.metadata",
+                     Matchers.allOf(
+                         MetadataMatcher.matchMetadata("dc.description", communityDescriptions.get(2), 0),
+                         MetadataMatcher.matchMetadata("dc.description", communityDescriptions.get(0), 1),
+                         MetadataMatcher.matchMetadata("dc.description", communityDescriptions.get(1), 2)
+                     )
+                 )
+             );
+        getClient(token)
+            .perform(get("/api/core/communities/" + parentCommunity.getID()))
+            .andExpect(status().isOk())
+            .andExpect(
+                jsonPath("$.metadata",
+                    Matchers.allOf(
+                        MetadataMatcher.matchMetadata("dc.description", communityDescriptions.get(2), 0),
+                        MetadataMatcher.matchMetadata("dc.description", communityDescriptions.get(0), 1),
+                        MetadataMatcher.matchMetadata("dc.description", communityDescriptions.get(1), 2)
+                    )
+                )
+            );
+    }
+
     private void runPatchMetadataTests(EPerson asUser, int expectedStatus) throws Exception {
         context.turnOffAuthorisationSystem();
         parentCommunity = CommunityBuilder.createCommunity(context).withName("Community").build();
@@ -2086,7 +2166,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
 
         String token = getAuthToken(topLevelCommunityAAdmin.getEmail(), password);
 
-        // Verify the community admin gets all the communities he's admin for
+        // Verify the community admin gets all the communities they are admin for
         getClient(token).perform(get("/api/core/communities/search/findAdminAuthorized"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.communities", Matchers.containsInAnyOrder(
@@ -2139,7 +2219,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
 
         String token = getAuthToken(subCommunityAAdmin.getEmail(), password);
 
-        // Verify the community admin gets all the communities he's admin for
+        // Verify the community admin gets all the communities they are admin for
         getClient(token).perform(get("/api/core/communities/search/findAdminAuthorized"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.communities", Matchers.containsInAnyOrder(
@@ -2299,7 +2379,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
 
         String token = getAuthToken(eperson.getEmail(), password);
 
-        // Verify the community admins' subgroup users get all the communities he's admin for
+        // Verify the community admins' subgroup users get all the communities they are admin for
         getClient(token).perform(get("/api/core/communities/search/findAdminAuthorized"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.communities", Matchers.containsInAnyOrder(
@@ -2352,7 +2432,7 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
 
         String token = getAuthToken(eperson.getEmail(), password);
 
-        // Verify the sub-community admins' subgroup users get all the communities he's admin for
+        // Verify the sub-community admins' subgroup users get all the communities they are admin for
         getClient(token).perform(get("/api/core/communities/search/findAdminAuthorized"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$._embedded.communities", Matchers.containsInAnyOrder(
@@ -2590,6 +2670,91 @@ public class CommunityRestRepositoryIT extends AbstractControllerIntegrationTest
                    .andExpect(jsonPath("$.page.size", is(1)))
                    .andExpect(jsonPath("$.page.totalPages", is(2)))
                    .andExpect(jsonPath("$.page.totalElements", is(2)));
+    }
+
+    @Test
+    public void removeComAdminGroupToCheckReindexingTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+        Community rootCommunity = CommunityBuilder.createCommunity(context)
+                                                  .withName("Root Community")
+                                                  .build();
+
+        Community subCommunity = CommunityBuilder.createSubCommunity(context, rootCommunity)
+                                                 .withName("MyTestCom")
+                                                 .withAdminGroup(eperson)
+                                                 .build();
+        context.restoreAuthSystemState();
+
+        String epersonToken = getAuthToken(eperson.getEmail(), password);
+        getClient(epersonToken).perform(get("/api/core/communities/search/findAdminAuthorized")
+                               .param("query", "MyTestCom"))
+                               .andExpect(status().isOk())
+                               .andExpect(jsonPath("$._embedded.communities", Matchers.contains(CommunityMatcher
+                                          .matchProperties(subCommunity.getName(),
+                                                           subCommunity.getID(),
+                                                           subCommunity.getHandle())
+                                          )))
+                               .andExpect(jsonPath("$.page.totalElements", is(1)));
+
+        String token = getAuthToken(admin.getEmail(), password);
+        getClient(token).perform(delete("/api/core/communities/" + subCommunity.getID() + "/adminGroup"))
+                        .andExpect(status().isNoContent());
+
+        getClient(epersonToken).perform(get("/api/core/communities/search/findAdminAuthorized")
+                               .param("query", "MyTestCom"))
+                               .andExpect(status().isOk())
+                               .andExpect(jsonPath("$._embedded").doesNotExist())
+                               .andExpect(jsonPath("$.page.totalElements", is(0)));
+    }
+
+    @Test
+    public void addComAdminGroupToCheckReindexingTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        Community rootCommunity = CommunityBuilder.createCommunity(context)
+                                                  .withName("Root Community")
+                                                  .build();
+
+        Community subCommunity = CommunityBuilder.createSubCommunity(context, rootCommunity)
+                                                 .withName("MyTestCom")
+                                                 .build();
+
+        context.restoreAuthSystemState();
+
+        String epersonToken = getAuthToken(eperson.getEmail(), password);
+        getClient(epersonToken).perform(get("/api/core/communities/search/findAdminAuthorized")
+                               .param("query", "MyTestCom"))
+                               .andExpect(status().isOk())
+                               .andExpect(jsonPath("$._embedded").doesNotExist())
+                               .andExpect(jsonPath("$.page.totalElements", is(0)));
+
+        AtomicReference<UUID> idRef = new AtomicReference<>();
+        ObjectMapper mapper = new ObjectMapper();
+        GroupRest groupRest = new GroupRest();
+        String token = getAuthToken(admin.getEmail(), password);
+        getClient(token).perform(post("/api/core/communities/" + subCommunity.getID() + "/adminGroup")
+                        .content(mapper.writeValueAsBytes(groupRest))
+                        .contentType(contentType))
+                        .andExpect(status().isCreated())
+                        .andDo(result -> idRef.set(
+                               UUID.fromString(read(result.getResponse().getContentAsString(), "$.id")))
+                        );
+
+        String adminToken = getAuthToken(admin.getEmail(), password);
+        getClient(adminToken).perform(post("/api/eperson/groups/" + idRef.get() + "/epersons")
+                             .contentType(parseMediaType(TEXT_URI_LIST_VALUE))
+                             .content(REST_SERVER_URL + "eperson/groups/" + eperson.getID()
+                             ));
+
+        getClient(epersonToken).perform(get("/api/core/communities/search/findAdminAuthorized")
+                               .param("query", "MyTestCom"))
+                               .andExpect(status().isOk())
+                               .andExpect(jsonPath("$._embedded.communities", Matchers.contains(CommunityMatcher
+                                           .matchProperties(subCommunity.getName(),
+                                                            subCommunity.getID(),
+                                                            subCommunity.getHandle())
+                                           )))
+                               .andExpect(jsonPath("$.page.totalElements", is(1)));
     }
 
 }
