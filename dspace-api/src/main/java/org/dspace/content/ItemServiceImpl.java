@@ -913,13 +913,18 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
                                        + " has no default bitstream READ policies");
         }
 
+        boolean removeCurrentReadRPBitstream =
+            replaceReadRPWithCollectionRP && defaultCollectionBitstreamPolicies.size() > 0;
+        boolean removeCurrentReadRPBundle =
+            replaceReadRPWithCollectionRP && defaultCollectionBundlePolicies.size() > 0;
+
         // remove all policies from bundles, add new ones
         // Remove bundles
         List<Bundle> bunds = item.getBundles();
         for (Bundle mybundle : bunds) {
-            // If collection has default READ policies, remove the bitstream's READ policies.
-            if (replaceReadRPWithCollectionRP && defaultCollectionBitstreamPolicies.size() > 0) {
-                authorizeService.removePoliciesActionFilter(context, item, Constants.READ);
+            // If collection has default READ policies, remove the bundle's READ policies.
+            if (removeCurrentReadRPBundle) {
+                authorizeService.removePoliciesActionFilter(context, mybundle, Constants.READ);
             }
 
             // if come from InstallItem: remove all submission/workflow policies
@@ -929,6 +934,11 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
             addDefaultPoliciesNotInPlace(context, mybundle, defaultCollectionPolicies);
 
             for (Bitstream bitstream : mybundle.getBitstreams()) {
+                // If collection has default READ policies, remove the bundle's READ policies.
+                if (removeCurrentReadRPBitstream) {
+                    authorizeService.removePoliciesActionFilter(context, bitstream, Constants.READ);
+                }
+
                 // if come from InstallItem: remove all submission/workflow policies
                 removeAllPoliciesAndAddDefault(context, bitstream, defaultItemPolicies,
                                                defaultCollectionBitstreamPolicies);
