@@ -20,6 +20,9 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.Logger;
 import org.dspace.AbstractIntegrationTestWithDatabase;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.authorize.ResourcePolicy;
+import org.dspace.authorize.factory.AuthorizeServiceFactory;
+import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.builder.CollectionBuilder;
 import org.dspace.builder.CommunityBuilder;
 import org.dspace.builder.EntityTypeBuilder;
@@ -35,6 +38,10 @@ import org.dspace.content.Relationship;
 import org.dspace.content.RelationshipType;
 import org.dspace.content.WorkspaceItem;
 import org.dspace.content.factory.ContentServiceFactory;
+import org.dspace.core.Constants;
+import org.dspace.eperson.Group;
+import org.dspace.eperson.factory.EPersonServiceFactory;
+import org.dspace.eperson.service.GroupService;
 import org.dspace.versioning.Version;
 import org.dspace.versioning.factory.VersionServiceFactory;
 import org.dspace.versioning.service.VersioningService;
@@ -55,6 +62,8 @@ public class ItemServiceTest extends AbstractIntegrationTestWithDatabase {
     protected WorkspaceItemService workspaceItemService = ContentServiceFactory.getInstance().getWorkspaceItemService();
     protected MetadataValueService metadataValueService = ContentServiceFactory.getInstance().getMetadataValueService();
     protected VersioningService versioningService = VersionServiceFactory.getInstance().getVersionService();
+    protected AuthorizeService authorizeService = AuthorizeServiceFactory.getInstance().getAuthorizeService();
+    protected GroupService groupService = EPersonServiceFactory.getInstance().getGroupService();
 
     Community community;
     Collection collection1;
@@ -469,6 +478,53 @@ public class ItemServiceTest extends AbstractIntegrationTestWithDatabase {
         assertEquals(2, relationships2.size());
 
         itemService.delete(context, person1);
+
+        context.restoreAuthSystemState();
+    }
+
+    @Test
+    public void testMoveItemToCollectionWithMoreRestrictiveReadPolicy() throws Exception {
+        /* Verify that, if we move an item from a collection with a permissive default READ policy
+         * to a collection with a restrictive default READ policy,
+         * that the item does not retain the original permissive READ policy.
+         */
+
+        context.turnOffAuthorisationSystem();
+
+        Group anonymous = groupService.findByName(context, Group.ANONYMOUS);
+        Group admin = groupService.findByName(context, Group.ADMIN);
+
+        // Set up the two different collections: one permissive and one restrictive in its default READ policy.
+        Collection permissive = CollectionBuilder
+            .createCollection(context, community)
+            .build();
+        Collection restrictive = CollectionBuilder
+            .createCollection(context, community)
+            .build();
+        authorizeService.removePoliciesActionFilter(context, restrictive, Constants.DEFAULT_ITEM_READ);
+        authorizeService.addPolicy(context, restrictive, Constants.DEFAULT_ITEM_READ, admin);
+
+        // Add an item to the permissive collection.
+        Item item = ItemBuilder
+            .createItem(context, permissive)
+            .build();
+
+        // Verify that the item has exactly one READ policy, for the anonymous group.
+        assertEquals(
+            List.of(anonymous),
+            authorizeService.getPoliciesActionFilter(context, item, Constants.READ)
+                .stream().map(ResourcePolicy::getGroup).collect(Collectors.toList())
+        );
+
+        // Move the item to the restrictive collection, making sure to inherit default policies.
+        itemService.move(context, item, permissive, restrictive, true);
+
+        // Verify that the item has exactly one READ policy, but now for the admin group.
+        assertEquals(
+            List.of(admin),
+            authorizeService.getPoliciesActionFilter(context, item, Constants.READ)
+                .stream().map(ResourcePolicy::getGroup).collect(Collectors.toList())
+        );
 
         context.restoreAuthSystemState();
     }
