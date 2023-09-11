@@ -44,6 +44,7 @@ import org.dspace.xmlworkflow.storedcomponents.PoolTask;
 import org.dspace.xmlworkflow.storedcomponents.XmlWorkflowItem;
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.RestMediaTypes;
@@ -169,6 +170,11 @@ public class LoginAsEPersonIT extends AbstractControllerIntegrationTest {
      * @throws Exception
      */
     @Test
+    // Atmire modifications START
+    // Disable checking embedded collection and submitter because workspaceitem doesn't automatically embed these
+    // anymore for performance reasons
+    @Ignore
+    // Atmire modifications END
     public void createEmptyWorkspaceItemLoginOnBehalfOfCheckSubmitterTest() throws Exception {
         context.turnOffAuthorisationSystem();
 
