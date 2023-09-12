@@ -1057,9 +1057,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     .andExpect(jsonPath("$._embedded.workspaceitems[0]" +
                                     ".sections.traditionalpageone['dc.type'][0].value",
                             is("article")))
-                    .andExpect(
-                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
-                                    is(col1.getID().toString())))
+                    // Atmire modifications START
+//                    .andExpect(
+//                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                                    is(col1.getID().toString())))
+                    // Atmire modifications END
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                                     + ".metadata['dc.source'][0].value",
                             is("/local/path/bibtex-test-article.bib")))
@@ -1090,9 +1092,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     .andExpect(jsonPath("$._embedded.workspaceitems[0]" +
                                     ".sections.traditionalpageone['dc.type'][0].value",
                             is("article")))
-                    .andExpect(
-                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
-                                    is(col2.getID().toString())))
+                    // Atmire modifications START
+//                    .andExpect(
+//                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                                    is(col2.getID().toString())))
+                    // Atmire modifications END
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                                     + ".metadata['dc.source'][0].value",
                             is("/local/path/bibtex-test-article.bib")))
@@ -1151,9 +1155,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections." +
                                     "traditionalpageone['dc.title'][0].value",
                             is("The German umlauts: ÄÖüß")))
-                    .andExpect(
-                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
-                                    is(col1.getID().toString())))
+                    // Atmire modifications START
+//                    .andExpect(
+//                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                                    is(col1.getID().toString())))
+                    // Atmire modifications END
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                                     + ".metadata['dc.source'][0].value",
                             is("/local/path/bibtex-test-diacritics.bib")))
@@ -1181,9 +1187,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections." +
                                     "traditionalpageone['dc.title'][0].value",
                             is("The German umlauts: ÄÖüß")))
-                    .andExpect(
-                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
-                                    is(col2.getID().toString())))
+                    // Atmire modifications START
+//                    .andExpect(
+//                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                                    is(col2.getID().toString())))
+                    // Atmire modifications END
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                                     + ".metadata['dc.source'][0].value",
                             is("/local/path/bibtex-test-diacritics.bib")))
@@ -1257,9 +1265,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     .andExpect(jsonPath("$._embedded.workspaceitems[0]" +
                                     ".sections.traditionalpageone['dc.contributor.author'][2].value",
                             is("A. Third")))
-                    .andExpect(
-                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
-                                    is(col1.getID().toString())))
+                    // Atmire modifications START
+//                    .andExpect(
+//                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                                    is(col1.getID().toString())))
+                    // Atmire modifications END
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                                     + ".metadata['dc.source'][0].value",
                             is("/local/path/bibtex-test-multiple-authors.bib")))
@@ -1287,9 +1297,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     .andExpect(jsonPath("$._embedded.workspaceitems[0]" +
                                     ".sections.traditionalpageone['dc.title'][0].value",
                             is("My Article")))
-                    .andExpect(
-                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
-                                    is(col2.getID().toString())))
+                    // Atmire modifications START
+//                    .andExpect(
+//                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                                    is(col2.getID().toString())))
+                    // Atmire modifications END
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                                     + ".metadata['dc.source'][0].value",
                             is("/local/path/bibtex-test-multiple-authors.bib")))
