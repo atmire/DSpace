@@ -18,7 +18,7 @@ import org.dspace.app.rest.RestResourceController;
     @LinkRest(
         name = WorkspaceItemRest.SUPERVISION_ORDERS,
         method = "getSupervisionOrders"
-    )
+    ),
     @LinkRest(
             name = WorkspaceItemRest.SUBMITTER,
             method = "getWorkspaceItemSubmitter"
