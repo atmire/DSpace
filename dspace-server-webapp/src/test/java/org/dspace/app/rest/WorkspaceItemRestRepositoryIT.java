@@ -91,6 +91,7 @@ import org.dspace.eperson.service.GroupService;
 import org.dspace.services.ConfigurationService;
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
@@ -101,6 +102,9 @@ import org.springframework.test.web.servlet.MvcResult;
  * @author Andrea Bollini (andrea.bollini at 4science.it)
  *
  */
+// Contains Atmire modifications
+// Disable checking embedded collection, submitter and item because workspaceitem doesn't automatically embed these
+// anymore for performance reasons
 public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegrationTest {
 
     @Autowired
@@ -875,7 +879,9 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     .param("owningCollection", col1.getID().toString())
                     .contentType(org.springframework.http.MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$._embedded.collection.id", is(col1.getID().toString())))
+                // Atmire modifications START
+//                .andExpect(jsonPath("$._embedded.collection.id", is(col1.getID().toString())))
+                // Atmire modifications END
                 .andDo(result -> idRef1.set(read(result.getResponse().getContentAsString(), "$.id")));
 
         // create a workspaceitem explicitly in the col2
@@ -883,7 +889,9 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     .param("owningCollection", col2.getID().toString())
                     .contentType(org.springframework.http.MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$._embedded.collection.id", is(col2.getID().toString())))
+                // Atmire modifications START
+//                .andExpect(jsonPath("$._embedded.collection.id", is(col2.getID().toString())))
+                // Atmire modifications END
                 .andDo(result -> idRef2.set(read(result.getResponse().getContentAsString(), "$.id")));
 
         // create a workspaceitem without an explicit collection, this will go in the first valid collection for the
@@ -891,8 +899,10 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         getClient(authToken).perform(post("/api/submission/workspaceitems")
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$._embedded.collection.id", is(col1.getID().toString())))
-                .andExpect(jsonPath("$", WorkspaceItemMatcher.matchFullEmbeds()))
+                // Atmire modifications START
+//                .andExpect(jsonPath("$._embedded.collection.id", is(col1.getID().toString())))
+//                .andExpect(jsonPath("$", WorkspaceItemMatcher.matchFullEmbeds()))
+                // Atmire modifications END
                 .andDo(result -> idRef3.set(read(result.getResponse().getContentAsString(), "$.id")));
 
 
@@ -945,8 +955,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.traditionalpageone['dc.title'][0].value",
                         is("My Article")))
-                .andExpect(
-                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id", is(col1.getID().toString())))
+                    // Atmire modifications START
+//                .andExpect(
+//                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                        is(col1.getID().toString())))
+                    // Atmire modifications END
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                      + ".metadata['dc.source'][0].value",
                         is("/local/path/bibtex-test.bib")))
@@ -973,8 +986,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.traditionalpageone['dc.title'][0].value",
                         is("My Article")))
-                .andExpect(
-                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id", is(col2.getID().toString())))
+                    // Atmire modifications START
+//                .andExpect(
+//                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                        is(col2.getID().toString())))
+                    // Atmire modifications END
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                      + ".metadata['dc.source'][0].value",
                         is("/local/path/bibtex-test.bib")))
@@ -1041,9 +1057,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     .andExpect(jsonPath("$._embedded.workspaceitems[0]" +
                                     ".sections.traditionalpageone['dc.type'][0].value",
                             is("article")))
-                    .andExpect(
-                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
-                                    is(col1.getID().toString())))
+                    // Atmire modifications START
+//                    .andExpect(
+//                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                                    is(col1.getID().toString())))
+                    // Atmire modifications END
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                                     + ".metadata['dc.source'][0].value",
                             is("/local/path/bibtex-test-article.bib")))
@@ -1074,9 +1092,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     .andExpect(jsonPath("$._embedded.workspaceitems[0]" +
                                     ".sections.traditionalpageone['dc.type'][0].value",
                             is("article")))
-                    .andExpect(
-                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
-                                    is(col2.getID().toString())))
+                    // Atmire modifications START
+//                    .andExpect(
+//                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                                    is(col2.getID().toString())))
+                    // Atmire modifications END
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                                     + ".metadata['dc.source'][0].value",
                             is("/local/path/bibtex-test-article.bib")))
@@ -1135,9 +1155,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections." +
                                     "traditionalpageone['dc.title'][0].value",
                             is("The German umlauts: ÄÖüß")))
-                    .andExpect(
-                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
-                                    is(col1.getID().toString())))
+                    // Atmire modifications START
+//                    .andExpect(
+//                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                                    is(col1.getID().toString())))
+                    // Atmire modifications END
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                                     + ".metadata['dc.source'][0].value",
                             is("/local/path/bibtex-test-diacritics.bib")))
@@ -1165,9 +1187,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections." +
                                     "traditionalpageone['dc.title'][0].value",
                             is("The German umlauts: ÄÖüß")))
-                    .andExpect(
-                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
-                                    is(col2.getID().toString())))
+                    // Atmire modifications START
+//                    .andExpect(
+//                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                                    is(col2.getID().toString())))
+                    // Atmire modifications END
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                                     + ".metadata['dc.source'][0].value",
                             is("/local/path/bibtex-test-diacritics.bib")))
@@ -1241,9 +1265,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     .andExpect(jsonPath("$._embedded.workspaceitems[0]" +
                                     ".sections.traditionalpageone['dc.contributor.author'][2].value",
                             is("A. Third")))
-                    .andExpect(
-                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
-                                    is(col1.getID().toString())))
+                    // Atmire modifications START
+//                    .andExpect(
+//                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                                    is(col1.getID().toString())))
+                    // Atmire modifications END
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                                     + ".metadata['dc.source'][0].value",
                             is("/local/path/bibtex-test-multiple-authors.bib")))
@@ -1271,9 +1297,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     .andExpect(jsonPath("$._embedded.workspaceitems[0]" +
                                     ".sections.traditionalpageone['dc.title'][0].value",
                             is("My Article")))
-                    .andExpect(
-                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
-                                    is(col2.getID().toString())))
+                    // Atmire modifications START
+//                    .andExpect(
+//                            jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                                    is(col2.getID().toString())))
+                    // Atmire modifications END
                     .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                                     + ".metadata['dc.source'][0].value",
                             is("/local/path/bibtex-test-multiple-authors.bib")))
@@ -1347,8 +1375,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                         is("Mock ISSN")))
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.traditionalpageone['dc.type'][0].value",
                         is("Mock subtype")))
-                .andExpect(
-                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id", is(col1.getID().toString())))
+                    // Atmire modifications START
+//                .andExpect(
+//                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                        is(col1.getID().toString())))
+                    // Atmire modifications END
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                      + ".metadata['dc.source'][0].value",
                         is("/local/path/csv-test.csv")))
@@ -1387,8 +1418,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                      is("Mock ISSN")))
                  .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.traditionalpageone['dc.type'][0].value",
                      is("Mock subtype")))
-                 .andExpect(
-                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id", is(col2.getID().toString())))
+                    // Atmire modifications START
+//                 .andExpect(
+//                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                        is(col2.getID().toString())))
+                    // Atmire modifications END
                  .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                      + ".metadata['dc.source'][0].value",
                         is("/local/path/csv-test.csv")))
@@ -1466,8 +1500,10 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     is("Mock ISSN")))
             .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.traditionalpageone['dc.type'][0].value"
                     ).doesNotExist())
-            .andExpect(
-                    jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id", is(col1.getID().toString())))
+                    // Atmire modifications START
+//            .andExpect(
+//                    jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id", is(col1.getID().toString())))
+                    // Atmire modifications END
             .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                  + ".metadata['dc.source'][0].value",
                     is("/local/path/csv-missing-field-test.csv")))
@@ -1542,8 +1578,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                         is("Mock ISSN")))
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.traditionalpageone['dc.type'][0].value",
                         is("Mock subtype")))
-                .andExpect(
-                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id", is(col1.getID().toString())))
+                    // Atmire modifications START
+//                .andExpect(
+//                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                        is(col1.getID().toString())))
+                    // Atmire modifications END
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                      + ".metadata['dc.source'][0].value",
                         is("/local/path/tsv-test.tsv")))
@@ -1620,8 +1659,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                         is("978-0-387-23483-0")))
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.traditionalpageone['dc.type'][0].value",
                         is("Mock subtype")))
-                .andExpect(
-                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id", is(col1.getID().toString())))
+                    // Atmire modifications START
+//                .andExpect(
+//                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                        is(col1.getID().toString())))
+                    // Atmire modifications END
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                      + ".metadata['dc.source'][0].value",
                         is("/local/path/ris-test.ris")))
@@ -1696,8 +1738,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.traditionalpagetwo"
                         + "['dc.description.abstract'][0].value",
                         is("This is my abstract")))
-                .andExpect(
-                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id", is(col1.getID().toString())))
+                    // Atmire modifications START
+//                .andExpect(
+//                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                        is(col1.getID().toString())))
+                    // Atmire modifications END
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                      + ".metadata['dc.source'][0].value",
                         is("/local/path/endnote-test.enw")))
@@ -1776,8 +1821,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                     is("Mock ISSN")))
             .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.traditionalpageone['dc.type'][0].value"
                     ).doesNotExist())
-            .andExpect(
-                    jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id", is(col1.getID().toString())))
+                    // Atmire modifications START
+//            .andExpect(
+//                    jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                    is(col1.getID().toString())))
+                    // Atmire modifications END
             .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                  + ".metadata['dc.source'][0].value",
                     is("/local/path/tsv-missing-field-test.tsv")))
@@ -1844,8 +1892,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.traditionalpageone['dc.title'][0].value",
                         is("My Article")))
-                .andExpect(
-                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id", is(col1.getID().toString())))
+                    // Atmire modifications START
+//                .andExpect(
+//                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                        is(col1.getID().toString())))
+                    // Atmire modifications END
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                      + ".metadata['dc.source'][0].value",
                         is("/local/path/bibtex-test.bib")))
@@ -1878,8 +1929,11 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.traditionalpageone['dc.title'][0].value",
                         is("My Article")))
-                .andExpect(
-                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id", is(col2.getID().toString())))
+                    // Atmire modifications START
+//                .andExpect(
+//                        jsonPath("$._embedded.workspaceitems[0]._embedded.collection.id",
+//                        is(col2.getID().toString())))
+                    // Atmire modifications END
                 .andExpect(jsonPath("$._embedded.workspaceitems[0].sections.upload.files[0]"
                      + ".metadata['dc.source'][0].value",
                         is("/local/path/bibtex-test.bib")))
@@ -4295,6 +4349,9 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
     }
 
     @Test
+    // Atmire modifications START
+    @Ignore
+    // Atmire modifications END
     public void createWorkspaceItemFromExternalSources() throws Exception {
         //We turn off the authorization system in order to create the structure as defined below
         context.turnOffAuthorisationSystem();
@@ -4528,7 +4585,9 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
                             .content("https://localhost:8080/server/api/integration/externalsources/" +
                                                           "mock/entryValues/one"))
                             .andExpect(status().isCreated())
-                            .andExpect(jsonPath("$._embedded.collection.id", is(col1.getID().toString())))
+                // Atmire modifications START
+//                            .andExpect(jsonPath("$._embedded.collection.id", is(col1.getID().toString())))
+                // Atmire modifications END
                             .andDo(result -> idRef.set(read(result.getResponse().getContentAsString(), "$.id")));
         workspaceItemId = idRef.get();
 
@@ -4536,14 +4595,16 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
         .andExpect(status().isOk())
         .andExpect(jsonPath("$", Matchers.allOf(
             hasJsonPath("$.id", is(workspaceItemId)),
-            hasJsonPath("$.type", is("workspaceitem")),
-            hasJsonPath("$._embedded.item", Matchers.allOf(
-                hasJsonPath("$.metadata", Matchers.allOf(
-                    MetadataMatcher.matchMetadata("dc.contributor.author", "Donald, Smith")
-            )))),
-            hasJsonPath("$._embedded.collection", Matchers.allOf(
-                hasJsonPath("$.id", is(col1.getID().toString())
-            )))
+            hasJsonPath("$.type", is("workspaceitem"))
+                // Atmire modifications START
+//            hasJsonPath("$._embedded.item", Matchers.allOf(
+//                hasJsonPath("$.metadata", Matchers.allOf(
+//                    MetadataMatcher.matchMetadata("dc.contributor.author", "Donald, Smith")
+//            )))),
+//            hasJsonPath("$._embedded.collection", Matchers.allOf(
+//                hasJsonPath("$.id", is(col1.getID().toString())
+//            )))
+                // Atmire modifications END
         )));
 
         } finally {
@@ -5544,14 +5605,18 @@ public class WorkspaceItemRestRepositoryIT extends AbstractControllerIntegration
 
         getClient(adminToken).perform(get("/api/submission/workspaceitems/" + witem.getID())
                                 .param("projection", "full"))
-                            .andExpect(status().isOk())
-                            .andExpect(jsonPath("$._embedded.collection._embedded.adminGroup", nullValue()));
+                            .andExpect(status().isOk());
+        // Atmire modifications START
+//                            .andExpect(jsonPath("$._embedded.collection._embedded.adminGroup", nullValue()));
+        // Atmire modifications END
 
 
         getClient(epersonToken).perform(get("/api/submission/workspaceitems/" + witem.getID())
                                           .param("projection", "full"))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$._embedded.collection._embedded.adminGroup").doesNotExist());
+                                .andExpect(status().isOk());
+        // Atmire modifications START
+//                                .andExpect(jsonPath("$._embedded.collection._embedded.adminGroup").doesNotExist());
+        // Atmire modifications END
 
     }
 

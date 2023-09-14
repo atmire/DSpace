@@ -24,8 +24,6 @@ import org.dspace.app.util.SubmissionConfigReaderException;
 import org.dspace.app.util.SubmissionStepConfig;
 import org.dspace.content.Collection;
 import org.dspace.content.InProgressSubmission;
-import org.dspace.content.Item;
-import org.dspace.eperson.EPerson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
@@ -64,16 +62,7 @@ public abstract class AInprogressItemConverter<T extends InProgressSubmission,
 
     protected void fillFromModel(T obj, R witem, Projection projection) {
         Collection collection = obj.getCollection();
-        Item item = obj.getItem();
-        EPerson submitter = null;
-        submitter = obj.getSubmitter();
-
         witem.setId(obj.getID());
-        witem.setCollection(collection != null ? converter.toRest(collection, projection) : null);
-        witem.setItem(converter.toRest(item, projection));
-        if (submitter != null) {
-            witem.setSubmitter(converter.toRest(submitter, projection));
-        }
 
         // 1. retrieve the submission definition
         // 2. iterate over the submission section to allow to plugin additional
