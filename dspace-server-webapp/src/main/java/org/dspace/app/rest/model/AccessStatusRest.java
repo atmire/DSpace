@@ -10,11 +10,13 @@ package org.dspace.app.rest.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import org.dspace.app.rest.RestResourceController;
 
 /**
  * The Access Status REST Resource.
  */
-public class AccessStatusRest implements RestModel {
+public class AccessStatusRest extends RestAddressableModel {
+    public static final String CATEGORY = RestAddressableModel.CORE;
     public static final String NAME = "accessStatus";
 
     String status;
@@ -45,5 +47,15 @@ public class AccessStatusRest implements RestModel {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    @Override
+    public String getCategory() {
+        return CATEGORY;
+    }
+
+    @Override
+    public Class getController() {
+        return RestResourceController.class;
     }
 }
