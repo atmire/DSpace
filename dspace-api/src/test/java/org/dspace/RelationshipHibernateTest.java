@@ -11,7 +11,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 import org.dspace.builder.CollectionBuilder;
 import org.dspace.builder.CommunityBuilder;
 import org.dspace.builder.EntityTypeBuilder;
@@ -19,13 +22,16 @@ import org.dspace.builder.ItemBuilder;
 import org.dspace.builder.RelationshipBuilder;
 import org.dspace.builder.RelationshipTypeBuilder;
 import org.dspace.content.Collection;
+import org.dspace.content.DCDate;
 import org.dspace.content.EntityType;
 import org.dspace.content.Item;
+import org.dspace.content.MetadataValue;
 import org.dspace.content.Relationship;
 import org.dspace.content.RelationshipType;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.MetadataFieldService;
+import org.dspace.core.Context;
 import org.dspace.services.factory.DSpaceServicesFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,8 +64,6 @@ public class RelationshipHibernateTest extends AbstractIntegrationTestWithDataba
                 context, publicationType, personType, "isAuthorOfPublication",
                 "isPublicationOfAuthor", 0, 10, 0, 10
             )
-            .withCopyToLeft(false)
-            .withCopyToRight(false)
             .build();
 
 
@@ -85,12 +89,61 @@ public class RelationshipHibernateTest extends AbstractIntegrationTestWithDataba
     @Test
     public void test() throws Exception {
         int count = 0;
-        Iterator<Item> it = itemService.findAllUnfiltered(context);
-        while (it.hasNext()) {
-            Item item = it.next();
-            count += itemService.getMetadata(item, "*", "*", "*", "*", true).size();
+
+        Context ctx = new Context(Context.Mode.READ_ONLY);
+        ctx.turnOffAuthorisationSystem();
+
+        List<UUID> itemIds = new ArrayList<>();
+        Iterator<Item> it = itemService.findAllUnfiltered(ctx);
+        it.forEachRemaining(item -> itemIds.add(item.getID()));
+
+        List<String[]> results = new ArrayList<>();
+
+        for (UUID id : itemIds) {
+            Item item = itemService.find(ctx, id);
+            List<MetadataValue> mdvs = itemService.getMetadata(item, "*", "*", "*", "*", true);
+            for (MetadataValue mdv : mdvs) {
+                results.add(itemCSV(item));
+                results.add(metadataCSV(mdv, item));
+            }
         }
 
-        assertTrue(count > 0);
+        assertTrue(results.size() > 0);
+    }
+
+    private String[] itemCSV(Item item) {
+        List<MetadataValue> entityTypeMV = itemService.getMetadata(item, "dspace", "entity", "type", Item.ANY, false);
+        return new String[] {
+            item.getID().toString(),
+            item.getLegacyId() != null ? item.getLegacyId().toString() : null,
+            item.getSubmitter() != null ? item.getSubmitter().getID().toString() : null,
+            item.getSubmitter() != null && item.getSubmitter().getLegacyId() != null
+                ? item.getSubmitter().getLegacyId().toString() : null,
+            String.valueOf(item.isArchived()),
+            String.valueOf(item.isWithdrawn()),
+            item.getOwningCollection() != null ? item.getOwningCollection().getID().toString() : null,
+            item.getOwningCollection() != null && item.getOwningCollection().getLegacyId() != null
+                ? item.getOwningCollection().getLegacyId().toString() : null,
+            new DCDate(item.getLastModified()).toString(),
+            String.valueOf(item.isDiscoverable()),
+            entityTypeMV.size() > 0 ? entityTypeMV.get(0).getValue() : null
+        };
+    }
+
+    private String[] metadataCSV(MetadataValue mdv, Item item) {
+        boolean isVirtual = mdv.getAuthority() != null && mdv.getAuthority().startsWith("virtual::");
+        return new String[] {
+            isVirtual ? "virtual metadata" : mdv.getID().toString(),
+            item.getID().toString(),
+            mdv.getMetadataField().getID().toString(),
+            mdv.getValue(),
+            mdv.getLanguage(),
+            String.valueOf(mdv.getPlace()),
+            mdv.getAuthority(),
+            mdv.getMetadataField().getMetadataSchema().getName(),
+            mdv.getMetadataField().getElement(),
+            mdv.getMetadataField().getQualifier()
+        };
+
     }
 }
