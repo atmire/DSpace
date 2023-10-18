@@ -7,8 +7,6 @@
  */
 package org.dspace;
 
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 
 import org.dspace.builder.CollectionBuilder;
@@ -25,6 +23,7 @@ import org.dspace.content.RelationshipType;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.MetadataFieldService;
+import org.dspace.core.Context;
 import org.dspace.services.factory.DSpaceServicesFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,8 +56,6 @@ public class RelationshipHibernateTest extends AbstractIntegrationTestWithDataba
                 context, publicationType, personType, "isAuthorOfPublication",
                 "isPublicationOfAuthor", 0, 10, 0, 10
             )
-            .withCopyToLeft(false)
-            .withCopyToRight(false)
             .build();
 
 
@@ -83,6 +80,6 @@ public class RelationshipHibernateTest extends AbstractIntegrationTestWithDataba
 
     @Test
     public void test() throws Exception {
-        assertTrue(true);
+        new Context(Context.Mode.READ_ONLY);
     }
 }
