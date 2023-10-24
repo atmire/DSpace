@@ -153,11 +153,15 @@ public class DiscoveryRestController implements InitializingBean {
 
         //Get the Search results in JSON format
         try {
+            log.info("start getSearchObjects");
             SearchResultsRest searchResultsRest = discoveryRestRepository.getSearchObjects(query, dsoTypes, dsoScope,
                 configuration, searchFilters, page, utils.obtainProjection());
+            log.info("end getSearchObjects");
 
             //Convert the Search JSON results to paginated HAL resources
+            log.info("start SearchResultsResource");
             SearchResultsResource searchResultsResource = new SearchResultsResource(searchResultsRest, utils, page);
+            log.info("end SearchResultsResource");
             halLinkService.addLinks(searchResultsResource, page);
             return searchResultsResource;
         } catch (IllegalArgumentException e) {

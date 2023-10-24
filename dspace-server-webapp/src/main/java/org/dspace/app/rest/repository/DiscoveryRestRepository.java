@@ -102,8 +102,10 @@ public class DiscoveryRestRepository extends AbstractDSpaceRestRepository {
         DiscoverQuery discoverQuery = null;
 
         try {
+            log.info("start buildQuery");
             discoverQuery = queryBuilder
                 .buildQuery(context, scopeObject, discoveryConfiguration, query, searchFilters, dsoTypes, page);
+            log.info("end buildQuery");
             searchResult = searchService.search(context, scopeObject, discoverQuery);
 
         } catch (SearchServiceException e) {
@@ -111,9 +113,12 @@ public class DiscoveryRestRepository extends AbstractDSpaceRestRepository {
             throw new IllegalArgumentException("Error while searching with Discovery: " + e.getMessage());
         }
 
-        return discoverResultConverter
-            .convert(context, query, dsoTypes, configuration, dsoScope, searchFilters, page, searchResult,
-                     discoveryConfiguration, projection);
+        log.info("start convert");
+        SearchResultsRest convert = discoverResultConverter
+                .convert(context, query, dsoTypes, configuration, dsoScope, searchFilters, page, searchResult,
+                        discoveryConfiguration, projection);
+        log.info("end convert");
+        return convert;
     }
 
     public FacetConfigurationRest getFacetsConfiguration(final String dsoScope, final String configuration) {

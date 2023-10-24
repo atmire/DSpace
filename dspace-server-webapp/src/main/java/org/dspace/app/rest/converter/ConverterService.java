@@ -109,7 +109,9 @@ public class ConverterService {
     public <M, R> R toRest(M modelObject, Projection projection) {
         M transformedModel = projection.transformModel(modelObject);
         DSpaceConverter<M, R> converter = requireConverter(modelObject.getClass());
+        log.info("start convert " + modelObject.getClass());
         R restObject = converter.convert(transformedModel, projection);
+        log.info("end convert " + modelObject.getClass());
         if (restObject instanceof BaseObjectRest) {
             BaseObjectRest baseObjectRest = (BaseObjectRest) restObject;
             // This section will verify whether the current user has permissions to retrieve the
