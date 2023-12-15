@@ -551,25 +551,27 @@ public final class ChoiceAuthorityServiceImpl implements ChoiceAuthorityService 
 
     @Override
     public DSpaceControlledVocabularyIndex getVocabularyIndex(String nameVocab) {
+        DSpaceControlledVocabularyIndex result = null;
         if (this.vocabularyIndexMap.containsKey(nameVocab)) {
-            return this.vocabularyIndexMap.get(nameVocab);
+            result = this.vocabularyIndexMap.get(nameVocab);
         } else {
             init();
             ChoiceAuthority source = this.getChoiceAuthorityByAuthorityName(nameVocab);
-            if (source != null && source instanceof DSpaceControlledVocabulary) {
+            if (source != null && source instanceof DSpaceControlledVocabulary &&
+                ((DSpaceControlledVocabulary) source).includeInBrowse) {
                 Set<String> metadataFields = new HashSet<>();
                 Map<String, List<String>> formsToFields = this.authoritiesFormDefinitions.get(nameVocab);
                 for (Map.Entry<String, List<String>> formToField : formsToFields.entrySet()) {
                     metadataFields.addAll(formToField.getValue().stream().map(value ->
-                                    StringUtils.replace(value, "_", "."))
-                            .collect(Collectors.toList()));
+                                                                                  StringUtils.replace(value, "_", "."))
+                                                     .collect(Collectors.toList()));
                 }
                 DiscoverySearchFilterFacet matchingFacet = null;
                 for (DiscoverySearchFilterFacet facetConfig : searchConfigurationService.getAllFacetsConfig()) {
                     boolean coversAllFieldsFromVocab = true;
-                    for (String fieldFromVocab: metadataFields) {
+                    for (String fieldFromVocab : metadataFields) {
                         boolean coversFieldFromVocab = false;
-                        for (String facetMdField: facetConfig.getMetadataFields()) {
+                        for (String facetMdField : facetConfig.getMetadataFields()) {
                             if (facetMdField.startsWith(fieldFromVocab)) {
                                 coversFieldFromVocab = true;
                                 break;
@@ -586,12 +588,23 @@ public final class ChoiceAuthorityServiceImpl implements ChoiceAuthorityService 
                     }
                 }
                 DSpaceControlledVocabularyIndex vocabularyIndex =
-                        new DSpaceControlledVocabularyIndex((DSpaceControlledVocabulary) source, metadataFields,
-                                matchingFacet);
+                    new DSpaceControlledVocabularyIndex((DSpaceControlledVocabulary) source, metadataFields,
+                                                        matchingFacet);
                 this.vocabularyIndexMap.put(nameVocab, vocabularyIndex);
-                return vocabularyIndex;
+                result = vocabularyIndex;
             }
-            return null;
         }
+        if (result != null) {
+            if (result.facetConfig == null) {
+                log.error("The following vocabulary " + result.getName() +
+                              " has been excluded from the browses because the because no matching facet was found. " +
+                              "Ensure that every vocabulary either has matching discovery facet or is excplicitely " +
+                              "disabled in the configuration by setting \"vocabulary.plugin." +
+                              result.getName() + ".browse.enable = false\"");
+            } else {
+                return result;
+            }
+        }
+        return null;
     }
 }

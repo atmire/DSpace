@@ -235,6 +235,9 @@ it, please enter the types and the actual numbers or codes.</hint>
          <input-type>textarea</input-type>
          <hint>Enter any other description or comments in this box. </hint>
          <required></required>
+         <!-- Add a vocabulary that does not have a matching facet. -->
+         <!-- This should not break the browse vocabulary indexes. -->
+         <vocabulary>nsi</vocabulary>
        </field>
      </row>
    </form>

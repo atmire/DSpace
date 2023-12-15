@@ -143,6 +143,14 @@ public class BrowsesResourceControllerIT extends AbstractControllerIntegrationTe
     }
 
     @Test
+    public void findBrowseByVocabularyNoMatchingFacet() throws Exception {
+        //The nsi vocabulary has been added to the submission form with to a field without a facet
+        getClient().perform(get("/api/discover/browses/nsi"))
+                   //The status has to be 404 not found because the vocabulary has no matching facet
+                   .andExpect(status().isNotFound());
+    }
+
+    @Test
     public void findBrowseBySubject() throws Exception {
         //When we call the root endpoint
         getClient().perform(get("/api/discover/browses/subject"))

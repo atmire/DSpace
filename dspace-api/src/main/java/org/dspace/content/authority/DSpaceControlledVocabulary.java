@@ -74,6 +74,8 @@ public class DSpaceControlledVocabulary extends SelfNamedPlugin implements Hiera
     protected String hierarchyDelimiter = "::";
     protected Integer preloadLevel = 1;
 
+    protected boolean includeInBrowse = true;
+
     public DSpaceControlledVocabulary() {
         super();
     }
@@ -125,6 +127,7 @@ public class DSpaceControlledVocabulary extends SelfNamedPlugin implements Hiera
             storeHierarchy = config.getBooleanProperty(configurationPrefix + ".hierarchy.store", storeHierarchy);
             suggestHierarchy = config.getBooleanProperty(configurationPrefix + ".hierarchy.suggest", suggestHierarchy);
             preloadLevel = config.getIntProperty(configurationPrefix + ".hierarchy.preloadLevel", preloadLevel);
+            includeInBrowse = config.getBooleanProperty(configurationPrefix + ".browse.enable", includeInBrowse);
             String configuredDelimiter = config.getProperty(configurationPrefix + ".delimiter");
             if (configuredDelimiter != null) {
                 hierarchyDelimiter = configuredDelimiter.replaceAll("(^\"|\"$)", "");
