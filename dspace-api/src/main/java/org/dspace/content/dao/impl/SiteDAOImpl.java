@@ -8,6 +8,7 @@
 package org.dspace.content.dao.impl;
 
 import java.sql.SQLException;
+import java.util.UUID;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -25,16 +26,31 @@ import org.dspace.core.Context;
  * @author kevinvandevelde at atmire.com
  */
 public class SiteDAOImpl extends AbstractHibernateDAO<Site> implements SiteDAO {
+
+    private UUID cachedSiteId;
+
     protected SiteDAOImpl() {
         super();
     }
 
     @Override
     public Site findSite(Context context) throws SQLException {
+        if (cachedSiteId != null) {
+            Site site = findByID(context, Site.class, cachedSiteId);
+            if (site != null) {
+                return site;
+            } else {
+                cachedSiteId = null;
+            }
+        }
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
         CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, Site.class);
         Root<Site> siteRoot = criteriaQuery.from(Site.class);
         criteriaQuery.select(siteRoot);
-        return uniqueResult(context, criteriaQuery, true, Site.class, -1, -1);
+        Site site = uniqueResult(context, criteriaQuery, true, Site.class, -1, -1);
+        if (site != null) {
+            cachedSiteId = site.getID();
+        }
+        return site;
     }
 }
