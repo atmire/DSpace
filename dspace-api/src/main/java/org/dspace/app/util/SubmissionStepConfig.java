@@ -11,6 +11,9 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.apache.commons.lang3.BooleanUtils;
+import org.dspace.content.InProgressSubmission;
+import org.dspace.content.WorkspaceItem;
+import org.hibernate.proxy.HibernateProxyHelper;
 
 /**
  * Class representing configuration for a single step within an Item Submission
@@ -30,6 +33,7 @@ public class SubmissionStepConfig implements Serializable {
 
     public static final String INPUT_FORM_STEP_NAME = "submission-form";
     public static final String UPLOAD_STEP_NAME = "upload";
+    public static final String ACCESS_CONDITION_STEP_NAME = "accessCondition";
 
     /*
      * The identifier for the Select Collection step
@@ -170,6 +174,38 @@ public class SubmissionStepConfig implements Serializable {
 
     public String getVisibilityOutside() {
         return visibilityOutside;
+    }
+
+    /**
+     * Check if given submission section object is hidden for the current submission scope
+     *
+     * @param obj the InProgressSubmission to check
+     * @return true if the submission section is hidden, false otherwise
+     */
+    public boolean isHiddenForInProgressSubmission(InProgressSubmission obj) {
+
+        String scopeToCheck = getScope(obj);
+
+        if (scope == null || scopeToCheck == null) {
+            return false;
+        }
+
+        String visibility = getVisibility();
+        String visibilityOutside = getVisibilityOutside();
+
+        if (scope.equalsIgnoreCase(scopeToCheck)) {
+            return "hidden".equalsIgnoreCase(visibility);
+        } else {
+            return visibilityOutside == null || "hidden".equalsIgnoreCase(visibilityOutside);
+        }
+
+    }
+
+    private String getScope(InProgressSubmission obj) {
+        if (HibernateProxyHelper.getClassWithoutInitializingProxy(obj).equals(WorkspaceItem.class)) {
+            return "submission";
+        }
+        return "workflow";
     }
 
     /**

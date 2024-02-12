@@ -11,8 +11,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.browse.ItemCountException;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
@@ -52,6 +54,20 @@ public interface CommunityService extends DSpaceObjectService<Community>, DSpace
      */
     public Community create(Community parent, Context context, String handle)
         throws SQLException, AuthorizeException;
+
+    /**
+     * Create a new top-level community, with a new ID.
+     *
+     * @param parent  parent community
+     * @param context DSpace context object
+     * @param handle  the pre-determined Handle to assign to the new community
+     * @param uuid    the pre-determined uuid to assign to the new community
+     * @return the newly created community
+     * @throws SQLException       if database error
+     * @throws AuthorizeException if authorization error
+     */
+    public Community create(Community parent, Context context,
+                            String handle, UUID uuid) throws SQLException, AuthorizeException;
 
 
     /**
@@ -203,6 +219,20 @@ public interface CommunityService extends DSpaceObjectService<Community>, DSpace
         throws SQLException, AuthorizeException;
 
     /**
+     * Create a new sub-community within this community.
+     *
+     * @param context context
+     * @param handle the pre-determined Handle to assign to the new community
+     * @param parentCommunity parent community
+     * @param uuid the pre-determined UUID to assign to the new community
+     * @return the new community
+     * @throws SQLException if database error
+     * @throws AuthorizeException if authorization error
+     */
+    public Community createSubcommunity(Context context, Community parentCommunity, String handle, UUID uuid)
+            throws SQLException, AuthorizeException;
+
+    /**
      * Add an existing community as a subcommunity to the community
      *
      * @param context         context
@@ -263,4 +293,13 @@ public interface CommunityService extends DSpaceObjectService<Community>, DSpace
     public List<Community> findAuthorizedGroupMapped(Context context, List<Integer> actions) throws SQLException;
 
     int countTotal(Context context) throws SQLException;
+
+    /**
+     * Returns total community archived items
+     *
+     * @param community       Community
+     * @return                total community archived items
+     * @throws ItemCountException
+     */
+    int countArchivedItems(Community community) throws ItemCountException;
 }

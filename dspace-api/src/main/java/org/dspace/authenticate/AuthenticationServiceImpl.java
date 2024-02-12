@@ -179,10 +179,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         int totalLen = 0;
 
         for (AuthenticationMethod method : getAuthenticationMethodStack()) {
-            List<Group> gl = method.getSpecialGroups(context, request);
-            if (gl.size() > 0) {
-                result.addAll(gl);
-                totalLen += gl.size();
+
+            if (method.areSpecialGroupsApplicable(context, request)) {
+
+                List<Group> gl = method.getSpecialGroups(context, request);
+                if (gl.size() > 0) {
+                    result.addAll(gl);
+                    totalLen += gl.size();
+                }
+
             }
         }
 
@@ -192,5 +197,31 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public Iterator<AuthenticationMethod> authenticationMethodIterator() {
         return getAuthenticationMethodStack().iterator();
+    }
+
+    @Override
+    public String getAuthenticationMethod(final Context context, final HttpServletRequest request) {
+        final Iterator<AuthenticationMethod> authenticationMethodIterator = authenticationMethodIterator();
+
+        while (authenticationMethodIterator.hasNext()) {
+            final AuthenticationMethod authenticationMethod = authenticationMethodIterator.next();
+            if (authenticationMethod.isUsed(context, request)) {
+                return authenticationMethod.getName();
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public boolean canChangePassword(Context context, EPerson ePerson, String currentPassword) {
+
+        for (AuthenticationMethod method : getAuthenticationMethodStack()) {
+            if (method.getName().equals(context.getAuthenticationMethod())) {
+                return method.canChangePassword(context, ePerson, currentPassword);
+            }
+        }
+
+        return false;
     }
 }

@@ -21,9 +21,9 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.DiscoverableEndpointsService;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
-import org.dspace.app.rest.authorization.AuthorizationFeatureService;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.EPersonNameNotProvidedException;
+import org.dspace.app.rest.exception.PasswordNotValidException;
 import org.dspace.app.rest.exception.RESTEmptyWorkflowGroupException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.EPersonRest;
@@ -34,13 +34,15 @@ import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.util.AuthorizeUtil;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
-import org.dspace.content.service.SiteService;
+import org.dspace.authorize.service.ValidatePasswordService;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.EmptyWorkflowGroupException;
+import org.dspace.eperson.Group;
 import org.dspace.eperson.RegistrationData;
 import org.dspace.eperson.service.AccountService;
 import org.dspace.eperson.service.EPersonService;
+import org.dspace.eperson.service.GroupService;
 import org.dspace.eperson.service.RegistrationDataService;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,13 +76,13 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     private AccountService accountService;
 
     @Autowired
-    private AuthorizationFeatureService authorizationFeatureService;
-
-    @Autowired
-    private SiteService siteService;
+    private ValidatePasswordService validatePasswordService;
 
     @Autowired
     private RegistrationDataService registrationDataService;
+
+    @Autowired
+    private GroupService groupService;
 
     private final EPersonService es;
 
@@ -129,6 +131,9 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
             eperson.setEmail(epersonRest.getEmail());
             eperson.setNetid(epersonRest.getNetid());
             if (epersonRest.getPassword() != null) {
+                if (!validatePasswordService.isPasswordValid(epersonRest.getPassword())) {
+                    throw new PasswordNotValidException();
+                }
                 es.setPassword(eperson, epersonRest.getPassword());
             }
             es.update(context, eperson);
@@ -207,8 +212,8 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
             }
         }
         String password = epersonRest.getPassword();
-        if (!accountService.verifyPasswordStructure(password)) {
-            throw new DSpaceBadRequestException("The given password is invalid");
+        if (StringUtils.isBlank(password)) {
+            throw new DSpaceBadRequestException("A password is required");
         }
     }
 
@@ -289,20 +294,54 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
         }
     }
 
+    /**
+     * Find the EPersons matching the query parameter which are NOT a member of the given Group.
+     * The search is delegated to the
+     * {@link EPersonService#searchNonMembers(Context, String, Group, int, int)}  method
+     *
+     * @param groupUUID the *required* group UUID to exclude results from
+     * @param query    is the *required* query string
+     * @param pageable contains the pagination information
+     * @return a Page of EPersonRest instances matching the user query
+     */
+    @PreAuthorize("hasAuthority('ADMIN') || hasAuthority('MANAGE_ACCESS_GROUP')")
+    @SearchRestMethod(name = "isNotMemberOf")
+    public Page<EPersonRest> findIsNotMemberOf(@Parameter(value = "group", required = true) UUID groupUUID,
+                                             @Parameter(value = "query", required = true) String query,
+                                             Pageable pageable) {
+
+        try {
+            Context context = obtainContext();
+            Group excludeGroup = groupService.find(context, groupUUID);
+            long total = es.searchNonMembersCount(context, query, excludeGroup);
+            List<EPerson> epersons = es.searchNonMembers(context, query, excludeGroup,
+                                                     Math.toIntExact(pageable.getOffset()),
+                                                     Math.toIntExact(pageable.getPageSize()));
+            return converter.toRestPage(epersons, pageable, total, utils.obtainProjection());
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
     @Override
     @PreAuthorize("hasPermission(#uuid, 'EPERSON', #patch)")
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
                          Patch patch) throws AuthorizeException, SQLException {
-        if (StringUtils.isNotBlank(request.getParameter("token"))) {
-            boolean passwordChangeFound = false;
-            for (Operation operation : patch.getOperations()) {
-                if (StringUtils.equalsIgnoreCase(operation.getPath(), "/password")) {
-                    passwordChangeFound = true;
-                }
+        boolean passwordChangeFound = false;
+        for (Operation operation : patch.getOperations()) {
+            if (StringUtils.equalsIgnoreCase(operation.getPath(), "/password")) {
+                passwordChangeFound = true;
             }
+        }
+        if (StringUtils.isNotBlank(request.getParameter("token"))) {
             if (!passwordChangeFound) {
                 throw new AccessDeniedException("Refused to perform the EPerson patch based on a token without " +
                                                     "changing the password");
+            }
+        } else {
+            if (passwordChangeFound && !StringUtils.equals(context.getAuthenticationMethod(), "password")) {
+                throw new AccessDeniedException("Refused to perform the EPerson patch based to change the password " +
+                                                        "for non \"password\" authentication");
             }
         }
         patchDSpaceObject(apiCategory, model, uuid, patch);
@@ -331,6 +370,6 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     @Override
     public void afterPropertiesSet() throws Exception {
         discoverableEndpointsService.register(this, Arrays.asList(
-                new Link("/api/" + EPersonRest.CATEGORY + "/registrations", EPersonRest.NAME + "-registration")));
+                Link.of("/api/" + EPersonRest.CATEGORY + "/registrations", EPersonRest.NAME + "-registration")));
     }
 }

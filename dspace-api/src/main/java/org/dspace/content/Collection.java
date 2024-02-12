@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
@@ -28,6 +29,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.browse.ItemCountException;
 import org.dspace.content.comparator.NameAscendingComparator;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.CollectionService;
@@ -102,6 +104,16 @@ public class Collection extends DSpaceObject implements DSpaceObjectLegacySuppor
      */
     protected Collection() {
 
+    }
+
+    /**
+     * Takes a pre-determined UUID to be passed to the object to allow for the
+     * restoration of previously defined UUID's.
+     *
+     * @param uuid Takes a uuid to be passed to the Pre-Defined UUID Generator
+     */
+    protected Collection(UUID uuid) {
+        this.predefinedUUID = uuid;
     }
 
     @Override
@@ -323,6 +335,19 @@ public class Collection extends DSpaceObject implements DSpaceObjectLegacySuppor
             collectionService = ContentServiceFactory.getInstance().getCollectionService();
         }
         return collectionService;
+    }
+
+    /**
+     * return count of the collection items
+     *
+     * @return int
+     */
+    public int countArchivedItems() {
+        try {
+            return collectionService.countArchivedItems(this);
+        } catch (ItemCountException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

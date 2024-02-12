@@ -66,7 +66,7 @@ Common usage:
     <property name="irus-config" value="config/modules/irus-statistics.cfg" />
 
     <!-- Give user a chance to override without editing this file
-       (and without typing -D each time s/he compiles it) -->
+       (and without typing -D each time they compiles it) -->
     <property file="${user.home}/.dspace.properties" />
 
     <!-- Load the configurations -->
@@ -685,10 +685,6 @@ Common usage:
 
         <war destfile="${dspace.dir}/webapps/rdf.war">
             <fileset dir="${dspace.dir}/webapps/rdf/"/>
-        </war>
-
-        <war destfile="${dspace.dir}/webapps/rest.war">
-            <fileset dir="${dspace.dir}/webapps/rest/"/>
         </war>
 
         <war destfile="${dspace.dir}/webapps/sword.war">

@@ -29,8 +29,12 @@ import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.app.util.SubmissionStepConfig;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.content.MetadataValue;
+import org.dspace.content.RelationshipMetadataService;
+import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.core.Context;
 import org.dspace.core.Utils;
+import org.dspace.services.ConfigurationService;
+import org.dspace.services.factory.DSpaceServicesFactory;
 
 /**
  * Describe step for DSpace Spring Rest. Expose and allow patching of the in progress submission metadata. It is
@@ -43,7 +47,14 @@ public class DescribeStep extends AbstractProcessingStep {
 
     private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(DescribeStep.class);
 
+    // Input reader for form configuration
     private DCInputsReader inputReader;
+    // Configuration service
+    private final ConfigurationService configurationService =
+            DSpaceServicesFactory.getInstance().getConfigurationService();
+
+    private RelationshipMetadataService relationshipMetadataService =
+        ContentServiceFactory.getInstance().getRelationshipMetadataService();
 
     public DescribeStep() throws DCInputsReaderException {
         inputReader = new DCInputsReader();
@@ -64,16 +75,29 @@ public class DescribeStep extends AbstractProcessingStep {
 
     private void readField(InProgressSubmission obj, SubmissionStepConfig config, DataDescribe data,
                            DCInputSet inputConfig) throws DCInputsReaderException {
+        String documentTypeValue = "";
+        List<MetadataValue> documentType = itemService.getMetadataByMetadataString(obj.getItem(),
+                configurationService.getProperty("submit.type-bind.field", "dc.type"));
+        if (documentType.size() > 0) {
+            documentTypeValue = documentType.get(0).getValue();
+        }
+
+        // Get list of all field names (including qualdrop names) allowed for this dc.type
+        List<String> allowedFieldNames = inputConfig.populateAllowedFieldNames(documentTypeValue);
+
+        // Loop input rows and process submitted metadata
         for (DCInput[] row : inputConfig.getFields()) {
             for (DCInput input : row) {
-
                 List<String> fieldsName = new ArrayList<String>();
                 if (input.isQualdropValue()) {
                     for (Object qualifier : input.getPairs()) {
                         fieldsName.add(input.getFieldName() + "." + (String) qualifier);
                     }
                 } else {
-                    fieldsName.add(input.getFieldName());
+                    String fieldName = input.getFieldName();
+                    if (fieldName != null) {
+                        fieldsName.add(fieldName);
+                    }
                 }
 
 
@@ -91,20 +115,30 @@ public class DescribeStep extends AbstractProcessingStep {
                         String[] metadataToCheck = Utils.tokenize(md.getMetadataField().toString());
                         if (data.getMetadata().containsKey(
                             Utils.standardize(metadataToCheck[0], metadataToCheck[1], metadataToCheck[2], "."))) {
-                            data.getMetadata()
-                                .get(Utils.standardize(md.getMetadataField().getMetadataSchema().getName(),
-                                                       md.getMetadataField().getElement(),
-                                                       md.getMetadataField().getQualifier(),
-                                                       "."))
-                                .add(dto);
+                            // If field is allowed by type bind, add value to existing field set, otherwise remove
+                            // all values for this field
+                            if (allowedFieldNames.contains(fieldName)) {
+                                data.getMetadata()
+                                        .get(Utils.standardize(md.getMetadataField().getMetadataSchema().getName(),
+                                                md.getMetadataField().getElement(),
+                                                md.getMetadataField().getQualifier(),
+                                                "."))
+                                        .add(dto);
+                            } else {
+                                data.getMetadata().remove(Utils.standardize(metadataToCheck[0], metadataToCheck[1],
+                                        metadataToCheck[2], "."));
+                            }
                         } else {
-                            List<MetadataValueRest> listDto = new ArrayList<>();
-                            listDto.add(dto);
-                            data.getMetadata()
-                                .put(Utils.standardize(md.getMetadataField().getMetadataSchema().getName(),
-                                                       md.getMetadataField().getElement(),
-                                                       md.getMetadataField().getQualifier(),
-                                                       "."), listDto);
+                            // Add values only if allowed by type bind
+                            if (allowedFieldNames.contains(fieldName)) {
+                                List<MetadataValueRest> listDto = new ArrayList<>();
+                                listDto.add(dto);
+                                data.getMetadata()
+                                        .put(Utils.standardize(md.getMetadataField().getMetadataSchema().getName(),
+                                                md.getMetadataField().getElement(),
+                                                md.getMetadataField().getQualifier(),
+                                                "."), listDto);
+                            }
                         }
                     }
                 }

@@ -22,11 +22,11 @@ import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.RESTAuthorizationException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.AInprogressSubmissionRest;
+import org.dspace.app.rest.model.AccessConditionDTO;
 import org.dspace.app.rest.model.BitstreamRest;
 import org.dspace.app.rest.model.CheckSumRest;
 import org.dspace.app.rest.model.ErrorRest;
 import org.dspace.app.rest.model.MetadataValueRest;
-import org.dspace.app.rest.model.UploadBitstreamAccessConditionDTO;
 import org.dspace.app.rest.model.WorkspaceItemRest;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.model.step.DataCCLicense;
@@ -37,7 +37,6 @@ import org.dspace.app.rest.repository.WorkflowItemRestRepository;
 import org.dspace.app.rest.repository.WorkspaceItemRestRepository;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.util.SubmissionConfig;
-import org.dspace.app.util.SubmissionConfigReader;
 import org.dspace.app.util.SubmissionConfigReaderException;
 import org.dspace.app.util.SubmissionStepConfig;
 import org.dspace.authorize.AuthorizeException;
@@ -58,11 +57,14 @@ import org.dspace.license.service.CreativeCommonsService;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.RequestService;
 import org.dspace.services.model.Request;
+import org.dspace.submit.factory.SubmissionServiceFactory;
+import org.dspace.submit.service.SubmissionConfigService;
 import org.dspace.workflow.WorkflowException;
 import org.dspace.workflow.WorkflowItemService;
 import org.dspace.workflow.WorkflowService;
 import org.dspace.xmlworkflow.storedcomponents.XmlWorkflowItem;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.rest.webmvc.json.patch.PatchException;
 import org.springframework.jdbc.datasource.init.UncategorizedScriptException;
 import org.springframework.stereotype.Component;
@@ -94,14 +96,15 @@ public class SubmissionService {
     protected CreativeCommonsService creativeCommonsService;
     @Autowired
     private RequestService requestService;
+    @Lazy
     @Autowired
     private ConverterService converter;
     @Autowired
     private org.dspace.app.rest.utils.Utils utils;
-    private SubmissionConfigReader submissionConfigReader;
+    private SubmissionConfigService submissionConfigService;
 
     public SubmissionService() throws SubmissionConfigReaderException {
-        submissionConfigReader = new SubmissionConfigReader();
+        submissionConfigService = SubmissionServiceFactory.getInstance().getSubmissionConfigService();
     }
 
     /**
@@ -162,7 +165,7 @@ public class SubmissionService {
     /**
      * Build the rest representation of a bitstream as used in the upload section
      * ({@link DataUpload}. It contains all its metadata and the list of applied
-     * access conditions (@link {@link UploadBitstreamAccessConditionDTO}
+     * access conditions (@link {@link AccessConditionDTO}
      *
      * @param configurationService the DSpace ConfigurationService
      * @param source               the bitstream to translate in its rest submission
@@ -204,7 +207,7 @@ public class SubmissionService {
 
         for (ResourcePolicy rp : source.getResourcePolicies()) {
             if (ResourcePolicy.TYPE_CUSTOM.equals(rp.getRpType())) {
-                UploadBitstreamAccessConditionDTO uploadAccessCondition = createAccessConditionFromResourcePolicy(rp);
+                AccessConditionDTO uploadAccessCondition = createAccessConditionFromResourcePolicy(rp);
                 data.getAccessConditions().add(uploadAccessCondition);
             }
         }
@@ -250,7 +253,7 @@ public class SubmissionService {
             id = Integer.parseInt(split[1]);
             wsi = workspaceItemService.find(context, id);
         } catch (NumberFormatException e) {
-            throw new UnprocessableEntityException("The provided workspaceitem URI is not valid");
+            throw new UnprocessableEntityException("The provided workspaceitem URI is not valid", e);
         }
         if (wsi == null) {
             throw new UnprocessableEntityException("Workspace item is not found");
@@ -265,14 +268,14 @@ public class SubmissionService {
             wi = workflowService.start(context, wsi);
         } catch (IOException e) {
             throw new RuntimeException("The workflow could not be started for workspaceItem with" +
-                                               "id:  " + id);
+                                               " id:  " + id, e);
         }
 
         return wi;
     }
 
-    private UploadBitstreamAccessConditionDTO createAccessConditionFromResourcePolicy(ResourcePolicy rp) {
-        UploadBitstreamAccessConditionDTO accessCondition = new UploadBitstreamAccessConditionDTO();
+    private AccessConditionDTO createAccessConditionFromResourcePolicy(ResourcePolicy rp) {
+        AccessConditionDTO accessCondition = new AccessConditionDTO();
 
         accessCondition.setId(rp.getID());
         accessCondition.setName(rp.getRpName());
@@ -304,7 +307,9 @@ public class SubmissionService {
         result.setRights(creativeCommonsService.getLicenseName(item));
 
         Bitstream licenseRdfBitstream = creativeCommonsService.getLicenseRdfBitstream(item);
-        result.setFile(converter.toRest(licenseRdfBitstream, Projection.DEFAULT));
+        if (licenseRdfBitstream != null) {
+            result.setFile(converter.toRest(licenseRdfBitstream, Projection.DEFAULT));
+        }
 
         return result;
     }
@@ -325,7 +330,7 @@ public class SubmissionService {
             AInprogressSubmissionRest wsi, InProgressSubmission source, MultipartFile file) {
         List<ErrorRest> errors = new ArrayList<ErrorRest>();
         SubmissionConfig submissionConfig =
-            submissionConfigReader.getSubmissionConfigByName(wsi.getSubmissionDefinition().getName());
+            submissionConfigService.getSubmissionConfigByName(wsi.getSubmissionDefinition().getName());
         List<Object[]> stepInstancesAndConfigs = new ArrayList<Object[]>();
         // we need to run the preProcess of all the appropriate steps and move on to the
         // upload and postProcess step
@@ -392,7 +397,7 @@ public class SubmissionService {
     public void evaluatePatchToInprogressSubmission(Context context, HttpServletRequest request,
             InProgressSubmission source, AInprogressSubmissionRest wsi, String section, Operation op) {
         boolean sectionExist = false;
-        SubmissionConfig submissionConfig = submissionConfigReader
+        SubmissionConfig submissionConfig = submissionConfigService
                 .getSubmissionConfigByName(wsi.getSubmissionDefinition().getName());
         List<Object[]> stepInstancesAndConfigs = new ArrayList<Object[]>();
         // we need to run the preProcess of all the appropriate steps and move on to the

@@ -8,12 +8,14 @@
 package org.dspace.authorize.dao.impl;
 
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Root;
 
 import org.dspace.authorize.ResourcePolicy;
@@ -60,6 +62,9 @@ public class ResourcePolicyDAOImpl extends AbstractHibernateDAO<ResourcePolicy> 
                                        criteriaBuilder.equal(resourcePolicyRoot.get(ResourcePolicy_.rptype), type)
                    )
         );
+        List<Order> orderList = new LinkedList<>();
+        orderList.add(criteriaBuilder.asc(resourcePolicyRoot.get(ResourcePolicy_.id)));
+        criteriaQuery.orderBy(orderList);
         return list(context, criteriaQuery, false, ResourcePolicy.class, -1, -1);
     }
 
@@ -96,6 +101,19 @@ public class ResourcePolicyDAOImpl extends AbstractHibernateDAO<ResourcePolicy> 
                    )
         );
         return list(context, criteriaQuery, false, ResourcePolicy.class, -1, -1);
+    }
+
+    @Override
+    public void deleteByDsoAndTypeAndAction(Context context, DSpaceObject dso, String type, int actionId)
+        throws SQLException {
+        String queryString = "delete from ResourcePolicy where dSpaceObject.id = :dsoId "
+            + "AND rptype = :rptype AND actionId= :actionId";
+        Query query = createQuery(context, queryString);
+        query.setParameter("dsoId", dso.getID());
+        query.setParameter("rptype", type);
+        query.setParameter("actionId", actionId);
+        query.executeUpdate();
+
     }
 
     @Override

@@ -8,12 +8,17 @@
 package org.dspace.app.rest;
 
 import static com.jayway.jsonpath.JsonPath.read;
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -22,12 +27,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.dspace.app.rest.converter.DSpaceRunnableParameterConverter;
 import org.dspace.app.rest.matcher.BitstreamMatcher;
@@ -39,6 +45,8 @@ import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.builder.CollectionBuilder;
 import org.dspace.builder.CommunityBuilder;
+import org.dspace.builder.EPersonBuilder;
+import org.dspace.builder.GroupBuilder;
 import org.dspace.builder.ItemBuilder;
 import org.dspace.builder.ProcessBuilder;
 import org.dspace.content.Bitstream;
@@ -47,10 +55,13 @@ import org.dspace.content.Community;
 import org.dspace.content.Item;
 import org.dspace.content.ProcessStatus;
 import org.dspace.content.service.BitstreamService;
+import org.dspace.eperson.EPerson;
+import org.dspace.eperson.Group;
 import org.dspace.scripts.DSpaceCommandLineParameter;
 import org.dspace.scripts.Process;
 import org.dspace.scripts.configuration.ScriptConfiguration;
 import org.dspace.scripts.service.ProcessService;
+import org.dspace.services.ConfigurationService;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -69,6 +80,9 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
     private BitstreamService bitstreamService;
 
     @Autowired
+    private ConfigurationService configurationService;
+
+    @Autowired
     private List<ScriptConfiguration> scriptConfigurations;
 
     @Autowired
@@ -81,98 +95,175 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
         getClient(token).perform(get("/api/system/scripts"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$._embedded.scripts", containsInAnyOrder(
-                                ScriptMatcher.matchScript(scriptConfigurations.get(0).getName(),
-                                                          scriptConfigurations.get(0).getDescription()),
-                                ScriptMatcher.matchScript(scriptConfigurations.get(1).getName(),
-                                                          scriptConfigurations.get(1).getDescription()),
-                                ScriptMatcher.matchScript(scriptConfigurations.get(2).getName(),
-                                                          scriptConfigurations.get(2).getDescription()),
-                                ScriptMatcher.matchScript(scriptConfigurations.get(3).getName(),
-                                                          scriptConfigurations.get(3).getDescription()),
-                                ScriptMatcher.matchScript(scriptConfigurations.get(4).getName(),
-                                                      scriptConfigurations.get(4).getDescription()),
-                                ScriptMatcher.matchScript(scriptConfigurations.get(5).getName(),
-                                                      scriptConfigurations.get(5).getDescription()),
-                                ScriptMatcher.matchScript(scriptConfigurations.get(6).getName(),
-                                                          scriptConfigurations.get(6).getDescription()),
-                                ScriptMatcher.matchScript(scriptConfigurations.get(7).getName(),
-                                                          scriptConfigurations.get(7).getDescription())
+                            scriptConfigurations
+                                .stream()
+                                .map(scriptConfiguration -> ScriptMatcher.matchScript(
+                                    scriptConfiguration.getName(),
+                                    scriptConfiguration.getDescription()
+                                ))
+                                .collect(Collectors.toList())
                         )));
+    }
 
+    @Test
+    public void findAllScriptsSortedAlphabeticallyTest() throws Exception {
+        String token = getAuthToken(admin.getEmail(), password);
+
+        getClient(token).perform(get("/api/system/scripts")
+                        .param("size", String.valueOf(scriptConfigurations.size())))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.scripts", contains(
+                            scriptConfigurations
+                                .stream()
+                                .sorted(Comparator.comparing(ScriptConfiguration::getName))
+                                .map(scriptConfiguration -> ScriptMatcher.matchScript(
+                                    scriptConfiguration.getName(),
+                                    scriptConfiguration.getDescription()
+                                ))
+                                .collect(Collectors.toList())
+                        )));
     }
 
 
     @Test
-    public void findAllScriptsUnauthorizedTest() throws Exception {
+    public void findAllScriptsGenericLoggedInUserTest() throws Exception {
         String token = getAuthToken(eperson.getEmail(), password);
 
         getClient(token).perform(get("/api/system/scripts"))
-                        .andExpect(status().isForbidden());
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.page.totalElements", is(0)));
+    }
 
+    @Test
+    public void findAllScriptsAnonymousUserTest() throws Exception {
+        // this should be changed once we allow anonymous user to execute some scripts
+        getClient().perform(get("/api/system/scripts"))
+                   .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void findAllScriptsLocalAdminsTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+        EPerson comAdmin = EPersonBuilder.createEPerson(context)
+                .withEmail("comAdmin@example.com")
+                .withPassword(password).build();
+        EPerson colAdmin = EPersonBuilder.createEPerson(context)
+                .withEmail("colAdmin@example.com")
+                .withPassword(password).build();
+        EPerson itemAdmin = EPersonBuilder.createEPerson(context)
+                .withEmail("itemAdmin@example.com")
+                .withPassword(password).build();
+        Community community = CommunityBuilder.createCommunity(context)
+                                          .withName("Community")
+                                          .withAdminGroup(comAdmin)
+                                          .build();
+        Collection collection = CollectionBuilder.createCollection(context, community)
+                                                .withName("Collection")
+                                                .withAdminGroup(colAdmin)
+                                                .build();
+        ItemBuilder.createItem(context, collection).withAdminUser(itemAdmin)
+                .withTitle("Test item to curate").build();
+        context.restoreAuthSystemState();
+        ScriptConfiguration curateScriptConfiguration =
+                scriptConfigurations.stream().filter(scriptConfiguration
+                        -> scriptConfiguration.getName().equals("curate"))
+            .findAny().get();
+
+        // the local admins have at least access to the curate script
+        // and not access to process-cleaner script
+        String comAdminToken = getAuthToken(comAdmin.getEmail(), password);
+        getClient(comAdminToken).perform(get("/api/system/scripts").param("size", "100"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.scripts", Matchers.hasItem(
+                                ScriptMatcher.matchScript(curateScriptConfiguration.getName(),
+                                        curateScriptConfiguration.getDescription()))))
+                        .andExpect(jsonPath("$.page.totalElements", greaterThanOrEqualTo(1)));
+        String colAdminToken = getAuthToken(colAdmin.getEmail(), password);
+        getClient(colAdminToken).perform(get("/api/system/scripts").param("size", "100"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.scripts", Matchers.hasItem(
+                                ScriptMatcher.matchScript(curateScriptConfiguration.getName(),
+                                        curateScriptConfiguration.getDescription()))))
+                        .andExpect(jsonPath("$.page.totalElements", greaterThanOrEqualTo(1)));
+        String itemAdminToken = getAuthToken(itemAdmin.getEmail(), password);
+        getClient(itemAdminToken).perform(get("/api/system/scripts").param("size", "100"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.scripts", Matchers.hasItem(
+                                ScriptMatcher.matchScript(curateScriptConfiguration.getName(),
+                                        curateScriptConfiguration.getDescription()))))
+                        .andExpect(jsonPath("$.page.totalElements", greaterThanOrEqualTo(1)));
     }
 
     @Test
     public void findAllScriptsPaginationTest() throws Exception {
+        List<ScriptConfiguration> alphabeticScripts =
+            scriptConfigurations.stream()
+                                .sorted(Comparator.comparing(ScriptConfiguration::getName))
+                                .collect(Collectors.toList());
+
+        int totalPages = scriptConfigurations.size();
+        int lastPage = totalPages - 1;
 
         String token = getAuthToken(admin.getEmail(), password);
 
+        // NOTE: the scripts are always returned in alphabetical order by fully qualified class name.
         getClient(token).perform(get("/api/system/scripts").param("size", "1"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$._embedded.scripts", Matchers.not(Matchers.hasItem(
-                                ScriptMatcher.matchScript(scriptConfigurations.get(2).getName(),
-                                                          scriptConfigurations.get(2).getDescription())
+                            ScriptMatcher.matchScript(alphabeticScripts.get(1).getName(),
+                                                      alphabeticScripts.get(1).getDescription())
                         ))))
                         .andExpect(jsonPath("$._embedded.scripts", hasItem(
-                                ScriptMatcher.matchScript(scriptConfigurations.get(5).getName(),
-                                                          scriptConfigurations.get(5).getDescription())
+                            ScriptMatcher.matchScript(alphabeticScripts.get(0).getName(),
+                                                      alphabeticScripts.get(0).getDescription())
                         )))
                         .andExpect(jsonPath("$._links.first.href", Matchers.allOf(
-                                Matchers.containsString("/api/system/scripts?"),
-                                Matchers.containsString("page=0"), Matchers.containsString("size=1"))))
+                            Matchers.containsString("/api/system/scripts?"),
+                            Matchers.containsString("page=0"), Matchers.containsString("size=1"))))
                         .andExpect(jsonPath("$._links.self.href", Matchers.allOf(
-                                Matchers.containsString("/api/system/scripts?"),
-                                Matchers.containsString("size=1"))))
+                            Matchers.containsString("/api/system/scripts?"),
+                            Matchers.containsString("size=1"))))
                         .andExpect(jsonPath("$._links.next.href", Matchers.allOf(
-                                Matchers.containsString("/api/system/scripts?"),
-                                Matchers.containsString("page=1"), Matchers.containsString("size=1"))))
+                            Matchers.containsString("/api/system/scripts?"),
+                            Matchers.containsString("page=1"), Matchers.containsString("size=1"))))
                         .andExpect(jsonPath("$._links.last.href", Matchers.allOf(
-                                Matchers.containsString("/api/system/scripts?"),
-                                Matchers.containsString("page=7"), Matchers.containsString("size=1"))))
+                            Matchers.containsString("/api/system/scripts?"),
+                            Matchers.containsString("page=" + lastPage), Matchers.containsString("size=1"))))
                         .andExpect(jsonPath("$.page.size", is(1)))
                         .andExpect(jsonPath("$.page.number", is(0)))
-                        .andExpect(jsonPath("$.page.totalPages", is(8)))
-                        .andExpect(jsonPath("$.page.totalElements", is(8)));
+                        .andExpect(jsonPath("$.page.totalPages", is(totalPages)))
+                        .andExpect(jsonPath("$.page.totalElements", is(totalPages)));
 
 
         getClient(token).perform(get("/api/system/scripts").param("size", "1").param("page", "1"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$._embedded.scripts", hasItem(
-                                ScriptMatcher.matchScript(scriptConfigurations.get(2).getName(),
-                                                          scriptConfigurations.get(2).getDescription())
+                            ScriptMatcher.matchScript(alphabeticScripts.get(1).getName(),
+                                                      alphabeticScripts.get(1).getDescription())
                         )))
                         .andExpect(jsonPath("$._embedded.scripts", Matchers.not(hasItem(
-                                ScriptMatcher.matchScript(scriptConfigurations.get(5).getName(),
-                                                          scriptConfigurations.get(5).getDescription())
+                            ScriptMatcher.matchScript(alphabeticScripts.get(0).getName(),
+                                                      alphabeticScripts.get(0).getDescription())
                         ))))
                         .andExpect(jsonPath("$._links.first.href", Matchers.allOf(
-                                Matchers.containsString("/api/system/scripts?"),
-                                Matchers.containsString("page=0"), Matchers.containsString("size=1"))))
+                            Matchers.containsString("/api/system/scripts?"),
+                            Matchers.containsString("page=0"), Matchers.containsString("size=1"))))
                         .andExpect(jsonPath("$._links.prev.href", Matchers.allOf(
-                                Matchers.containsString("/api/system/scripts?"),
-                                Matchers.containsString("page=0"), Matchers.containsString("size=1"))))
+                            Matchers.containsString("/api/system/scripts?"),
+                            Matchers.containsString("page=0"), Matchers.containsString("size=1"))))
                         .andExpect(jsonPath("$._links.self.href", Matchers.allOf(
-                                Matchers.containsString("/api/system/scripts?"),
-                                Matchers.containsString("page=1"), Matchers.containsString("size=1"))))
+                            Matchers.containsString("/api/system/scripts?"),
+                            Matchers.containsString("page=1"), Matchers.containsString("size=1"))))
                         .andExpect(jsonPath("$._links.next.href", Matchers.allOf(
-                                Matchers.containsString("/api/system/scripts?"),
-                                Matchers.containsString("page=2"), Matchers.containsString("size=1"))))
+                            Matchers.containsString("/api/system/scripts?"),
+                            Matchers.containsString("page=2"), Matchers.containsString("size=1"))))
                         .andExpect(jsonPath("$._links.last.href", Matchers.allOf(
-                                Matchers.containsString("/api/system/scripts?"),
-                                Matchers.containsString("page=7"), Matchers.containsString("size=1"))))
+                            Matchers.containsString("/api/system/scripts?"),
+                            Matchers.containsString("page=" + lastPage), Matchers.containsString("size=1"))))
                         .andExpect(jsonPath("$.page.size", is(1)))
                         .andExpect(jsonPath("$.page.number", is(1)))
-                        .andExpect(jsonPath("$.page.totalPages", is(8)))
-                        .andExpect(jsonPath("$.page.totalElements", is(8)));
+                        .andExpect(jsonPath("$.page.totalPages", is(totalPages)))
+                        .andExpect(jsonPath("$.page.totalElements", is(totalPages)));
     }
 
     @Test
@@ -182,8 +273,73 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
         getClient(token).perform(get("/api/system/scripts/mock-script"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$", ScriptMatcher
-                                .matchMockScript(
-                                        scriptConfigurations.get(scriptConfigurations.size() - 1).getOptions())));
+                            .matchMockScript(
+                                scriptConfigurations
+                                    .stream()
+                                    .filter(scriptConfiguration
+                                                -> scriptConfiguration.getName().equals("mock-script"))
+                                    .findAny()
+                                    .orElseThrow()
+                                    .getOptions()
+                            )
+                        ));
+    }
+
+    @Test
+    public void findOneScriptByNameLocalAdminsTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+        EPerson comAdmin = EPersonBuilder.createEPerson(context)
+                .withEmail("comAdmin@example.com")
+                .withPassword(password).build();
+        EPerson colAdmin = EPersonBuilder.createEPerson(context)
+                .withEmail("colAdmin@example.com")
+                .withPassword(password).build();
+        EPerson itemAdmin = EPersonBuilder.createEPerson(context)
+                .withEmail("itemAdmin@example.com")
+                .withPassword(password).build();
+        Community community = CommunityBuilder.createCommunity(context)
+                                          .withName("Community")
+                                          .withAdminGroup(comAdmin)
+                                          .build();
+        Collection collection = CollectionBuilder.createCollection(context, community)
+                                                .withName("Collection")
+                                                .withAdminGroup(colAdmin)
+                                                .build();
+        ItemBuilder.createItem(context, collection).withAdminUser(itemAdmin)
+                .withTitle("Test item to curate").build();
+        context.restoreAuthSystemState();
+        ScriptConfiguration curateScriptConfiguration =
+                scriptConfigurations.stream().filter(scriptConfiguration
+                        -> scriptConfiguration.getName().equals("curate"))
+            .findAny().get();
+
+        String comAdminToken = getAuthToken(comAdmin.getEmail(), password);
+        String colAdminToken = getAuthToken(colAdmin.getEmail(), password);
+        String itemAdminToken = getAuthToken(itemAdmin.getEmail(), password);
+        getClient(comAdminToken).perform(get("/api/system/scripts/" + curateScriptConfiguration.getName()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$", ScriptMatcher
+                .matchScript(
+                        curateScriptConfiguration.getName(),
+                        curateScriptConfiguration.getDescription())));
+        getClient(colAdminToken).perform(get("/api/system/scripts/" + curateScriptConfiguration.getName()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$", ScriptMatcher
+                .matchScript(
+                        curateScriptConfiguration.getName(),
+                        curateScriptConfiguration.getDescription())));
+        getClient(itemAdminToken).perform(get("/api/system/scripts/" + curateScriptConfiguration.getName()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$", ScriptMatcher
+                .matchScript(
+                        curateScriptConfiguration.getName(),
+                        curateScriptConfiguration.getDescription())));
+    }
+
+    @Test
+    public void findOneScriptByNameNotAuthenticatedTest() throws Exception {
+        getClient().perform(get("/api/system/scripts/mock-script"))
+                        .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -199,34 +355,67 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
         String token = getAuthToken(admin.getEmail(), password);
 
         getClient(token).perform(get("/api/system/scripts/mock-script-invalid"))
-                   .andExpect(status().isBadRequest());
+                   .andExpect(status().isNotFound());
     }
 
+    /**
+     * This test will create a basic structure of communities, collections and items with some local admins at each
+     * level and verify that the local admins, nor generic users can run scripts reserved to administrator
+     * (i.e. default one that don't override the default
+     * {@link ScriptConfiguration#isAllowedToExecute(org.dspace.core.Context, List)} method implementation
+     */
     @Test
     public void postProcessNonAdminAuthorizeException() throws Exception {
+        context.turnOffAuthorisationSystem();
+        EPerson comAdmin = EPersonBuilder.createEPerson(context)
+                .withEmail("comAdmin@example.com")
+                .withPassword(password).build();
+        EPerson colAdmin = EPersonBuilder.createEPerson(context)
+                .withEmail("colAdmin@example.com")
+                .withPassword(password).build();
+        EPerson itemAdmin = EPersonBuilder.createEPerson(context)
+                .withEmail("itemAdmin@example.com")
+                .withPassword(password).build();
+        Community community = CommunityBuilder.createCommunity(context)
+                                          .withName("Community")
+                                          .withAdminGroup(comAdmin)
+                                          .build();
+        Collection collection = CollectionBuilder.createCollection(context, community)
+                                                .withName("Collection")
+                                                .withAdminGroup(colAdmin)
+                                                .build();
+        Item item = ItemBuilder.createItem(context, collection).withAdminUser(itemAdmin)
+                                .withTitle("Test item to curate").build();
+        context.restoreAuthSystemState();
 
         String token = getAuthToken(eperson.getEmail(), password);
-
-        getClient(token).perform(post("/api/system/scripts/mock-script/processes").contentType("multipart/form-data"))
+        String comAdmin_token = getAuthToken(eperson.getEmail(), password);
+        String colAdmin_token = getAuthToken(eperson.getEmail(), password);
+        String itemAdmin_token = getAuthToken(eperson.getEmail(), password);
+        getClient(token).perform(multipart("/api/system/scripts/mock-script/processes"))
+                        .andExpect(status().isForbidden());
+        getClient(comAdmin_token).perform(multipart("/api/system/scripts/mock-script/processes"))
+                        .andExpect(status().isForbidden());
+        getClient(colAdmin_token).perform(multipart("/api/system/scripts/mock-script/processes"))
+                        .andExpect(status().isForbidden());
+        getClient(itemAdmin_token).perform(multipart("/api/system/scripts/mock-script/processes"))
                         .andExpect(status().isForbidden());
     }
 
     @Test
     public void postProcessAnonymousAuthorizeException() throws Exception {
-        getClient().perform(post("/api/system/scripts/mock-script/processes").contentType("multipart/form-data"))
+        getClient().perform(multipart("/api/system/scripts/mock-script/processes"))
                    .andExpect(status().isUnauthorized());
     }
 
     @Test
     public void postProcessAdminWrongOptionsException() throws Exception {
-
-
         String token = getAuthToken(admin.getEmail(), password);
         AtomicReference<Integer> idRef = new AtomicReference<>();
 
         try {
             getClient(token)
-                    .perform(post("/api/system/scripts/mock-script/processes").contentType("multipart/form-data"))
+                    .perform(multipart("/api/system/scripts/mock-script/processes"))
                     .andExpect(status().isAccepted())
                     .andExpect(jsonPath("$", is(
                             ProcessMatcher.matchProcess("mock-script",
@@ -244,16 +433,6 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
     @Test
     public void postProcessAdminNoOptionsFailedStatus() throws Exception {
 
-//        List<ParameterValueRest> list = new LinkedList<>();
-//
-//        ParameterValueRest parameterValueRest = new ParameterValueRest();
-//        parameterValueRest.setName("-z");
-//        parameterValueRest.setValue("test");
-//        ParameterValueRest parameterValueRest1 = new ParameterValueRest();
-//        parameterValueRest1.setName("-q");
-//        list.add(parameterValueRest);
-//        list.add(parameterValueRest1);
-
         LinkedList<DSpaceCommandLineParameter> parameters = new LinkedList<>();
 
         parameters.add(new DSpaceCommandLineParameter("-z", "test"));
@@ -270,9 +449,8 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         try {
             getClient(token)
-                    .perform(post("/api/system/scripts/mock-script/processes").contentType("multipart/form-data")
-                                                                              .param("properties",
-                                                                                     new Gson().toJson(list)))
+                    .perform(multipart("/api/system/scripts/mock-script/processes")
+                                 .param("properties", new ObjectMapper().writeValueAsString(list)))
                     .andExpect(status().isAccepted())
                     .andExpect(jsonPath("$", is(
                             ProcessMatcher.matchProcess("mock-script",
@@ -289,9 +467,8 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
     public void postProcessNonExistingScriptNameException() throws Exception {
         String token = getAuthToken(admin.getEmail(), password);
 
-        getClient(token).perform(post("/api/system/scripts/mock-script-invalid/processes")
-                                         .contentType("multipart/form-data"))
-                        .andExpect(status().isBadRequest());
+        getClient(token).perform(multipart("/api/system/scripts/mock-script-invalid/processes"))
+                        .andExpect(status().isNotFound());
     }
 
     @Test
@@ -316,9 +493,8 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         try {
             getClient(token)
-                    .perform(post("/api/system/scripts/mock-script/processes").contentType("multipart/form-data")
-                                                                              .param("properties",
-                                                                                     new Gson().toJson(list)))
+                    .perform(multipart("/api/system/scripts/mock-script/processes")
+                                 .param("properties", new ObjectMapper().writeValueAsString(list)))
                     .andExpect(status().isAccepted())
                     .andExpect(jsonPath("$", is(
                             ProcessMatcher.matchProcess("mock-script",
@@ -354,9 +530,8 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         try {
             getClient(token)
-                    .perform(post("/api/system/scripts/mock-script/processes").contentType("multipart/form-data")
-                                                                              .param("properties",
-                                                                                     new Gson().toJson(list)))
+                    .perform(multipart("/api/system/scripts/mock-script/processes")
+                                 .param("properties", new ObjectMapper().writeValueAsString(list)))
                     .andExpect(status().isAccepted())
                     .andExpect(jsonPath("$", is(
                             ProcessMatcher.matchProcess("mock-script",
@@ -405,12 +580,19 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
     }
 
 
+
+
     @Test
     public void postProcessAdminWithWrongContentTypeBadRequestException() throws Exception {
 
         String token = getAuthToken(admin.getEmail(), password);
+
+        getClient(token)
+                .perform(post("/api/system/scripts/mock-script/processes"))
+                .andExpect(status().isBadRequest());
+
         getClient(token).perform(post("/api/system/scripts/mock-script-invalid/processes"))
-                        .andExpect(status().isBadRequest());
+                        .andExpect(status().isNotFound());
     }
 
     @Test
@@ -461,9 +643,10 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         try {
             getClient(token)
-                    .perform(fileUpload("/api/system/scripts/mock-script/processes").file(bitstreamFile)
-                                                                                    .param("properties",
-                                                                                           new Gson().toJson(list)))
+                    .perform(multipart("/api/system/scripts/mock-script/processes")
+                                 .file(bitstreamFile)
+                                 .characterEncoding("UTF-8")
+                                 .param("properties", new ObjectMapper().writeValueAsString(list)))
                     .andExpect(status().isAccepted())
                     .andExpect(jsonPath("$", is(
                             ProcessMatcher.matchProcess("mock-script",
@@ -477,9 +660,103 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
         }
     }
 
+    @Test
+    public void scriptTypeConversionTest() throws Exception {
+        String token = getAuthToken(admin.getEmail(), password);
+
+        getClient(token).perform(get("/api/system/scripts/type-conversion-test"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$", ScriptMatcher
+                                .matchScript("type-conversion-test",
+                                             "Test the type conversion different option types")))
+                        .andExpect(jsonPath("$.parameters", containsInAnyOrder(
+                                allOf(
+                                        hasJsonPath("$.name", is("-b")),
+                                        hasJsonPath("$.description", is("option set to the boolean class")),
+                                        hasJsonPath("$.type", is("boolean")),
+                                        hasJsonPath("$.mandatory", is(false)),
+                                        hasJsonPath("$.nameLong", is("--boolean"))
+                                ),
+                                allOf(
+                                        hasJsonPath("$.name", is("-s")),
+                                        hasJsonPath("$.description", is("string option with an argument")),
+                                        hasJsonPath("$.type", is("String")),
+                                        hasJsonPath("$.mandatory", is(false)),
+                                        hasJsonPath("$.nameLong", is("--string"))
+                                ),
+                                allOf(
+                                        hasJsonPath("$.name", is("-n")),
+                                        hasJsonPath("$.description", is("string option without an argument")),
+                                        hasJsonPath("$.type", is("boolean")),
+                                        hasJsonPath("$.mandatory", is(false)),
+                                        hasJsonPath("$.nameLong", is("--noargument"))
+                                ),
+                                allOf(
+                                        hasJsonPath("$.name", is("-f")),
+                                        hasJsonPath("$.description", is("file option with an argument")),
+                                        hasJsonPath("$.type", is("InputStream")),
+                                        hasJsonPath("$.mandatory", is(false)),
+                                        hasJsonPath("$.nameLong", is("--file"))
+                                )
+                        ) ));
+    }
+
+    @Test
+    public void TrackSpecialGroupduringprocessSchedulingTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+
+        Group specialGroup = GroupBuilder.createGroup(context)
+            .withName("Special Group")
+            .addMember(admin)
+            .build();
+
+        context.restoreAuthSystemState();
+
+        configurationService.setProperty("authentication-password.login.specialgroup", specialGroup.getName());
+
+        LinkedList<DSpaceCommandLineParameter> parameters = new LinkedList<>();
+
+        parameters.add(new DSpaceCommandLineParameter("-r", "test"));
+        parameters.add(new DSpaceCommandLineParameter("-i", null));
+
+        List<ParameterValueRest> list = parameters.stream()
+            .map(dSpaceCommandLineParameter -> dSpaceRunnableParameterConverter
+                .convert(dSpaceCommandLineParameter, Projection.DEFAULT))
+            .collect(Collectors.toList());
+
+
+
+        String token = getAuthToken(admin.getEmail(), password);
+        List<ProcessStatus> acceptableProcessStatuses = new LinkedList<>();
+        acceptableProcessStatuses.addAll(Arrays.asList(ProcessStatus.SCHEDULED,
+                                                       ProcessStatus.RUNNING,
+                                                       ProcessStatus.COMPLETED));
+
+        AtomicReference<Integer> idRef = new AtomicReference<>();
+
+        try {
+            getClient(token).perform(post("/api/system/scripts/mock-script/processes")
+                                         .contentType("multipart/form-data")
+                                         .param("properties", new ObjectMapper().writeValueAsString(list)))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$", is(ProcessMatcher.matchProcess("mock-script",
+                                                                        String.valueOf(admin.getID()),
+                                                                        parameters, acceptableProcessStatuses))))
+                .andDo(result -> idRef.set(read(result.getResponse().getContentAsString(), "$.processId")));
+
+            Process process = processService.find(context, idRef.get());
+            List<Group> groups = process.getGroups();
+            boolean isPresent = groups.stream().anyMatch(g -> g.getID().equals(specialGroup.getID()));
+            assertTrue(isPresent);
+
+        } finally {
+            ProcessBuilder.deleteProcess(idRef.get());
+        }
+    }
 
     @After
     public void destroy() throws Exception {
+        context.turnOffAuthorisationSystem();
         CollectionUtils.emptyIfNull(processService.findAll(context)).stream().forEach(process -> {
             try {
                 processService.delete(context, process);
@@ -487,6 +764,7 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
                 throw new RuntimeException(e);
             }
         });
+        context.restoreAuthSystemState();
         super.destroy();
     }
 

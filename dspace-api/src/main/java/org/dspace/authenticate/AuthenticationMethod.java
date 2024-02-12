@@ -154,6 +154,22 @@ public interface AuthenticationMethod {
         throws SQLException;
 
     /**
+     * Returns true if the special groups returned by
+     * {@link org.dspace.authenticate.AuthenticationMethod#getSpecialGroups(Context, HttpServletRequest)}
+     * should be implicitly be added to the groups related to the current user. By
+     * default this is true if the authentication method is the actual
+     * authentication mechanism used by the user.
+     * @param  context A valid DSpace context.
+     * @param  request The request that started this operation, or null if not
+     *                 applicable.
+     * @return         true is the special groups must be considered, false
+     *                 otherwise
+     */
+    public default boolean areSpecialGroupsApplicable(Context context, HttpServletRequest request) {
+        return getName().equals(context.getAuthenticationMethod());
+    }
+
+    /**
      * Authenticate the given or implicit credentials.
      * This is the heart of the authentication method: test the
      * credentials for authenticity, and if accepted, attempt to match
@@ -216,4 +232,23 @@ public interface AuthenticationMethod {
      * @return The authentication method name
      */
     public String getName();
+
+    /**
+     * Get whether the authentication method is being used.
+     * @param context   The DSpace context
+     * @param request   The current request
+     * @return whether the authentication method is being used.
+     */
+    public boolean isUsed(Context context, HttpServletRequest request);
+
+    /**
+     * Check if the given current password is valid to change the password of the
+     * given ePerson
+     * @param  context         The DSpace context
+     * @param  ePerson         the ePerson related to the password change
+     * @param  currentPassword The current password to check
+     * @return                 true if the provided password matches with current
+     *                         password
+     */
+    public boolean canChangePassword(Context context, EPerson ePerson, String currentPassword);
 }

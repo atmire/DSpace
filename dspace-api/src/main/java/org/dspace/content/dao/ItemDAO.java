@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
@@ -32,7 +31,21 @@ public interface ItemDAO extends DSpaceObjectLegacySupportDAO<Item> {
 
     public Iterator<Item> findAll(Context context, boolean archived, int limit, int offset) throws SQLException;
 
+    @Deprecated
     public Iterator<Item> findAll(Context context, boolean archived, boolean withdrawn) throws SQLException;
+
+    /**
+     * Find all items that are:
+     * - NOT in the workspace
+     * - NOT in the workflow
+     * - NOT a template item for e.g. a collection
+     *
+     * This implies that the result also contains older versions of items and withdrawn items.
+     * @param context the DSpace context.
+     * @return iterator over all regular items.
+     * @throws SQLException if database error.
+     */
+    public Iterator<Item> findAllRegularItems(Context context) throws SQLException;
 
     /**
      * Find all Items modified since a Date.
@@ -65,10 +78,6 @@ public interface ItemDAO extends DSpaceObjectLegacySupportDAO<Item> {
 
     public Iterator<Item> findByMetadataField(Context context, MetadataField metadataField, String value,
                                               boolean inArchive) throws SQLException;
-
-    public Iterator<Item> findByMetadataQuery(Context context, List<List<MetadataField>> listFieldList,
-                                              List<String> query_op, List<String> query_val, List<UUID> collectionUuids,
-                                              String regexClause, int offset, int limit) throws SQLException;
 
     public Iterator<Item> findByAuthorityValue(Context context, MetadataField metadataField, String authority,
                                                boolean inArchive) throws SQLException;

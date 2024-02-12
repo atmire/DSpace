@@ -8,13 +8,18 @@
 package org.dspace.app.mediafilter;
 
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.mediafilter.service.MediaFilterService;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.Bitstream;
 import org.dspace.content.BitstreamFormat;
@@ -34,7 +39,9 @@ import org.dspace.core.Context;
 import org.dspace.core.SelfNamedPlugin;
 import org.dspace.eperson.Group;
 import org.dspace.eperson.service.GroupService;
+import org.dspace.scripts.handler.DSpaceRunnableHandler;
 import org.dspace.services.ConfigurationService;
+import org.dspace.util.ThrowableUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -66,6 +73,8 @@ public class MediaFilterServiceImpl implements MediaFilterService, InitializingB
     protected ItemService itemService;
     @Autowired(required = true)
     protected ConfigurationService configurationService;
+
+    protected DSpaceRunnableHandler handler;
 
     protected int max2Process = Integer.MAX_VALUE;  // maximum number items to process
 
@@ -218,23 +227,9 @@ public class MediaFilterServiceImpl implements MediaFilterService, InitializingB
                         filtered = true;
                     }
                 } catch (Exception e) {
-                    String handle = myItem.getHandle();
-                    List<Bundle> bundles = myBitstream.getBundles();
-                    long size = myBitstream.getSizeBytes();
-                    String checksum = myBitstream.getChecksum() + " (" + myBitstream.getChecksumAlgorithm() + ")";
-                    int assetstore = myBitstream.getStoreNumber();
-
                     // Printout helpful information to find the errored bitstream.
-                    System.out.println("ERROR filtering, skipping bitstream:\n");
-                    System.out.println("\tItem Handle: " + handle);
-                    for (Bundle bundle : bundles) {
-                        System.out.println("\tBundle Name: " + bundle.getName());
-                    }
-                    System.out.println("\tFile Size: " + size);
-                    System.out.println("\tChecksum: " + checksum);
-                    System.out.println("\tAsset Store: " + assetstore);
-                    System.out.println(e);
-                    e.printStackTrace();
+                    logError(formatBitstreamDetails(myItem.getHandle(), myBitstream));
+                    logError(ThrowableUtils.formatCauseChain(e));
                 }
             } else if (filterClass instanceof SelfRegisterInputFormats) {
                 // Filter implements self registration, so check to see if it should be applied
@@ -287,7 +282,7 @@ public class MediaFilterServiceImpl implements MediaFilterService, InitializingB
                             filtered = true;
                         }
                     } catch (Exception e) {
-                        System.out.println("ERROR filtering, skipping bitstream #"
+                        logError("ERROR filtering, skipping bitstream #"
                                                + myBitstream.getID() + " " + e);
                         e.printStackTrace();
                     }
@@ -312,27 +307,27 @@ public class MediaFilterServiceImpl implements MediaFilterService, InitializingB
 
         // check if destination bitstream exists
         Bundle existingBundle = null;
-        Bitstream existingBitstream = null;
+        List<Bitstream> existingBitstreams = new ArrayList<>();
         List<Bundle> bundles = itemService.getBundles(item, formatFilter.getBundleName());
 
-        if (bundles.size() > 0) {
-            // only finds the last match (FIXME?)
+        if (!bundles.isEmpty()) {
+            // only finds the last matching bundle and all matching bitstreams in the proper bundle(s)
             for (Bundle bundle : bundles) {
                 List<Bitstream> bitstreams = bundle.getBitstreams();
 
                 for (Bitstream bitstream : bitstreams) {
                     if (bitstream.getName().trim().equals(newName.trim())) {
                         existingBundle = bundle;
-                        existingBitstream = bitstream;
+                        existingBitstreams.add(bitstream);
                     }
                 }
             }
         }
 
         // if exists and overwrite = false, exit
-        if (!overWrite && (existingBitstream != null)) {
+        if (!overWrite && (!existingBitstreams.isEmpty())) {
             if (!isQuiet) {
-                System.out.println("SKIPPED: bitstream " + source.getID()
+                logInfo("SKIPPED: bitstream " + source.getID()
                                        + " (item: " + item.getHandle() + ") because '" + newName + "' already exists");
             }
 
@@ -340,11 +335,11 @@ public class MediaFilterServiceImpl implements MediaFilterService, InitializingB
         }
 
         if (isVerbose) {
-            System.out.println("PROCESSING: bitstream " + source.getID()
+            logInfo("PROCESSING: bitstream " + source.getID()
                                    + " (item: " + item.getHandle() + ")");
         }
 
-        System.out.println("File: " + newName);
+        logInfo("File: " + newName);
 
         // start filtering of the bitstream, using try with resource to close all InputStreams properly
         try (
@@ -356,14 +351,14 @@ public class MediaFilterServiceImpl implements MediaFilterService, InitializingB
         ) {
             if (destStream == null) {
                 if (!isQuiet) {
-                    System.out.println("SKIPPED: bitstream " + source.getID()
+                    logInfo("SKIPPED: bitstream " + source.getID()
                             + " (item: " + item.getHandle() + ") because filtering was unsuccessful");
                 }
                 return false;
             }
 
             Bundle targetBundle; // bundle we're modifying
-            if (bundles.size() < 1) {
+            if (bundles.isEmpty()) {
                 // create new bundle if needed
                 targetBundle = bundleService.create(context, item, formatFilter.getBundleName());
             } else {
@@ -385,38 +380,92 @@ public class MediaFilterServiceImpl implements MediaFilterService, InitializingB
             bitstreamService.update(context, b);
 
             //Set permissions on the derivative bitstream
-            //- First remove any existing policies
-            authorizeService.removeAllPolicies(context, b);
-
-            //- Determine if this is a public-derivative format
-            if (publicFiltersClasses.contains(formatFilter.getClass().getSimpleName())) {
-                //- Set derivative bitstream to be publicly accessible
-                Group anonymous = groupService.findByName(context, Group.ANONYMOUS);
-                authorizeService.addPolicy(context, b, Constants.READ, anonymous);
-            } else {
-                //- Inherit policies from the source bitstream
-                authorizeService.inheritPolicies(context, source, b);
-            }
+            updatePoliciesOfDerivativeBitstream(context, b, formatFilter, source);
 
             //do post-processing of the generated bitstream
             formatFilter.postProcessBitstream(context, item, b);
 
         } catch (OutOfMemoryError oome) {
-            System.out.println("!!! OutOfMemoryError !!!");
+            logError("!!! OutOfMemoryError !!!");
+            logError(formatBitstreamDetails(item.getHandle(), source));
         }
 
-        // fixme - set date?
         // we are overwriting, so remove old bitstream
-        if (existingBitstream != null) {
+        for (Bitstream existingBitstream : existingBitstreams) {
             bundleService.removeBitstream(context, existingBundle, existingBitstream);
         }
 
         if (!isQuiet) {
-            System.out.println("FILTERED: bitstream " + source.getID()
+            logInfo("FILTERED: bitstream " + source.getID()
                                    + " (item: " + item.getHandle() + ") and created '" + newName + "'");
         }
 
         return true;
+    }
+
+    @Override
+    public void updatePoliciesOfDerivativeBitstreams(Context context, Item item, Bitstream source)
+        throws SQLException, AuthorizeException {
+
+        if (filterClasses == null) {
+            return;
+        }
+
+        for (FormatFilter formatFilter : filterClasses) {
+            for (Bitstream bitstream : findDerivativeBitstreams(item, source, formatFilter)) {
+                updatePoliciesOfDerivativeBitstream(context, bitstream, formatFilter, source);
+            }
+        }
+    }
+
+    /**
+     * find derivative bitstreams related to source bitstream
+     *
+     * @param item item containing bitstreams
+     * @param source source bitstream
+     * @param formatFilter formatFilter
+     * @return list of derivative bitstreams from source bitstream
+     * @throws SQLException If something goes wrong in the database
+     */
+    private List<Bitstream> findDerivativeBitstreams(Item item, Bitstream source, FormatFilter formatFilter)
+        throws SQLException {
+
+        String bitstreamName = formatFilter.getFilteredName(source.getName());
+        List<Bundle> bundles = itemService.getBundles(item, formatFilter.getBundleName());
+
+        return bundles.stream()
+                      .flatMap(bundle ->
+                          bundle.getBitstreams().stream())
+                      .filter(bitstream ->
+                          StringUtils.equals(bitstream.getName().trim(), bitstreamName.trim()))
+                      .collect(Collectors.toList());
+    }
+
+    /**
+     * update resource polices of derivative bitstreams.
+     * by remove all resource policies and
+     * set derivative bitstreams to be publicly accessible or
+     * replace derivative bitstreams policies using
+     * the same in the source bitstream.
+     *
+     * @param context the context
+     * @param bitstream derivative bitstream
+     * @param formatFilter formatFilter
+     * @param source the source bitstream
+     * @throws SQLException If something goes wrong in the database
+     * @throws AuthorizeException if authorization error
+     */
+    private void updatePoliciesOfDerivativeBitstream(Context context, Bitstream bitstream, FormatFilter formatFilter,
+                                                     Bitstream source) throws SQLException, AuthorizeException {
+
+        authorizeService.removeAllPolicies(context, bitstream);
+
+        if (publicFiltersClasses.contains(formatFilter.getClass().getSimpleName())) {
+            Group anonymous = groupService.findByName(context, Group.ANONYMOUS);
+            authorizeService.addPolicy(context, bitstream, Constants.READ, anonymous);
+        } else {
+            authorizeService.replaceAllPolicies(context, source, bitstream);
+        }
     }
 
     @Override
@@ -428,11 +477,64 @@ public class MediaFilterServiceImpl implements MediaFilterService, InitializingB
     public boolean inSkipList(String identifier) {
         if (skipList != null && skipList.contains(identifier)) {
             if (!isQuiet) {
-                System.out.println("SKIP-LIST: skipped bitstreams within identifier " + identifier);
+                logInfo("SKIP-LIST: skipped bitstreams within identifier " + identifier);
             }
             return true;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * Describe a Bitstream in detail.  Format a single line of text with
+     * information such as Bitstore index, backing file ID, size, checksum,
+     * enclosing Item and Bundles.
+     *
+     * @param itemHandle Handle of the Item by which we found the Bitstream.
+     * @param bitstream the Bitstream to be described.
+     * @return Bitstream details.
+     */
+    private String formatBitstreamDetails(String itemHandle,
+            Bitstream bitstream) {
+        List<Bundle> bundles;
+        try {
+            bundles = bitstream.getBundles();
+        } catch (SQLException ex) {
+            logError("Unexpected error fetching Bundles", ex);
+            bundles = Collections.EMPTY_LIST;
+        }
+        StringBuilder sb = new StringBuilder("ERROR filtering, skipping bitstream:\n");
+        sb.append("\tItem Handle: ").append(itemHandle);
+        for (Bundle bundle : bundles) {
+            sb.append("\tBundle Name: ").append(bundle.getName());
+        }
+        sb.append("\tFile Size: ").append(bitstream.getSizeBytes());
+        sb.append("\tChecksum: ").append(bitstream.getChecksum())
+                .append(" (").append(bitstream.getChecksumAlgorithm()).append(')');
+        sb.append("\tAsset Store: ").append(bitstream.getStoreNumber());
+        sb.append("\tInternal ID: ").append(bitstream.getInternalId());
+        return sb.toString();
+    }
+
+    private void logInfo(String message) {
+        if (handler != null) {
+            handler.logInfo(message);
+        } else {
+            System.out.println(message);
+        }
+    }
+    private void logError(String message) {
+        if (handler != null) {
+            handler.logError(message);
+        } else {
+            System.out.println(message);
+        }
+    }
+    private void logError(String message, Exception e) {
+        if (handler != null) {
+            handler.logError(message, e);
+        } else {
+            System.out.println(message);
         }
     }
 
@@ -469,5 +571,10 @@ public class MediaFilterServiceImpl implements MediaFilterService, InitializingB
     @Override
     public void setFilterFormats(Map<String, List<String>> filterFormats) {
         this.filterFormats = filterFormats;
+    }
+
+    @Override
+    public void setLogHandler(DSpaceRunnableHandler handler) {
+        this.handler = handler;
     }
 }

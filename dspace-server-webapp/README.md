@@ -10,7 +10,7 @@ This webapp uses the following technologies:
 We don't use Spring Data REST as we haven't a spring data layer and we want to provide clear separation between the persistence representation and the REST representation
 
 ## How to contribute
-Check the infomation available on the DSpace Official Wiki page for the [DSpace 7 Working Group](https://wiki.duraspace.org/display/DSPACE/DSpace+7+UI+Working+Group)
+Check the information available on the DSpace Official Wiki page for the [DSpace 7 Working Group](https://wiki.duraspace.org/display/DSPACE/DSpace+7+UI+Working+Group)
 
 [DSpace 7 REST: Coding DSpace Objects](https://wiki.duraspace.org/display/DSPACE/DSpace+7+REST%3A+Coding+DSpace+Objects)
 
@@ -22,7 +22,10 @@ The only tested way right now is to run this webapp inside your IDE (Eclipse). J
 > dspace.dir = d:/install/dspace7
 
 ## HAL Browser
-The modified version of the HAL Browser from the Spring Data REST project is included, the index.html file is overriden locally to support the /api baseURL (see [DATAREST-971](https://jira.spring.io/browse/DATAREST-971))
+
+The modified version of the HAL Browser from https://github.com/mikekelly/hal-browser
+
+We've updated/customized the HAL Browser to integrate better with our authentication system, provide CSRF support, and use a more recent version of its dependencies.
 
 ## Packages and main classes
 *[org.dspace.app.rest.Application](src/main/java/org/dspace/app/rest/Application.java)* is the spring boot main class it initializes

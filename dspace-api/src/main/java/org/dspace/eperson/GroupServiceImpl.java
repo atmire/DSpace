@@ -15,12 +15,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dspace.authorize.AuthorizeConfiguration;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.ResourcePolicy;
@@ -34,7 +37,7 @@ import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.CommunityService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
-import org.dspace.core.LogManager;
+import org.dspace.core.LogHelper;
 import org.dspace.eperson.dao.Group2GroupCacheDAO;
 import org.dspace.eperson.dao.GroupDAO;
 import org.dspace.eperson.factory.EPersonServiceFactory;
@@ -51,8 +54,6 @@ import org.dspace.xmlworkflow.storedcomponents.PoolTask;
 import org.dspace.xmlworkflow.storedcomponents.service.ClaimedTaskService;
 import org.dspace.xmlworkflow.storedcomponents.service.CollectionRoleService;
 import org.dspace.xmlworkflow.storedcomponents.service.PoolTaskService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -63,7 +64,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author kevinvandevelde at atmire.com
  */
 public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements GroupService {
-    private static final Logger log = LoggerFactory.getLogger(GroupServiceImpl.class);
+    private static final Logger log = LogManager.getLogger();
 
     @Autowired(required = true)
     protected GroupDAO groupDAO;
@@ -110,7 +111,7 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
         // Create a table row
         Group g = groupDAO.create(context, new Group());
 
-        log.info(LogManager.getHeader(context, "create_group", "group_id="
+        log.info(LogHelper.getHeader(context, "create_group", "group_id="
             + g.getID()));
 
         context.addEvent(new Event(Event.CREATE, Constants.GROUP, g.getID(), null, getIdentifiers(context, g)));
@@ -178,8 +179,13 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
                 for (CollectionRole collectionRole : collectionRoles) {
                     if (StringUtils.equals(collectionRole.getRoleId(), role.getId())
                             && claimedTask.getWorkflowItem().getCollection() == collectionRole.getCollection()) {
-                        List<EPerson> ePeople = allMembers(context, group);
-                        if (ePeople.size() == 1 && ePeople.contains(ePerson)) {
+                        // Count number of EPersons who are *direct* members of this group
+                        int totalDirectEPersons = ePersonService.countByGroups(context, Set.of(group));
+                        // Count number of Groups which have this groupParent as a direct parent
+                        int totalChildGroups = countByParent(context, group);
+                        // If this group has only one direct EPerson and *zero* child groups, then we cannot delete the
+                        // EPerson or we will leave this group empty.
+                        if (totalDirectEPersons == 1 && totalChildGroups == 0) {
                             throw new IllegalStateException(
                                     "Refused to remove user " + ePerson
                                             .getID() + " from workflow group because the group " + group
@@ -190,8 +196,13 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
                 }
             }
             if (!poolTasks.isEmpty()) {
-                List<EPerson> ePeople = allMembers(context, group);
-                if (ePeople.size() == 1 && ePeople.contains(ePerson)) {
+                // Count number of EPersons who are *direct* members of this group
+                int totalDirectEPersons = ePersonService.countByGroups(context, Set.of(group));
+                // Count number of Groups which have this groupParent as a direct parent
+                int totalChildGroups = countByParent(context, group);
+                // If this group has only one direct EPerson and *zero* child groups, then we cannot delete the
+                // EPerson or we will leave this group empty.
+                if (totalDirectEPersons == 1 && totalChildGroups == 0) {
                     throw new IllegalStateException(
                             "Refused to remove user " + ePerson
                                     .getID() + " from workflow group because the group " + group
@@ -211,9 +222,13 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
         if (!collectionRoles.isEmpty()) {
             List<PoolTask> poolTasks = poolTaskService.findByGroup(context, groupParent);
             if (!poolTasks.isEmpty()) {
-                List<EPerson> parentPeople = allMembers(context, groupParent);
-                List<EPerson> childPeople = allMembers(context, childGroup);
-                if (childPeople.containsAll(parentPeople)) {
+                // Count number of Groups which have this groupParent as a direct parent
+                int totalChildGroups = countByParent(context, groupParent);
+                // Count number of EPersons who are *direct* members of this group
+                int totalDirectEPersons = ePersonService.countByGroups(context, Set.of(groupParent));
+                // If this group has only one childGroup and *zero* direct EPersons, then we cannot delete the
+                // childGroup or we will leave this group empty.
+                if (totalChildGroups == 1 && totalDirectEPersons == 0) {
                     throw new IllegalStateException(
                             "Refused to remove sub group " + childGroup
                                     .getID() + " from workflow group because the group " + groupParent
@@ -352,8 +367,6 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
 
         List<Group2GroupCache> groupCache = group2GroupCacheDAO.findByChildren(context, groups);
         // now we have all owning groups, also grab all parents of owning groups
-        // yes, I know this could have been done as one big query and a union,
-        // but doing the Oracle port taught me to keep to simple SQL!
         for (Group2GroupCache group2GroupCache : groupCache) {
             groups.add(group2GroupCache.getParent());
         }
@@ -369,7 +382,8 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
 
         // Get all groups which are a member of this group
         List<Group2GroupCache> group2GroupCaches = group2GroupCacheDAO.findByParent(c, g);
-        Set<Group> groups = new HashSet<>();
+        // Initialize HashSet based on List size to avoid Set resizing. See https://stackoverflow.com/a/21822273
+        Set<Group> groups = new HashSet<>((int) (group2GroupCaches.size() / 0.75 + 1));
         for (Group2GroupCache group2GroupCache : group2GroupCaches) {
             groups.add(group2GroupCache.getChild());
         }
@@ -380,6 +394,23 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
         childGroupChildren.addAll(g.getMembers());
 
         return new ArrayList<>(childGroupChildren);
+    }
+
+    @Override
+    public int countAllMembers(Context context, Group group) throws SQLException {
+        // Get all groups which are a member of this group
+        List<Group2GroupCache> group2GroupCaches = group2GroupCacheDAO.findByParent(context, group);
+        // Initialize HashSet based on List size + current 'group' to avoid Set resizing.
+        // See https://stackoverflow.com/a/21822273
+        Set<Group> groups = new HashSet<>((int) ((group2GroupCaches.size() + 1) / 0.75 + 1));
+        for (Group2GroupCache group2GroupCache : group2GroupCaches) {
+            groups.add(group2GroupCache.getChild());
+        }
+        // Append current group as well
+        groups.add(group);
+
+        // Return total number of unique EPerson objects in any of these groups
+        return ePersonService.countByGroups(context, groups);
     }
 
     @Override
@@ -429,17 +460,17 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
     }
 
     @Override
-    public List<Group> search(Context context, String groupIdentifier) throws SQLException {
-        return search(context, groupIdentifier, -1, -1);
+    public List<Group> search(Context context, String query) throws SQLException {
+        return search(context, query, -1, -1);
     }
 
     @Override
-    public List<Group> search(Context context, String groupIdentifier, int offset, int limit) throws SQLException {
+    public List<Group> search(Context context, String query, int offset, int limit) throws SQLException {
         List<Group> groups = new ArrayList<>();
-        UUID uuid = UUIDUtils.fromString(groupIdentifier);
+        UUID uuid = UUIDUtils.fromString(query);
         if (uuid == null) {
             //Search by group name
-            groups = groupDAO.findByNameLike(context, groupIdentifier, offset, limit);
+            groups = groupDAO.findByNameLike(context, query, offset, limit);
         } else {
             //Search by group id
             Group group = find(context, uuid);
@@ -452,12 +483,12 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
     }
 
     @Override
-    public int searchResultCount(Context context, String groupIdentifier) throws SQLException {
+    public int searchResultCount(Context context, String query) throws SQLException {
         int result = 0;
-        UUID uuid = UUIDUtils.fromString(groupIdentifier);
+        UUID uuid = UUIDUtils.fromString(query);
         if (uuid == null) {
             //Search by group name
-            result = groupDAO.countByNameLike(context, groupIdentifier);
+            result = groupDAO.countByNameLike(context, query);
         } else {
             //Search by group id
             Group group = find(context, uuid);
@@ -470,17 +501,52 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
     }
 
     @Override
+    public List<Group> searchNonMembers(Context context, String query, Group excludeParentGroup,
+                                        int offset, int limit) throws SQLException {
+        List<Group> groups = new ArrayList<>();
+        UUID uuid = UUIDUtils.fromString(query);
+        if (uuid == null) {
+            // Search by group name
+            groups = groupDAO.findByNameLikeAndNotMember(context, query, excludeParentGroup, offset, limit);
+        } else if (!uuid.equals(excludeParentGroup.getID())) {
+            // Search by group id
+            Group group = find(context, uuid);
+            // Verify it is NOT a member of the given excludeParentGroup before adding
+            if (group != null && !isMember(excludeParentGroup, group)) {
+                groups.add(group);
+            }
+        }
+
+        return groups;
+    }
+
+    @Override
+    public int searchNonMembersCount(Context context, String query, Group excludeParentGroup) throws SQLException {
+        int result = 0;
+        UUID uuid = UUIDUtils.fromString(query);
+        if (uuid == null) {
+            // Search by group name
+            result = groupDAO.countByNameLikeAndNotMember(context, query, excludeParentGroup);
+        } else if (!uuid.equals(excludeParentGroup.getID())) {
+            // Search by group id
+            Group group = find(context, uuid);
+            // Verify it is NOT a member of the given excludeParentGroup before adding
+            if (group != null && !isMember(excludeParentGroup, group)) {
+                result = 1;
+            }
+        }
+        return result;
+    }
+
+    @Override
     public void delete(Context context, Group group) throws SQLException {
         if (group.isPermanent()) {
-            log.error("Attempt to delete permanent Group $", group.getName());
+            log.error("Attempt to delete permanent Group {}", group::getName);
             throw new SQLException("Attempt to delete a permanent Group");
         }
 
         context.addEvent(new Event(Event.DELETE, Constants.GROUP, group.getID(),
                                    group.getName(), getIdentifiers(context, group)));
-
-        //Remove the supervised group from any workspace items linked to us.
-        group.getSupervisedItems().clear();
 
         // Remove any ResourcePolicies that reference this group
         authorizeService.removeGroupPolicies(context, group);
@@ -502,7 +568,7 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
         groupDAO.delete(context, group);
         rethinkGroupCache(context, false);
 
-        log.info(LogManager.getHeader(context, "delete_group", "group_id="
+        log.info(LogHelper.getHeader(context, "delete_group", "group_id="
             + group.getID()));
     }
 
@@ -595,7 +661,7 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
             group.clearGroupsChanged();
         }
 
-        log.info(LogManager.getHeader(context, "update_group", "group_id="
+        log.info(LogHelper.getHeader(context, "update_group", "group_id="
             + group.getID()));
     }
 
@@ -714,7 +780,7 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
                     // if the group is used for one or more roles on a single collection,
                     // admins can eventually manage it
                     List<CollectionRole> collectionRoles = collectionRoleService.findByGroup(context, group);
-                    if (collectionRoles != null && collectionRoles.size() > 0) {
+                    if (collectionRoles != null && !collectionRoles.isEmpty()) {
                         Set<Collection> colls = new HashSet<>();
                         for (CollectionRole cr : collectionRoles) {
                             colls.add(cr.getCollection());
@@ -735,13 +801,24 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
                             groups.add(group);
                             List<ResourcePolicy> policies = resourcePolicyService.find(context, null, groups,
                                                             Constants.DEFAULT_ITEM_READ, Constants.COLLECTION);
-                            if (policies.size() > 0) {
-                                return policies.get(0).getdSpaceObject();
+
+                            Optional<ResourcePolicy> defaultPolicy = policies.stream().filter(p -> StringUtils.equals(
+                                    collectionService.getDefaultReadGroupName((Collection) p.getdSpaceObject(), "ITEM"),
+                                    group.getName())).findFirst();
+
+                            if (defaultPolicy.isPresent()) {
+                                return defaultPolicy.get().getdSpaceObject();
                             }
                             policies = resourcePolicyService.find(context, null, groups,
                                                              Constants.DEFAULT_BITSTREAM_READ, Constants.COLLECTION);
-                            if (policies.size() > 0) {
-                                return policies.get(0).getdSpaceObject();
+
+                            defaultPolicy = policies.stream()
+                                    .filter(p -> StringUtils.equals(collectionService.getDefaultReadGroupName(
+                                            (Collection) p.getdSpaceObject(), "BITSTREAM"), group.getName()))
+                                    .findFirst();
+
+                            if (defaultPolicy.isPresent()) {
+                                return defaultPolicy.get().getdSpaceObject();
                             }
                         }
                     }
@@ -795,10 +872,15 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
 
     @Override
     public Group findByIdOrLegacyId(Context context, String id) throws SQLException {
-        if (org.apache.commons.lang3.StringUtils.isNumeric(id)) {
-            return findByLegacyId(context, Integer.parseInt(id));
-        } else {
-            return find(context, UUIDUtils.fromString(id));
+        try {
+            if (StringUtils.isNumeric(id)) {
+                return findByLegacyId(context, Integer.parseInt(id));
+            } else {
+                return find(context, UUID.fromString(id));
+            }
+        } catch (IllegalArgumentException e) {
+            // Not a valid legacy ID or valid UUID
+            return null;
         }
     }
 
@@ -816,5 +898,26 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
     public List<Group> findByMetadataField(final Context context, final String searchValue,
                                            final MetadataField metadataField) throws SQLException {
         return groupDAO.findByMetadataField(context, searchValue, metadataField);
+    }
+
+    @Override
+    public String getName(Group dso) {
+        return dso.getName();
+    }
+
+    @Override
+    public List<Group> findByParent(Context context, Group parent, int pageSize, int offset) throws SQLException {
+        if (parent == null) {
+            return null;
+        }
+        return groupDAO.findByParent(context, parent, pageSize, offset);
+    }
+
+    @Override
+    public int countByParent(Context context, Group parent) throws SQLException {
+        if (parent == null) {
+            return 0;
+        }
+        return groupDAO.countByParent(context, parent);
     }
 }

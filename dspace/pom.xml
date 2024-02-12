@@ -16,7 +16,7 @@
     <parent>
         <groupId>org.dspace</groupId>
         <artifactId>dspace-parent</artifactId>
-        <version>7.0</version>
+        <version>8.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -188,7 +188,6 @@
             </build>
             <dependencies>
                 <!-- Add all modules that should be taken into account for the coverage reports -->
-                <!-- (Excludes dspace-rest which is deprecated and doesn't build by default) -->
                 <dependency>
                     <groupId>org.dspace</groupId>
                     <artifactId>dspace-api</artifactId>
@@ -206,13 +205,17 @@
                 </dependency>
                 <dependency>
                     <groupId>org.dspace</groupId>
+                    <artifactId>dspace-iiif</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.dspace</groupId>
                     <artifactId>dspace-services</artifactId>
                     <scope>compile</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.dspace</groupId>
                     <artifactId>dspace-server-webapp</artifactId>
-                    <type>war</type>
                     <scope>compile</scope>
                 </dependency>
                 <dependency>

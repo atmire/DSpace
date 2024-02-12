@@ -19,6 +19,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -41,6 +43,7 @@ import org.dspace.authorize.factory.AuthorizeServiceFactory;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.BitstreamFormatService;
+import org.dspace.content.service.ItemService;
 import org.dspace.content.service.MetadataFieldService;
 import org.dspace.content.service.MetadataSchemaService;
 import org.dspace.core.Constants;
@@ -679,7 +682,7 @@ public class ItemTest extends AbstractDSpaceObjectTest {
 
         String schema = "dc";
         String element = "contributor";
-        String qualifier = "author";
+        String qualifier = "editor";
         String lang = Item.ANY;
         String values = "value0";
         String authorities = "auth0";
@@ -1186,8 +1189,6 @@ public class ItemTest extends AbstractDSpaceObjectTest {
         doNothing().when(authorizeServiceSpy).authorizeAction(context, item, Constants.REMOVE, true);
         // Allow Item DELETE perms
         doNothing().when(authorizeServiceSpy).authorizeAction(context, item, Constants.DELETE);
-        // Allow Item WRITE perms (required to first delete identifiers)
-        doNothing().when(authorizeServiceSpy).authorizeAction(context, item, Constants.WRITE);
 
         UUID id = item.getID();
         itemService.delete(context, item);
@@ -1392,6 +1393,78 @@ public class ItemTest extends AbstractDSpaceObjectTest {
         assertTrue("testInheritCollectionDefaultPolicies 2", equals);
     }
 
+    // Test to verify DEFAULT_*_READ policies on collection inherit properly to Item/Bundle/Bitstream
+    @Test
+    public void testInheritCollectionDefaultPolicies_custom_default_groups() throws Exception {
+        context.turnOffAuthorisationSystem();
+        // Create a new collection
+        Collection c = createCollection();
+        // Create a custom group with DEFAULT_ITEM_READ privileges in this Collection
+        Group item_read_role = collectionService.createDefaultReadGroup(context, c, "ITEM",
+                                                                        Constants.DEFAULT_ITEM_READ);
+        // Create a custom group with DEFAULT_BITSTREAM_READ privileges in this Collection
+        Group bitstream_read_role = collectionService.createDefaultReadGroup(context, c, "BITSTREAM",
+                                                                        Constants.DEFAULT_BITSTREAM_READ);
+        context.restoreAuthSystemState();
+
+        // Verify that Collection's DEFAULT_ITEM_READ now uses the newly created group.
+        List<ResourcePolicy> defaultItemReadPolicies =
+            authorizeService.getPoliciesActionFilter(context, c, Constants.DEFAULT_ITEM_READ);
+        assertEquals("One DEFAULT_ITEM_READ policy", 1, defaultItemReadPolicies.size());
+        assertEquals("DEFAULT_ITEM_READ group", item_read_role.getName(),
+                     defaultItemReadPolicies.get(0).getGroup().getName());
+
+        // Verify that Collection's DEFAULT_BITSTREAM_READ now uses the newly created group.
+        List<ResourcePolicy> defaultBitstreamReadPolicies =
+            authorizeService.getPoliciesActionFilter(context, c, Constants.DEFAULT_BITSTREAM_READ);
+        assertEquals("One DEFAULT_BITSTREAM_READ policy on Collection", 1, defaultBitstreamReadPolicies.size());
+        assertEquals("DEFAULT_BITSTREAM_READ group", bitstream_read_role.getName(),
+                     defaultBitstreamReadPolicies.get(0).getGroup().getName());
+
+        context.turnOffAuthorisationSystem();
+        // Create a new Item in this Collection
+        WorkspaceItem workspaceItem = workspaceItemService.create(context, c, false);
+        Item item = workspaceItem.getItem();
+        // Add a single Bitstream to the ORIGINAL bundle
+        File f = new File(testProps.get("test.bitstream").toString());
+        Bitstream bitstream = itemService.createSingleBitstream(context, new FileInputStream(f), item);
+        context.restoreAuthSystemState();
+
+        // Allow Item WRITE perms
+        doNothing().when(authorizeServiceSpy).authorizeAction(context, item, Constants.WRITE, true);
+        // Inherit all default policies from Collection down to new Item
+        itemService.inheritCollectionDefaultPolicies(context, item, c);
+
+        // Verify Item inherits DEFAULT_ITEM_READ group from Collection
+        List<ResourcePolicy> itemReadPolicies = authorizeService.getPoliciesActionFilter(context, item, Constants.READ);
+        assertEquals("One READ policy on Item", 1, itemReadPolicies.size());
+        assertEquals("Item's READ group", item_read_role.getName(),
+                     itemReadPolicies.get(0).getGroup().getName());
+
+        // Verify Bitstream inherits DEFAULT_BITSTREAM_READ group from Collection
+        List<ResourcePolicy> bitstreamReadPolicies = authorizeService.getPoliciesActionFilter(context, bitstream,
+                                                                                              Constants.READ);
+        assertEquals("One READ policy on Bitstream", 1, bitstreamReadPolicies.size());
+        assertEquals("Bitstream's READ group", bitstream_read_role.getName(),
+                     bitstreamReadPolicies.get(0).getGroup().getName());
+
+        // Verify ORIGINAL Bundle inherits DEFAULT_ITEM_READ group from Collection
+        // Bundles should inherit from DEFAULT_ITEM_READ so that if the item is readable, the files
+        // can be listed (even if files are access restricted or embargoed)
+        List<Bundle> bundles = item.getBundles(Constants.DEFAULT_BUNDLE_NAME);
+        Bundle originalBundle = bundles.get(0);
+        List<ResourcePolicy> bundleReadPolicies = authorizeService.getPoliciesActionFilter(context, originalBundle,
+                                                                                           Constants.READ);
+        assertEquals("One READ policy on Bundle", 1, bundleReadPolicies.size());
+        assertEquals("Bundles's READ group", item_read_role.getName(),
+                     bundleReadPolicies.get(0).getGroup().getName());
+
+        // Cleanup after ourselves. Delete created collection & all content under it
+        context.turnOffAuthorisationSystem();
+        collectionService.delete(context, c);
+        context.restoreAuthSystemState();
+    }
+
     /**
      * Test of move method, of class Item.
      */
@@ -1408,6 +1481,27 @@ public class ItemTest extends AbstractDSpaceObjectTest {
         context.restoreAuthSystemState();
         assertThat("testMove 0", it.getOwningCollection(), notNullValue());
         assertThat("testMove 1", it.getOwningCollection(), equalTo(to));
+    }
+
+    /**
+     * Test of move method, of class Item, where both Collections are the same.
+     */
+    @Test
+    public void testMoveSameCollection() throws Exception {
+        context.turnOffAuthorisationSystem();
+        while (it.getCollections().size() > 1) {
+            it.removeCollection(it.getCollections().get(0));
+        }
+
+        Collection collection = it.getCollections().get(0);
+        it.setOwningCollection(collection);
+        ItemService itemServiceSpy = spy(itemService);
+
+        itemService.move(context, it, collection, collection);
+        context.restoreAuthSystemState();
+        assertThat("testMoveSameCollection 0", it.getOwningCollection(), notNullValue());
+        assertThat("testMoveSameCollection 1", it.getOwningCollection(), equalTo(collection));
+        verify(itemServiceSpy, times(0)).delete(context, it);
     }
 
     /**

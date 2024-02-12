@@ -8,7 +8,6 @@
 package org.dspace.statistics;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,9 +17,12 @@ import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -79,6 +81,7 @@ import org.apache.solr.common.params.MapSolrParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.ShardParams;
 import org.apache.solr.common.util.NamedList;
+import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
 import org.dspace.content.Collection;
@@ -142,6 +145,10 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
     private ClientInfoService clientInfoService;
     @Autowired
     private SolrStatisticsCore solrStatisticsCore;
+    @Autowired
+    private GeoIpService geoIpService;
+    @Autowired
+    private AuthorizeService authorizeService;
 
     /** URL to the current-year statistics core.  Prior-year shards will have a year suffixed. */
     private String statisticsCoreURL;
@@ -173,32 +180,29 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        statisticsCoreURL = configurationService.getProperty("solr-statistics.server");
+
+        if (null != statisticsCoreURL) {
+            Path statisticsPath = Paths.get(new URI(statisticsCoreURL).getPath());
+            statisticsCoreBase = statisticsPath
+                .getName(statisticsPath.getNameCount() - 1)
+                .toString();
+        } else {
+            log.warn("Unable to find solr-statistics.server parameter in DSpace configuration. This is required for " +
+                     "sharding statistics.");
+            statisticsCoreBase = null;
+        }
+
         solr = solrStatisticsCore.getSolr();
 
         // Read in the file so we don't have to do it all the time
         //spiderIps = SpiderDetector.getSpiderIpAddresses();
 
         DatabaseReader service = null;
-        // Get the db file for the location
-        String dbPath = configurationService.getProperty("usage-statistics.dbfile");
-        if (dbPath != null) {
-            try {
-                File dbFile = new File(dbPath);
-                service = new DatabaseReader.Builder(dbFile).build();
-            } catch (FileNotFoundException fe) {
-                log.error(
-                    "The GeoLite Database file is missing (" + dbPath + ")! Solr Statistics cannot generate location " +
-                        "based reports! Please see the DSpace installation instructions for instructions to install " +
-                        "this file.",
-                    fe);
-            } catch (IOException e) {
-                log.error(
-                    "Unable to load GeoLite Database file (" + dbPath + ")! You may need to reinstall it. See the " +
-                        "DSpace installation instructions for more details.",
-                    e);
-            }
-        } else {
-            log.error("The required 'dbfile' configuration is missing in solr-statistics.cfg!");
+        try {
+            service = geoIpService.getDatabaseReader();
+        } catch (IllegalStateException ex) {
+            log.error(ex);
         }
         locationService = service;
     }
@@ -212,14 +216,30 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
     @Override
     public void postView(DSpaceObject dspaceObject, HttpServletRequest request,
                          EPerson currentUser) {
-        if (solr == null || locationService == null) {
+        postView(dspaceObject, request, currentUser, null);
+    }
+
+    @Override
+    public void postView(DSpaceObject dspaceObject, HttpServletRequest request,
+                         EPerson currentUser, String referrer) {
+        Context context = new Context();
+        // Do not record statistics for Admin users
+        try {
+            if (authorizeService.isAdmin(context, currentUser)) {
+                return;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (solr == null) {
             return;
         }
         initSolrYearCores();
 
 
         try {
-            SolrInputDocument doc1 = getCommonSolrDoc(dspaceObject, request, currentUser);
+            SolrInputDocument doc1 = getCommonSolrDoc(dspaceObject, request, currentUser, referrer);
             if (doc1 == null) {
                 return;
             }
@@ -253,14 +273,20 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
     @Override
     public void postView(DSpaceObject dspaceObject,
                          String ip, String userAgent, String xforwardedfor, EPerson currentUser) {
-        if (solr == null || locationService == null) {
+        postView(dspaceObject, ip, userAgent, xforwardedfor, currentUser, null);
+    }
+
+    @Override
+    public void postView(DSpaceObject dspaceObject,
+                         String ip, String userAgent, String xforwardedfor, EPerson currentUser, String referrer) {
+        if (solr == null) {
             return;
         }
         initSolrYearCores();
 
         try {
             SolrInputDocument doc1 = getCommonSolrDoc(dspaceObject, ip, userAgent, xforwardedfor,
-                                                      currentUser);
+                                                      currentUser, referrer);
             if (doc1 == null) {
                 return;
             }
@@ -301,6 +327,22 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
      */
     protected SolrInputDocument getCommonSolrDoc(DSpaceObject dspaceObject, HttpServletRequest request,
                                                  EPerson currentUser) throws SQLException {
+        return getCommonSolrDoc(dspaceObject, request, currentUser, null);
+    }
+
+    /**
+     * Returns a solr input document containing common information about the statistics
+     * regardless if we are logging a search or a view of a DSpace object
+     *
+     * @param dspaceObject the object used.
+     * @param request      the current request context.
+     * @param currentUser  the current session's user.
+     * @param referrer     the optional referrer.
+     * @return a solr input document
+     * @throws SQLException in case of a database exception
+     */
+    protected SolrInputDocument getCommonSolrDoc(DSpaceObject dspaceObject, HttpServletRequest request,
+                                                 EPerson currentUser, String referrer) throws SQLException {
         boolean isSpiderBot = request != null && SpiderDetector.isSpider(request);
         if (isSpiderBot &&
             !configurationService.getBooleanProperty("usage-statistics.logBots", true)) {
@@ -323,7 +365,9 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
             }
 
             //Also store the referrer
-            if (request.getHeader("referer") != null) {
+            if (referrer != null) {
+                doc1.addField("referrer", referrer);
+            } else if (request.getHeader("referer") != null) {
                 doc1.addField("referrer", request.getHeader("referer"));
             }
 
@@ -392,7 +436,8 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
     }
 
     protected SolrInputDocument getCommonSolrDoc(DSpaceObject dspaceObject, String ip, String userAgent,
-                                                 String xforwardedfor, EPerson currentUser) throws SQLException {
+                                                 String xforwardedfor, EPerson currentUser,
+                                                 String referrer) throws SQLException {
         boolean isSpiderBot = SpiderDetector.isSpider(ip);
         if (isSpiderBot &&
             !configurationService.getBooleanProperty("usage-statistics.logBots", true)) {
@@ -411,6 +456,11 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
             }
         } else {
             doc1.addField("ip", ip);
+        }
+
+        // Add the referrer, if present
+        if (referrer != null) {
+            doc1.addField("referrer", referrer);
         }
 
         InetAddress ipAddress = null;
@@ -1167,22 +1217,6 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
     }
 
     @Override
-    public void optimizeSOLR() {
-        try {
-            long start = System.currentTimeMillis();
-            System.out.println("SOLR Optimize -- Process Started:" + start);
-            solr.optimize();
-            long finish = System.currentTimeMillis();
-            System.out.println("SOLR Optimize -- Process Finished:" + finish);
-            System.out.println("SOLR Optimize -- Total time taken:" + (finish - start) + " (ms).");
-        } catch (SolrServerException sse) {
-            System.err.println(sse.getMessage());
-        } catch (IOException ioe) {
-            System.err.println(ioe.getMessage());
-        }
-    }
-
-    @Override
     public void shardSolrIndex() throws IOException, SolrServerException {
         if (!(solr instanceof HttpSolrClient)) {
             return;
@@ -1654,11 +1688,14 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
                 statisticYearCores
                     .add(baseSolrUrl.replace("http://", "").replace("https://", "") + statCoreName);
             }
-            //Also add the core containing the current year !
-            statisticYearCores.add(((HttpSolrClient) solr)
+            var baseCore = ((HttpSolrClient) solr)
                     .getBaseURL()
                     .replace("http://", "")
-                    .replace("https://", ""));
+                    .replace("https://", "");
+            if (!statisticYearCores.contains(baseCore)) {
+                //Also add the core containing the current year, if it hasn't been added already
+                statisticYearCores.add(baseCore);
+            }
         } catch (IOException | SolrServerException e) {
             log.error(e.getMessage(), e);
         }

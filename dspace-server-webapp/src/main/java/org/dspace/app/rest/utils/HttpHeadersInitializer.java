@@ -9,12 +9,12 @@ package org.dspace.app.rest.utils;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static javax.mail.internet.MimeUtility.encodeText;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -34,7 +34,6 @@ public class HttpHeadersInitializer {
 
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    private static final String METHOD_HEAD = "HEAD";
     private static final String MULTIPART_BOUNDARY = "MULTIPART_BYTERANGES";
     private static final String CONTENT_TYPE_MULTITYPE_WITH_BOUNDARY = "multipart/byteranges; boundary=" +
         MULTIPART_BOUNDARY;
@@ -64,7 +63,6 @@ public class HttpHeadersInitializer {
     //no-cache so request is always performed for logging
     private static final String CACHE_CONTROL_SETTING = "private,no-cache";
 
-    private BufferedInputStream inputStream;
     private HttpServletRequest request;
     private HttpServletResponse response;
     private String contentType;
@@ -74,14 +72,8 @@ public class HttpHeadersInitializer {
     private String fileName;
     private String checksum;
 
-    public HttpHeadersInitializer(final InputStream inputStream) {
+    public HttpHeadersInitializer() {
         //Convert to BufferedInputStream so we can re-read the stream
-        this.inputStream = new BufferedInputStream(inputStream);
-    }
-
-
-    public static HttpHeadersInitializer fromInputStream(InputStream inputStream) {
-        return new HttpHeadersInitializer(inputStream);
     }
 
     public HttpHeadersInitializer with(HttpServletRequest httpRequest) {
@@ -152,6 +144,9 @@ public class HttpHeadersInitializer {
         if (checksum != null) {
             httpHeaders.put(ETAG, Collections.singletonList(checksum));
         }
+        if (Objects.nonNull((Long.valueOf(this.length)))) {
+            httpHeaders.put(HttpHeaders.CONTENT_LENGTH, Collections.singletonList(String.valueOf(this.length)));
+        }
         httpHeaders.put(LAST_MODIFIED, Collections.singletonList(FastHttpDateFormat.formatDate(lastModified)));
         httpHeaders.put(EXPIRES, Collections.singletonList(FastHttpDateFormat.formatDate(
             System.currentTimeMillis() + DEFAULT_EXPIRE_TIME)));
@@ -171,15 +166,16 @@ public class HttpHeadersInitializer {
 
         }
 
-        httpHeaders.put(CONTENT_DISPOSITION, Collections.singletonList(String.format(CONTENT_DISPOSITION_FORMAT,
-                                                                                     disposition, fileName)));
-        log.debug("Content-Disposition : {}", disposition);
+        httpHeaders.put(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS,
+                        Collections.singletonList(HttpHeaders.ACCEPT_RANGES));
 
-        // Content phase
-        if (METHOD_HEAD.equals(request.getMethod())) {
-            log.debug("HEAD request - skipping content");
-            return null;
+        // distposition may be null here if contentType is null
+        if (!isNullOrEmpty(disposition)) {
+            httpHeaders.put(CONTENT_DISPOSITION, Collections.singletonList(String.format(CONTENT_DISPOSITION_FORMAT,
+                                                                                         disposition,
+                                                                                         encodeText(fileName))));
         }
+        log.debug("Content-Disposition : {}", disposition);
 
         return httpHeaders;
 
@@ -195,12 +191,6 @@ public class HttpHeadersInitializer {
      */
     public boolean isValid() throws IOException {
         if (response == null || request == null) {
-            return false;
-        }
-
-        if (inputStream == null) {
-            log.error("Input stream has no content");
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return false;
         }
 

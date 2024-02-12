@@ -152,17 +152,10 @@ public class Curation extends DSpaceRunnable<CurationScriptConfiguration> {
                 super.handler.logInfo("Curating id: " + entry.getObjectId());
             }
             curator.clear();
-            // does entry relate to a DSO or workflow object?
-            if (entry.getObjectId().indexOf('/') > 0) {
-                for (String taskName : entry.getTaskNames()) {
-                    curator.addTask(taskName);
-                }
-                curator.curate(context, entry.getObjectId());
-            } else {
-                // TODO: Remove this exception once curation tasks are supported by configurable workflow
-                // e.g. see https://github.com/DSpace/DSpace/pull/3157
-                throw new IllegalArgumentException("curation for workflow items is no longer supported");
+            for (String taskName : entry.getTaskNames()) {
+                curator.addTask(taskName);
             }
+            curator.curate(context, entry.getObjectId());
         }
         queue.release(this.queue, ticket, true);
         return ticket;
@@ -189,7 +182,7 @@ public class Curation extends DSpaceRunnable<CurationScriptConfiguration> {
      * @throws FileNotFoundException If file of command line variable -r reporter is not found
      */
     private Curator initCurator() throws FileNotFoundException {
-        Curator curator = new Curator();
+        Curator curator = new Curator(handler);
         OutputStream reporterStream;
         if (null == this.reporter) {
             reporterStream = new NullOutputStream();
@@ -259,9 +252,16 @@ public class Curation extends DSpaceRunnable<CurationScriptConfiguration> {
                 super.handler.logError("EPerson not found: " + currentUserUuid);
                 throw new IllegalArgumentException("Unable to find a user with uuid: " + currentUserUuid);
             }
+            assignSpecialGroupsInContext();
             this.context.setCurrentUser(eperson);
         } catch (SQLException e) {
             handler.handleException("Something went wrong trying to fetch eperson for uuid: " + currentUserUuid, e);
+        }
+    }
+
+    protected void assignSpecialGroupsInContext() throws SQLException {
+        for (UUID uuid : handler.getSpecialGroups()) {
+            context.setSpecialGroup(uuid);
         }
     }
 

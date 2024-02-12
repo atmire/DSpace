@@ -16,6 +16,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.Logger;
+import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Get;
 import org.dspace.services.factory.DSpaceServicesFactory;
 import org.dspace.statistics.factory.StatisticsServiceFactory;
@@ -66,7 +67,6 @@ public class StatisticsClient {
         options.addOption("m", "mark-spiders", false, "Update isBot Flag in Solr");
         options.addOption("f", "delete-spiders-by-flag", false, "Delete Spiders in Solr By isBot Flag");
         options.addOption("i", "delete-spiders-by-ip", false, "Delete Spiders in Solr By IP Address");
-        options.addOption("o", "optimize", false, "Run maintenance on the SOLR index");
         options.addOption("b", "reindex-bitstreams", false, "Reindex the bitstreams to ensure we have the bundle name");
         options.addOption("e", "export", false,
                           "Export SOLR view statistics data to usage-statistics-intermediate-format");
@@ -92,8 +92,6 @@ public class StatisticsClient {
             solrLoggerService.deleteRobotsByIsBotFlag();
         } else if (line.hasOption('i')) {
             solrLoggerService.deleteRobotsByIP();
-        } else if (line.hasOption('o')) {
-            solrLoggerService.optimizeSOLR();
         } else if (line.hasOption('b')) {
             solrLoggerService.reindexBitstreamHits(line.hasOption('r'));
         } else if (line.hasOption('e')) {
@@ -136,6 +134,7 @@ public class StatisticsClient {
                 URL url = new URL(value);
 
                 Get get = new Get();
+                get.setProject(new Project());
                 get.setDest(new File(spiders, url.getHost() + url.getPath().replace("/", "-")));
                 get.setSrc(url);
                 get.setUseTimestamp(true);

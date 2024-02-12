@@ -7,6 +7,8 @@
  */
 package org.dspace.app.rest;
 
+import static org.dspace.app.rest.matcher.ProcessMatcher.matchProcess;
+import static org.dspace.content.ProcessStatus.SCHEDULED;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
@@ -16,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -36,7 +39,6 @@ import org.dspace.scripts.Process;
 import org.dspace.scripts.ProcessLogLevel;
 import org.dspace.scripts.service.ProcessService;
 import org.hamcrest.Matchers;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -221,22 +223,35 @@ public class ProcessRestRepositoryIT extends AbstractControllerIntegrationTest {
 
     @Test
     public void getProcessFiles() throws Exception {
+        context.setCurrentUser(eperson);
         Process newProcess = ProcessBuilder.createProcess(context, eperson, "mock-script", new LinkedList<>()).build();
-
         try (InputStream is = IOUtils.toInputStream("Test File For Process", CharEncoding.UTF_8)) {
-            processService.appendFile(context, process, is, "inputfile", "test.csv");
+            processService.appendFile(context, newProcess, is, "inputfile", "test.csv");
         }
-        Bitstream bitstream = processService.getBitstream(context, process, "inputfile");
+        Bitstream bitstream = processService.getBitstream(context, newProcess, "inputfile");
 
         String token = getAuthToken(admin.getEmail(), password);
 
-        getClient(token).perform(get("/api/system/processes/" + process.getID() + "/files"))
+        getClient(token).perform(get("/api/system/processes/" + newProcess.getID() + "/files"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$._embedded.files[0].name", is("test.csv")))
                         .andExpect(jsonPath("$._embedded.files[0].uuid", is(bitstream.getID().toString())))
                         .andExpect(jsonPath("$._embedded.files[0].metadata['dspace.process.filetype']" +
                                                 "[0].value", is("inputfile")));
-
+        getClient(token).perform(get("/api/core/bitstreams/" + bitstream.getID() + "/content"))
+                        .andExpect(status().isOk());
+        // also the user that triggered the process should be able to access the process' files
+        String epersonToken = getAuthToken(eperson.getEmail(), password);
+        getClient(epersonToken)
+                        .perform(get("/api/system/processes/" + newProcess.getID() + "/files"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.files[0].name", is("test.csv")))
+                        .andExpect(jsonPath("$._embedded.files[0].uuid", is(bitstream.getID().toString())))
+                        .andExpect(jsonPath("$._embedded.files[0].metadata['dspace.process.filetype']" +
+                                                "[0].value", is("inputfile")));
+        getClient(epersonToken)
+                        .perform(get("/api/core/bitstreams/" + bitstream.getID() + "/content"))
+                        .andExpect(status().isOk());
     }
 
     @Test
@@ -244,25 +259,34 @@ public class ProcessRestRepositoryIT extends AbstractControllerIntegrationTest {
         Process newProcess = ProcessBuilder.createProcess(context, eperson, "mock-script", new LinkedList<>()).build();
 
         try (InputStream is = IOUtils.toInputStream("Test File For Process", CharEncoding.UTF_8)) {
-            processService.appendFile(context, process, is, "inputfile", "test.csv");
+            processService.appendFile(context, newProcess, is, "inputfile", "test.csv");
         }
-        Bitstream bitstream = processService.getBitstream(context, process, "inputfile");
+        Bitstream bitstream = processService.getBitstream(context, newProcess, "inputfile");
 
         String token = getAuthToken(admin.getEmail(), password);
 
-        getClient(token).perform(get("/api/system/processes/" + process.getID() + "/files/inputfile"))
+        getClient(token).perform(get("/api/system/processes/" + newProcess.getID() + "/files/inputfile"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$._embedded.bitstreams[0].name", is("test.csv")))
                         .andExpect(jsonPath("$._embedded.bitstreams[0].uuid", is(bitstream.getID().toString())))
                         .andExpect(jsonPath("$._embedded.bitstreams[0].metadata['dspace.process.filetype']" +
                                                 "[0].value", is("inputfile")));
-
+        // also the user that triggered the process should be able to access the process' files
+        String epersonToken = getAuthToken(eperson.getEmail(), password);
+        getClient(epersonToken)
+                        .perform(get("/api/system/processes/" + newProcess.getID() + "/files/inputfile"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.bitstreams[0].name", is("test.csv")))
+                        .andExpect(jsonPath("$._embedded.bitstreams[0].uuid", is(bitstream.getID().toString())))
+                        .andExpect(jsonPath("$._embedded.bitstreams[0].metadata['dspace.process.filetype']" +
+                                                "[0].value", is("inputfile")));
     }
 
     @Test
     public void getProcessFilesTypes() throws Exception {
+        Process newProcess = ProcessBuilder.createProcess(context, eperson, "mock-script", new LinkedList<>()).build();
         try (InputStream is = IOUtils.toInputStream("Test File For Process", CharEncoding.UTF_8)) {
-            processService.appendFile(context, process, is, "inputfile", "test.csv");
+            processService.appendFile(context, newProcess, is, "inputfile", "test.csv");
         }
 
         List<String> fileTypesToCheck = new LinkedList<>();
@@ -270,12 +294,18 @@ public class ProcessRestRepositoryIT extends AbstractControllerIntegrationTest {
 
         String token = getAuthToken(admin.getEmail(), password);
 
-        getClient(token).perform(get("/api/system/processes/" + process.getID() + "/filetypes"))
+        getClient(token).perform(get("/api/system/processes/" + newProcess.getID() + "/filetypes"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$", ProcessFileTypesMatcher
-                            .matchProcessFileTypes("filetypes-" + process.getID(), fileTypesToCheck)));
+                            .matchProcessFileTypes("filetypes-" + newProcess.getID(), fileTypesToCheck)));
 
-
+        // also the user that triggered the process should be able to access the process' files
+        String epersonToken = getAuthToken(eperson.getEmail(), password);
+        getClient(epersonToken)
+                        .perform(get("/api/system/processes/" + newProcess.getID() + "/filetypes"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$", ProcessFileTypesMatcher
+                            .matchProcessFileTypes("filetypes-" + newProcess.getID(), fileTypesToCheck)));
     }
 
     @Test
@@ -661,6 +691,78 @@ public class ProcessRestRepositoryIT extends AbstractControllerIntegrationTest {
     }
 
     @Test
+    public void searchProcessTestByUserSortedOnCreationTimeAsc() throws Exception {
+        SimpleDateFormat date = new SimpleDateFormat("dd/MM/yyyy");
+        Process newProcess1 = ProcessBuilder.createProcess(context, eperson, "mock-script", parameters)
+                                            // not realistic to have creationTime after startTime,
+                                            // but proves startTime is ignored on sort
+                                            .withCreationTime(date.parse("01/01/2000"))
+                                            .withStartAndEndTime("01/01/1990", "01/01/1995").build();
+        Process newProcess2 = ProcessBuilder.createProcess(context, eperson, "mock-script", parameters)
+                                            .withCreationTime(date.parse("01/01/2005"))
+                                            .withStartAndEndTime(null, null).build();
+        Process newProcess3 = ProcessBuilder.createProcess(context, eperson, "mock-script", parameters)
+                                            .withCreationTime(date.parse("01/01/2010"))
+                                            .withStartAndEndTime("01/01/2015", "01/01/2020").build();
+
+        String token = getAuthToken(admin.getEmail(), password);
+
+        getClient(token).perform(get("/api/system/processes/search/byProperty")
+                                     .param("userId", eperson.getID().toString())
+                                     .param("sort", "creationTime,asc"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.processes", contains(
+                            ProcessMatcher.matchProcess(newProcess1.getName(),
+                                                        String.valueOf(eperson.getID().toString()),
+                                                        newProcess1.getID(), parameters, ProcessStatus.SCHEDULED),
+                            ProcessMatcher.matchProcess(newProcess2.getName(),
+                                                        String.valueOf(eperson.getID().toString()),
+                                                        newProcess2.getID(), parameters, ProcessStatus.SCHEDULED),
+                            ProcessMatcher.matchProcess(newProcess3.getName(),
+                                                        String.valueOf(eperson.getID().toString()),
+                                                        newProcess3.getID(), parameters, ProcessStatus.SCHEDULED)
+                        )))
+                        .andExpect(jsonPath("$.page", is(
+                            PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 1, 3))));
+    }
+
+    @Test
+    public void searchProcessTestByUserSortedOnCreationTimeDesc() throws Exception {
+        SimpleDateFormat date = new SimpleDateFormat("dd/MM/yyyy");
+        Process newProcess1 = ProcessBuilder.createProcess(context, eperson, "mock-script", parameters)
+                                            // not realistic to have creationTime after startTime,
+                                            // but proves startTime is ignored on sort
+                                            .withCreationTime(date.parse("01/01/2000"))
+                                            .withStartAndEndTime("01/01/1990", "01/01/1995").build();
+        Process newProcess2 = ProcessBuilder.createProcess(context, eperson, "mock-script", parameters)
+                                            .withCreationTime(date.parse("01/01/2005"))
+                                            .withStartAndEndTime(null, null).build();
+        Process newProcess3 = ProcessBuilder.createProcess(context, eperson, "mock-script", parameters)
+                                            .withCreationTime(date.parse("01/01/2010"))
+                                            .withStartAndEndTime("01/01/2015", "01/01/2020").build();
+
+        String token = getAuthToken(admin.getEmail(), password);
+
+        getClient(token).perform(get("/api/system/processes/search/byProperty")
+                                     .param("userId", eperson.getID().toString())
+                                     .param("sort", "creationTime,desc"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.processes", contains(
+                            ProcessMatcher.matchProcess(newProcess3.getName(),
+                                                        String.valueOf(eperson.getID().toString()),
+                                                        newProcess3.getID(), parameters, ProcessStatus.SCHEDULED),
+                            ProcessMatcher.matchProcess(newProcess2.getName(),
+                                                        String.valueOf(eperson.getID().toString()),
+                                                        newProcess2.getID(), parameters, ProcessStatus.SCHEDULED),
+                            ProcessMatcher.matchProcess(newProcess1.getName(),
+                                                        String.valueOf(eperson.getID().toString()),
+                                                        newProcess1.getID(), parameters, ProcessStatus.SCHEDULED)
+                        )))
+                        .andExpect(jsonPath("$.page", is(
+                            PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 1, 3))));
+    }
+
+    @Test
     public void searchProcessTestByUserSortedOnEndTimeAsc() throws Exception {
         Process newProcess1 = ProcessBuilder.createProcess(context, eperson, "mock-script", parameters)
                                             .withStartAndEndTime("10/01/1990", "20/01/1990").build();
@@ -768,7 +870,7 @@ public class ProcessRestRepositoryIT extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    public void searchProcessTestByUserSortedOnNonExistingIsSortedAsDefault() throws Exception {
+    public void searchProcessTestByUserSortedOnNonExistingBadRequest() throws Exception {
         Process newProcess1 = ProcessBuilder.createProcess(context, eperson, "mock-script", parameters)
                                             .withStartAndEndTime("10/01/1990", "20/01/1990").build();
         Process newProcess2 = ProcessBuilder.createProcess(context, eperson, "mock-script", parameters)
@@ -785,32 +887,67 @@ public class ProcessRestRepositoryIT extends AbstractControllerIntegrationTest {
     }
 
     @Test
+    public void testFindByCurrentUser() throws Exception {
+
+        Process process1 = ProcessBuilder.createProcess(context, eperson, "mock-script", parameters)
+            .withStartAndEndTime("10/01/1990", "20/01/1990")
+            .build();
+        ProcessBuilder.createProcess(context, admin, "mock-script", parameters)
+            .withStartAndEndTime("11/01/1990", "19/01/1990")
+            .build();
+        Process process3 = ProcessBuilder.createProcess(context, eperson, "mock-script", parameters)
+            .withStartAndEndTime("12/01/1990", "18/01/1990")
+            .build();
+
+        String token = getAuthToken(eperson.getEmail(), password);
+
+        getClient(token).perform(get("/api/system/processes/search/own"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$._embedded.processes", contains(
+                matchProcess(process3.getName(), eperson.getID().toString(), process3.getID(), parameters, SCHEDULED),
+                matchProcess(process1.getName(), eperson.getID().toString(), process1.getID(), parameters, SCHEDULED))))
+            .andExpect(jsonPath("$.page", is(PageMatcher.pageEntryWithTotalPagesAndElements(0, 20, 1, 2))));
+
+    }
+
+    @Test
     public void getProcessOutput() throws Exception {
+        context.setCurrentUser(eperson);
+        Process process1 = ProcessBuilder.createProcess(context, eperson, "mock-script", parameters)
+                .withStartAndEndTime("10/01/1990", "20/01/1990")
+                .build();
+
         try (InputStream is = IOUtils.toInputStream("Test File For Process", CharEncoding.UTF_8)) {
-            processService.appendLog(process.getID(), process.getName(), "testlog", ProcessLogLevel.INFO);
+            processService.appendLog(process1.getID(), process1.getName(), "testlog", ProcessLogLevel.INFO);
         }
-        processService.createLogBitstream(context, process);
+        processService.createLogBitstream(context, process1);
         List<String> fileTypesToCheck = new LinkedList<>();
         fileTypesToCheck.add("inputfile");
 
         String token = getAuthToken(admin.getEmail(), password);
 
-        getClient(token).perform(get("/api/system/processes/" + process.getID() + "/output"))
+        getClient(token).perform(get("/api/system/processes/" + process1.getID() + "/output"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.name",
-                                            is(process.getName() + process.getID() + ".log")))
+                                            is(process1.getName() + process1.getID() + ".log")))
                         .andExpect(jsonPath("$.type", is("bitstream")))
                         .andExpect(jsonPath("$.metadata['dc.title'][0].value",
-                                            is(process.getName() + process.getID() + ".log")))
+                                            is(process1.getName() + process1.getID() + ".log")))
                         .andExpect(jsonPath("$.metadata['dspace.process.filetype'][0].value",
                                             is("script_output")));
 
+        String epersonToken = getAuthToken(eperson.getEmail(), password);
 
-    }
+        getClient(epersonToken)
+                        .perform(get("/api/system/processes/" + process1.getID() + "/output"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.name",
+                                            is(process1.getName() + process1.getID() + ".log")))
+                        .andExpect(jsonPath("$.type", is("bitstream")))
+                        .andExpect(jsonPath("$.metadata['dc.title'][0].value",
+                                            is(process1.getName() + process1.getID() + ".log")))
+                        .andExpect(jsonPath("$.metadata['dspace.process.filetype'][0].value",
+                                            is("script_output")));
 
-    @After
-    @Override
-    public void destroy() throws Exception {
-        super.destroy();
     }
 }

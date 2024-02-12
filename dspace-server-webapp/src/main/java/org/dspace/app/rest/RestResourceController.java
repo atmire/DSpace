@@ -8,6 +8,7 @@
 package org.dspace.app.rest;
 
 import static org.dspace.app.rest.utils.RegexUtils.REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT;
+import static org.dspace.app.rest.utils.RegexUtils.REGEX_REQUESTMAPPING_IDENTIFIER_AS_HEX32;
 import static org.dspace.app.rest.utils.RegexUtils.REGEX_REQUESTMAPPING_IDENTIFIER_AS_STRING_VERSION_STRONG;
 import static org.dspace.app.rest.utils.RegexUtils.REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -126,7 +127,7 @@ public class RestResourceController implements InitializingBean {
             // Link l = linkTo(this.getClass(), r).withRel(r);
             String[] split = r.split("\\.", 2);
             String plural = English.plural(split[1]);
-            Link l = new Link("/api/" + split[0] + "/" + plural, plural);
+            Link l = Link.of("/api/" + split[0] + "/" + plural, plural);
             links.add(l);
             log.debug(l.getRel().value() + " " + l.getHref());
         }
@@ -572,6 +573,37 @@ public class RestResourceController implements InitializingBean {
     }
 
     /**
+     * Called in POST, multipart, upload to a specific rest resource the file passed as "file" request parameter
+     *
+     * Note that the regular expression in the request mapping accept a String as identifier;
+     *
+     * @param request
+     *            the http request
+     * @param apiCategory
+     *            the api category
+     * @param model
+     *            the rest model that identify the REST resource collection
+     * @param id
+     *            the id of the specific rest resource
+     * @param uploadfile
+     *            the file to upload
+     * @return the created resource
+     * @throws HttpRequestMethodNotSupportedException
+     */
+    @RequestMapping(method = RequestMethod.POST,
+            value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_STRING_VERSION_STRONG,
+            headers = "content-type=multipart/form-data")
+    public <ID extends Serializable> ResponseEntity<RepresentationModel<?>> upload(HttpServletRequest request,
+                                                                                   @PathVariable String apiCategory,
+                                                                                   @PathVariable String model,
+                                                                                   @PathVariable String id,
+                                                                                   @RequestParam("file") MultipartFile
+                                                                                uploadfile)
+        throws HttpRequestMethodNotSupportedException {
+        return uploadInternal(request, apiCategory, model, id, uploadfile);
+    }
+
+    /**
      * Internal upload method.
      *
      * @param request
@@ -684,6 +716,28 @@ public class RestResourceController implements InitializingBean {
     }
 
     /**
+     * PATCH method, using operation on the resources following (JSON) Patch notation (https://tools.ietf
+     * .org/html/rfc6902)
+     *
+     * Note that the regular expression in the request mapping accept a UUID as identifier;
+     *
+     * @param request
+     * @param apiCategory
+     * @param model
+     * @param id
+     * @param jsonNode
+     * @return
+     * @throws HttpRequestMethodNotSupportedException
+     */
+    @RequestMapping(method = RequestMethod.PATCH, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_STRING_VERSION_STRONG)
+    public ResponseEntity<RepresentationModel<?>> patch(HttpServletRequest request, @PathVariable String apiCategory,
+                                                        @PathVariable String model,
+                                                        @PathVariable String id,
+                                                        @RequestBody(required = true) JsonNode jsonNode) {
+        return patchInternal(request, apiCategory, model, id, jsonNode);
+    }
+
+    /**
      * Internal patch method
      *
      * @param request
@@ -710,9 +764,13 @@ public class RestResourceController implements InitializingBean {
             log.error(e.getMessage(), e);
             throw e;
         }
-        DSpaceResource result = converter.toResource(modelObject);
-        //TODO manage HTTPHeader
-        return ControllerUtils.toResponseEntity(HttpStatus.OK, new HttpHeaders(), result);
+        if (modelObject != null) {
+            DSpaceResource result = converter.toResource(modelObject);
+            //TODO manage HTTPHeader
+            return ControllerUtils.toResponseEntity(HttpStatus.OK, new HttpHeaders(), result);
+        } else {
+            return ControllerUtils.toEmptyResponse(HttpStatus.NO_CONTENT);
+        }
 
     }
 
@@ -820,7 +878,7 @@ public class RestResourceController implements InitializingBean {
                         link = linkTo(this.getClass(), apiCategory, model).slash(uuid).slash(subpath).withSelfRel();
                     }
 
-                    return new EntityModel(new EmbeddedPage(link.getHref(),
+                    return EntityModel.of(new EmbeddedPage(link.getHref(),
                             pageResult.map(converter::toResource), null, subpath));
                 } else {
                     RestModel object = (RestModel) linkMethod.invoke(linkRepository, request,
@@ -1035,6 +1093,17 @@ public class RestResourceController implements InitializingBean {
         return uriComponentsBuilder.encode().build().toString();
     }
 
+    /**
+     * Method to delete an entity by ID
+     * Note that the regular expression in the request mapping accept a number as identifier;
+     *
+     * @param request
+     * @param apiCategory
+     * @param model
+     * @param id
+     * @return
+     * @throws HttpRequestMethodNotSupportedException
+     */
     @RequestMapping(method = RequestMethod.DELETE, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_DIGIT)
     public ResponseEntity<RepresentationModel<?>> delete(HttpServletRequest request, @PathVariable String apiCategory,
                                                          @PathVariable String model, @PathVariable Integer id)
@@ -1047,6 +1116,13 @@ public class RestResourceController implements InitializingBean {
                                                          @PathVariable String model, @PathVariable UUID uuid)
         throws HttpRequestMethodNotSupportedException {
         return deleteInternal(apiCategory, model, uuid);
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_STRING_VERSION_STRONG)
+    public ResponseEntity<RepresentationModel<?>> delete(HttpServletRequest request, @PathVariable String apiCategory,
+                                                         @PathVariable String model, @PathVariable String id)
+        throws HttpRequestMethodNotSupportedException {
+        return deleteInternal(apiCategory, model, id);
     }
 
     /**
@@ -1145,6 +1221,36 @@ public class RestResourceController implements InitializingBean {
                                                     @PathVariable String apiCategory, @PathVariable String model,
                                                     @PathVariable Integer id) throws IOException {
         return putOneUriListInternal(request, apiCategory, model, id);
+    }
+
+    /**
+     * Execute a PUT request for an entity with id of type String and containing
+     * 32 hexadecimal digits.
+     *
+     * <p>
+     * curl -X PUT -H "Content-Type:application/json" http://<dspace.server.url>/api/{apiCategory}/{model}/{id}
+     *
+     * <p>Example:
+     * <pre>
+     * {@code
+     *      curl -X PUT -H "Content-Type:application/json" http://<dspace.server.url>/api/core/metadatafield/d41d8cd98f00b204e9800998ecf8427e
+     * }
+     * </pre>
+     *
+     * @param request     the http request
+     * @param apiCategory the API category e.g. "api"
+     * @param model       the DSpace model e.g. "collection"
+     * @param id        the ID of the target REST object
+     * @param jsonNode    the part of the request body representing the updated rest object
+     * @return the relevant REST resource
+     */
+    @RequestMapping(method = RequestMethod.PUT, value = REGEX_REQUESTMAPPING_IDENTIFIER_AS_HEX32,
+        consumes = {"application/json", "application/hal+json"})
+    public DSpaceResource<RestAddressableModel> put(HttpServletRequest request,
+                                                    @PathVariable String apiCategory, @PathVariable String model,
+                                                    @PathVariable String id,
+                                                    @RequestBody(required = true) JsonNode jsonNode) {
+        return putOneJsonInternal(request, apiCategory, model, id, jsonNode);
     }
 
     /**

@@ -8,7 +8,7 @@
 package org.dspace.scripts;
 
 import java.io.InputStream;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,6 +18,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.dspace.cli.DSpaceSkipUnknownArgumentsParser;
 import org.dspace.eperson.EPerson;
 import org.dspace.scripts.configuration.ScriptConfiguration;
 import org.dspace.scripts.handler.DSpaceRunnableHandler;
@@ -37,7 +38,12 @@ public abstract class DSpaceRunnable<T extends ScriptConfiguration> implements R
     protected CommandLine commandLine;
 
     /**
-     * This EPerson identifier variable is the uuid of the eperson that's running the script
+     * The minimal CommandLine object for the script that'll hold help information
+     */
+    protected CommandLine helpCommandLine;
+
+    /**
+     * This EPerson identifier variable is the UUID of the EPerson that's running the script
      */
     private UUID epersonIdentifier;
 
@@ -64,16 +70,46 @@ public abstract class DSpaceRunnable<T extends ScriptConfiguration> implements R
      * @param args                  The arguments given to the script
      * @param dSpaceRunnableHandler The DSpaceRunnableHandler object that defines from where the script was ran
      * @param currentUser
+     * @return the result of this step; StepResult.Continue: continue the normal process,
+     * initialize is successful; otherwise exit the process (the help or version is shown)
      * @throws ParseException       If something goes wrong
      */
-    public void initialize(String[] args, DSpaceRunnableHandler dSpaceRunnableHandler,
+    public StepResult initialize(String[] args, DSpaceRunnableHandler dSpaceRunnableHandler,
                            EPerson currentUser) throws ParseException {
         if (currentUser != null) {
             this.setEpersonIdentifier(currentUser.getID());
         }
         this.setHandler(dSpaceRunnableHandler);
-        this.parse(args);
+
+        // parse the command line in a first step for the help options
+        // --> no other option is required
+        StepResult result = this.parseForHelp(args);
+        switch (result) {
+            case Exit:
+                // arguments of the command line matches the help options, handle this
+                handleHelpCommandLine();
+                break;
+
+            case Continue:
+                // arguments of the command line matches NOT the help options, parse the args for the normal options
+                result = this.parse(args);
+                break;
+            default:
+                break;
+        }
+
+        return result;
     }
+
+
+    /**
+     * This method handle the help command line. In this easy implementation only the help is printed. For more
+     * complexity override this method.
+     */
+    private void handleHelpCommandLine() {
+        printHelp();
+    }
+
 
     /**
      * This method will take the primitive array of String objects that represent the parameters given to the String
@@ -81,9 +117,19 @@ public abstract class DSpaceRunnable<T extends ScriptConfiguration> implements R
      * @param args              The primitive array of Strings representing the parameters
      * @throws ParseException   If something goes wrong
      */
-    private void parse(String[] args) throws ParseException {
+    private StepResult parse(String[] args) throws ParseException {
         commandLine = new DefaultParser().parse(getScriptConfiguration().getOptions(), args);
         setup();
+        return StepResult.Continue;
+    }
+
+    private StepResult parseForHelp(String[] args) throws ParseException {
+        helpCommandLine = new DSpaceSkipUnknownArgumentsParser().parse(getScriptConfiguration().getHelpOptions(), args);
+        if (helpCommandLine.getOptions() != null && helpCommandLine.getOptions().length > 0) {
+            return StepResult.Exit;
+        }
+
+        return StepResult.Continue;
     }
 
     /**
@@ -129,7 +175,7 @@ public abstract class DSpaceRunnable<T extends ScriptConfiguration> implements R
      * @return  The list of Strings representing filenames from the options given to the script
      */
     public List<String> getFileNamesFromInputStreamOptions() {
-        List<String> fileNames = new LinkedList<>();
+        List<String> fileNames = new ArrayList<>();
 
         for (Option option : getScriptConfiguration().getOptions().getOptions()) {
             if (option.getType() == InputStream.class &&
@@ -151,11 +197,15 @@ public abstract class DSpaceRunnable<T extends ScriptConfiguration> implements R
     }
 
     /**
-     * Generic setter for the epersonIdentifier
-     * This EPerson identifier variable is the uuid of the eperson that's running the script
+     * Generic setter for the epersonIdentifier.
+     * This EPerson identifier variable is the UUID of the EPerson that's running the script.
      * @param epersonIdentifier   The epersonIdentifier to be set on this DSpaceRunnable
      */
     public void setEpersonIdentifier(UUID epersonIdentifier) {
         this.epersonIdentifier = epersonIdentifier;
+    }
+
+    public enum StepResult {
+        Continue, Exit;
     }
 }

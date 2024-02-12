@@ -19,6 +19,7 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.dspace.core.Context;
 import org.dspace.core.ReloadableEntity;
@@ -46,7 +47,7 @@ public class MetadataValue implements ReloadableEntity<Integer> {
     @Column(name = "metadata_value_id")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "metadatavalue_seq")
     @SequenceGenerator(name = "metadatavalue_seq", sequenceName = "metadatavalue_seq", allocationSize = 1)
-    private Integer id;
+    private final Integer id;
 
     /**
      * The primary key for the metadata value
@@ -59,7 +60,7 @@ public class MetadataValue implements ReloadableEntity<Integer> {
      * The value of the field
      */
     @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
+    @Type(type = "org.hibernate.type.TextType")
     @Column(name = "text_value")
     private String value;
 
@@ -104,6 +105,7 @@ public class MetadataValue implements ReloadableEntity<Integer> {
      *
      * @return metadata value ID
      */
+    @Override
     public Integer getID() {
         return id;
     }
@@ -168,6 +170,14 @@ public class MetadataValue implements ReloadableEntity<Integer> {
 
     public void setMetadataField(MetadataField metadataField) {
         this.metadataField = metadataField;
+    }
+
+    /**
+     * @return {@code MetadataField#getID()}
+     */
+    @Transient
+    protected Integer getMetadataFieldId() {
+        return getMetadataField().getID();
     }
 
     /**
@@ -249,10 +259,7 @@ public class MetadataValue implements ReloadableEntity<Integer> {
         if (!this.getID().equals(other.getID())) {
             return false;
         }
-        if (!this.getDSpaceObject().getID().equals(other.getDSpaceObject().getID())) {
-            return false;
-        }
-        return true;
+        return this.getDSpaceObject().getID().equals(other.getDSpaceObject().getID());
     }
 
     @Override

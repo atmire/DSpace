@@ -28,7 +28,7 @@ import org.dspace.content.service.BundleService;
 import org.dspace.content.service.ItemService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
-import org.dspace.core.LogManager;
+import org.dspace.core.LogHelper;
 import org.dspace.event.Event;
 import org.dspace.storage.bitstore.service.BitstreamStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +45,8 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
     /**
      * log4j logger
      */
-    private static Logger log = org.apache.logging.log4j.LogManager.getLogger(BitstreamServiceImpl.class);
+    private static final Logger log
+            = org.apache.logging.log4j.LogManager.getLogger();
 
 
     @Autowired(required = true)
@@ -73,7 +74,7 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
 
         if (bitstream == null) {
             if (log.isDebugEnabled()) {
-                log.debug(LogManager.getHeader(context, "find_bitstream",
+                log.debug(LogHelper.getHeader(context, "find_bitstream",
                                                "not_found,bitstream_id=" + id));
             }
 
@@ -82,7 +83,7 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
 
         // not null, return Bitstream
         if (log.isDebugEnabled()) {
-            log.debug(LogManager.getHeader(context, "find_bitstream",
+            log.debug(LogHelper.getHeader(context, "find_bitstream",
                                            "bitstream_id=" + id));
         }
 
@@ -96,7 +97,7 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
 
     @Override
     public Bitstream clone(Context context, Bitstream bitstream)
-            throws SQLException {
+            throws SQLException, AuthorizeException {
         // Create a new bitstream with a new ID.
         Bitstream clonedBitstream = bitstreamDAO.create(context, new Bitstream());
         // Set the internal identifier, file size, checksum, and
@@ -106,18 +107,7 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
         clonedBitstream.setChecksum(bitstream.getChecksum());
         clonedBitstream.setChecksumAlgorithm(bitstream.getChecksumAlgorithm());
         clonedBitstream.setFormat(bitstream.getBitstreamFormat());
-
-        try {
-            //Update our bitstream but turn off the authorization system since permissions
-            //haven't been set at this point in time.
-            context.turnOffAuthorisationSystem();
-            update(context, clonedBitstream);
-        } catch (AuthorizeException e) {
-            log.error(e);
-            //Can never happen since we turn off authorization before we update
-        } finally {
-            context.restoreAuthSystemState();
-        }
+        update(context, clonedBitstream);
         return clonedBitstream;
     }
 
@@ -131,7 +121,7 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
         // Store the bits
         UUID bitstreamID = bitstreamStorageService.store(context, bitstreamDAO.create(context, new Bitstream()), is);
 
-        log.info(LogManager.getHeader(context, "create_bitstream",
+        log.info(LogHelper.getHeader(context, "create_bitstream",
                                       "bitstream_id=" + bitstreamID));
 
         // Set the format to "unknown"
@@ -191,7 +181,7 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
         bitstreamStorageService.register(
             context, bitstream, assetstore, bitstreamPath);
 
-        log.info(LogManager.getHeader(context,
+        log.info(LogHelper.getHeader(context,
                                       "create_bitstream",
                                       "bitstream_id=" + bitstream.getID()));
 
@@ -248,7 +238,7 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
         // Check authorisation
         authorizeService.authorizeAction(context, bitstream, Constants.WRITE);
 
-        log.info(LogManager.getHeader(context, "update_bitstream",
+        log.info(LogHelper.getHeader(context, "update_bitstream",
                                       "bitstream_id=" + bitstream.getID()));
         super.update(context, bitstream);
         if (bitstream.isModified()) {
@@ -273,7 +263,7 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
         // changed to a check on delete
         // Check authorisation
         authorizeService.authorizeAction(context, bitstream, Constants.DELETE);
-        log.info(LogManager.getHeader(context, "delete_bitstream",
+        log.info(LogHelper.getHeader(context, "delete_bitstream",
                                       "bitstream_id=" + bitstream.getID()));
 
         context.addEvent(new Event(Event.DELETE, Constants.BITSTREAM, bitstream.getID(),
@@ -286,6 +276,11 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
         //Remove our bitstream from all our bundles
         final List<Bundle> bundles = bitstream.getBundles();
         for (Bundle bundle : bundles) {
+            authorizeService.authorizeAction(context, bundle, Constants.REMOVE);
+            //We also need to remove the bitstream id when it's set as bundle's primary bitstream
+            if (bitstream.equals(bundle.getPrimaryBitstream())) {
+                bundle.unsetPrimaryBitstreamID();
+            }
             bundle.removeBitstream(bitstream);
         }
 
@@ -342,15 +337,16 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
     }
 
     @Override
-    public List<Bitstream> findDeletedBitstreams(Context context) throws SQLException {
-        return bitstreamDAO.findDeletedBitstreams(context);
+    public List<Bitstream> findDeletedBitstreams(Context context, int limit, int offset) throws SQLException {
+        return bitstreamDAO.findDeletedBitstreams(context, limit, offset);
     }
 
     @Override
     public void expunge(Context context, Bitstream bitstream) throws SQLException, AuthorizeException {
         authorizeService.authorizeAction(context, bitstream, Constants.DELETE);
         if (!bitstream.isDeleted()) {
-            throw new IllegalStateException("Bitstream must be deleted before it can be removed from the database");
+            throw new IllegalStateException("Bitstream " + bitstream.getID().toString()
+                    + " must be deleted before it can be removed from the database.");
         }
         bitstreamDAO.delete(context, bitstream);
     }
@@ -412,7 +408,7 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
 
     @Override
     public Bitstream getThumbnail(Context context, Bitstream bitstream) throws SQLException {
-        Pattern pattern = Pattern.compile("^" + bitstream.getName() + ".([^.]+)$");
+        Pattern pattern = getBitstreamNamePattern(bitstream);
 
         for (Bundle bundle : bitstream.getBundles()) {
             for (Item item : bundle.getItems()) {
@@ -427,6 +423,13 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
         }
 
         return null;
+    }
+
+    protected Pattern getBitstreamNamePattern(Bitstream bitstream) {
+        if (bitstream.getName() != null) {
+            return Pattern.compile("^" + Pattern.quote(bitstream.getName()) + ".([^.]+)$");
+        }
+        return Pattern.compile("^" + bitstream.getName() + ".([^.]+)$");
     }
 
     @Override
@@ -455,10 +458,15 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
 
     @Override
     public Bitstream findByIdOrLegacyId(Context context, String id) throws SQLException {
-        if (StringUtils.isNumeric(id)) {
-            return findByLegacyId(context, Integer.parseInt(id));
-        } else {
-            return find(context, UUID.fromString(id));
+        try {
+            if (StringUtils.isNumeric(id)) {
+                return findByLegacyId(context, Integer.parseInt(id));
+            } else {
+                return find(context, UUID.fromString(id));
+            }
+        } catch (IllegalArgumentException e) {
+            // Not a valid legacy ID or valid UUID
+            return null;
         }
     }
 

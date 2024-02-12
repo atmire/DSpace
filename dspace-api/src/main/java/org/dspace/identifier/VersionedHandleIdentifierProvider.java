@@ -27,7 +27,7 @@ import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.DSpaceObjectService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
-import org.dspace.core.LogManager;
+import org.dspace.core.LogHelper;
 import org.dspace.handle.service.HandleService;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
@@ -35,6 +35,7 @@ import org.dspace.versioning.Version;
 import org.dspace.versioning.VersionHistory;
 import org.dspace.versioning.service.VersionHistoryService;
 import org.dspace.versioning.service.VersioningService;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -45,7 +46,7 @@ import org.springframework.stereotype.Component;
  * @author Pascal-Nicolas Becker (dspace at pascal dash becker dot de)
  */
 @Component
-public class VersionedHandleIdentifierProvider extends IdentifierProvider {
+public class VersionedHandleIdentifierProvider extends IdentifierProvider implements InitializingBean {
     /**
      * log4j category
      */
@@ -71,6 +72,19 @@ public class VersionedHandleIdentifierProvider extends IdentifierProvider {
     @Autowired(required = true)
     protected ContentServiceFactory contentServiceFactory;
 
+    /**
+     * After all the properties are set check that the versioning is enabled
+     *
+     * @throws Exception throws an exception if this isn't the case
+     */
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        if (!configurationService.getBooleanProperty("versioning.enabled", true)) {
+            throw new RuntimeException("the " + VersionedHandleIdentifierProvider.class.getName() +
+                    " is enabled, but the versioning is disabled.");
+        }
+    }
+
     @Override
     public boolean supports(Class<? extends Identifier> identifier) {
         return Handle.class.isAssignableFrom(identifier);
@@ -89,7 +103,7 @@ public class VersionedHandleIdentifierProvider extends IdentifierProvider {
                 populateHandleMetadata(context, dso, id);
             }
         } catch (IOException | SQLException | AuthorizeException e) {
-            log.error(LogManager.getHeader(context, "Error while attempting to create handle",
+            log.error(LogHelper.getHeader(context, "Error while attempting to create handle",
                                            "Item id: " + (dso != null ? dso.getID() : "")), e);
             throw new RuntimeException(
                 "Error while attempting to create identifier for Item id: " + (dso != null ? dso.getID() : ""));
@@ -240,8 +254,9 @@ public class VersionedHandleIdentifierProvider extends IdentifierProvider {
         try {
             handleService.createHandle(context, dso, identifier);
         } catch (IllegalStateException | SQLException e) {
-            log.error(
-                LogManager.getHeader(context, "Error while attempting to create handle", "Item id: " + dso.getID()), e);
+            log.error(LogHelper.getHeader(context,
+                    "Error while attempting to create handle",
+                    "Item id: " + dso.getID()), e);
             throw new RuntimeException("Error while attempting to create identifier for Item id: " + dso.getID());
         }
     }
@@ -274,8 +289,9 @@ public class VersionedHandleIdentifierProvider extends IdentifierProvider {
             }
             return handleId;
         } catch (SQLException | AuthorizeException e) {
-            log.error(
-                LogManager.getHeader(context, "Error while attempting to create handle", "Item id: " + dso.getID()), e);
+            log.error(LogHelper.getHeader(context,
+                    "Error while attempting to create handle",
+                    "Item id: " + dso.getID()), e);
             throw new RuntimeException("Error while attempting to create identifier for Item id: " + dso.getID());
         }
     }
@@ -287,7 +303,7 @@ public class VersionedHandleIdentifierProvider extends IdentifierProvider {
             identifier = handleService.parseHandle(identifier);
             return handleService.resolveToObject(context, identifier);
         } catch (IllegalStateException | SQLException e) {
-            log.error(LogManager.getHeader(context, "Error while resolving handle to item", "handle: " + identifier),
+            log.error(LogHelper.getHeader(context, "Error while resolving handle to item", "handle: " + identifier),
                       e);
         }
         return null;
