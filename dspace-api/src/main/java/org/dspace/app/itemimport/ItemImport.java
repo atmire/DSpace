@@ -239,9 +239,10 @@ public class ItemImport extends DSpaceRunnable<ItemImportScriptConfiguration> {
         } finally {
             if (zip) {
                 // if zip file was valid then clean sourcedir
-                if (zipvalid && sourcedir != null && new File(sourcedir).exists()) {
-                    FileUtils.deleteDirectory(new File(sourcedir));
-                }
+                // Don't delete the source dir -> Full explanation https://github.com/DSpace/DSpace/issues/9330
+                //if (zipvalid && sourcedir != null && new File(sourcedir).exists()) {
+                    //FileUtils.deleteDirectory(new File(sourcedir));
+                //}
 
                 // clean workdir
                 if (workDir != null && workDir.exists()) {
