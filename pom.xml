@@ -23,7 +23,7 @@
         <spring-boot.version>2.6.8</spring-boot.version>
         <spring-security.version>5.6.5</spring-security.version> <!-- sync with version used by spring-boot-->
         <hibernate.version>5.6.5.Final</hibernate.version>
-        <hibernate-validator.version>6.0.23.Final</hibernate-validator.version>
+        <hibernate-validator.version>6.2.0.Final</hibernate-validator.version>
         <postgresql.driver.version>42.4.3</postgresql.driver.version>
         <solr.client.version>8.11.1</solr.client.version>
 
@@ -115,7 +115,7 @@
                             </goals>
                             <configuration>
                                 <rules>
-                                    <DependencyConvergence />
+                                    <DependencyConvergence/>
                                 </rules>
                             </configuration>
                         </execution>
