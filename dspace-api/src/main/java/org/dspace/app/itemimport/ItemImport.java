@@ -231,7 +231,8 @@ public class ItemImport extends DSpaceRunnable<ItemImportScriptConfiguration> {
         } finally {
             // clean work dir
             if (zip) {
-                FileUtils.deleteDirectory(new File(sourcedir));
+                // Don't delete the source dir -> Full explanation https://github.com/DSpace/DSpace/issues/9330
+                // FileUtils.deleteDirectory(new File(sourcedir));
                 FileUtils.deleteDirectory(workDir);
             }
 
