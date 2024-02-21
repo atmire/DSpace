@@ -222,7 +222,7 @@ public class SolrServiceImpl implements SearchService, IndexingService {
             log.info("Try to delete uniqueID:" + uniqueID);
             indexObjectServiceFactory.getIndexableObjectFactory(indexableObject).delete(indexableObject);
             if (commit) {
-                solrSearchCore.getSolr().commit();
+                solrSearchCore.getSolr().commit(false, false);
             }
         } catch (IOException | SolrServerException exception) {
             log.error(exception.getMessage(), exception);
@@ -263,7 +263,7 @@ public class SolrServiceImpl implements SearchService, IndexingService {
                     log.warn("Object not found in Solr index: " + searchUniqueID);
                 }
                 if (commit) {
-                    solrSearchCore.getSolr().commit();
+                    solrSearchCore.getSolr().commit(false, false);
                 }
             }
         } catch (SolrServerException e) {
@@ -352,7 +352,7 @@ public class SolrServiceImpl implements SearchService, IndexingService {
                 }
             }
             if (solrSearchCore.getSolr() != null) {
-                solrSearchCore.getSolr().commit();
+                solrSearchCore.getSolr().commit(false, false);
             }
 
         } catch (IOException | SQLException | SolrServerException e) {
@@ -1065,7 +1065,7 @@ public class SolrServiceImpl implements SearchService, IndexingService {
                 log.info("ZombieDocs ");
                 zombieDocs.forEach(log::info);
                 solrSearchCore.getSolr().deleteById(zombieDocs);
-                solrSearchCore.getSolr().commit();
+                solrSearchCore.getSolr().commit(false, false);
             } else {
                 valid = true;
             }
@@ -1548,7 +1548,7 @@ public class SolrServiceImpl implements SearchService, IndexingService {
     public void commit() throws SearchServiceException {
         try {
             if (solrSearchCore.getSolr() != null) {
-                solrSearchCore.getSolr().commit();
+                solrSearchCore.getSolr().commit(false, false);
             }
         } catch (IOException | SolrServerException e) {
             throw new SearchServiceException(e.getMessage(), e);

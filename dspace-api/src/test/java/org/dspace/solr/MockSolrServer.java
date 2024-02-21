@@ -108,7 +108,7 @@ public class MockSolrServer {
             //Start with an empty index
             try {
                 server.deleteByQuery("*:*");
-                server.commit();
+                server.commit(false, false);
             } catch (SolrServerException | IOException e) {
                 log.error("Failed to empty Solr index:  {}", e.getMessage(), e);
             }

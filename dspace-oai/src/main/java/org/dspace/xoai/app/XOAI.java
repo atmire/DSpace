@@ -171,7 +171,7 @@ public class XOAI {
                 }
 
             }
-            solrServerResolver.getServer().commit();
+            solrServerResolver.getServer().commit(false, false);
 
             if (optimize) {
                 println("Optimizing Index");
@@ -340,7 +340,7 @@ public class XOAI {
                 if (i % batchSize == 0) {
                     System.out.println(i + " items imported so far...");
                     server.add(list);
-                    server.commit();
+                    server.commit(false, false);
                     list.clear();
                 }
             }
@@ -349,7 +349,7 @@ public class XOAI {
                 if (!list.isEmpty()) {
                     server.add(list);
                 }
-                server.commit(true, true);
+                server.commit(false, false);
                 list.clear();
             }
             return i;
@@ -553,7 +553,7 @@ public class XOAI {
         try {
             System.out.println("Clearing index");
             solrServerResolver.getServer().deleteByQuery("*:*");
-            solrServerResolver.getServer().commit();
+            solrServerResolver.getServer().commit(false, false);
             System.out.println("Index cleared");
         } catch (SolrServerException | IOException ex) {
             throw new DSpaceSolrIndexerException(ex.getMessage(), ex);
