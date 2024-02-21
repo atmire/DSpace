@@ -829,7 +829,7 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         item = context.reloadEntity(item);
         itemService.delete(context, item);
         context.commit();
-        indexer.commit();
+        indexer.commit(true);
         context.restoreAuthSystemState();
     }
 
@@ -839,7 +839,7 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         anotherWorkspaceItem = context.reloadEntity(anotherWorkspaceItem);
         workspaceItemService.deleteAll(context, anotherWorkspaceItem);
         context.commit();
-        indexer.commit();
+        indexer.commit(true);
         context.restoreAuthSystemState();
     }
 
@@ -849,7 +849,7 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         workflowItem = context.reloadEntity(workflowItem);
         workflowService.deleteWorkflowByWorkflowItem(context, workflowItem, admin);
         context.commit();
-        indexer.commit();
+        indexer.commit(true);
         context.restoreAuthSystemState();
     }
 

@@ -553,7 +553,7 @@ public class XOAI {
         try {
             System.out.println("Clearing index");
             solrServerResolver.getServer().deleteByQuery("*:*");
-            solrServerResolver.getServer().commit(false, false);
+            solrServerResolver.getServer().commit(true, true);
             System.out.println("Index cleared");
         } catch (SolrServerException | IOException ex) {
             throw new DSpaceSolrIndexerException(ex.getMessage(), ex);

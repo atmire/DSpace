@@ -222,7 +222,7 @@ public class SolrServiceImpl implements SearchService, IndexingService {
             log.info("Try to delete uniqueID:" + uniqueID);
             indexObjectServiceFactory.getIndexableObjectFactory(indexableObject).delete(indexableObject);
             if (commit) {
-                solrSearchCore.getSolr().commit(false, false);
+                solrSearchCore.getSolr().commit(true, true);
             }
         } catch (IOException | SolrServerException exception) {
             log.error(exception.getMessage(), exception);
@@ -263,7 +263,7 @@ public class SolrServiceImpl implements SearchService, IndexingService {
                     log.warn("Object not found in Solr index: " + searchUniqueID);
                 }
                 if (commit) {
-                    solrSearchCore.getSolr().commit(false, false);
+                    solrSearchCore.getSolr().commit(true, true);
                 }
             }
         } catch (SolrServerException e) {
@@ -1065,7 +1065,7 @@ public class SolrServiceImpl implements SearchService, IndexingService {
                 log.info("ZombieDocs ");
                 zombieDocs.forEach(log::info);
                 solrSearchCore.getSolr().deleteById(zombieDocs);
-                solrSearchCore.getSolr().commit(false, false);
+                solrSearchCore.getSolr().commit(true, true);
             } else {
                 valid = true;
             }
@@ -1546,9 +1546,14 @@ public class SolrServiceImpl implements SearchService, IndexingService {
 
     @Override
     public void commit() throws SearchServiceException {
+        commit(false);
+    }
+
+    @Override
+    public void commit(boolean hard) throws SearchServiceException {
         try {
             if (solrSearchCore.getSolr() != null) {
-                solrSearchCore.getSolr().commit(false, false);
+                solrSearchCore.getSolr().commit(hard, hard);
             }
         } catch (IOException | SolrServerException e) {
             throw new SearchServiceException(e.getMessage(), e);

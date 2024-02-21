@@ -659,7 +659,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
     public void removeIndex(String query) throws IOException,
         SolrServerException {
         solr.deleteByQuery(query);
-        solr.commit(false, false);
+        solr.commit(true, true);
     }
 
     @Override
@@ -1345,7 +1345,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
 
             //Delete contents of this year from our year query !
             solr.deleteByQuery(filterQuery.toString());
-            solr.commit(false, false);
+            solr.commit(true, true);
 
             log.info("Moved {} records into core: {}", totalRecords, coreName);
         }
@@ -1530,7 +1530,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
             //Now that all our new bitstream stats are in place, delete all the old ones !
             solr.deleteByQuery("-bundleName:[* TO *] AND type:" + Constants.BITSTREAM);
             //Commit everything to wrap up
-            solr.commit(false, false);
+            solr.commit(true, true);
             //Clean up our directory !
             FileUtils.deleteDirectory(tempDirectory);
         } catch (Exception e) {

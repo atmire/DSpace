@@ -72,6 +72,8 @@ public interface IndexingService {
 
     void commit() throws SearchServiceException;
 
+    void commit(boolean hard) throws SearchServiceException;
+
     void optimize() throws SearchServiceException;
 
     void buildSpellCheck() throws SearchServiceException, IOException;
