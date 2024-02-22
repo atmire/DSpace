@@ -659,7 +659,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
     public void removeIndex(String query) throws IOException,
         SolrServerException {
         solr.deleteByQuery(query);
-        solr.commit(true, true);
+        solr.commit();
     }
 
     @Override
@@ -730,7 +730,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
         }
 
         public void commit() throws IOException, SolrServerException {
-            solr.commit(false, false);
+            solr.commit();
         }
 
         /**
@@ -780,7 +780,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
                 /* query for ip, exclude results previously set as bots. */
                 processor.execute("ip:" + ip + "* AND -isBot:true");
 
-                solr.commit(false, false);
+                solr.commit();
 
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
@@ -808,7 +808,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
             /* query for ip, exclude results previously set as bots. */
             processor.execute("userAgent:" + agent + " AND -isBot:true");
 
-            solr.commit(false, false);
+            solr.commit();
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
@@ -1340,7 +1340,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
                 statisticsYearServer.request(contentStreamUpdateRequest);
             }
 
-            statisticsYearServer.commit(false, false);
+            statisticsYearServer.commit(true, true);
 
 
             //Delete contents of this year from our year query !
@@ -1587,7 +1587,7 @@ public class SolrLoggerServiceImpl implements SolrLoggerService, InitializingBea
 
     @Override
     public void commit() throws IOException, SolrServerException {
-        solr.commit(false, false);
+        solr.commit();
     }
 
     protected void addDocumentsToFile(Context context, SolrDocumentList docs, File exportOutput)

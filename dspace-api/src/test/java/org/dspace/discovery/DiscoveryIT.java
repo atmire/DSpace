@@ -820,7 +820,6 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         workspaceItem = context.reloadEntity(workspaceItem);
         XmlWorkflowItem unusedWorkflowItem = workflowService.startWithoutNotify(context, workspaceItem);
         context.commit();
-        indexer.commit();
         context.restoreAuthSystemState();
     }
 
@@ -829,7 +828,6 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         item = context.reloadEntity(item);
         itemService.delete(context, item);
         context.commit();
-        indexer.commit(true);
         context.restoreAuthSystemState();
     }
 
@@ -839,7 +837,6 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         anotherWorkspaceItem = context.reloadEntity(anotherWorkspaceItem);
         workspaceItemService.deleteAll(context, anotherWorkspaceItem);
         context.commit();
-        indexer.commit(true);
         context.restoreAuthSystemState();
     }
 
@@ -849,7 +846,6 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         workflowItem = context.reloadEntity(workflowItem);
         workflowService.deleteWorkflowByWorkflowItem(context, workflowItem, admin);
         context.commit();
-        indexer.commit(true);
         context.restoreAuthSystemState();
     }
 
@@ -863,7 +859,6 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         workflowRequirementsService.removeClaimedUser(context, workflowItem, taskToUnclaim.getOwner(),
                 taskToUnclaim.getStepID());
         context.commit();
-        indexer.commit();
         context.setCurrentUser(previousUser);
     }
 
@@ -876,7 +871,6 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         WorkflowActionConfig currentActionConfig = step.getActionConfig(task.getActionID());
         workflowService.doState(context, user, null, task.getWorkflowItem().getID(), workflow, currentActionConfig);
         context.commit();
-        indexer.commit();
         context.setCurrentUser(previousUser);
     }
 
@@ -888,7 +882,6 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         workflowService.doState(context, task.getOwner(), httpServletRequest, task.getWorkflowItem().getID(), workflow,
                                 workflow.getStep(task.getStepID()).getActionConfig(task.getActionID()));
         context.commit();
-        indexer.commit();
         context.setCurrentUser(previousUser);
     }
 
@@ -906,7 +899,6 @@ public class DiscoveryIT extends AbstractIntegrationTestWithDatabase {
         context.setCurrentUser(admin);
         workflowService.abort(context, workflowItem, admin);
         context.commit();
-        indexer.commit();
         context.setCurrentUser(previousUser);
     }
 }

@@ -160,7 +160,7 @@ public class SolrUpgradePre6xStatistics {
     private void batchUpdateStats() throws SolrServerException, IOException {
         if (docs.size() > 0) {
             server.add(docs);
-            server.commit(false, false);
+            server.commit(true, true);
             docs.clear();
         }
     }

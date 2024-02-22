@@ -223,7 +223,12 @@ public class IndexEventConsumer implements Consumer {
         } finally {
             if (!objectsToUpdate.isEmpty() || !uniqueIdsToDelete.isEmpty()) {
 
-                indexer.commit();
+                // Check if our consumer just deleted some items, in that case a hard comment is needed
+                if (uniqueIdsToDelete.isEmpty()) {
+                    indexer.commit();
+                } else {
+                    indexer.commit(true);
+                }
 
                 // "free" the resources
                 objectsToUpdate.clear();

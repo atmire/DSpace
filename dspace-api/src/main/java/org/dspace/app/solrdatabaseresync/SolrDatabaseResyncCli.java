@@ -138,7 +138,7 @@ public class SolrDatabaseResyncCli extends DSpaceRunnable<SolrDatabaseResyncCliS
             }
         }
 
-        indexingService.commit(true);
+        indexingService.commit();
     }
 
     private void updateItem(Context context, IndexableObject indexableObject) throws SolrServerException, IOException {
