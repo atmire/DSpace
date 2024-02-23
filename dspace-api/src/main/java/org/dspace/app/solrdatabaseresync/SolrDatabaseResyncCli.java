@@ -106,6 +106,7 @@ public class SolrDatabaseResyncCli extends DSpaceRunnable<SolrDatabaseResyncCliS
         solrQuery.addField(SearchUtils.RESOURCE_ID_FIELD);
         solrQuery.addField(SearchUtils.RESOURCE_UNIQUE_ID);
         QueryResponse response = solrSearchCore.getSolr().query(solrQuery, solrSearchCore.REQUEST_METHOD);
+        boolean unindexed = false;
 
         if (response != null) {
             logInfoAndOut(response.getResults().size() + " items found to process");
@@ -131,6 +132,7 @@ public class SolrDatabaseResyncCli extends DSpaceRunnable<SolrDatabaseResyncCliS
                     } else {
                         logDebugAndOut("Item doesn't exist in DB, removing solr document");
                         removeItem(context, uniqueId);
+                        unindexed = true;
                     }
                 } catch (SQLException | IOException e) {
                     log.error(e.getMessage(), e);
@@ -138,7 +140,12 @@ public class SolrDatabaseResyncCli extends DSpaceRunnable<SolrDatabaseResyncCliS
             }
         }
 
-        indexingService.commit();
+        // If items were unindexed, a hard commit is required for immediate effects
+        if (unindexed) {
+            indexingService.commit(true);
+        } else {
+            indexingService.commit();
+        }
     }
 
     private void updateItem(Context context, IndexableObject indexableObject) throws SolrServerException, IOException {
