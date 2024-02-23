@@ -53,6 +53,11 @@ public class SolrServiceTest extends AbstractIntegrationTestWithDatabase {
         context.restoreAuthSystemState();
     }
 
+    /**
+     * This test confirms that changes made to items directly, without DSpace's service layer, has no effect on
+     * their solr index (because the change is never indexed)
+     * This test merely exists to back up the idea that our item changes are NOT indexed until we want it to.
+     */
     @Test
     public void directDatabaseNoCommitTest() throws Exception {
         setTitleDatabase("Test Item MODIFIED");
@@ -60,6 +65,10 @@ public class SolrServiceTest extends AbstractIntegrationTestWithDatabase {
         assertSolrTitle("Test Item");
     }
 
+    /**
+     * This test performs a "soft" commit after making changes to an item, confirming the changes are immediately
+     * present in solr
+     */
     @Test
     public void directDatabaseSoftCommitTest() throws Exception {
         setTitleDatabase("Test Item MODIFIED");
@@ -68,6 +77,10 @@ public class SolrServiceTest extends AbstractIntegrationTestWithDatabase {
         assertSolrTitle("Test Item MODIFIED");
     }
 
+    /**
+     * This test performs a "hard" commit after making changes to an item, confirming the changes are immediately
+     * present in solr
+     */
     @Test
     public void directDatabaseHardCommitTest() throws Exception {
         setTitleDatabase("Test Item MODIFIED");
@@ -76,11 +89,36 @@ public class SolrServiceTest extends AbstractIntegrationTestWithDatabase {
         assertSolrTitle("Test Item MODIFIED");
     }
 
-    private void assertSolrTitle(String expectedTitle) throws Exception {
-        // Retrieve item document from solr
+    /**
+     * This test confirms that deleting an item through DSpace's service layer has an immediate effect on the indexed
+     * solr content of that item (removed from index).
+     * This essentially tests whether a "hard" commit happens somewhere within the service layer upon item deletion,
+     * which is important, because "soft" commits won't have an immediate impact on solr content when an index is
+     * removed.
+     */
+    @Test
+    public void deleteItemSolrTest() throws Exception {
+        // Confirm the item is present in solr
+        SolrDocumentList results = getSolrDocumentList();
+        assertEquals(1, results.getNumFound());
+
+        // Delete the item
+        ItemBuilder.deleteItem(item.getID());
+
+        // Confirm the item isn't present in solr
+        results = getSolrDocumentList();
+        assertEquals(0, results.getNumFound());
+    }
+
+    private SolrDocumentList getSolrDocumentList() throws Exception {
         SolrQuery query = new SolrQuery();
         query.setQuery("search.resourceid:\"" + item.getID() + "\"");
-        SolrDocumentList results = solrSearchCore.getSolr().query(query, solrSearchCore.REQUEST_METHOD).getResults();
+        return solrSearchCore.getSolr().query(query, solrSearchCore.REQUEST_METHOD).getResults();
+    }
+
+    private void assertSolrTitle(String expectedTitle) throws Exception {
+        // Retrieve item document from solr
+        SolrDocumentList results = getSolrDocumentList();
         assertEquals(1, results.getNumFound());
         SolrDocument result = results.get(0);
 

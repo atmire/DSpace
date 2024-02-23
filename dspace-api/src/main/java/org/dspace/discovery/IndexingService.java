@@ -70,8 +70,19 @@ public interface IndexingService {
 
     void deleteIndex();
 
+    /**
+     * Commit indexing changes to solr
+     */
     void commit() throws SearchServiceException;
 
+    /**
+     * Commit indexing changes to solr
+     * @param hard  Whether this is a "hard" commit.
+     *              Hard commits will take immediate effect on the disk.
+     *              Soft commits will load the changes into memory first and later write them to the disk in batches.
+     *              Warning:    Un-indexing content requires a hard commit, soft commits will leave traces of the object
+     *                          behind in memory for a short while.
+     */
     void commit(boolean hard) throws SearchServiceException;
 
     void optimize() throws SearchServiceException;

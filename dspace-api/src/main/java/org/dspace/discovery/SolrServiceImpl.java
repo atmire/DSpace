@@ -1544,11 +1544,26 @@ public class SolrServiceImpl implements SearchService, IndexingService {
         }
     }
 
+    /**
+     * Commit indexing changes to solr.
+     * Default to a "soft" commit. More information about the difference between hard and soft commits can be found
+     * in the parameterised method.
+     */
     @Override
     public void commit() throws SearchServiceException {
         commit(false);
     }
 
+    /**
+     * Commit indexing changes to solr
+     * @param hard  Whether this is a "hard" commit.
+     *              Hard commits will take immediate effect on the disk, but might affect performance negatively,
+     *              if called too often.
+     *              Soft commits will load the changes into memory first and later write them to the disk in batches,
+     *              better for performance.
+     *              Warning:    Un-indexing content requires a hard commit, soft commits will leave traces of the object
+     *                          behind in memory for a short while.
+     */
     @Override
     public void commit(boolean hard) throws SearchServiceException {
         try {
