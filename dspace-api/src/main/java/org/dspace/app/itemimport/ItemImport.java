@@ -230,8 +230,7 @@ public class ItemImport extends DSpaceRunnable<ItemImportScriptConfiguration> {
             }
         } finally {
             // clean work dir
-            if (zip) {
-                FileUtils.deleteDirectory(new File(sourcedir));
+            if (zip && workDir != null) {
                 FileUtils.deleteDirectory(workDir);
             }
 
