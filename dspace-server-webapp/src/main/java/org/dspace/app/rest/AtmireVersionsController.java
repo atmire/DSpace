@@ -1,8 +1,11 @@
 package org.dspace.app.rest;
 
 
+import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -26,16 +29,17 @@ public class AtmireVersionsController {
     protected ConfigurationService configurationService
         = DSpaceServicesFactory.getInstance().getConfigurationService();
 
+    public static final String CONFIG_DIR = "atmire-versions.directory";
     public static final String ATMIRE_VERSIONS_FILE  = "atmire-versions.json";
     public static final int BUFFER_SIZE = 4096 * 10;
-    private static final String mimetype = "applicaton/json";
+    private static final String mimetype = MediaType.APPLICATION_JSON;
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @RequestMapping(value = "/atmire-versions", method = RequestMethod.GET)
     public ResponseEntity<String> atmireVersioning(HttpServletRequest request, HttpServletResponse response) {
 
         // get the directory location of the atmire-versioning file out of the config
-        String directory = configurationService.getProperty("atmire-versions.directory");
+        String directory = defaultIfEmpty(configurationService.getProperty(CONFIG_DIR), "/");
         if (!directory.endsWith("/")) {
             directory += '/';
         }
