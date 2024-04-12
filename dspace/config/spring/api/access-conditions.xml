@@ -55,6 +55,8 @@
         <property name="map">
             <map>
                 <entry key="upload" value-ref="uploadConfigurationDefault" />
+                <!-- REQUIRED to have a configuration matching your custom step's ID, for demonstration purposes, this one re-uses default upload -->
+                <entry key="custom-upload" value-ref="uploadConfigurationDefault" />
             </map>
         </property>
     </bean>
