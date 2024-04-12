@@ -154,6 +154,18 @@
             <processing-class>org.dspace.app.rest.submit.step.UploadStep</processing-class>
             <type>upload</type>
         </step-definition>
+
+        <!-- Custom example step extending from "upload", it'll inherit all of its functionality unless overwritten -->
+        <step-definition id="custom-upload">
+            <!-- Custom heading should be configured on the angular side -->
+            <heading>submit.progressbar.custom-upload</heading>
+            <!-- For demonstrative purposes and keeping it simple, this custom step re-uses the same processing class as default upload,
+                 but you probably want to create your own and configure it here -->
+            <processing-class>org.dspace.app.rest.submit.step.UploadStep</processing-class>
+            <!-- The extends attribute will cause this step to re-use functionality of the default type, unless overwritten -->
+            <type extends="upload">custom-upload</type>
+        </step-definition>
+
         <step-definition id="license">
             <heading>submit.progressbar.license</heading>
             <processing-class>org.dspace.app.rest.submit.step.LicenseStep</processing-class>
@@ -273,7 +285,7 @@
             <!-- <step id="sherpaPolicies"/> -->
 
             <!--Step will be to Upload the item -->
-            <step id="upload"/>
+            <step id="custom-upload"/>
 
             <!-- <step id="extractionstep"/> -->
 
