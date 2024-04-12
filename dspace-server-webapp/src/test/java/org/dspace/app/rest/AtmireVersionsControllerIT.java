@@ -1,43 +1,43 @@
 package org.dspace.app.rest;
 
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import java.io.IOException;
+
 import org.dspace.app.rest.test.AbstractControllerIntegrationTest;
-import org.dspace.services.ConfigurationService;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 
 
-@Ignore
 public class AtmireVersionsControllerIT extends AbstractControllerIntegrationTest {
 
 
-    private static final String CONFIG_NAME = "atmire-versions.directory";
-    private static final String DIR = "/home/testing/";
-    private static final String NO_DIR = "/this/does/not/exist/";
-    private static final String FILE = "atmire-versions.json";
+    @Autowired
+    private AtmireVersionsController atmireVersionsController;
+
 
     @Test
+    @Ignore
     public void test_unauthorisedUserReadsversioning() throws Exception {
         // no token given to ensure the request is not authorised
-        getClient().perform(get("/atmire-versions"))
+        getClient().perform(get("/api/atmire-versions"))
             .andExpect(status().isUnauthorized());
     }
 
     @Test
+    @Ignore
     public void test_adminReadsNotExistingFile() throws Exception {
-
-        ConfigurationService configurationService = mock(ConfigurationService.class);
-        when(configurationService.getProperty(CONFIG_NAME)).thenReturn(NO_DIR);
-
-        AtmireVersionsController atmireVersionsController = mock(AtmireVersionsController.class);
-        when(atmireVersionsController.readFileAsJson(NO_DIR+FILE)).thenThrow(new IOException("file not found"));
+        when(atmireVersionsController.readFileAsJson(anyString())).thenThrow(new IOException("file not found"));
 
         String token = getAuthToken(admin.getEmail(), password);
-        getClient(token).perform(get("/atmire-versions"))
+        getClient(token).perform(get("/api/atmire-versions"))
             .andExpect(status().isNotFound());
     }
 
@@ -45,16 +45,14 @@ public class AtmireVersionsControllerIT extends AbstractControllerIntegrationTes
     @Test
     public void test_adminReadsVersioningFile() throws Exception {
 
-        ConfigurationService configurationService = mock(ConfigurationService.class);
-        when(configurationService.getProperty(CONFIG_NAME)).thenReturn(DIR);
-
-        AtmireVersionsController atmireVersionsController = mock(AtmireVersionsController.class);
-        when(atmireVersionsController.readFileAsJson(DIR+FILE)).thenReturn("{ 'some':'json' }");
+        when(atmireVersionsController.readFileAsJson(anyString())).thenReturn("{ 'some':'json' }");
 
         String token = getAuthToken(admin.getEmail(), password);
-        getClient(token).perform(get("/atmire-versions"))
-            .andExpect(status().isOk());
-
+        getClient(token).perform(get("/api/atmire-versions"))
+            .andExpect(status().isOk())
+            .andExpect(content().string("{ 'some':'json' }"))
+            .andExpect(header().string("Content-Type", MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(header().string("filename", AtmireVersionsController.ATMIRE_VERSIONS_FILE))
+            .andExpect(header().string("size", ""+AtmireVersionsController.BUFFER_SIZE));
     }
-
 }
