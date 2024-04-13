@@ -1,7 +1,7 @@
 package org.dspace.app.rest;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -11,7 +11,8 @@ import org.dspace.services.factory.DSpaceServicesFactory;
 import org.junit.Test;
 
 public class AtmireVersionsControllerIT extends AbstractControllerIntegrationTest {
-    private final ConfigurationService configurationService = DSpaceServicesFactory.getInstance().getConfigurationService();
+    private final ConfigurationService configurationService =
+        DSpaceServicesFactory.getInstance().getConfigurationService();
     @Override
     public void destroy() throws Exception {
         configurationService.setProperty(AtmireVersionsController.CONFIG_DIR, null);
