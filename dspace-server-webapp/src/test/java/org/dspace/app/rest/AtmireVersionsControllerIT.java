@@ -13,9 +13,10 @@ import org.junit.Test;
 public class AtmireVersionsControllerIT extends AbstractControllerIntegrationTest {
     private final ConfigurationService configurationService =
         DSpaceServicesFactory.getInstance().getConfigurationService();
+
     @Override
     public void destroy() throws Exception {
-        configurationService.setProperty(AtmireVersionsController.CONFIG_DIR, null);
+        configurationService.setProperty(AtmireVersionsController.ATMIRE_VERSIONS_CONFIG, null);
         super.destroy();
     }
 
@@ -28,7 +29,7 @@ public class AtmireVersionsControllerIT extends AbstractControllerIntegrationTes
 
     @Test
     public void test_adminReadsNotExistingFile() throws Exception {
-        configurationService.setProperty(AtmireVersionsController.CONFIG_DIR, "/something/wrong/");
+        configurationService.setProperty(AtmireVersionsController.ATMIRE_VERSIONS_CONFIG, "/something/wrong/");
 
         String token = getAuthToken(admin.getEmail(), password);
         getClient(token).perform(get("/api/atmire-versions"))
@@ -37,8 +38,9 @@ public class AtmireVersionsControllerIT extends AbstractControllerIntegrationTes
 
     @Test
     public void test_adminReadsVersioningFile() throws Exception {
-
-        configurationService.setProperty(AtmireVersionsController.CONFIG_DIR, "src/test/data/dspaceFolder/");
+        String filename = "atmire-versions.json";
+        String path = "src/test/data/dspaceFolder/" + filename;
+        configurationService.setProperty(AtmireVersionsController.ATMIRE_VERSIONS_CONFIG, path);
 
         String token = getAuthToken(admin.getEmail(), password);
         getClient(token).perform(get("/api/atmire-versions"))
@@ -46,6 +48,6 @@ public class AtmireVersionsControllerIT extends AbstractControllerIntegrationTes
             .andExpect(content().string("{\"this\":\"is for testing\"}"))
             .andExpect(header().string("Content-Type", "application/json;charset=UTF-8"))
             .andExpect(header().string("Content-Disposition",
-                String.format("attachment;filename=\"%s\"",AtmireVersionsController.ATMIRE_VERSIONS_FILE)));
+                String.format("attachment;filename=\"%s\"", filename)));
     }
 }

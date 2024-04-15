@@ -1,8 +1,5 @@
 package org.dspace.app.rest;
 
-
-import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -11,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.utils.HttpHeadersInitializer;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
@@ -29,8 +27,7 @@ public class AtmireVersionsController {
     protected ConfigurationService configurationService
         = DSpaceServicesFactory.getInstance().getConfigurationService();
 
-    public static final String CONFIG_DIR = "atmire-versions.directory";
-    public static final String ATMIRE_VERSIONS_FILE  = "atmire-versions.json";
+    public static final String ATMIRE_VERSIONS_CONFIG  = "atmire-versions.file";
     public static final int BUFFER_SIZE = 4096 * 10;
     private static final String mimetype = MediaType.APPLICATION_JSON;
 
@@ -38,20 +35,17 @@ public class AtmireVersionsController {
     @RequestMapping(value = "/atmire-versions", method = RequestMethod.GET)
     public ResponseEntity<String> atmireVersioning(HttpServletRequest request, HttpServletResponse response) {
 
-        // get the directory location of the atmire-versioning file out of the config
-        String directory = defaultIfEmpty(configurationService.getProperty(CONFIG_DIR), "/");
-        if (!directory.endsWith("/")) {
-            directory += '/';
-        }
-        final String file = directory + ATMIRE_VERSIONS_FILE;
+        // get the file location
+        String file = getFilePath();
 
         try {
             // read the file
             String json = readFileAsJson(file);
 
+            // setup headers
             HttpHeadersInitializer httpHeadersInitializer = new HttpHeadersInitializer()
                 .withBufferSize(BUFFER_SIZE)
-                .withFileName(ATMIRE_VERSIONS_FILE)
+                .withFileName(getFileNameFromPath(file))
                 .withMimetype(mimetype)
                 .with(request)
                 .with(response);
@@ -67,6 +61,25 @@ public class AtmireVersionsController {
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something went wrong reading " + file);
         }
+    }
+
+    private String getFilePath() {
+        String file = configurationService.getProperty(ATMIRE_VERSIONS_CONFIG);
+        if (StringUtils.isBlank(file)) {
+            throw new IllegalArgumentException(ATMIRE_VERSIONS_CONFIG + " was not correctly defined in the config.");
+        }
+        return file;
+    }
+
+    /**
+     * This method will give the filename that is specified at the end of a path to a file
+     * @param path the path to the file
+     * @return the filename at the end of the path
+     */
+    private static String getFileNameFromPath(String path) {
+        // get filename
+        String[] parts = path.split("/");
+        return parts[parts.length - 1];
     }
 
     /**
