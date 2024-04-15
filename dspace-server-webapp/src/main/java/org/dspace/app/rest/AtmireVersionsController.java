@@ -3,6 +3,8 @@ package org.dspace.app.rest;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
@@ -12,6 +14,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.utils.HttpHeadersInitializer;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,9 +31,18 @@ public class AtmireVersionsController {
     protected ConfigurationService configurationService
         = DSpaceServicesFactory.getInstance().getConfigurationService();
 
-    public static final String ATMIRE_VERSIONS_CONFIG  = "atmire-versions.file";
+    public static final String ATMIRE_VERSIONS_CONFIG = "atmire-versions.file";
     public static final int BUFFER_SIZE = 4096 * 10;
     private static final String mimetype = MediaType.APPLICATION_JSON;
+
+    @Autowired
+    private DiscoverableEndpointsService discoverableEndpointsService;
+
+
+    @PostConstruct
+    public void afterPropertiesSet() {
+        discoverableEndpointsService.register(this, List.of(Link.of("/api/atmire-versions", "atmire-versions")));
+    }
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @RequestMapping(value = "/atmire-versions", method = RequestMethod.GET)
@@ -57,22 +70,23 @@ public class AtmireVersionsController {
             return ResponseEntity.ok().body(json);
 
         } catch (FileNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Could not find " + file);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Could not find the versions-file");
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something went wrong reading " + file);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something went wrong reading the versions-file");
         }
     }
 
     private String getFilePath() {
         String file = configurationService.getProperty(ATMIRE_VERSIONS_CONFIG);
         if (StringUtils.isBlank(file)) {
-            throw new IllegalArgumentException(ATMIRE_VERSIONS_CONFIG + " was not correctly defined in the config.");
+            throw new IllegalArgumentException("versions-file was not correctly defined in the config.");
         }
         return file;
     }
 
     /**
      * This method will give the filename that is specified at the end of a path to a file
+     *
      * @param path the path to the file
      * @return the filename at the end of the path
      */
@@ -84,6 +98,7 @@ public class AtmireVersionsController {
 
     /**
      * This method reads a json file and returns it's content
+     *
      * @param filePath file to read
      * @return content of the file
      * @throws IOException file not found, something went wrong trying to read the file
