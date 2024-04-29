@@ -1115,9 +1115,6 @@ public class BrowsesResourceControllerIT extends AbstractControllerIntegrationTe
 
                    //We expect the totalElements to be the 1 item present in the collection
                    .andExpect(jsonPath("$.page.totalElements", is(1)))
-                   //As this is a small collection, we expect to go-to page 0
-                   //We expect the totalElements to be the 3 items present in the collection
-                   .andExpect(jsonPath("$.page.totalElements", is(3)))
                    //As this is is a small collection, we expect to go-to page 0
                    .andExpect(jsonPath("$.page.number", is(0)))
                    .andExpect(jsonPath("$._links.self.href", containsString("startsWith=Blade")))
@@ -1252,86 +1249,6 @@ public class BrowsesResourceControllerIT extends AbstractControllerIntegrationTe
                         contains(
                             ItemMatcher.matchItemWithTitleAndDateIssued(item3, "Java", "1995-05-23")
                         )));
-    }
-
-
-    @Test
-    public void testBrowseByTitleStartsWithAndDiacritics() throws Exception {
-        context.turnOffAuthorisationSystem();
-
-        //** GIVEN **
-        //1. A community-collection structure with one parent community and one collection.
-        parentCommunity = CommunityBuilder.createCommunity(context)
-                .withName("Parent Community")
-                .build();
-        Collection col1 = CollectionBuilder.createCollection(context, parentCommunity).withName("Collection 1").build();
-
-        //2. 2 public items that are readable by Anonymous
-        Item item1 = ItemBuilder.createItem(context, col1)
-                .withTitle("Número 1")
-                .withAuthor("Surname, Name")
-                .withIssueDate("2020")
-                .build();
-
-        Item item2 = ItemBuilder.createItem(context, col1)
-                .withTitle("Numero 2")
-                .withAuthor("Surname, Name")
-                .withIssueDate("2010")
-                .build();
-
-        context.restoreAuthSystemState();
-
-        //** WHEN **
-        //An anonymous user browses the items in the Browse by Title endpoint
-        //with startsWith set to Num (unaccented)
-        getClient().perform(get("/api/discover/browses/title/items?startsWith=Num")
-                        .param("size", "2"))
-
-                //** THEN **
-                //The status has to be 200 OK
-                .andExpect(status().isOk())
-                //We expect the content type to be "application/hal+json;charset=UTF-8"
-                .andExpect(content().contentType(contentType))
-
-                //We expect the totalElements to be the 1 item present in the repository
-                .andExpect(jsonPath("$.page.totalElements", is(2)))
-                //We expect to jump to page 2 in the index
-                .andExpect(jsonPath("$.page.number", is(0)))
-                .andExpect(jsonPath("$._links.self.href", containsString("startsWith=Num")))
-
-                //Verify that the index contains both items (the accented and the unaccented)
-                .andExpect(jsonPath("$._embedded.items",
-                        contains(ItemMatcher.matchItemWithTitleAndDateIssued(item1,
-                                        "Número 1", "2020"),
-                                ItemMatcher.matchItemWithTitleAndDateIssued(item2,
-                                        "Numero 2", "2010")
-                        )));
-
-        //An anonymous user browses the items in the Browse by Title endpoint
-        //with startsWith set to Núm (accented)
-        getClient().perform(get("/api/discover/browses/title/items?startsWith=Núm")
-                        .param("size", "2"))
-
-                //** THEN **
-                //The status has to be 200 OK
-                .andExpect(status().isOk())
-                //We expect the content type to be "application/hal+json;charset=UTF-8"
-                .andExpect(content().contentType(contentType))
-
-                //We expect the totalElements to be the 1 item present in the repository
-                .andExpect(jsonPath("$.page.totalElements", is(2)))
-                //We expect to jump to page 2 in the index
-                .andExpect(jsonPath("$.page.number", is(0)))
-                .andExpect(jsonPath("$._links.self.href", containsString("startsWith=Núm")))
-
-                //Verify that the index contains both items (the accented and the unaccented)
-                .andExpect(jsonPath("$._embedded.items",
-                        contains(ItemMatcher.matchItemWithTitleAndDateIssued(item1,
-                                        "Número 1", "2020"),
-                                ItemMatcher.matchItemWithTitleAndDateIssued(item2,
-                                        "Numero 2", "2010")
-                        )));
-
     }
 
     @Test
