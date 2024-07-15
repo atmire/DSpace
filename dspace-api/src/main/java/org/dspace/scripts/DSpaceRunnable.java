@@ -10,6 +10,7 @@ package org.dspace.scripts;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.cli.CommandLine;
@@ -157,5 +158,9 @@ public abstract class DSpaceRunnable<T extends ScriptConfiguration> implements R
      */
     public void setEpersonIdentifier(UUID epersonIdentifier) {
         this.epersonIdentifier = epersonIdentifier;
+    }
+
+    public Optional<String> fileParameterToBitstreamType(String fileParameter) {
+        return Optional.empty();
     }
 }
