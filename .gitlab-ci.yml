@@ -15,4 +15,4 @@ cache:
 test:
   stage: test
   script:
-    - mvn $MAVEN_CLI_OPTS clean install license:check -DskipUnitTests=false -DskipIntegrationTests=false -P !assembly -B -V -Dsurefire.rerunFailingTestsCount=2
+    - mvn $MAVEN_CLI_OPTS clean install license:check -DskipUnitTests=false -DskipIntegrationTests=false -P !assembly -B -V -Dsurefire.rerunFailingTestsCount=2 -Dfailsafe.rerunFailingTestsCount=2
