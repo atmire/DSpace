@@ -47,6 +47,7 @@ import javax.annotation.Nullable;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -886,6 +887,20 @@ public class Utils {
             RestAddressableModel restObject = (RestAddressableModel) linkedObject;
             restObject.setEmbedLevel(childEmbedLevel);
             return converter.toResource(restObject, newList);
+        } else if (linkedObject instanceof RestModel) {
+            RestModel restModelObject = (RestModel) linkedObject;
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> halResource = objectMapper.convertValue(restModelObject, Map.class);
+
+            // Manually add _links section with the self link
+            Map<String, Object> links = new HashMap<>();
+            Map<String, String> selfLink = new HashMap<>();
+            selfLink.put("href", link.getHref()); // Use the link passed in
+            links.put("self", selfLink);
+            halResource.put("_links", links);
+
+            return halResource;
         } else if (linkedObject instanceof Page) {
             // The first page has already been constructed by a link repository and we only need to wrap it
             Page<RestAddressableModel> page = (Page<RestAddressableModel>) linkedObject;
