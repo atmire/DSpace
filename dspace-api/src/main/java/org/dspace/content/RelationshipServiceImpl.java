@@ -864,6 +864,11 @@ public class RelationshipServiceImpl implements RelationshipService {
     private void copyMetadataValues(Context context, Relationship relationship, boolean copyToLeftItem,
                                     boolean copyToRightItem)
         throws SQLException, AuthorizeException {
+
+        // Fetch configuration: should we copy relation.* metadata or not?
+        boolean copyRelationMetadata =
+            configurationService.getBooleanProperty("relation.metadata.copy.on.delete", true);
+
         if (copyToLeftItem) {
             String entityTypeString = itemService.getEntityTypeLabel(relationship.getLeftItem());
             List<RelationshipMetadataValue> relationshipMetadataValues =
@@ -878,14 +883,19 @@ public class RelationshipServiceImpl implements RelationshipService {
                 //   relationship values which are not useForPlace, while the relationhip type has useForPlace
                 // E.g. when using addAndShiftRightMetadata on relation.isAuthorOfPublication, it will break the order
                 // from dc.contributor.author
-                itemService.addMetadata(context, relationship.getLeftItem(),
-                                                     relationshipMetadataValue.getMetadataField().
-                                                         getMetadataSchema().getName(),
-                                                     relationshipMetadataValue.getMetadataField().getElement(),
-                                                     relationshipMetadataValue.getMetadataField().getQualifier(),
-                                                     relationshipMetadataValue.getLanguage(),
-                                                     relationshipMetadataValue.getValue(), null, -1,
-                                                     relationshipMetadataValue.getPlace());
+
+                MetadataField metadataField = relationshipMetadataValue.getMetadataField();
+                // Only add metadata if it's not relation.* or if copying relation.* metadata is allowed
+                if (copyRelationMetadata || !"relation".equals(metadataField.getMetadataSchema().getName())) {
+                    itemService.addMetadata(context, relationship.getLeftItem(),
+                                            relationshipMetadataValue.getMetadataField().
+                                                                     getMetadataSchema().getName(),
+                                            relationshipMetadataValue.getMetadataField().getElement(),
+                                            relationshipMetadataValue.getMetadataField().getQualifier(),
+                                            relationshipMetadataValue.getLanguage(),
+                                            relationshipMetadataValue.getValue(), null, -1,
+                                            relationshipMetadataValue.getPlace());
+                }
             }
             //This will ensure the new values no longer overlap, but won't break the order
             itemService.update(context, relationship.getLeftItem());
@@ -896,14 +906,19 @@ public class RelationshipServiceImpl implements RelationshipService {
                 relationshipMetadataService.findRelationshipMetadataValueForItemRelationship(context,
                     relationship.getRightItem(), entityTypeString, relationship, true);
             for (RelationshipMetadataValue relationshipMetadataValue : relationshipMetadataValues) {
-                itemService.addMetadata(context, relationship.getRightItem(),
-                                                     relationshipMetadataValue.getMetadataField().
-                                                         getMetadataSchema().getName(),
-                                                     relationshipMetadataValue.getMetadataField().getElement(),
-                                                     relationshipMetadataValue.getMetadataField().getQualifier(),
-                                                     relationshipMetadataValue.getLanguage(),
-                                                     relationshipMetadataValue.getValue(), null, -1,
-                                                     relationshipMetadataValue.getPlace());
+
+                MetadataField metadataField = relationshipMetadataValue.getMetadataField();
+                // Only add metadata if it's not relation.* or if copying relation.* metadata is allowed
+                if (copyRelationMetadata || !"relation".equals(metadataField.getMetadataSchema().getName())) {
+                    itemService.addMetadata(context, relationship.getRightItem(),
+                                            relationshipMetadataValue.getMetadataField().
+                                                                     getMetadataSchema().getName(),
+                                            relationshipMetadataValue.getMetadataField().getElement(),
+                                            relationshipMetadataValue.getMetadataField().getQualifier(),
+                                            relationshipMetadataValue.getLanguage(),
+                                            relationshipMetadataValue.getValue(), null, -1,
+                                            relationshipMetadataValue.getPlace());
+                }
             }
             itemService.update(context, relationship.getRightItem());
         }
