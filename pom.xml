@@ -37,12 +37,12 @@
         <jaxb-runtime.version>2.3.1</jaxb-runtime.version>
         <jcache-version>1.1.0</jcache-version>
         <!-- NOTE: Jetty needed for Solr, Handle Server & tests -->
-        <jetty.version>9.4.48.v20220622</jetty.version>
+        <jetty.version>12.0.12</jetty.version>
         <log4j.version>2.17.1</log4j.version>
         <pdfbox-version>2.0.27</pdfbox-version>
         <rome.version>1.18.0</rome.version>
         <slf4j.version>1.7.25</slf4j.version>
-        <tika.version>2.3.0</tika.version>
+        <tika.version>3.0.0</tika.version>
         <!-- Sync with whatever version Tika uses -->
         <bouncycastle.version>1.70</bouncycastle.version>
 
@@ -115,7 +115,7 @@
                             </goals>
                             <configuration>
                                 <rules>
-                                    <DependencyConvergence />
+                                    <DependencyConvergence/>
                                 </rules>
                             </configuration>
                         </execution>
