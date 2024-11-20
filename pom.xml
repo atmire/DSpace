@@ -56,7 +56,7 @@
         <!--=== OTHER MODULE-SPECIFIC DEPENDENCIES ===-->
         <!-- PIN Jena to 2.x until both RDF and SWORDv2 can be updated to Jena 3. Requires package renaming, see
              https://jena.apache.org/documentation/migrate_jena2_jena3.html -->
-        <jena.version>2.13.0</jena.version>
+        <jena.version>4.0.0</jena.version>
         <!-- Used by (now obsolete) 'dspace-rest' WAR -->
         <jersey.version>2.35</jersey.version>
 
@@ -115,7 +115,7 @@
                             </goals>
                             <configuration>
                                 <rules>
-                                    <DependencyConvergence />
+                                    <DependencyConvergence/>
                                 </rules>
                             </configuration>
                         </execution>
