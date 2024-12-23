@@ -117,6 +117,13 @@
   </dc-type>
 
   <dc-type>
+    <schema>dc</schema>
+    <element>contributor</element>
+    <qualifier>sponsor</qualifier>
+    <scope_note></scope_note>
+  </dc-type>
+
+  <dc-type>
 	<schema>dc</schema>
     <element>contributor</element>
     <qualifier>other</qualifier>
