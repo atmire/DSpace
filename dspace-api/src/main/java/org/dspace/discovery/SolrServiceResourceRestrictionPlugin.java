@@ -126,7 +126,8 @@ public class SolrServiceResourceRestrictionPlugin implements SolrServiceIndexPlu
                             context.uncacheEntity(resourcePolicy);
                         }
                     }
-                    dso = ContentServiceFactory.getInstance().getDSpaceObjectService(dso).getParentObject(context, dso);
+                    // FIXME: Temporary disable ancestor discovery to test the impact on performance.
+                    dso = null;
                 }
             } catch (SQLException e) {
                 log.error(LogHelper.getHeader(context, "Error while indexing resource policies",

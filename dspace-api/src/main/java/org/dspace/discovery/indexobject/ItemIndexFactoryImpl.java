@@ -645,25 +645,26 @@ public class ItemIndexFactoryImpl extends DSpaceObjectIndexFactoryImpl<Indexable
     @Override
     public List<String> getLocations(Context context, IndexableItem indexableDSpaceObject)
             throws SQLException {
-        final Item item = indexableDSpaceObject.getIndexedObject();
+        // FIXME: Temporary disable ancestor discovery to test the impact on performance.
         List<String> locations = new ArrayList<>();
-
-        // build list of community ids
-        List<Community> communities = itemService.getCommunities(context, item);
-
-        // build list of collection ids
-        List<Collection> collections = item.getCollections();
-
-        // now put those into strings
-        int i = 0;
-
-        for (i = 0; i < communities.size(); i++) {
-            locations.add("m" + communities.get(i).getID());
-        }
-
-        for (i = 0; i < collections.size(); i++) {
-            locations.add("l" + collections.get(i).getID());
-        }
+//        final Item item = indexableDSpaceObject.getIndexedObject();
+//
+//        // build list of community ids
+//        List<Community> communities = itemService.getCommunities(context, item);
+//
+//        // build list of collection ids
+//        List<Collection> collections = item.getCollections();
+//
+//        // now put those into strings
+//        int i = 0;
+//
+//        for (i = 0; i < communities.size(); i++) {
+//            locations.add("m" + communities.get(i).getID());
+//        }
+//
+//        for (i = 0; i < collections.size(); i++) {
+//            locations.add("l" + collections.get(i).getID());
+//        }
 
         return locations;
     }

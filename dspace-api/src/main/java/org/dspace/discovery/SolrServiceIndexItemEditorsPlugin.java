@@ -48,11 +48,13 @@ public class SolrServiceIndexItemEditorsPlugin implements SolrServiceIndexPlugin
                     // Community.
                     // TODO: Strictly speaking we should also check for epersons who received admin rights directly,
                     //       without being part of the admin group. Finding them may be a lot slower though.
-                    for (Collection collection : item.getCollections()) {
-                        for (UUID unprefixedId : findTransitiveAdminGroupIds(context, collection)) {
-                            document.addField("edit", "g" + unprefixedId);
-                        }
-                    }
+                    //
+                    // FIXME: Temporary disable ancestor discovery to test the impact on performance.
+                    // for (Collection collection : item.getCollections()) {
+                    // for (UUID unprefixedId : findTransitiveAdminGroupIds(context, collection)) {
+                    //        document.addField("edit", "g" + unprefixedId);
+                    //    }
+                    // }
 
                     // Index groups and epersons with WRITE or direct ADMIN rights on the Item.
                     List<String> prefixedIds = findDirectlyAuthorizedGroupAndEPersonPrefixedIds(
