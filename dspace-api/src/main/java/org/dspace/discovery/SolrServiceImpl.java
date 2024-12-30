@@ -11,6 +11,8 @@ import static java.util.stream.Collectors.joining;
 import static org.dspace.discovery.indexobject.ItemIndexFactoryImpl.STATUS_FIELD;
 import static org.dspace.discovery.indexobject.ItemIndexFactoryImpl.STATUS_FIELD_PREDB;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -32,6 +34,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 import javax.mail.MessagingException;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.Transformer;
@@ -120,8 +123,14 @@ public class SolrServiceImpl implements SearchService, IndexingService {
     @Autowired
     protected ConfigurationService configurationService;
 
-    protected SolrServiceImpl() {
+    FileOutputStream out;
 
+    protected SolrServiceImpl() {
+        try {
+            out = new FileOutputStream("/Users/jensvannerum/Desktop/solr.json");
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -167,7 +176,8 @@ public class SolrServiceImpl implements SearchService, IndexingService {
     protected void update(Context context, IndexFactory indexableObjectService,
                           IndexableObject indexableObject) throws IOException, SQLException, SolrServerException {
         final SolrInputDocument solrInputDocument = indexableObjectService.buildDocument(context, indexableObject);
-        indexableObjectService.writeDocument(context, indexableObject, solrInputDocument);
+        out.write(new ObjectMapper().writeValueAsBytes(solrInputDocument.toMap(new HashMap<>())));
+        out.write("\n".getBytes());
     }
 
     /**
@@ -333,7 +343,7 @@ public class SolrServiceImpl implements SearchService, IndexingService {
      */
     @Override
     public void updateIndex(Context context, boolean force) {
-        updateIndex(context, force, null);
+        updateIndex(context, force, IndexableItem.TYPE);
     }
 
     @Override
