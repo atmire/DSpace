@@ -42,6 +42,8 @@ import org.dspace.content.WorkspaceItem;
 import org.dspace.content.authority.Choices;
 import org.dspace.content.authority.service.ChoiceAuthorityService;
 import org.dspace.content.authority.service.MetadataAuthorityService;
+import org.dspace.content.dao.impl.LocationDAOImpl;
+import org.dspace.content.dao.pojo.Location;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.WorkspaceItemService;
 import org.dspace.core.Context;
@@ -108,6 +110,8 @@ public class ItemIndexFactoryImpl extends DSpaceObjectIndexFactoryImpl<Indexable
     protected WorkspaceItemIndexFactory workspaceItemIndexFactory;
     @Autowired
     protected VersionHistoryService versionHistoryService;
+    @Autowired
+    LocationDAOImpl locationDAO;
 
 
     @Override
@@ -645,27 +649,17 @@ public class ItemIndexFactoryImpl extends DSpaceObjectIndexFactoryImpl<Indexable
     @Override
     public List<String> getLocations(Context context, IndexableItem indexableDSpaceObject)
             throws SQLException {
-        // FIXME: Temporary disable ancestor discovery to test the impact on performance.
         List<String> locations = new ArrayList<>();
-//        final Item item = indexableDSpaceObject.getIndexedObject();
-//
-//        // build list of community ids
-//        List<Community> communities = itemService.getCommunities(context, item);
-//
-//        // build list of collection ids
-//        List<Collection> collections = item.getCollections();
-//
-//        // now put those into strings
-//        int i = 0;
-//
-//        for (i = 0; i < communities.size(); i++) {
-//            locations.add("m" + communities.get(i).getID());
-//        }
-//
-//        for (i = 0; i < collections.size(); i++) {
-//            locations.add("l" + collections.get(i).getID());
-//        }
+        final Item item = indexableDSpaceObject.getIndexedObject();
+        Location location = locationDAO.findLocationByDsoId(context, item.getID());
 
+        for (UUID uuid : location.getLocationComm()) {
+            locations.add("m" + uuid.toString());
+        }
+
+        for (UUID uuid : location.getLocationColl()) {
+            locations.add("l" + uuid.toString());
+        }
         return locations;
     }
 

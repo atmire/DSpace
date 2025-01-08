@@ -31,6 +31,8 @@
     <bean class="org.dspace.content.dao.impl.RelationshipDAOImpl"/>
     <bean class="org.dspace.content.dao.impl.EntityTypeDAOImpl"/>
     <bean class="org.dspace.content.dao.impl.RelationshipTypeDAOImpl"/>
+    <bean class="org.dspace.content.dao.impl.LocationDAOImpl"/>
+    <bean class="org.dspace.content.dao.impl.DSOWithPoliciesDAOImpl"/>
 
     <bean class="org.dspace.content.dao.impl.ProcessDAOImpl"/>
 

@@ -23,6 +23,8 @@ import org.dspace.content.Community;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.InProgressSubmission;
 import org.dspace.content.Item;
+import org.dspace.content.dao.impl.DSOWithPoliciesDAOImpl;
+import org.dspace.content.dao.pojo.DsoWithPolicies;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.CommunityService;
@@ -64,6 +66,8 @@ public class SolrServiceResourceRestrictionPlugin implements SolrServiceIndexPlu
     protected GroupService groupService;
     @Autowired(required = true)
     protected ResourcePolicyService resourcePolicyService;
+    @Autowired
+    private DSOWithPoliciesDAOImpl dsoWithPoliciesDAO;
 
     @Override
     public void additionalIndex(Context context, IndexableObject idxObj, SolrInputDocument document) {
@@ -83,51 +87,25 @@ public class SolrServiceResourceRestrictionPlugin implements SolrServiceIndexPlu
         }
         if (dso != null) {
             try {
-                List<ResourcePolicy> policies = authorizeService.getPoliciesActionFilter(context, dso, Constants.READ);
-                for (ResourcePolicy resourcePolicy : policies) {
-                    if (resourcePolicyService.isDateValid(resourcePolicy)) {
-                        String fieldValue;
-                        if (resourcePolicy.getGroup() != null) {
-                            //We have a group add it to the value
-                            fieldValue = "g" + resourcePolicy.getGroup().getID();
-                        } else {
-                            //We have an eperson add it to the value
-                            fieldValue = "e" + resourcePolicy.getEPerson().getID();
-
-                        }
-
-                        document.addField("read", fieldValue);
-                    }
-
-                    //remove the policy from the cache to save memory
-                    context.uncacheEntity(resourcePolicy);
+                DsoWithPolicies dsoWithPolicies = dsoWithPoliciesDAO.findDsoWithPoliciesByDsoId(context, dso.getID());
+                Set<String> policies = dsoWithPolicies.getReadPolicyIds();
+                for (String prefixedResourcePolicy : policies) {
+                    // TODO: We are no longer checking if the date is valid here which was the case before, issue ?
+                    //       Resolving the RP object would defeat the purpose of our materialized view.
+                    document.addField("read", prefixedResourcePolicy);
                 }
-                 // also index ADMIN policies as ADMIN permissions provides READ access
+
+                // also index ADMIN policies as ADMIN permissions provides READ access
                 // going up through the hierarchy for communities, collections and items
                 while (dso != null) {
                     if (dso instanceof Community || dso instanceof Collection || dso instanceof Item) {
-                        List<ResourcePolicy> policiesAdmin = authorizeService
-                                     .getPoliciesActionFilter(context, dso, Constants.ADMIN);
-                        for (ResourcePolicy resourcePolicy : policiesAdmin) {
-                            if (resourcePolicyService.isDateValid(resourcePolicy)) {
-                                String fieldValue;
-                                if (resourcePolicy.getGroup() != null) {
-                                    // We have a group add it to the value
-                                    fieldValue = "g" + resourcePolicy.getGroup().getID();
-                                } else {
-                                    // We have an eperson add it to the value
-                                    fieldValue = "e" + resourcePolicy.getEPerson().getID();
-                                }
-                                document.addField("read", fieldValue);
-                                document.addField("admin", fieldValue);
-                            }
-
-                            // remove the policy from the cache to save memory
-                            context.uncacheEntity(resourcePolicy);
+                        Set<String> policiesAdmin = dsoWithPolicies.getAdminPolicyIds();
+                        for (String prefixedResourcePolicy : policiesAdmin) {
+                            document.addField("read", prefixedResourcePolicy);
+                            document.addField("admin", prefixedResourcePolicy);
                         }
                     }
-                    // FIXME: Temporary disable ancestor discovery to test the impact on performance.
-                    dso = null;
+                    dso = ContentServiceFactory.getInstance().getDSpaceObjectService(dso).getParentObject(context, dso);
                 }
             } catch (SQLException e) {
                 log.error(LogHelper.getHeader(context, "Error while indexing resource policies",
