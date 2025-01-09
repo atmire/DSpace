@@ -97,15 +97,12 @@ public class SolrServiceResourceRestrictionPlugin implements SolrServiceIndexPlu
 
                 // also index ADMIN policies as ADMIN permissions provides READ access
                 // going up through the hierarchy for communities, collections and items
-                while (dso != null) {
-                    if (dso instanceof Community || dso instanceof Collection || dso instanceof Item) {
-                        Set<String> policiesAdmin = dsoWithPolicies.getAdminPolicyIds();
-                        for (String prefixedResourcePolicy : policiesAdmin) {
-                            document.addField("read", prefixedResourcePolicy);
-                            document.addField("admin", prefixedResourcePolicy);
-                        }
+                if (dso instanceof Community || dso instanceof Collection || dso instanceof Item) {
+                    Set<String> policiesAdmin = dsoWithPolicies.getAdminPolicyIds();
+                    for (String prefixedResourcePolicy : policiesAdmin) {
+                        document.addField("read", prefixedResourcePolicy);
+                        document.addField("admin", prefixedResourcePolicy);
                     }
-                    dso = ContentServiceFactory.getInstance().getDSpaceObjectService(dso).getParentObject(context, dso);
                 }
             } catch (SQLException e) {
                 log.error(LogHelper.getHeader(context, "Error while indexing resource policies",
