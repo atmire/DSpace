@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -837,7 +838,7 @@ public class DataCiteConnector
     }
 
     protected Element addDOI(String doi, Element root) {
-        if (null != extractDOI(root)) {
+        if (StringUtils.isNotBlank(extractDOI(root))) {
             return root;
         }
         Element identifier = new Element("identifier",
