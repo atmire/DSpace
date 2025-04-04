@@ -175,6 +175,7 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
         context.turnOffAuthorisationSystem();
         Item item = ItemBuilder.createItem(context, publicationCollection)
                                .withTitle("Publication1").build();
+        context.commit();
         context.restoreAuthSystemState();
 
         String[] csv = {"id,collection,dc.title,relation.isPublicationOfAuthor,dspace.entity.type",
@@ -197,6 +198,7 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
             .build();
         Item publicationItem = ItemBuilder.createItem(context, publicationCollection)
                                           .withTitle("Publication1").build();
+        context.commit();
         context.restoreAuthSystemState();
 
         String[] csv = {"id,collection,relation.isPublicationOfAuthor",
@@ -218,6 +220,7 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
             .build();
         Item publicationItem = ItemBuilder.createItem(context, publicationCollection)
             .withTitle("Publication1").build();
+        context.commit();
         context.restoreAuthSystemState();
 
         String[] csv = {"id,collection,relation.isAuthorOfPublication",
@@ -284,6 +287,7 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
         context.turnOffAuthorisationSystem();
         Item item = ItemBuilder.createItem(context,publicationCollection).withAuthor("TestAuthorToRemove")
             .withTitle("title").build();
+        context.commit();
         context.restoreAuthSystemState();
 
         assertTrue(itemHasMetadata(item, "dc", "contributor", "author", Item.ANY,
@@ -302,6 +306,7 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
     public void metadataImportDeleteItemNotAllowedTest() throws Exception {
         context.turnOffAuthorisationSystem();
         Item item = ItemBuilder.createItem(context,publicationCollection).withTitle("title").build();
+        context.commit();
         context.restoreAuthSystemState();
 
         configurationService.setProperty("bulkedit.allowexpunge", false);
@@ -316,6 +321,7 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
     public void metadataImportDeleteItemAllowedTest() throws Exception {
         context.turnOffAuthorisationSystem();
         Item item = ItemBuilder.createItem(context,publicationCollection).withTitle("title").build();
+        context.commit();
         context.restoreAuthSystemState();
 
         configurationService.setProperty("bulkedit.allowexpunge", true);
