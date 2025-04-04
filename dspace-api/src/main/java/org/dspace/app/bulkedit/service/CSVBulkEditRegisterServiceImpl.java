@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.bulkedit.BulkEditChange;
@@ -438,10 +439,7 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
             if (value == null || !value.contains(csv.getAuthoritySeparator())) {
                 simplyCopyValue(value, dcv);
             } else {
-                String[] parts = value.split(csv.getAuthoritySeparator());
-                dcv.setValue(parts[0]);
-                dcv.setAuthority(parts[1]);
-                dcv.setConfidence((parts.length > 2 ? Integer.parseInt(parts[2]) : Choices.CF_ACCEPTED));
+                resolveValueAndAuthority(csv, value, dcv);
             }
 
             // fromAuthority==null: with the current implementation metadata values from external authority sources
@@ -518,10 +516,7 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
         } else if (value == null || !value.contains(csv.getAuthoritySeparator())) {
             simplyCopyValue(value, dcv);
         } else {
-            String[] parts = value.split(csv.getEscapedAuthoritySeparator());
-            dcv.setValue(parts[0]);
-            dcv.setAuthority(parts[1]);
-            dcv.setConfidence((parts.length > 2 ? Integer.parseInt(parts[2]) : Choices.CF_ACCEPTED));
+            resolveValueAndAuthority(csv, value, dcv);
         }
         return dcv;
     }
@@ -530,6 +525,35 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
         dcv.setValue(value);
         dcv.setAuthority(null);
         dcv.setConfidence(Choices.CF_UNSET);
+    }
+
+    protected void resolveValueAndAuthority(DSpaceCSV csv, String value, BulkEditMetadataValue dcv) {
+        // Cells with valid authority are composed of three parts ~ <value>, <authority>, <confidence>
+        // The value itself may also include the authority separator though
+        String[] parts = value.split(csv.getEscapedAuthoritySeparator());
+
+        // If we don't have enough parts, assume the whole string is the value
+        if (parts.length < 3) {
+            simplyCopyValue(value, dcv);
+            return;
+        }
+
+        try {
+            // The last part of the cell must be a confidence value (integer)
+            int confidence = Integer.parseInt(parts[parts.length - 1]);
+            String authority = parts[parts.length - 2];
+            String plainValue = String.join(
+                csv.getAuthoritySeparator(),
+                ArrayUtils.subarray(parts, 0, parts.length - 2)
+            );
+
+            dcv.setValue(plainValue);
+            dcv.setAuthority(authority);
+            dcv.setConfidence(confidence);
+        } catch (NumberFormatException e) {
+            // Otherwise assume the whole string is the value
+            simplyCopyValue(value, dcv);
+        }
     }
 
     /**
