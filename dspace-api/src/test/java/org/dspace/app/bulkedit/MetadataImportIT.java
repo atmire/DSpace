@@ -175,6 +175,7 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
         context.turnOffAuthorisationSystem();
         Item item = ItemBuilder.createItem(context, publicationCollection)
                                .withTitle("Publication1").build();
+        context.commit();
         context.restoreAuthSystemState();
 
         String[] csv = {"id,collection,dc.title,relation.isPublicationOfAuthor,dspace.entity.type",
@@ -197,6 +198,7 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
             .build();
         Item publicationItem = ItemBuilder.createItem(context, publicationCollection)
                                           .withTitle("Publication1").build();
+        context.commit();
         context.restoreAuthSystemState();
 
         String[] csv = {"id,collection,relation.isPublicationOfAuthor",
@@ -218,6 +220,7 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
             .build();
         Item publicationItem = ItemBuilder.createItem(context, publicationCollection)
             .withTitle("Publication1").build();
+        context.commit();
         context.restoreAuthSystemState();
 
         String[] csv = {"id,collection,relation.isAuthorOfPublication",
@@ -284,6 +287,7 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
         context.turnOffAuthorisationSystem();
         Item item = ItemBuilder.createItem(context,publicationCollection).withAuthor("TestAuthorToRemove")
             .withTitle("title").build();
+        context.commit();
         context.restoreAuthSystemState();
 
         assertTrue(itemHasMetadata(item, "dc", "contributor", "author", Item.ANY,
@@ -302,6 +306,7 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
     public void metadataImportDeleteItemNotAllowedTest() throws Exception {
         context.turnOffAuthorisationSystem();
         Item item = ItemBuilder.createItem(context,publicationCollection).withTitle("title").build();
+        context.commit();
         context.restoreAuthSystemState();
 
         configurationService.setProperty("bulkedit.allowexpunge", false);
@@ -316,6 +321,7 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
     public void metadataImportDeleteItemAllowedTest() throws Exception {
         context.turnOffAuthorisationSystem();
         Item item = ItemBuilder.createItem(context,publicationCollection).withTitle("title").build();
+        context.commit();
         context.restoreAuthSystemState();
 
         configurationService.setProperty("bulkedit.allowexpunge", true);
@@ -372,8 +378,8 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
         context.restoreAuthSystemState();
 
         String[] csv = {"id,dc.title,dc.contributor.author", item.getID().toString() +
-            ",title,\"author 1::authorityKeyChanged||author 2 edited::authorityKeyToStay||" +
-            "author 3::authorityKeyUnchanged||author 4::newAuthorityKey\""};
+            ",title,\"author 1::authorityKeyChanged::600||author 2 edited::authorityKeyToStay::600||" +
+            "author 3::authorityKeyUnchanged::600||author 4::newAuthorityKey::600||author 5::noConfidence\""};
         performImportScript(csv);
 
         item = findItemByName("title");
@@ -385,7 +391,9 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
             "author 3", "authorityKeyUnchanged"));
         assertTrue(itemHasMetadata(item, "dc", "contributor", "author", Item.ANY,
             "author 4", "newAuthorityKey"));
-        assertEquals(4, itemService.getMetadata(item, "dc", "contributor", "author", Item.ANY).size());
+        assertTrue(itemHasMetadata(item, "dc", "contributor", "author", Item.ANY,
+            "author 5::noConfidence", null));
+        assertEquals(5, itemService.getMetadata(item, "dc", "contributor", "author", Item.ANY).size());
     }
 
     private boolean itemHasMetadata(Item item, String schema, String element, String qualifier, String language,
