@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -122,32 +123,7 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
                     compareMetadata(c, item, csv, metadataValues.get(md), md, whatHasChanged, line);
                 }
 
-                // Perform the action
-                String action = line.getAction();
-                if (!"".equals(action)) {
-                    if ("expunge".equals(action)) {
-                        // Does the configuration allow deletes?
-                        if (!configurationService.getBooleanProperty("bulkedit.allowexpunge", false)) {
-                            throw new MetadataImportException("'expunge' action denied by configuration");
-                        }
-
-                        // Remove the item
-                        whatHasChanged.setDeleted();
-                    } else if ("withdraw".equals(action)) {
-                        // Withdraw the item
-                        if (!item.isWithdrawn()) {
-                            whatHasChanged.setWithdrawn();
-                        }
-                    } else if ("reinstate".equals(action)) {
-                        // Reinstate the item
-                        if (item.isWithdrawn()) {
-                            whatHasChanged.setReinstated();
-                        }
-                    } else {
-                        // Unknown action!
-                        throw new MetadataImportException("Unknown action: " + action);
-                    }
-                }
+                registerAction(line, whatHasChanged);
 
                 // Only record if changes have been made
                 if (whatHasChanged.hasChanges()) {
@@ -222,6 +198,8 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
                 changes.add(whatHasChanged);
             }
 
+            setIdentifiers(line, whatHasChanged);
+
             bulkEditCache.populateReferenceMaps(line, bulkEditCache.getRowCount(), whatHasChanged.getUuid());
             bulkEditCache.increaseRowCount();
         }
@@ -232,6 +210,40 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
         c.setMode(lastMode);
 
         return changes;
+    }
+
+    /**
+     * Register the line's action
+     * @param line              DSpaceCSVLine to read action from
+     * @param whatHasChanged    BulkEditChange to register action into
+     */
+    protected void registerAction(DSpaceCSVLine line, BulkEditChange whatHasChanged) throws MetadataImportException {
+        // Perform the action
+        String action = line.getAction();
+        if (!"".equals(action)) {
+            if ("expunge".equals(action)) {
+                // Does the configuration allow deletes?
+                if (!configurationService.getBooleanProperty("bulkedit.allowexpunge", false)) {
+                    throw new MetadataImportException("'expunge' action denied by configuration");
+                }
+
+                // Remove the item
+                whatHasChanged.setDeleted();
+            } else if ("withdraw".equals(action)) {
+                // Withdraw the item
+                if (!whatHasChanged.getItem().isWithdrawn()) {
+                    whatHasChanged.setWithdrawn();
+                }
+            } else if ("reinstate".equals(action)) {
+                // Reinstate the item
+                if (whatHasChanged.getItem().isWithdrawn()) {
+                    whatHasChanged.setReinstated();
+                }
+            } else {
+                // Unknown action!
+                throw new MetadataImportException("Unknown action: " + action);
+            }
+        }
     }
 
     /**
@@ -483,6 +495,18 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
             if (StringUtils.isNotBlank(value)) {
                 changes.registerAdd(dcv);
             }
+        }
+    }
+
+    /**
+     * Store optional identifiers from the CSV line into the BulkEditChange
+     * @param line      DSpaceCSVLine to retrieve optional identifiers from
+     * @param bechange  BulkEditChange to store the optional identifiers into
+     */
+    protected void setIdentifiers(DSpaceCSVLine line, BulkEditChange bechange) {
+        List<String> rowName = line.get("rowName");
+        if (CollectionUtils.isNotEmpty(rowName)) {
+            bechange.setIdentifier("rowName", rowName.get(0));
         }
     }
 
