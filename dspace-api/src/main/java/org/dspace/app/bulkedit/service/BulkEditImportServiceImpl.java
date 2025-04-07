@@ -104,7 +104,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
         //Add relations after all metadata has been processed
         for (BulkEditMetadataValue dcv : bechange.getAdds()) {
             if (isRelationship(dcv)) {
-                addRelationship(c, item, dcv.getElement(), dcv.getValue());
+                addRelationship(c, item, dcv);
             }
         }
 
@@ -274,7 +274,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
         return StringUtils.equals(dcv.getSchema(), MetadataSchemaEnum.RELATION.getName());
     }
 
-    private Map<String, List<BulkEditMetadataValue>> getMetadataByField(List<BulkEditMetadataValue> allMetadata) {
+    protected Map<String, List<BulkEditMetadataValue>> getMetadataByField(List<BulkEditMetadataValue> allMetadata) {
         Map<String, List<BulkEditMetadataValue>> map = new HashMap<>();
         for (BulkEditMetadataValue value : allMetadata) {
             String mdField = value.getSchema() + "." + value.getElement() + "." + value.getQualifier() + "." +
@@ -289,21 +289,17 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
 
     /**
      *
-     * Adds multiple relationships with a matching typeName to an item.
+     * Creates a relationship for the given item
      *
-     * @param c             The relevant DSpace context
-     * @param item          The item to which this metadatavalue belongs to
-     * @param typeName       The element for the metadatavalue
-     * @param values to iterate over
+     * @param c         The relevant DSpace context
+     * @param item      The item that the relationships will be made for
+     * @param dcv       Metadata value changes to create the relationship from
      * @throws SQLException If something goes wrong
      * @throws AuthorizeException   If something goes wrong
      */
-    private void addRelationships(Context c, Item item, String typeName, List<String> values)
-        throws SQLException, AuthorizeException,
-        MetadataImportException {
-        for (String value : values) {
-            addRelationship(c, item, typeName, value);
-        }
+    protected void addRelationship(Context c, Item item, BulkEditMetadataValue dcv)
+        throws SQLException, AuthorizeException, MetadataImportException {
+        addRelationship(c, item, dcv.getElement(), dcv.getValue());
     }
 
     /**
@@ -317,7 +313,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
      * @throws SQLException If something goes wrong
      * @throws AuthorizeException   If something goes wrong
      */
-    private void addRelationship(Context c, Item item, String typeName, String value)
+    protected void addRelationship(Context c, Item item, String typeName, String value)
         throws SQLException, AuthorizeException, MetadataImportException {
         if (value.isEmpty()) {
             return;
@@ -377,7 +373,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
      * @return the entity, which is guaranteed to exist.
      * @throws MetadataImportException if the target reference is badly formed or refers to a non-existing item.
      */
-    private Entity getEntity(Context context, String value) throws MetadataImportException {
+    protected Entity getEntity(Context context, String value) throws MetadataImportException {
         Entity entity;
         UUID uuid;
         try {
