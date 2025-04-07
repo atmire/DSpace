@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -98,19 +97,13 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
 
         // Add the metadata to the item
         for (BulkEditMetadataValue dcv : bechange.getAdds()) {
-            if (!StringUtils.equals(dcv.getSchema(), MetadataSchemaEnum.RELATION.getName())) {
-                itemService.addMetadata(c, item, dcv.getSchema(),
-                    dcv.getElement(),
-                    dcv.getQualifier(),
-                    dcv.getLanguage(),
-                    dcv.getValue(),
-                    dcv.getAuthority(),
-                    dcv.getConfidence());
+            if (!isRelationship(dcv)) {
+                addMetadata(c, item, dcv);
             }
         }
         //Add relations after all metadata has been processed
         for (BulkEditMetadataValue dcv : bechange.getAdds()) {
-            if (StringUtils.equals(dcv.getSchema(), MetadataSchemaEnum.RELATION.getName())) {
+            if (isRelationship(dcv)) {
                 addRelationship(c, item, dcv.getElement(), dcv.getValue());
             }
         }
@@ -221,28 +214,14 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
                     String element = list.get(0).getElement();
                     String qualifier = list.get(0).getQualifier();
                     String language = list.get(0).getLanguage();
-                    List<String> values = list.stream()
-                        .map(BulkEditMetadataValue::getValue).collect(Collectors.toList());
-                    List<String> authorities = list.stream()
-                        .map(BulkEditMetadataValue::getAuthority).collect(Collectors.toList());
-                    List<Integer> confidences = list.stream()
-                        .map(BulkEditMetadataValue::getConfidence).collect(Collectors.toList());
 
-                    if (StringUtils.equals(schema, MetadataSchemaEnum.RELATION.getName())) {
-                        List<RelationshipType> relationshipTypeList = relationshipTypeService
-                            .findByLeftwardOrRightwardTypeName(c, element);
-                        for (RelationshipType relationshipType : relationshipTypeList) {
-                            for (Relationship relationship : relationshipService
-                                .findByItemAndRelationshipType(c, item, relationshipType)) {
-                                relationshipService.delete(c, relationship);
-                                relationshipService.update(c, relationship);
-                            }
+                    clearMetadataAndRelationships(c, item, schema, element, qualifier, language);
+                    for (BulkEditMetadataValue dcv : list) {
+                        if (isRelationship(dcv)) {
+                            addRelationship(c, item, dcv.getElement(), dcv.getValue());
+                        } else {
+                            addMetadata(c, item, dcv);
                         }
-                        addRelationships(c, item, element, values);
-                    } else {
-                        itemService.clearMetadata(c, item, schema, element, qualifier, language);
-                        itemService.addMetadata(c, item, schema, element, qualifier,
-                            language, values, authorities, confidences);
                     }
                 }
             }
@@ -262,6 +241,37 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
 
             itemService.update(c, item);
         }
+    }
+
+    protected void clearMetadataAndRelationships(Context c, Item item, String schema, String element, String qualifier,
+                                                 String language) throws SQLException, AuthorizeException {
+        itemService.clearMetadata(c, item, schema, element, qualifier, language);
+        if (StringUtils.equals(schema, MetadataSchemaEnum.RELATION.getName())) {
+            List<RelationshipType> relationshipTypeList = relationshipTypeService
+                .findByLeftwardOrRightwardTypeName(c, element);
+            for (RelationshipType relationshipType : relationshipTypeList) {
+                for (Relationship relationship : relationshipService
+                    .findByItemAndRelationshipType(c, item, relationshipType)) {
+                    relationshipService.delete(c, relationship);
+                    relationshipService.update(c, relationship);
+                }
+            }
+        }
+    }
+
+    protected void addMetadata(Context c, Item item, BulkEditMetadataValue dcv)
+        throws SQLException, AuthorizeException, MetadataImportException {
+        itemService.addMetadata(c, item, dcv.getSchema(),
+            dcv.getElement(),
+            dcv.getQualifier(),
+            dcv.getLanguage(),
+            dcv.getValue(),
+            dcv.getAuthority(),
+            dcv.getConfidence());
+    }
+
+    protected boolean isRelationship(BulkEditMetadataValue dcv) {
+        return StringUtils.equals(dcv.getSchema(), MetadataSchemaEnum.RELATION.getName());
     }
 
     private Map<String, List<BulkEditMetadataValue>> getMetadataByField(List<BulkEditMetadataValue> allMetadata) {
