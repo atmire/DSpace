@@ -18,7 +18,7 @@
             what metadatafield is generated.
         </description>
         <entry key-ref="dc.title" value-ref="titleContrib"/>
-        <entry key-ref="dc.description.abstract" value-ref="abstractContrib"/>
+        <entry key-ref="dc.description.abstract" value-ref="combinedAbstractContrib"/>
         <entry key-ref="dc.identifier.other" value-ref="pubmedContrib"/>
         <entry key-ref="dc.contributor.author" value-ref="authorContrib"/>
         <entry key-ref="dc.date.issued" value-ref="dateContrib"/>
@@ -61,6 +61,12 @@
         <property name="field" ref="dc.description.abstract"/>
         <property name="query" value="descendant::AbstractText"/>
         <property name="prefixToNamespaceMapping" ref="prefixToNamespaceMapping"/>
+    </bean>
+
+    <bean id="combinedAbstractContrib" class="org.dspace.importer.external.metadatamapping.contributor.CombinedAbstractMetadatumContributor">
+        <property name="separator" value="\n"/>
+        <property name="contributor" ref="abstractContrib"/>
+        <property name="field" ref="dc.description.abstract"/>
     </bean>
 
     <bean id="authorContrib" class="org.dspace.importer.external.metadatamapping.contributor.CombinedMetadatumContributor">
