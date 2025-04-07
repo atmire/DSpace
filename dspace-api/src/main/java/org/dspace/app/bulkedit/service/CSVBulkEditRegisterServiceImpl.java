@@ -42,6 +42,7 @@ import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.core.LogHelper;
 import org.dspace.handle.service.HandleService;
+import org.dspace.scripts.handler.DSpaceRunnableHandler;
 import org.dspace.services.ConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -66,7 +67,7 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
 
     private CSVBulkEditCache bulkEditCache;
 
-    public List<BulkEditChange> registerBulkEditChange(Context c, DSpaceCSV csv)
+    public List<BulkEditChange> registerBulkEditChange(Context c, DSpaceCSV csv, DSpaceRunnableHandler handler)
         throws MetadataImportException, SQLException, AuthorizeException, IOException {
         bulkEditCache = new CSVBulkEditCacheImpl();
 
@@ -199,6 +200,10 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
             }
 
             setIdentifiers(line, whatHasChanged);
+
+            if (handler != null) {
+                logRegister(csv, whatHasChanged, handler);
+            }
 
             bulkEditCache.populateReferenceMaps(line, bulkEditCache.getRowCount(), whatHasChanged.getUuid());
             bulkEditCache.increaseRowCount();
@@ -622,5 +627,28 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
 
         // Remove newlines as different operating systems sometimes use different formats
         return in.replaceAll("\r\n", "").replaceAll("\n", "").trim();
+    }
+
+    /**
+     * Log the register of an item change to the handler
+     * @param csv       CSV origin
+     * @param change    BulkEditChange of the item
+     * @param handler   Handler to write info to
+     */
+    protected void logRegister(DSpaceCSV csv, BulkEditChange change, DSpaceRunnableHandler handler) {
+        boolean isAdd = change.isNewItem();
+
+        List<String> info = new ArrayList<>();
+
+        if (change.getItem() != null) {
+            info.add("uuid=" + change.getItem().getID());
+        }
+
+        handler.logInfo(String.format(
+            "Row %d/%d: Registered Item %s %s",
+            bulkEditCache.getRowCount(), csv.getCSVLines().size(),
+            isAdd ? "import" : "update",
+            info.isEmpty() ? "" : "(" + StringUtils.join(info, ", ") + ")"
+        ));
     }
 }
