@@ -218,7 +218,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
                     clearMetadataAndRelationships(c, item, schema, element, qualifier, language);
                     for (BulkEditMetadataValue dcv : list) {
                         if (isRelationship(dcv)) {
-                            addRelationship(c, item, dcv.getElement(), dcv.getValue());
+                            addRelationship(c, item, dcv);
                         } else {
                             addMetadata(c, item, dcv);
                         }
