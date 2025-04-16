@@ -35,6 +35,7 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.Item;
+import org.dspace.content.MetadataSchemaEnum;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.authority.Choices;
 import org.dspace.content.service.ItemService;
@@ -411,7 +412,8 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
         List<String> dcvalues = new ArrayList<>();
         if (fromAuthority == null) {
             List<MetadataValue> current = itemService.getMetadata(item, metadataField.getSchema(),
-                metadataField.getElement(), metadataField.getQualifier(), metadataField.getLanguage(), false);
+                metadataField.getElement(), metadataField.getQualifier(), metadataField.getLanguage(),
+                StringUtils.equals(metadataField.getSchema(), MetadataSchemaEnum.RELATION.getName()));
             for (MetadataValue dcv : current) {
                 if (dcv.getAuthority() == null || !csvBulkEditUtil.isAuthorityControlledField(md)) {
                     dcvalues.add(dcv.getValue());

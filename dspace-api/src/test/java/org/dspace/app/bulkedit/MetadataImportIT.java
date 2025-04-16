@@ -31,6 +31,7 @@ import org.dspace.builder.CollectionBuilder;
 import org.dspace.builder.CommunityBuilder;
 import org.dspace.builder.EntityTypeBuilder;
 import org.dspace.builder.ItemBuilder;
+import org.dspace.builder.RelationshipBuilder;
 import org.dspace.builder.RelationshipTypeBuilder;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
@@ -38,6 +39,7 @@ import org.dspace.content.EntityType;
 import org.dspace.content.Item;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.Relationship;
+import org.dspace.content.RelationshipType;
 import org.dspace.content.authority.Choices;
 import org.dspace.content.authority.factory.ContentAuthorityServiceFactory;
 import org.dspace.content.authority.service.ChoiceAuthorityService;
@@ -75,6 +77,8 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
     private Collection publicationCollection;
     private Collection personCollection;
 
+    private RelationshipType isAuthorOfPublicationRelType;
+
     @Before
     @Override
     public void setUp() throws Exception {
@@ -91,8 +95,9 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
 
         EntityType publication = EntityTypeBuilder.createEntityTypeBuilder(context, "Publication").build();
         EntityType person = EntityTypeBuilder.createEntityTypeBuilder(context, "Person").build();
-        RelationshipTypeBuilder.createRelationshipTypeBuilder(context, publication, person, "isAuthorOfPublication",
-            "isPublicationOfAuthor", 0, 10, 0, 10);
+        isAuthorOfPublicationRelType = RelationshipTypeBuilder
+            .createRelationshipTypeBuilder(context, publication, person, "isAuthorOfPublication",
+            "isPublicationOfAuthor", 0, 10, 0, 10).build();
         context.commit();
 
         context.restoreAuthSystemState();
@@ -264,6 +269,58 @@ public class MetadataImportIT extends AbstractIntegrationTestWithDatabase {
         assertEquals(1, relationshipList.size());
         assertEquals(importedPublication.getID(), relationshipList.get(0).getLeftItem().getID());
         assertEquals(importedPerson.getID(), relationshipList.get(0).getRightItem().getID());
+    }
+
+    @Test
+    public void metadataImportExistingItemRelationshipReplaceTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+        Item personItem = ItemBuilder.createItem(context, personCollection)
+            .withPersonIdentifierFirstName("John")
+            .withPersonIdentifierLastName("Doe")
+            .build();
+        Item publicationItem1 = ItemBuilder.createItem(context, publicationCollection)
+            .withTitle("Publication1").build();
+        Item publicationItem2 = ItemBuilder.createItem(context, publicationCollection)
+            .withTitle("Publication2").build();
+        Relationship existingRelationship =
+            RelationshipBuilder
+                .createRelationshipBuilder(context, publicationItem1, personItem, isAuthorOfPublicationRelType)
+                .withRightwardValue("Last, First").build();
+        context.commit();
+        context.restoreAuthSystemState();
+
+        String[] csv = {"id,collection,relation.isPublicationOfAuthor",
+            personItem.getID() + "," + personCollection.getHandle() + "," + publicationItem2.getID()};
+        performImportScript(csv);
+
+        List<Relationship> relationshipList = relationshipService.findByItem(context, personItem);
+        assertEquals(1, relationshipList.size());
+        assertEquals(publicationItem2.getID(), relationshipList.get(0).getLeftItem().getID());
+        assertEquals(personItem.getID(), relationshipList.get(0).getRightItem().getID());
+    }
+
+    @Test
+    public void metadataImportExistingItemRelationshipRemoveTest() throws Exception {
+        context.turnOffAuthorisationSystem();
+        Item personItem = ItemBuilder.createItem(context, personCollection)
+            .withPersonIdentifierFirstName("John")
+            .withPersonIdentifierLastName("Doe")
+            .build();
+        Item publicationItem = ItemBuilder.createItem(context, publicationCollection)
+            .withTitle("Publication1").build();
+        Relationship existingRelationship =
+            RelationshipBuilder
+                .createRelationshipBuilder(context, publicationItem, personItem, isAuthorOfPublicationRelType)
+                .withRightwardValue("Last, First").build();
+        context.commit();
+        context.restoreAuthSystemState();
+
+        String[] csv = {"id,collection,relation.isPublicationOfAuthor",
+            personItem.getID() + "," + personCollection.getHandle() + ","};
+        performImportScript(csv);
+
+        List<Relationship> relationshipList = relationshipService.findByItem(context, personItem);
+        assertEquals(0, relationshipList.size());
     }
 
     @Test

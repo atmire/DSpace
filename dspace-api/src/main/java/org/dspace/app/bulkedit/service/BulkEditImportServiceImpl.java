@@ -234,7 +234,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
                         String qualifier = list.get(0).getQualifier();
                         String language = list.get(0).getLanguage();
 
-                        itemService.clearMetadata(c, item, schema, element, qualifier, language);
+                        clearMetadataAndRelationships(c, item, schema, element, qualifier, language);
                     }
                 }
             }
