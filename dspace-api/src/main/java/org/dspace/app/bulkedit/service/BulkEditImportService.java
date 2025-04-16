@@ -17,7 +17,7 @@ import org.dspace.core.Context;
 import org.dspace.workflow.WorkflowException;
 
 public interface BulkEditImportService {
-    void importBulkEditChange(Context context, BulkEditChange bulkEditChange, boolean useCollectionTemplate,
+    BulkEditChange importBulkEditChange(Context context, BulkEditChange bulkEditChange, boolean useCollectionTemplate,
                               boolean useWorkflow, boolean workflowNotify)
         throws SQLException, AuthorizeException, IOException, MetadataImportException, WorkflowException;
 }

@@ -73,19 +73,20 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
     protected Map<UUID, UUID> fakeToRealUUIDMap = new ConcurrentHashMap<>();
 
     @Override
-    public void importBulkEditChange(Context c, BulkEditChange bechange, boolean useCollectionTemplate,
-                                     boolean useWorkflow, boolean workflowNotify)
+    public BulkEditChange importBulkEditChange(Context c, BulkEditChange bechange, boolean useCollectionTemplate,
+                                               boolean useWorkflow, boolean workflowNotify)
         throws SQLException, AuthorizeException, IOException, MetadataImportException, WorkflowException {
         if (bechange.isNewItem()) {
             createNewItem(c, bechange, useCollectionTemplate, useWorkflow, workflowNotify);
         } else {
             boolean deleted = performActions(c, bechange);
             if (deleted) {
-                return;
+                return bechange;
             }
             updateCollections(c, bechange);
             updateMetadata(c, bechange);
         }
+        return bechange;
     }
 
     protected void createNewItem(Context c, BulkEditChange bechange, boolean useCollectionTemplate,
