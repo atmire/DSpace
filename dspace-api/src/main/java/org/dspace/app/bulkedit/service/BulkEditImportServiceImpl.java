@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -96,7 +97,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
         Item item = wsItem.getItem();
 
         // Add the metadata to the item
-        for (BulkEditMetadataValue dcv : bechange.getAdds()) {
+        for (BulkEditMetadataValue dcv : getBulkEditMetadataValueSorted(bechange.getAdds())) {
             if (!isRelationship(dcv)) {
                 addMetadata(c, item, dcv);
             }
@@ -203,7 +204,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
         if ((!bechange.getAdds().isEmpty()) || (!bechange.getRemoves().isEmpty())) {
             // Get the complete list of what values should now be in that element
             Map<String, List<BulkEditMetadataValue>> metadataValuesToAddOrKeep =
-                getMetadataByField(bechange.getComplete());
+                getMetadataByField(getBulkEditMetadataValueSorted(bechange.getComplete()));
             Map<String, List<BulkEditMetadataValue>> metadataValuesToRemove =
                 getMetadataByField(bechange.getRemoves());
 
@@ -363,6 +364,31 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
             c, leftItem, rightItem, foundRelationshipType, -1, -1
         );
         relationshipService.update(c, persistedRelationship);
+    }
+
+    /**
+     * Sort a list of {@link BulkEditMetadataValue} to put essential values first
+     * dspace.entity.type is essential because it might influence how other imported values should behave
+     */
+    protected List<BulkEditMetadataValue> getBulkEditMetadataValueSorted(
+        List<BulkEditMetadataValue> bulkEditMetadataValues
+    ) {
+        return bulkEditMetadataValues.stream().sorted((o1, o2) -> {
+            boolean isO1EntityType = isEntityTypeMetadata(o1);
+            boolean isO2EntityType = isEntityTypeMetadata(o2);
+
+            if (isO1EntityType && !isO2EntityType) return -1;
+            if (!isO1EntityType && isO2EntityType) return 1;
+            return 0;
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * Check if a {@link BulkEditMetadataValue} is an entity type value
+     */
+    protected boolean isEntityTypeMetadata(BulkEditMetadataValue dcv) {
+        return dcv.getSchema().equals("dspace") && dcv.getElement().equals("entity") && dcv.getQualifier() != null &&
+            dcv.getQualifier().equals("type");
     }
 
     /**
