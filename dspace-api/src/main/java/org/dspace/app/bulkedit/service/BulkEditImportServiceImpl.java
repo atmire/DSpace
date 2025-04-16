@@ -377,8 +377,12 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
             boolean isO1EntityType = isEntityTypeMetadata(o1);
             boolean isO2EntityType = isEntityTypeMetadata(o2);
 
-            if (isO1EntityType && !isO2EntityType) return -1;
-            if (!isO1EntityType && isO2EntityType) return 1;
+            if (isO1EntityType && !isO2EntityType) {
+                return -1;
+            }
+            if (!isO1EntityType && isO2EntityType) {
+                return 1;
+            }
             return 0;
         }).collect(Collectors.toList());
     }
