@@ -18,6 +18,6 @@ import org.dspace.workflow.WorkflowException;
 
 public interface BulkEditImportService {
     BulkEditChange importBulkEditChange(Context context, BulkEditChange bulkEditChange, boolean useCollectionTemplate,
-                              boolean useWorkflow, boolean workflowNotify)
+                              boolean useWorkflow, boolean workflowNotify, boolean archive)
         throws SQLException, AuthorizeException, IOException, MetadataImportException, WorkflowException;
 }

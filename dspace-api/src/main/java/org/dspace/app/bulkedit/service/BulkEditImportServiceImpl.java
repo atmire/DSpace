@@ -74,10 +74,10 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
 
     @Override
     public BulkEditChange importBulkEditChange(Context c, BulkEditChange bechange, boolean useCollectionTemplate,
-                                               boolean useWorkflow, boolean workflowNotify)
+                                               boolean useWorkflow, boolean workflowNotify, boolean archive)
         throws SQLException, AuthorizeException, IOException, MetadataImportException, WorkflowException {
         if (bechange.isNewItem()) {
-            createNewItem(c, bechange, useCollectionTemplate, useWorkflow, workflowNotify);
+            createNewItem(c, bechange, useCollectionTemplate, useWorkflow, workflowNotify, archive);
         } else {
             boolean deleted = performActions(c, bechange);
             if (deleted) {
@@ -90,7 +90,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
     }
 
     protected void createNewItem(Context c, BulkEditChange bechange, boolean useCollectionTemplate,
-                                 boolean useWorkflow, boolean workflowNotify)
+                                 boolean useWorkflow, boolean workflowNotify, boolean archive)
         throws SQLException, AuthorizeException, MetadataImportException, WorkflowException, IOException {
         // Create the item
         Collection collection = bechange.getNewOwningCollection();
@@ -119,7 +119,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
             } else {
                 workflowService.startWithoutNotify(c, wsItem);
             }
-        } else {
+        } else if (archive) {
             // Install the item
             installItemService.installItem(c, wsItem);
         }

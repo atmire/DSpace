@@ -150,7 +150,8 @@ public class MetadataImport extends DSpaceRunnable<MetadataImportScriptConfigura
                 int i = 1;
                 int batchSize = configurationService.getIntProperty("bulkedit.change.commit.count", 100);
                 for (BulkEditChange bechange : changes) {
-                    bulkEditImportService.importBulkEditChange(c, bechange, useTemplate, useWorkflow, workflowNotify);
+                    bulkEditImportService.importBulkEditChange(c, bechange,
+                        useTemplate, useWorkflow, workflowNotify, true);
 
                     if (i % batchSize == 0) {
                         c.commit();
