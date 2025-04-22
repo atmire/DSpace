@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -593,7 +594,7 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
      * @param authoritySeparator Expected separator between value and authority
      */
     protected Map<String, List<String>> getAuthorityCleanMetadataValues(DSpaceCSVLine line, String authoritySeparator) {
-        Map<String, List<String>> metadataValues = new HashMap<>();
+        Map<String, List<String>> metadataValues = new TreeMap<>();
         for (String key : line.metadataKeys()) {
             metadataValues.put(key, csvBulkEditUtil.isAuthorityControlledField(key) ?
                 line.get(key) : line.get(key).stream()
