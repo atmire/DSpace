@@ -9,6 +9,8 @@ package org.dspace.app.bulkedit.service;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Map;
+import java.util.UUID;
 
 import org.dspace.app.bulkedit.BulkEditChange;
 import org.dspace.app.bulkedit.MetadataImportException;
@@ -17,7 +19,21 @@ import org.dspace.core.Context;
 import org.dspace.workflow.WorkflowException;
 
 public interface BulkEditImportService {
-    BulkEditChange importBulkEditChange(Context context, BulkEditChange bulkEditChange, boolean useCollectionTemplate,
-                              boolean useWorkflow, boolean workflowNotify, boolean archive)
+    /**
+     * Import or update an Item from a {@link BulkEditChange}
+     * @param context               DSpace context
+     * @param bulkEditChange        BulkEditChange containing information about the to-be-imported or updated item
+     * @param fakeToRealUUIDMap     A map containing previously imported/updated item UUIDs, mapped to their fake UUID
+     *                              found in their respective {@link BulkEditChange}. This way, real relationships
+     *                              between newly imported items can be made.
+     * @param useCollectionTemplate Use the item's collection template when creating a new item
+     * @param useWorkflow           Allow new items to go through workflow
+     * @param workflowNotify        Allow workflow notifications for new workflow items
+     * @param archive               Archive newly created items
+     */
+    BulkEditChange importBulkEditChange(Context context, BulkEditChange bulkEditChange,
+                                        Map<UUID, UUID> fakeToRealUUIDMap,
+                                        boolean useCollectionTemplate, boolean useWorkflow,
+                                        boolean workflowNotify, boolean archive)
         throws SQLException, AuthorizeException, IOException, MetadataImportException, WorkflowException;
 }

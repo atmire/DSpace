@@ -10,7 +10,6 @@ package org.dspace.app.bulkedit.service;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -29,7 +28,6 @@ import org.dspace.app.bulkedit.DSpaceCSVLine;
 import org.dspace.app.bulkedit.MetadataImportException;
 import org.dspace.app.bulkedit.cache.CSVBulkEditCache;
 import org.dspace.app.bulkedit.cache.CSVBulkEditCacheImpl;
-import org.dspace.app.bulkedit.util.BulkEditUtil;
 import org.dspace.authority.AuthorityValue;
 import org.dspace.authority.service.AuthorityValueService;
 import org.dspace.authorize.AuthorizeException;
@@ -62,161 +60,162 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
     protected ConfigurationService configurationService;
 
     @Autowired
-    protected BulkEditUtil csvBulkEditUtil;
-
-    @Autowired
     protected AuthorityValueService authorityValueService;
 
-    private CSVBulkEditCache bulkEditCache;
+    private ThreadLocal<CSVBulkEditCache> bulkEditCache;
 
     public List<BulkEditChange> registerBulkEditChange(Context c, DSpaceCSV csv, DSpaceRunnableHandler handler)
         throws MetadataImportException, SQLException, AuthorizeException, IOException {
-        bulkEditCache = new CSVBulkEditCacheImpl();
-
         Context.Mode lastMode = c.getCurrentMode();
-        // Force a READ ONLY mode to make it clear no actual changes are meant to be made during a register
-        c.setMode(Context.Mode.READ_ONLY);
-        bulkEditCache.resetCache();
+        initCache();
 
-        List<BulkEditChange> changes = new ArrayList<>();
+        try {
+            CSVBulkEditCache bulkEditCache = this.bulkEditCache.get();
+            // Force a READ ONLY mode to make it clear no actual changes are meant to be made during a register
+            c.setMode(Context.Mode.READ_ONLY);
+            bulkEditCache.resetCache();
 
-        bulkEditCache.resetRowCount();
-        for (DSpaceCSVLine line : csv.getCSVLines()) {
-            // Resolve target references to other items
-            line = resolveEntityRefs(c, line);
+            List<BulkEditChange> changes = new ArrayList<>();
 
-            // Get the DSpace item to compare with
-            UUID id = line.getID();
+            bulkEditCache.resetRowCount();
+            for (DSpaceCSVLine line : csv.getCSVLines()) {
+                // Resolve target references to other items
+                line = resolveEntityRefs(c, line);
 
-            // Is there an action column?
-            if ((!"".equals(line.getAction())) && (id == null)) {
-                throw new MetadataImportException("'action' not allowed for new items!");
-            }
+                // Get the DSpace item to compare with
+                UUID id = line.getID();
 
-            Map<String, List<String>> metadataValues =
-                getAuthorityCleanMetadataValues(line, csv.getAuthoritySeparator());
-
-            BulkEditChange whatHasChanged;
-
-            // Is this an existing item?
-            if (id != null) {
-                // Get the item
-                Item item = itemService.find(c, id);
-                if (item == null) {
-                    throw new MetadataImportException("Unknown item ID " + id);
+                // Is there an action column?
+                if ((!"".equals(line.getAction())) && (id == null)) {
+                    throw new MetadataImportException("'action' not allowed for new items!");
                 }
 
-                // Record changes
-                whatHasChanged = new BulkEditChange(item);
+                Map<String, List<String>> metadataValues =
+                    getAuthorityCleanMetadataValues(line, csv.getAuthoritySeparator());
 
-                // Has it moved collection?
-                List<String> collections = line.get("collection");
-                if (collections != null) {
-                    // Sanity check we're not orphaning it
-                    if (collections.isEmpty()) {
-                        throw new MetadataImportException("Missing collection from item " + item.getHandle());
+                BulkEditChange whatHasChanged;
+
+                // Is this an existing item?
+                if (id != null) {
+                    // Get the item
+                    Item item = itemService.find(c, id);
+                    if (item == null) {
+                        throw new MetadataImportException("Unknown item ID " + id);
                     }
-                    List<Collection> actualCollections = item.getCollections();
-                    compareCollections(c, item, collections, actualCollections, whatHasChanged);
-                }
 
-                // Iterate through each metadata element in the csv line
-                for (String md : metadataValues.keySet()) {
-                    // Compare
-                    compareMetadata(c, item, csv, metadataValues.get(md), md, whatHasChanged, line);
-                }
+                    // Record changes
+                    whatHasChanged = new BulkEditChange(item);
 
-                registerAction(line, whatHasChanged);
+                    // Has it moved collection?
+                    List<String> collections = line.get("collection");
+                    if (collections != null) {
+                        // Sanity check we're not orphaning it
+                        if (collections.isEmpty()) {
+                            throw new MetadataImportException("Missing collection from item " + item.getHandle());
+                        }
+                        List<Collection> actualCollections = item.getCollections();
+                        compareCollections(c, item, collections, actualCollections, whatHasChanged);
+                    }
 
-                // Only record if changes have been made
-                if (whatHasChanged.hasChanges()) {
+                    // Iterate through each metadata element in the csv line
+                    for (String md : metadataValues.keySet()) {
+                        // Compare
+                        compareMetadata(c, item, csv, metadataValues.get(md), md, whatHasChanged, line);
+                    }
+
+                    registerAction(line, whatHasChanged);
+
+                    // Only record if changes have been made
+                    if (whatHasChanged.hasChanges()) {
+                        changes.add(whatHasChanged);
+                    }
+                } else {
+                    // This is marked as a new item, so no need to compare
+
+                    // First check a user is set, otherwise this can't happen
+                    if (c.getCurrentUser() == null) {
+                        throw new MetadataImportException(
+                            "When adding new items, a user must be specified with the -e option");
+                    }
+
+                    // Iterate through each metadata element in the csv line
+                    whatHasChanged = new BulkEditChange(new UUID(0, bulkEditCache.getRowCount()));
+                    for (String md : metadataValues.keySet()) {
+                        // Add all the values from the CSV line
+                        add(c, csv, metadataValues.get(md), md, whatHasChanged);
+                    }
+
+                    // Check it has an owning collection
+                    List<String> collections = line.get("collection");
+                    if (collections == null) {
+                        throw new MetadataImportException(
+                            "New items must have a 'collection' assigned in the form of a handle");
+                    }
+
+                    // Check collections are really collections
+                    ArrayList<Collection> check = new ArrayList<Collection>();
+                    Collection collection;
+                    for (String handle : collections) {
+                        try {
+                            // Resolve the handle to the collection
+                            collection = (Collection) handleService.resolveToObject(c, handle);
+
+                            // Check it resolved OK
+                            if (collection == null) {
+                                throw new MetadataImportException(
+                                    "'" + handle + "' is not a Collection! You must specify a valid collection for " +
+                                        "new items");
+                            }
+
+                            // Check for duplicate
+                            if (check.contains(collection)) {
+                                throw new MetadataImportException(
+                                    "Duplicate collection assignment detected in new item! " + handle);
+                            } else {
+                                check.add(collection);
+                            }
+                        } catch (Exception ex) {
+                            throw new MetadataImportException(
+                                "'" + handle + "' is not a Collection! You must specify a valid collection for new " +
+                                    "items",
+                                ex);
+                        }
+                    }
+
+                    // Record the addition to collections
+                    boolean first = true;
+                    for (String handle : collections) {
+                        Collection extra = (Collection) handleService.resolveToObject(c, handle);
+                        if (first) {
+                            whatHasChanged.setOwningCollection(extra);
+                        } else {
+                            whatHasChanged.registerNewMappedCollection(extra);
+                        }
+                        first = false;
+                    }
+
+                    // Record the changes
                     changes.add(whatHasChanged);
                 }
-            } else {
-                // This is marked as a new item, so no need to compare
 
-                // First check a user is set, otherwise this can't happen
-                if (c.getCurrentUser() == null) {
-                    throw new MetadataImportException(
-                        "When adding new items, a user must be specified with the -e option");
+                setIdentifiers(line, whatHasChanged);
+
+                if (handler != null) {
+                    logRegister(csv, whatHasChanged, handler);
                 }
 
-                // Iterate through each metadata element in the csv line
-                whatHasChanged = new BulkEditChange(new UUID(0, bulkEditCache.getRowCount()));
-                for (String md : metadataValues.keySet()) {
-                    // Add all the values from the CSV line
-                    add(c, csv, metadataValues.get(md), md, whatHasChanged);
-                }
-
-                // Check it has an owning collection
-                List<String> collections = line.get("collection");
-                if (collections == null) {
-                    throw new MetadataImportException(
-                        "New items must have a 'collection' assigned in the form of a handle");
-                }
-
-                // Check collections are really collections
-                ArrayList<Collection> check = new ArrayList<Collection>();
-                Collection collection;
-                for (String handle : collections) {
-                    try {
-                        // Resolve the handle to the collection
-                        collection = (Collection) handleService.resolveToObject(c, handle);
-
-                        // Check it resolved OK
-                        if (collection == null) {
-                            throw new MetadataImportException(
-                                "'" + handle + "' is not a Collection! You must specify a valid collection for " +
-                                    "new items");
-                        }
-
-                        // Check for duplicate
-                        if (check.contains(collection)) {
-                            throw new MetadataImportException(
-                                "Duplicate collection assignment detected in new item! " + handle);
-                        } else {
-                            check.add(collection);
-                        }
-                    } catch (Exception ex) {
-                        throw new MetadataImportException(
-                            "'" + handle + "' is not a Collection! You must specify a valid collection for new " +
-                                "items",
-                            ex);
-                    }
-                }
-
-                // Record the addition to collections
-                boolean first = true;
-                for (String handle : collections) {
-                    Collection extra = (Collection) handleService.resolveToObject(c, handle);
-                    if (first) {
-                        whatHasChanged.setOwningCollection(extra);
-                    } else {
-                        whatHasChanged.registerNewMappedCollection(extra);
-                    }
-                    first = false;
-                }
-
-                // Record the changes
-                changes.add(whatHasChanged);
+                bulkEditCache.populateReferenceMaps(line, bulkEditCache.getRowCount(), whatHasChanged.getUuid());
+                bulkEditCache.increaseRowCount();
             }
 
-            setIdentifiers(line, whatHasChanged);
+            bulkEditCache.validateExpressedRelations(c, csv);
 
-            if (handler != null) {
-                logRegister(csv, whatHasChanged, handler);
-            }
-
-            bulkEditCache.populateReferenceMaps(line, bulkEditCache.getRowCount(), whatHasChanged.getUuid());
-            bulkEditCache.increaseRowCount();
+            return changes;
+        } finally {
+            clearCache();
+            // Restore the Context Mode
+            c.setMode(lastMode);
         }
-
-        bulkEditCache.validateExpressedRelations(c, csv);
-
-        // Restore the Context Mode
-        c.setMode(lastMode);
-
-        return changes;
     }
 
     /**
@@ -353,6 +352,7 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
      * @throws MetadataImportException if there is an error resolving any entity target reference.
      */
     public DSpaceCSVLine resolveEntityRefs(Context c, DSpaceCSVLine line) throws MetadataImportException {
+        CSVBulkEditCache bulkEditCache = this.bulkEditCache.get();
         DSpaceCSVLine newLine = new DSpaceCSVLine(line.getID());
         UUID originId = bulkEditCache.evaluateOriginId(line.getID());
         for (String key : line.keys()) {
@@ -416,7 +416,7 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
                 metadataField.getElement(), metadataField.getQualifier(), metadataField.getLanguage(),
                 StringUtils.equals(metadataField.getSchema(), MetadataSchemaEnum.RELATION.getName()));
             for (MetadataValue dcv : current) {
-                if (dcv.getAuthority() == null || !csvBulkEditUtil.isAuthorityControlledField(md)) {
+                if (dcv.getAuthority() == null || !bulkEditCache.get().isAuthorityControlledField(md)) {
                     dcvalues.add(dcv.getValue());
                 } else {
                     dcvalues.add(dcv.getValue() + csv.getAuthoritySeparator() + dcv.getAuthority() +
@@ -596,7 +596,7 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
     protected Map<String, List<String>> getAuthorityCleanMetadataValues(DSpaceCSVLine line, String authoritySeparator) {
         Map<String, List<String>> metadataValues = new TreeMap<>();
         for (String key : line.metadataKeys()) {
-            metadataValues.put(key, csvBulkEditUtil.isAuthorityControlledField(key) ?
+            metadataValues.put(key, bulkEditCache.get().isAuthorityControlledField(key) ?
                 line.get(key) : line.get(key).stream()
                 .map((value) -> StringUtils.substringBefore(value, authoritySeparator))
                 .collect(Collectors.toList()));
@@ -649,9 +649,24 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
 
         handler.logInfo(String.format(
             "Row %d/%d: Registered Item %s %s",
-            bulkEditCache.getRowCount(), csv.getCSVLines().size(),
+            bulkEditCache.get().getRowCount(), csv.getCSVLines().size(),
             isAdd ? "import" : "update",
             info.isEmpty() ? "" : "(" + StringUtils.join(info, ", ") + ")"
         ));
+    }
+
+    /**
+     * Initialise the CSVBulkEditCache with a ThreadLocal to ensure cache remains relevant to the current thread only
+     */
+    protected void initCache() {
+        bulkEditCache = ThreadLocal.withInitial(CSVBulkEditCacheImpl::new);
+    }
+
+    /**
+     * Clear the cache
+     */
+    protected void clearCache() {
+        bulkEditCache.remove();
+        bulkEditCache = null;
     }
 }

@@ -11,15 +11,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.bulkedit.service.BulkEditImportService;
 import org.dspace.app.bulkedit.service.BulkEditRegisterService;
 import org.dspace.app.bulkedit.service.BulkEditServiceFactory;
-import org.dspace.app.bulkedit.util.BulkEditUtil;
 import org.dspace.authority.factory.AuthorityServiceFactory;
 import org.dspace.authority.service.AuthorityValueService;
 import org.dspace.content.Collection;
@@ -89,7 +90,6 @@ public class MetadataImport extends DSpaceRunnable<MetadataImportScriptConfigura
         BulkEditServiceFactory.getInstance().getCSVBulkEditRegisterService();
     protected BulkEditImportService bulkEditImportService =
         BulkEditServiceFactory.getInstance().getBulkEditImportService();
-    protected BulkEditUtil bulkEditUtil = BulkEditUtil.getInstance();
 
     @Override
     public void internalRun() throws Exception {
@@ -149,8 +149,9 @@ public class MetadataImport extends DSpaceRunnable<MetadataImportScriptConfigura
                 c.setMode(Context.Mode.BATCH_EDIT);
                 int i = 1;
                 int batchSize = configurationService.getIntProperty("bulkedit.change.commit.count", 100);
+                Map<UUID, UUID> fakeToRealUUIDMap = new ConcurrentHashMap<>();
                 for (BulkEditChange bechange : changes) {
-                    bulkEditImportService.importBulkEditChange(c, bechange,
+                    bulkEditImportService.importBulkEditChange(c, bechange, fakeToRealUUIDMap,
                         useTemplate, useWorkflow, workflowNotify, true);
 
                     if (i % batchSize == 0) {
@@ -372,7 +373,7 @@ public class MetadataImport extends DSpaceRunnable<MetadataImportScriptConfigura
                     handler.logInfo(" + Added   (" + md + "): ");
                 }
                 handler.logInfo(metadataValue.getValue());
-                if (bulkEditUtil.isAuthorityControlledField(md)) {
+                if (metadataValue.getAuthority() != null) {
                     handler.logInfo(", authority = " + metadataValue.getAuthority());
                     handler.logInfo(", confidence = " + metadataValue.getConfidence());
                 }
@@ -393,7 +394,7 @@ public class MetadataImport extends DSpaceRunnable<MetadataImportScriptConfigura
                     handler.logInfo(" - Removed (" + md + "): ");
                 }
                 handler.logInfo(metadataValue.getValue());
-                if (bulkEditUtil.isAuthorityControlledField(md)) {
+                if (metadataValue.getAuthority() != null) {
                     handler.logInfo(", authority = " + metadataValue.getAuthority());
                     handler.logInfo(", confidence = " + metadataValue.getConfidence());
                 }
