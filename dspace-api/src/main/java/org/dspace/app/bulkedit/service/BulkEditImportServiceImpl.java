@@ -95,7 +95,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
         // Add the metadata to the item
         for (BulkEditMetadataValue dcv : getBulkEditMetadataValueSorted(bechange.getAdds())) {
             if (!isRelationship(dcv)) {
-                addMetadata(c, item, dcv);
+                addMetadata(c, item, fakeToRealUUIDMap, dcv);
             }
         }
         //Add relations after all metadata has been processed
@@ -217,7 +217,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
                         if (isRelationship(dcv)) {
                             addRelationship(c, item, fakeToRealUUIDMap, dcv);
                         } else {
-                            addMetadata(c, item, dcv);
+                            addMetadata(c, item, fakeToRealUUIDMap, dcv);
                         }
                     }
                 }
@@ -256,7 +256,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
         }
     }
 
-    protected void addMetadata(Context c, Item item, BulkEditMetadataValue dcv)
+    protected void addMetadata(Context c, Item item, Map<UUID, UUID> fakeToRealUUIDMap, BulkEditMetadataValue dcv)
         throws SQLException, AuthorizeException, MetadataImportException {
         itemService.addMetadata(c, item, dcv.getSchema(),
             dcv.getElement(),
