@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.apache.commons.cli.CommandLine;
 import org.dspace.app.bulkedit.BulkEditChange;
 import org.dspace.app.bulkedit.MetadataImportException;
 import org.dspace.authorize.AuthorizeException;
@@ -18,6 +19,7 @@ import org.dspace.core.Context;
 import org.dspace.scripts.handler.DSpaceRunnableHandler;
 
 public interface BulkEditRegisterService<T> {
-    List<BulkEditChange> registerBulkEditChange(Context context, T source, DSpaceRunnableHandler handler)
+    List<BulkEditChange> registerBulkEditChange(Context context, T source, DSpaceRunnableHandler handler,
+                                                CommandLine commandLine)
         throws MetadataImportException, SQLException, AuthorizeException, IOException;
 }

@@ -16,6 +16,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -64,7 +65,8 @@ public class CSVBulkEditRegisterServiceImpl implements BulkEditRegisterService<D
 
     private ThreadLocal<CSVBulkEditCache> bulkEditCache;
 
-    public List<BulkEditChange> registerBulkEditChange(Context c, DSpaceCSV csv, DSpaceRunnableHandler handler)
+    public List<BulkEditChange> registerBulkEditChange(Context c, DSpaceCSV csv, DSpaceRunnableHandler handler,
+                                                       CommandLine commandLine)
         throws MetadataImportException, SQLException, AuthorizeException, IOException {
         Context.Mode lastMode = c.getCurrentMode();
         initCache();
