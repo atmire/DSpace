@@ -70,7 +70,7 @@ public class SiteServiceImpl extends DSpaceObjectServiceImpl<Site> implements Si
     }
 
     @Override
-    public void update(Context context, Site site) throws SQLException, AuthorizeException {
+    public void forceUpdate(Context context, Site site) throws SQLException, AuthorizeException {
         if (!authorizeService.isAdmin(context)) {
             throw new AuthorizeException();
         }

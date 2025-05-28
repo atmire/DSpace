@@ -574,7 +574,7 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
      *                            to perform a particular action.
      */
     @Override
-    public void update(Context context, Group group) throws SQLException, AuthorizeException {
+    public void forceUpdate(Context context, Group group) throws SQLException, AuthorizeException {
 
         super.update(context, group);
         // FIXME: Check authorisation

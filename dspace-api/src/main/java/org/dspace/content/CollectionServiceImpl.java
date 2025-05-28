@@ -661,7 +661,7 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
     }
 
     @Override
-    public void update(Context context, Collection collection) throws SQLException, AuthorizeException {
+    public void forceUpdate(Context context, Collection collection) throws SQLException, AuthorizeException {
         // Check authorisation
         canEdit(context, collection, true);
 

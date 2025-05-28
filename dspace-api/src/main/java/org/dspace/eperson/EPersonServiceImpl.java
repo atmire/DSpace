@@ -482,7 +482,7 @@ public class EPersonServiceImpl extends DSpaceObjectServiceImpl<EPerson> impleme
     }
 
     @Override
-    public void update(Context context, EPerson ePerson) throws SQLException, AuthorizeException {
+    public void forceUpdate(Context context, EPerson ePerson) throws SQLException, AuthorizeException {
         // Check authorisation - if you're not the eperson
         // see if the authorization system says you can
         if (!context.ignoreAuthorization()

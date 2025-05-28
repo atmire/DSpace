@@ -258,7 +258,7 @@ public class CommunityServiceImpl extends DSpaceObjectServiceImpl<Community> imp
     }
 
     @Override
-    public void update(Context context, Community community) throws SQLException, AuthorizeException {
+    public void forceUpdate(Context context, Community community) throws SQLException, AuthorizeException {
         // Check authorisation
         canEdit(context, community);
 

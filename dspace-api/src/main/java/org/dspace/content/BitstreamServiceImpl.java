@@ -234,7 +234,7 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
     }
 
     @Override
-    public void update(Context context, Bitstream bitstream) throws SQLException, AuthorizeException {
+    public void forceUpdate(Context context, Bitstream bitstream) throws SQLException, AuthorizeException {
         // Check authorisation
         authorizeService.authorizeAction(context, bitstream, Constants.WRITE);
 

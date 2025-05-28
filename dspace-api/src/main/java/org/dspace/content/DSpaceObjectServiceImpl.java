@@ -591,7 +591,12 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
     }
 
     @Override
-    public void update(Context context, T dso) throws SQLException, AuthorizeException {
+    public final void update(Context context, T dso) throws SQLException, AuthorizeException {
+        context.cacheUpdateDSO(dso);
+    }
+
+    @Override
+    public void forceUpdate(Context context, T dso) throws SQLException, AuthorizeException {
         if (dso.isMetadataModified()) {
             /*
             Update the order of the metadata values

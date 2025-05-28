@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -21,8 +22,10 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.logging.log4j.Logger;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.ResourcePolicy;
 import org.dspace.content.DSpaceObject;
+import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
 import org.dspace.eperson.factory.EPersonServiceFactory;
@@ -127,6 +130,8 @@ public class Context implements AutoCloseable {
     protected EventService eventService;
 
     private DBConnection dbConnection;
+
+    private LinkedHashSet<DSpaceObject> cachedUpdateDSOs = new LinkedHashSet<>();
 
     public enum Mode {
         READ_ONLY,
@@ -456,6 +461,12 @@ public class Context implements AutoCloseable {
         Dispatcher dispatcher = null;
 
         try {
+            ContentServiceFactory contentServiceFactory = ContentServiceFactory.getInstance();
+            for (DSpaceObject dso : cachedUpdateDSOs) {
+                contentServiceFactory.getDSpaceObjectService(dso).update(this, dso);
+            }
+            cachedUpdateDSOs.clear();
+
             if (events != null) {
 
                 if (dispName == null) {
@@ -465,6 +476,8 @@ public class Context implements AutoCloseable {
                 dispatcher = eventService.getDispatcher(dispName);
                 dispatcher.dispatch(this);
             }
+        } catch (SQLException | AuthorizeException e) {
+            log.error(e.getMessage(), e);
         } finally {
             events = null;
             if (dispatcher != null) {
@@ -950,5 +963,9 @@ public class Context implements AutoCloseable {
      */
     public boolean isContextUserSwitched() {
         return currentUserPreviousState != null;
+    }
+
+    public void cacheUpdateDSO(DSpaceObject dso) {
+        cachedUpdateDSOs.add(dso);
     }
 }
