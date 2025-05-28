@@ -231,7 +231,7 @@ public class DOIOrganiser {
                     organiser.reserve(doi);
                     context.uncacheEntity(doi);
                 }
-            } catch (SQLException | AuthorizeException ex) {
+            } catch (SQLException ex) {
                 System.err.println("Error in database connection:" + ex.getMessage());
                 ex.printStackTrace(System.err);
             }
@@ -272,7 +272,7 @@ public class DOIOrganiser {
                     organiser.update(doi);
                     context.uncacheEntity(doi);
                 }
-            } catch (SQLException | AuthorizeException ex) {
+            } catch (SQLException ex) {
                 System.err.println("Error in database connection:" + ex.getMessage());
                 ex.printStackTrace(System.err);
             }
