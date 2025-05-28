@@ -463,7 +463,7 @@ public class Context implements AutoCloseable {
         try {
             ContentServiceFactory contentServiceFactory = ContentServiceFactory.getInstance();
             for (DSpaceObject dso : cachedUpdateDSOs) {
-                contentServiceFactory.getDSpaceObjectService(dso).update(this, dso);
+                contentServiceFactory.getDSpaceObjectService(dso).forceUpdate(this, dso);
             }
             cachedUpdateDSOs.clear();
 
