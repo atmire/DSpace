@@ -422,7 +422,7 @@ public class ItemBuilder extends AbstractDSpaceObjectBuilder<Item> {
      * @throws SQLException
      * @throws IOException
      */
-    public static void deleteItem(UUID uuid) throws SQLException, IOException {
+    public static void deleteItem(UUID uuid) throws SQLException, IOException, AuthorizeException {
         try (Context c = new Context()) {
             c.turnOffAuthorisationSystem();
             Item item = itemService.find(c, uuid);

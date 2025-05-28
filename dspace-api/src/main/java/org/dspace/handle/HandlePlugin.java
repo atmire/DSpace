@@ -22,6 +22,7 @@ import net.handle.hdllib.HandleValue;
 import net.handle.hdllib.ScanCallback;
 import net.handle.hdllib.Util;
 import org.apache.logging.log4j.Logger;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.handle.factory.HandleServiceFactory;
 import org.dspace.handle.service.HandleService;
@@ -299,7 +300,7 @@ public class HandlePlugin implements HandleStorage {
             if (context != null) {
                 try {
                     context.complete();
-                } catch (SQLException sqle) {
+                } catch (SQLException | AuthorizeException e) {
                     // ignore
                 }
             }
@@ -398,7 +399,7 @@ public class HandlePlugin implements HandleStorage {
             if (context != null) {
                 try {
                     context.complete();
-                } catch (SQLException sqle) {
+                } catch (SQLException | AuthorizeException e) {
                     // ignore
                 }
             }

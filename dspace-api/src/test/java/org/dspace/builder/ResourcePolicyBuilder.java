@@ -94,7 +94,7 @@ public class ResourcePolicyBuilder extends AbstractBuilder<ResourcePolicy, Resou
     }
 
     public static void delete(Integer id)
-            throws SQLException, IOException, SearchServiceException {
+            throws SQLException, IOException, SearchServiceException, AuthorizeException {
         try (Context c = new Context()) {
             c.turnOffAuthorisationSystem();
             ResourcePolicy rp = resourcePolicyService.find(c, id);

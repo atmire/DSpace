@@ -14,6 +14,7 @@ import java.util.Date;
 
 import org.dspace.app.util.factory.UtilServiceFactory;
 import org.dspace.app.util.service.WebAppService;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
@@ -76,7 +77,7 @@ abstract public class AbstractDSpaceWebapp
             Context context = new Context();
             webApp = webAppService.create(context, kind, url, now, isUI() ? 1 : 0);
             context.complete();
-        } catch (SQLException e) {
+        } catch (SQLException | AuthorizeException e) {
             log.error("Failed to record startup in Webapp table.", e);
         }
     }
@@ -90,7 +91,7 @@ abstract public class AbstractDSpaceWebapp
             Context context = new Context();
             webAppService.delete(context, webApp);
             context.complete();
-        } catch (SQLException e) {
+        } catch (SQLException | AuthorizeException e) {
             log.error("Failed to record shutdown in Webapp table.", e);
         }
     }

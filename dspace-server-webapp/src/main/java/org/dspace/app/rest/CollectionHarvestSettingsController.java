@@ -20,6 +20,7 @@ import org.dspace.app.rest.model.hateoas.HarvestedCollectionResource;
 import org.dspace.app.rest.repository.HarvestedCollectionRestRepository;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.Utils;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
 import org.dspace.content.service.CollectionService;
 import org.dspace.core.Context;
@@ -101,7 +102,7 @@ public class CollectionHarvestSettingsController {
     @RequestMapping(method = RequestMethod.PUT, consumes = {"application/json"})
     public HarvestedCollectionResource updateHarvestSettingsEndpoint(@PathVariable UUID collectionUuid,
                                               HttpServletResponse response,
-                                              HttpServletRequest request) throws SQLException {
+                                              HttpServletRequest request) throws SQLException, AuthorizeException {
 
         Context context = ContextUtil.obtainContext(request);
         Collection collection = collectionService.find(context, collectionUuid);

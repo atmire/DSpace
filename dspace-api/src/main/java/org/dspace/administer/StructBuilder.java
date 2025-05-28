@@ -147,7 +147,7 @@ public class StructBuilder {
      * @throws XPathExpressionException passed through.
      */
     public static void main(String[] argv)
-        throws ParserConfigurationException, SQLException,
+        throws ParserConfigurationException, SQLException, AuthorizeException,
         IOException, TransformerException, XPathExpressionException {
         // Define command line options.
         Options options = new Options();

@@ -302,7 +302,7 @@ public class CanSubscribeFeatureIT extends AbstractControllerIntegrationTest {
             for (ResourcePolicy resourcePolicy : resourcePolicies) {
                 ResourcePolicyBuilder.delete(resourcePolicy.getID());
             }
-        } catch (SQLException | SearchServiceException | IOException sqlException) {
+        } catch (SQLException | SearchServiceException | IOException | AuthorizeException sqlException) {
             log.error(sqlException.getMessage());
         }
     }

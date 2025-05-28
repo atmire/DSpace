@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.dspace.AbstractUnitTest;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.builder.AbstractBuilder;
 import org.dspace.builder.CollectionBuilder;
 import org.dspace.builder.CommunityBuilder;
@@ -50,7 +51,7 @@ public class RequestItemHelpdeskStrategyTest
 
     @BeforeClass
     public static void setUpClass()
-            throws SQLException {
+            throws SQLException, AuthorizeException {
         AbstractBuilder.init(); // AbstractUnitTest doesn't do this for us.
 
         configurationService = DSpaceServicesFactory.getInstance().getConfigurationService();

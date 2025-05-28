@@ -9,6 +9,7 @@ package org.dspace.sword2;
 
 import java.sql.SQLException;
 
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 
@@ -173,7 +174,7 @@ public class SwordContext {
             if (authenticatorContext != null && authenticatorContext.isValid()) {
                 authenticatorContext.abort();
             }
-        } catch (SQLException e) {
+        } catch (SQLException | AuthorizeException e) {
             throw new DSpaceSwordException(e);
         }
     }

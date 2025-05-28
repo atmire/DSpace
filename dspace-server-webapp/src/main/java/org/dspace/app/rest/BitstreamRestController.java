@@ -227,7 +227,7 @@ public class BitstreamRestController {
     @PreAuthorize("hasPermission(#uuid, 'BITSTREAM','WRITE')")
     @PostAuthorize("returnObject != null")
     public BitstreamResource updateBitstreamFormat(@PathVariable UUID uuid,
-                                                   HttpServletRequest request) throws SQLException {
+                                                   HttpServletRequest request) throws SQLException, AuthorizeException {
 
         Context context = obtainContext(request);
 

@@ -226,7 +226,7 @@ public class ContextTest extends AbstractUnitTest {
      * Test of complete method, of class Context.
      */
     @Test
-    public void testComplete() throws SQLException {
+    public void testComplete() throws SQLException, AuthorizeException {
         // To test complete() we need a new Context object
         Context instance = new Context();
 
@@ -249,7 +249,7 @@ public class ContextTest extends AbstractUnitTest {
      * Test of complete method, of class Context.
      */
     @Test
-    public void testComplete2() throws SQLException {
+    public void testComplete2() throws SQLException, AuthorizeException {
         // To test complete() we need a new Context object
         Context instance = new Context();
 

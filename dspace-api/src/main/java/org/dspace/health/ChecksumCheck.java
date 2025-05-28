@@ -13,6 +13,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.checker.CheckerCommand;
 import org.dspace.checker.ChecksumResultCode;
 import org.dspace.checker.ChecksumResultsCollector;
@@ -42,7 +43,7 @@ public class ChecksumCheck extends Check {
             checker.process();
             context.complete();
             context = null;
-        } catch (SQLException e) {
+        } catch (SQLException | AuthorizeException e) {
             error(e);
         } finally {
             if (context != null) {

@@ -213,7 +213,7 @@ public class AbstractIntegrationTestWithDatabase extends AbstractDSpaceIntegrati
      * This can also be used by individual tests to cleanup context objects they create.
      * @throws java.sql.SQLException passed through.
      */
-    protected void cleanupContext() throws SQLException {
+    protected void cleanupContext() throws SQLException, AuthorizeException {
         // If context still valid, flush all database changes and close it
         if (context != null && context.isValid()) {
             context.complete();

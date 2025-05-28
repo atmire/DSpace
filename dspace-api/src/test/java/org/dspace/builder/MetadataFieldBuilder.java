@@ -89,9 +89,10 @@ public class MetadataFieldBuilder extends AbstractBuilder<MetadataField, Metadat
      * Delete the Test MetadataField referred to by the given ID
      * @param id Integer of Test MetadataField to delete
      * @throws SQLException
+     * @throws AuthorizeException
      * @throws IOException
      */
-    public static void deleteMetadataField(Integer id) throws SQLException, IOException {
+    public static void deleteMetadataField(Integer id) throws SQLException, AuthorizeException, IOException {
         try (Context c = new Context()) {
             c.turnOffAuthorisationSystem();
             MetadataField metadataField = metadataFieldService.find(c, id);

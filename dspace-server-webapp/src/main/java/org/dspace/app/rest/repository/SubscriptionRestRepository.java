@@ -228,7 +228,7 @@ public class SubscriptionRestRepository extends DSpaceRestRepository<Subscriptio
     @Override
     @PreAuthorize("hasPermission(#id, 'subscription', 'WRITE')")
     protected SubscriptionRest put(Context context, HttpServletRequest request, String apiCategory, String model,
-                                   Integer id, JsonNode jsonNode) throws SQLException {
+                                   Integer id, JsonNode jsonNode) throws SQLException, AuthorizeException {
 
         SubscriptionRest subscriptionRest;
         try {

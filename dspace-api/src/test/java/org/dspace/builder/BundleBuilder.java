@@ -82,7 +82,7 @@ public class BundleBuilder extends AbstractDSpaceObjectBuilder<Bundle>  {
         return bundle;
     }
 
-    public static void deleteBundle(UUID uuid) throws SQLException, IOException {
+    public static void deleteBundle(UUID uuid) throws SQLException, IOException, AuthorizeException {
         try (Context c = new Context()) {
             c.turnOffAuthorisationSystem();
             Bundle bundle = bundleService.find(c, uuid);

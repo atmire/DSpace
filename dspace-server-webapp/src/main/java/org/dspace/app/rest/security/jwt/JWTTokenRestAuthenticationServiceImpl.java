@@ -24,6 +24,7 @@ import org.dspace.app.rest.security.RestAuthenticationService;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.authenticate.AuthenticationMethod;
 import org.dspace.authenticate.service.AuthenticationService;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.service.EPersonService;
@@ -92,6 +93,8 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
             log.error("JOSE Exception", e);
         } catch (SQLException e) {
             log.error("SQL error when adding authentication", e);
+        } catch (AuthorizeException e) {
+            log.error("Authorization error when adding authentication", e);
         }
     }
 
@@ -111,6 +114,8 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
             log.error("JOSE Exception", e);
         } catch (SQLException e) {
             log.error("SQL error when adding authentication", e);
+        } catch (AuthorizeException e) {
+            log.error("Authorization error when adding authentication", e);
         }
 
         return null;

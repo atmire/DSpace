@@ -174,7 +174,7 @@ public class Curation extends DSpaceRunnable<CurationScriptConfiguration> {
      * @param timeRun Time script was started
      * @throws SQLException If DSpace contextx can't complete
      */
-    private void endScript(long timeRun) throws SQLException {
+    private void endScript(long timeRun) throws SQLException, AuthorizeException {
         context.complete();
         if (verbose) {
             long elapsed = System.currentTimeMillis() - timeRun;

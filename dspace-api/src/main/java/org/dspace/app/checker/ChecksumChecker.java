@@ -24,6 +24,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.checker.BitstreamDispatcher;
 import org.dspace.checker.CheckerCommand;
 import org.dspace.checker.HandleDispatcher;
@@ -84,7 +85,7 @@ public final class ChecksumChecker {
      * @param args the command line arguments given
      * @throws SQLException if error
      */
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) throws SQLException, AuthorizeException {
         // set up command line parser
         CommandLineParser parser = new DefaultParser();
         CommandLine line = null;

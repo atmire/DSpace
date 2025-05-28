@@ -87,8 +87,9 @@ public class WorkspaceItemBuilder extends AbstractBuilder<WorkspaceItem, Workspa
      * @param id Integer of Test WorkspaceItem to delete
      * @throws SQLException
      * @throws IOException
+     * @throws AuthorizeException
      */
-    public static void deleteWorkspaceItem(Integer id) throws SQLException, IOException {
+    public static void deleteWorkspaceItem(Integer id) throws SQLException, IOException, AuthorizeException {
         try (Context c = new Context()) {
             c.turnOffAuthorisationSystem();
             WorkspaceItem workspaceItem = workspaceItemService.find(c, id);

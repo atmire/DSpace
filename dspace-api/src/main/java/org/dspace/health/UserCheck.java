@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.factory.ContentServiceFactory;
@@ -113,7 +114,7 @@ public class UserCheck extends Check {
 
             context.complete();
 
-        } catch (SQLException e) {
+        } catch (SQLException | AuthorizeException e) {
             error(e);
         }
 

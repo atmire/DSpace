@@ -75,7 +75,7 @@ public class SubscribeBuilder extends AbstractBuilder<Subscription, SubscribeSer
             context.dispatchEvents();
 
             indexingService.commit();
-        } catch (SearchServiceException  e) {
+        } catch (SearchServiceException | SQLException | AuthorizeException e) {
             log.error(e);
         }
         return subscription;

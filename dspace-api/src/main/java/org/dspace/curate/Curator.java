@@ -18,6 +18,7 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.dspace.content.DSpaceObject;
@@ -263,8 +264,8 @@ public class Curator {
                     ctx.complete();
                 }
             }
-        } catch (SQLException sqlE) {
-            throw new IOException(sqlE.getMessage(), sqlE);
+        } catch (SQLException | AuthorizeException e) {
+            throw new IOException(e.getMessage(), e);
         } finally {
             curationCtx.remove();
         }
@@ -538,7 +539,11 @@ public class Curator {
         Context curCtx = curationCtx.get();
         if (curCtx != null) {
             if (txScope.equals(TxScope.OBJECT)) {
-                curCtx.dispatchEvents();
+                try {
+                    curCtx.dispatchEvents();
+                } catch (SQLException | AuthorizeException e) {
+                    throw new IOException(e.getMessage(), e);
+                }
             }
         }
     }

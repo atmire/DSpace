@@ -479,7 +479,7 @@ public abstract class DSpaceRestRepository<T extends RestAddressableModel, ID ex
         throw new RepositoryMethodNotImplementedException(apiCategory, model);
     }
 
-    public T action(HttpServletRequest request, ID id) throws SQLException, IOException {
+    public T action(HttpServletRequest request, ID id) throws SQLException, IOException, AuthorizeException {
         Context context = obtainContext();
         T entity = action(context, request, id);
         context.commit();

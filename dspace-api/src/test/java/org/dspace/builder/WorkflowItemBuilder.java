@@ -262,9 +262,10 @@ public class WorkflowItemBuilder extends AbstractBuilder<XmlWorkflowItem, XmlWor
      * @throws SQLException
      * @throws IOException
      * @throws SearchServiceException
+     * @throws AuthorizeException
      */
     public static void deleteWorkflowItem(Integer id)
-            throws SQLException, IOException, SearchServiceException {
+            throws SQLException, IOException, SearchServiceException, AuthorizeException {
         try (Context c = new Context()) {
             c.turnOffAuthorisationSystem();
             XmlWorkflowItem wi = workflowItemService.find(c, id);

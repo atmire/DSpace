@@ -115,9 +115,10 @@ public class BitstreamFormatBuilder extends AbstractCRUDBuilder<BitstreamFormat>
      * Delete the Test BitstreamFormat referred to by the given UUID
      * @param id Id of Test BitstreamFormat to delete
      * @throws SQLException
+     * @throws AuthorizeException
      * @throws IOException
      */
-    public static void deleteBitstreamFormat(int id) throws SQLException, IOException {
+    public static void deleteBitstreamFormat(int id) throws SQLException, AuthorizeException, IOException {
         try (Context c = new Context()) {
             c.turnOffAuthorisationSystem();
             BitstreamFormat bitstreamFormat = bitstreamFormatService.find(c, id);

@@ -159,7 +159,7 @@ public class CommunityBuilder extends AbstractDSpaceObjectBuilder<Community> {
      * @throws SQLException
      * @throws IOException
      */
-    public static void deleteCommunity(UUID uuid) throws SQLException, IOException {
+    public static void deleteCommunity(UUID uuid) throws SQLException, IOException, AuthorizeException {
         try (Context c = new Context()) {
             c.turnOffAuthorisationSystem();
             Community community = communityService.find(c, uuid);

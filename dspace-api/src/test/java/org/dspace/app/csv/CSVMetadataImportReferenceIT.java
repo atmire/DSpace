@@ -24,6 +24,7 @@ import org.dspace.AbstractIntegrationTestWithDatabase;
 import org.dspace.app.bulkedit.MetadataImportException;
 import org.dspace.app.bulkedit.MetadataImportInvalidHeadingException;
 import org.dspace.app.scripts.handler.impl.TestDSpaceRunnableHandler;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.builder.CollectionBuilder;
 import org.dspace.builder.CommunityBuilder;
 import org.dspace.builder.EntityTypeBuilder;
@@ -188,7 +189,7 @@ public class CSVMetadataImportReferenceIT extends AbstractIntegrationTestWithDat
      * @throws SQLException
      * @throws IOException
      */
-    private void cleanupImportItems(Item[] items) throws SQLException, IOException {
+    private void cleanupImportItems(Item[] items) throws SQLException, IOException, AuthorizeException {
         context.turnOffAuthorisationSystem();
         for (Item item: items) {
             ItemBuilder.deleteItem(item.getID());
