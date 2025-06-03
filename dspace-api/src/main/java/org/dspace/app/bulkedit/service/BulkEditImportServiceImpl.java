@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.bulkedit.BulkEditChange;
@@ -68,13 +67,13 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
     protected InstallItemService installItemService;
 
     @Override
-    public BulkEditChange importBulkEditChange(Context c, DSpaceRunnableHandler handler, CommandLine commandLine,
+    public BulkEditChange importBulkEditChange(Context c, DSpaceRunnableHandler handler,
                                                BulkEditChange bechange, Map<UUID, UUID> fakeToRealUUIDMap,
                                                boolean useCollectionTemplate, boolean useWorkflow,
                                                boolean workflowNotify, boolean archive)
         throws SQLException, AuthorizeException, IOException, MetadataImportException, WorkflowException {
         if (bechange.isNewItem()) {
-            createNewItem(c, handler, commandLine, bechange, fakeToRealUUIDMap,
+            createNewItem(c, handler, bechange, fakeToRealUUIDMap,
                 useCollectionTemplate, useWorkflow, workflowNotify, archive);
         } else {
             boolean deleted = performActions(c, bechange);
@@ -82,12 +81,12 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
                 return bechange;
             }
             updateCollections(c, bechange);
-            updateMetadata(c, handler, commandLine, bechange, fakeToRealUUIDMap);
+            updateMetadata(c, handler, bechange, fakeToRealUUIDMap);
         }
         return bechange;
     }
 
-    protected void createNewItem(Context c, DSpaceRunnableHandler handler, CommandLine commandLine,
+    protected void createNewItem(Context c, DSpaceRunnableHandler handler,
                                  BulkEditChange bechange, Map<UUID, UUID> fakeToRealUUIDMap,
                                  boolean useCollectionTemplate, boolean useWorkflow,
                                  boolean workflowNotify, boolean archive)
@@ -197,7 +196,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
         }
     }
 
-    protected void updateMetadata(Context c, DSpaceRunnableHandler handler, CommandLine commandLine,
+    protected void updateMetadata(Context c, DSpaceRunnableHandler handler,
                                   BulkEditChange bechange, Map<UUID, UUID> fakeToRealUUIDMap)
         throws SQLException, AuthorizeException, MetadataImportException {
         Item item = bechange.getItem();

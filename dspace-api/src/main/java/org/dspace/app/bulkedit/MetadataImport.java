@@ -124,7 +124,7 @@ public class MetadataImport extends DSpaceRunnable<MetadataImportScriptConfigura
         boolean testRun = !commandLine.hasOption('s') || validateOnly;
 
         // Register the changes - just highlight differences
-        List<BulkEditChange> changes = bulkEditRegisterService.registerBulkEditChange(c, csv, handler, commandLine);
+        List<BulkEditChange> changes = bulkEditRegisterService.registerBulkEditChange(c, csv, handler);
 
         // Display the changes
         int changeCounter = displayChanges(changes, false);
@@ -151,7 +151,7 @@ public class MetadataImport extends DSpaceRunnable<MetadataImportScriptConfigura
                 int batchSize = configurationService.getIntProperty("bulkedit.change.commit.count", 100);
                 Map<UUID, UUID> fakeToRealUUIDMap = new ConcurrentHashMap<>();
                 for (BulkEditChange bechange : changes) {
-                    bulkEditImportService.importBulkEditChange(c, handler, commandLine, bechange, fakeToRealUUIDMap,
+                    bulkEditImportService.importBulkEditChange(c, handler, bechange, fakeToRealUUIDMap,
                         useTemplate, useWorkflow, workflowNotify, true);
 
                     if (i % batchSize == 0) {
