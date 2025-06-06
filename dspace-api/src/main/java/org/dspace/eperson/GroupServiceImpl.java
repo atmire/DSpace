@@ -469,7 +469,7 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
     }
 
     @Override
-    public void delete(Context context, Group group) throws SQLException {
+    public void deleteDso(Context context, Group group) throws SQLException {
         if (group.isPermanent()) {
             log.error("Attempt to delete permanent Group {}", group::getName);
             throw new SQLException("Attempt to delete a permanent Group");
@@ -576,7 +576,7 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
     @Override
     public void forceUpdate(Context context, Group group) throws SQLException, AuthorizeException {
 
-        super.update(context, group);
+        super.forceUpdate(context, group);
         // FIXME: Check authorisation
         groupDAO.save(context, group);
 

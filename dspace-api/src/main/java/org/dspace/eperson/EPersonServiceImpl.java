@@ -237,7 +237,7 @@ public class EPersonServiceImpl extends DSpaceObjectServiceImpl<EPerson> impleme
     }
 
     @Override
-    public void delete(Context context, EPerson ePerson) throws SQLException, AuthorizeException {
+    public void deleteDso(Context context, EPerson ePerson) throws SQLException, AuthorizeException {
         try {
             delete(context, ePerson, true);
         } catch (AuthorizeException ex) {
@@ -482,16 +482,19 @@ public class EPersonServiceImpl extends DSpaceObjectServiceImpl<EPerson> impleme
     }
 
     @Override
-    public void forceUpdate(Context context, EPerson ePerson) throws SQLException, AuthorizeException {
+    protected void checkAuthorization(Context context, EPerson ePerson) throws SQLException, AuthorizeException {
         // Check authorisation - if you're not the eperson
         // see if the authorization system says you can
         if (!context.ignoreAuthorization()
-                && ((context.getCurrentUser() == null) || (ePerson.getID() != context
-                .getCurrentUser().getID()))) {
+            && ((context.getCurrentUser() == null) || (ePerson.getID() != context
+            .getCurrentUser().getID()))) {
             authorizeService.authorizeAction(context, ePerson, Constants.WRITE);
         }
+    }
 
-        super.update(context, ePerson);
+    @Override
+    public void forceUpdate(Context context, EPerson ePerson) throws SQLException, AuthorizeException {
+        super.forceUpdate(context, ePerson);
 
         ePersonDAO.save(context, ePerson);
 

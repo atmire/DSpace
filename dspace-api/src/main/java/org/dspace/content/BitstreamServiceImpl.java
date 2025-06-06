@@ -234,13 +234,15 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
     }
 
     @Override
-    public void forceUpdate(Context context, Bitstream bitstream) throws SQLException, AuthorizeException {
-        // Check authorisation
+    protected void checkAuthorization(Context context, Bitstream bitstream) throws SQLException, AuthorizeException {
         authorizeService.authorizeAction(context, bitstream, Constants.WRITE);
+    }
 
+    @Override
+    public void forceUpdate(Context context, Bitstream bitstream) throws SQLException, AuthorizeException {
         log.info(LogHelper.getHeader(context, "update_bitstream",
                                       "bitstream_id=" + bitstream.getID()));
-        super.update(context, bitstream);
+        super.forceUpdate(context, bitstream);
         if (bitstream.isModified()) {
             context.addEvent(new Event(Event.MODIFY, Constants.BITSTREAM, bitstream.getID(), null,
                                        getIdentifiers(context, bitstream)));
@@ -258,7 +260,7 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
     }
 
     @Override
-    public void delete(Context context, Bitstream bitstream) throws SQLException, AuthorizeException {
+    public void deleteDso(Context context, Bitstream bitstream) throws SQLException, AuthorizeException {
 
         // changed to a check on delete
         // Check authorisation

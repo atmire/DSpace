@@ -661,14 +661,16 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
     }
 
     @Override
-    public void forceUpdate(Context context, Collection collection) throws SQLException, AuthorizeException {
-        // Check authorisation
+    protected void checkAuthorization(Context context, Collection collection) throws SQLException, AuthorizeException {
         canEdit(context, collection, true);
+    }
 
+    @Override
+    public void forceUpdate(Context context, Collection collection) throws SQLException, AuthorizeException {
         log.info(LogHelper.getHeader(context, "update_collection",
                                       "collection_id=" + collection.getID()));
 
-        super.update(context, collection);
+        super.forceUpdate(context, collection);
         collectionDAO.save(context, collection);
 
         if (collection.isModified()) {
@@ -724,7 +726,7 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
     }
 
     @Override
-    public void delete(Context context, Collection collection) throws SQLException, AuthorizeException, IOException {
+    public void deleteDso(Context context, Collection collection) throws SQLException, AuthorizeException, IOException {
         log.info(LogHelper.getHeader(context, "delete_collection",
                                       "collection_id=" + collection.getID()));
 

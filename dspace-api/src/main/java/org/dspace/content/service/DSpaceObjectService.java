@@ -513,6 +513,13 @@ public interface DSpaceObjectService<T extends DSpaceObject> {
      */
     public void forceUpdate(Context context, T dso) throws SQLException, AuthorizeException;
 
+    /**
+     * Order the metadata of the object to ensure place properties are incremental with no overlaps
+     * @param context               DSpace context
+     * @param dso                   DSpaceObject to order metadata for
+     */
+    public void orderMetadata(Context context, T dso) throws SQLException, AuthorizeException;
+
     public void delete(Context context, T dso) throws SQLException, AuthorizeException, IOException;
 
     /**

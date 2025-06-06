@@ -258,6 +258,11 @@ public class CommunityServiceImpl extends DSpaceObjectServiceImpl<Community> imp
     }
 
     @Override
+    protected void checkAuthorization(Context context, Community community) throws SQLException, AuthorizeException {
+        canEdit(context, community);
+    }
+
+    @Override
     public void forceUpdate(Context context, Community community) throws SQLException, AuthorizeException {
         // Check authorisation
         canEdit(context, community);
@@ -265,7 +270,7 @@ public class CommunityServiceImpl extends DSpaceObjectServiceImpl<Community> imp
         log.info(LogHelper.getHeader(context, "update_community",
                                       "community_id=" + community.getID()));
 
-        super.update(context, community);
+        super.forceUpdate(context, community);
 
         communityDAO.save(context, community);
         if (community.isModified()) {
@@ -489,7 +494,7 @@ public class CommunityServiceImpl extends DSpaceObjectServiceImpl<Community> imp
     }
 
     @Override
-    public void delete(Context context, Community community) throws SQLException, AuthorizeException, IOException {
+    public void deleteDso(Context context, Community community) throws SQLException, AuthorizeException, IOException {
         // Check authorisation
         // FIXME: If this was a subcommunity, it is first removed from it's
         // parent.

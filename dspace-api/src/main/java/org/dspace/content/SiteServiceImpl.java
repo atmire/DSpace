@@ -70,12 +70,15 @@ public class SiteServiceImpl extends DSpaceObjectServiceImpl<Site> implements Si
     }
 
     @Override
-    public void forceUpdate(Context context, Site site) throws SQLException, AuthorizeException {
+    protected void checkAuthorization(Context context, Site dso) throws SQLException, AuthorizeException {
         if (!authorizeService.isAdmin(context)) {
             throw new AuthorizeException();
         }
+    }
 
-        super.update(context, site);
+    @Override
+    public void forceUpdate(Context context, Site site) throws SQLException, AuthorizeException {
+        super.forceUpdate(context, site);
 
         if (site.isMetadataModified()) {
             context.addEvent(new Event(Event.MODIFY_METADATA, site.getType(), site.getID(), site.getDetails(),
@@ -97,7 +100,7 @@ public class SiteServiceImpl extends DSpaceObjectServiceImpl<Site> implements Si
     }
 
     @Override
-    public void delete(Context context, Site dso) throws SQLException, AuthorizeException, IOException {
+    public void deleteDso(Context context, Site dso) throws SQLException, AuthorizeException, IOException {
         throw new AuthorizeException("Site object cannot be deleted");
     }
 

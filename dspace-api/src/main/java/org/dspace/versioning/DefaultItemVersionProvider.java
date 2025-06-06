@@ -152,7 +152,8 @@ public class DefaultItemVersionProvider extends AbstractVersionProvider implemen
                     oldRelationship.getRightPlace(),
                     oldRelationship.getLeftwardValue(),
                     oldRelationship.getRightwardValue(),
-                    Relationship.LatestVersionStatus.RIGHT_ONLY // only mark the opposite side as "latest" for now
+                    Relationship.LatestVersionStatus.RIGHT_ONLY, // only mark the opposite side as "latest" for now
+                    false // the places remain the same, so no need to recalculate sibling places
                 );
             } else if (oldRelationship.getRightItem().equals(oldItem)) {
                 // current item is on right side of this relationship
@@ -165,7 +166,8 @@ public class DefaultItemVersionProvider extends AbstractVersionProvider implemen
                     oldRelationship.getRightPlace(),
                     oldRelationship.getLeftwardValue(),
                     oldRelationship.getRightwardValue(),
-                    Relationship.LatestVersionStatus.LEFT_ONLY // only mark the opposite side as "latest" for now
+                    Relationship.LatestVersionStatus.LEFT_ONLY, // only mark the opposite side as "latest" for now
+                    false // the places remain the same, so no need to recalculate sibling places
                 );
             }
         }

@@ -131,7 +131,13 @@ public class Context implements AutoCloseable {
 
     private DBConnection dbConnection;
 
-    private LinkedHashSet<DSpaceObject> cachedUpdateDSOs = new LinkedHashSet<>();
+    /**
+     * Cached list of DSpaceObjects with pending update calls
+     * forceUpdate will be called on each of these objects whenever we commit the context
+     * Static ThreadLocal to allow cross-context updates/commits within the same thread
+     */
+    private static final ThreadLocal<LinkedHashSet<DSpaceObject>> cachedUpdateDSOs =
+        ThreadLocal.withInitial(LinkedHashSet::new);
 
     public enum Mode {
         READ_ONLY,
@@ -405,6 +411,7 @@ public class Context implements AutoCloseable {
                 commit();
             }
         } finally {
+            clearUpdateCache();
             if (dbConnection != null) {
                 // Free the DB connection and invalidate the Context
                 dbConnection.closeDBConnection();
@@ -461,11 +468,7 @@ public class Context implements AutoCloseable {
         Dispatcher dispatcher = null;
 
         try {
-            ContentServiceFactory contentServiceFactory = ContentServiceFactory.getInstance();
-            for (DSpaceObject dso : cachedUpdateDSOs) {
-                contentServiceFactory.getDSpaceObjectService(dso).forceUpdate(this, dso);
-            }
-            cachedUpdateDSOs.clear();
+            runDSOUpdatesFromCache();
 
             if (events != null) {
 
@@ -477,6 +480,7 @@ public class Context implements AutoCloseable {
                 dispatcher.dispatch(this);
             }
         } finally {
+            clearUpdateCache();
             events = null;
             if (dispatcher != null) {
                 eventService.returnDispatcher(dispName, dispatcher);
@@ -604,6 +608,7 @@ public class Context implements AutoCloseable {
         } catch (SQLException se) {
             log.error("Error rolling back transaction during an abort()", se);
         } finally {
+            clearUpdateCache();
             try {
                 if (dbConnection != null) {
                     // Free the DB connection & invalidate the Context
@@ -963,7 +968,44 @@ public class Context implements AutoCloseable {
         return currentUserPreviousState != null;
     }
 
+    /**
+     * Cache an object's update
+     * Updates are performed (in queue) upon context commit/complete
+     * @param dso   DSpaceObject to queue for an update
+     */
     public void cacheUpdateDSO(DSpaceObject dso) {
-        cachedUpdateDSOs.add(dso);
+        cachedUpdateDSOs.get().add(dso);
+    }
+
+    /**
+     * Run updates (forceUpdate) for each of the objects in the cache and clear cache afterwards
+     * Authorization checks happen within the regular update calls, so authorization is disabled for these force updates
+     */
+    private void runDSOUpdatesFromCache() throws SQLException, AuthorizeException {
+        ContentServiceFactory contentServiceFactory = ContentServiceFactory.getInstance();
+        // Auth can be turned off because it has already been checked in update calls before the objects are added
+        // to the cache
+        turnOffAuthorisationSystem();
+        for (DSpaceObject dso : cachedUpdateDSOs.get()) {
+            contentServiceFactory.getDSpaceObjectService(dso).forceUpdate(this, dso);
+        }
+        restoreAuthSystemState();
+        clearUpdateCache();
+    }
+
+    /**
+     * Remove a DSO from the update cache, usually called when the object is removed, thus not being in need of an
+     * update anymore
+     * @param dso   DSpaceObject to remove from the cache
+     */
+    public void removeDSOFromUpdateCache(DSpaceObject dso) {
+        cachedUpdateDSOs.get().remove(dso);
+    }
+
+    /**
+     * Clear the update cache
+     */
+    public void clearUpdateCache() {
+        cachedUpdateDSOs.remove();
     }
 }

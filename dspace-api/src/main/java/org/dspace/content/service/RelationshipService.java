@@ -93,6 +93,20 @@ public interface RelationshipService extends DSpaceCRUDService<Relationship> {
      * if this is a valid relationship
      * @param context       The relevant DSpace context
      * @param relationship  The relationship that will be created in the database if it is valid
+     * @param recalculateSiblingPlaces Whether to recalculate the place properties of all siblings of the relationship
+     *                                 items
+     * @return              The created relationship with updated place variables
+     * @throws SQLException         If something goes wrong
+     * @throws AuthorizeException   If something goes wrong with authorizations
+     */
+    public Relationship create(Context context, Relationship relationship, boolean recalculateSiblingPlaces)
+        throws SQLException, AuthorizeException;
+
+    /**
+     * This method creates a relationship object in the database equal to the given relationship param
+     * if this is a valid relationship
+     * @param context       The relevant DSpace context
+     * @param relationship  The relationship that will be created in the database if it is valid
      * @return              The created relationship with updated place variables
      * @throws SQLException         If something goes wrong
      * @throws AuthorizeException   If something goes wrong with authorizations
@@ -295,6 +309,29 @@ public interface RelationshipService extends DSpaceCRUDService<Relationship> {
      */
     List<Relationship> findByRelationshipType(Context context, RelationshipType relationshipType, Integer limit,
                                               Integer offset) throws SQLException;
+
+    /**
+     * This method is used to construct a Relationship object with all it's variables
+     * @param c                   The relevant DSpace context
+     * @param leftItem            The leftItem Item object for the relationship
+     * @param rightItem           The rightItem Item object for the relationship
+     * @param relationshipType    The RelationshipType object for the relationship
+     * @param leftPlace           The leftPlace integer for the relationship
+     * @param rightPlace          The rightPlace integer for the relationship
+     * @param leftwardValue       The leftwardValue string for the relationship
+     * @param rightwardValue      The rightwardValue string for the relationship
+     * @param latestVersionStatus The latestVersionStatus value for the relationship
+     * @param recalculateSiblingPlaces Whether to recalculate the place properties of all siblings of the relationship
+     *                                 items
+     * @return                    The created Relationship object with the given properties
+     * @throws AuthorizeException   If something goes wrong
+     * @throws SQLException         If something goes wrong
+     */
+    Relationship create(
+        Context c, Item leftItem, Item rightItem, RelationshipType relationshipType, int leftPlace, int rightPlace,
+        String leftwardValue, String rightwardValue, LatestVersionStatus latestVersionStatus,
+        boolean recalculateSiblingPlaces
+    ) throws AuthorizeException, SQLException;
 
     /**
      * This method is used to construct a Relationship object with all it's variables

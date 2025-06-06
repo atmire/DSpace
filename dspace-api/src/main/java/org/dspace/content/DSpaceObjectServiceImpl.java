@@ -7,6 +7,7 @@
  */
 package org.dspace.content;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,8 +35,10 @@ import org.dspace.content.service.MetadataValueService;
 import org.dspace.content.service.RelationshipService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
+import org.dspace.event.Consumer;
 import org.dspace.handle.service.HandleService;
 import org.dspace.identifier.service.IdentifierService;
+import org.dspace.utils.CallStackUtils;
 import org.dspace.utils.DSpace;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -590,13 +593,27 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
         }
     }
 
+    protected void checkAuthorization(Context context, T dso) throws SQLException, AuthorizeException {
+        // Allow anything by default, implementations determine specific authorization checks
+    }
+
     @Override
     public final void update(Context context, T dso) throws SQLException, AuthorizeException {
-        context.cacheUpdateDSO(dso);
+        checkAuthorization(context, dso);
+        if (!CallStackUtils.wasCalledByClass(Consumer.class)) {
+            context.cacheUpdateDSO(dso);
+        } else {
+            forceUpdate(context, dso);
+        }
     }
 
     @Override
     public void forceUpdate(Context context, T dso) throws SQLException, AuthorizeException {
+        orderMetadata(context, dso);
+    }
+
+    @Override
+    public void orderMetadata(Context context, T dso) throws SQLException, AuthorizeException {
         if (dso.isMetadataModified()) {
             /*
             Update the order of the metadata values
@@ -664,6 +681,14 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
             }
         }
     }
+
+    @Override
+    public void delete(Context context, T dso) throws SQLException, AuthorizeException, IOException {
+        context.removeDSOFromUpdateCache(dso);
+        deleteDso(context, dso);
+    }
+
+    protected abstract void deleteDso(Context context, T dso) throws SQLException, AuthorizeException, IOException;
 
     /**
      * Retrieve the place of the metadata value
