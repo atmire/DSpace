@@ -74,6 +74,11 @@ public class GroupTest extends AbstractUnitTest {
             groupService.update(context, topGroup);
             groupService.update(context, level1Group);
             groupService.update(context, level2Group);
+
+            context.commit();
+            topGroup = context.reloadEntity(topGroup);
+            level1Group = context.reloadEntity(level1Group);
+            level2Group = context.reloadEntity(level2Group);
             context.restoreAuthSystemState();
 
 
@@ -103,6 +108,7 @@ public class GroupTest extends AbstractUnitTest {
                 groupService.delete(context, topGroup);
                 topGroup = null;
             }
+            context.commit();
             context.restoreAuthSystemState();
             super.destroy();
         } catch (SQLException ex) {
@@ -405,7 +411,7 @@ public class GroupTest extends AbstractUnitTest {
         try {
             specialGroup = createGroup("specialGroup");
             groupService.addMember(context, level1Group, specialGroup);
-            groupService.update(context, level1Group);
+            groupService.forceUpdate(context, level1Group);
 
             ePerson = createEPerson("isMemberContextGroupSpecial@dspace.org");
 
@@ -438,7 +444,7 @@ public class GroupTest extends AbstractUnitTest {
         try {
             specialGroup = createGroup("specialGroup");
             groupService.addMember(context, level2Group, specialGroup);
-            groupService.update(context, level2Group);
+            groupService.forceUpdate(context, level2Group);
 
             //The authenticated user has a special group
             ePerson1 = createEPerson("isMemberContextGroupSpecial@dspace.org");
@@ -563,7 +569,7 @@ public class GroupTest extends AbstractUnitTest {
         assertTrue(groupService.isParentOf(context, topGroup, level1Group));
 
         groupService.removeMember(context, topGroup, level1Group);
-        groupService.update(context, topGroup);
+        groupService.forceUpdate(context, topGroup);
 
         assertFalse(groupService.isMember(topGroup, level1Group));
         assertFalse(groupService.isParentOf(context, topGroup, level1Group));

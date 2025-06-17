@@ -431,6 +431,7 @@ public class RelationshipServiceImplPlaceTest extends AbstractUnitTest {
 
         // Create a relationship with this item with a spcific place
         Relationship relationship = relationshipService.create(context, item, authorItem, isAuthorOfPublication, 1, -1);
+        itemService.forceUpdate(context, item);
 
         context.restoreAuthSystemState();
 
@@ -481,6 +482,7 @@ public class RelationshipServiceImplPlaceTest extends AbstractUnitTest {
         itemService.addMetadata(context, secondAuthorItem, "person", "givenName", null, null, "firstNameTwo");
         Relationship relationshipTwo = relationshipService
             .create(context, item, secondAuthorItem, isAuthorOfPublication, 3, -1);
+        itemService.forceUpdate(context, item);
 
         context.restoreAuthSystemState();
 

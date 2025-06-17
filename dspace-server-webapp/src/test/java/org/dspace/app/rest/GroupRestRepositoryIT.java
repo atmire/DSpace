@@ -1582,6 +1582,7 @@ public class GroupRestRepositoryIT extends AbstractControllerIntegrationTest {
         EPerson member2 = EPersonBuilder.createEPerson(context).build();
         Group parentGroup = GroupBuilder.createGroup(context).addMember(member).build();
         Group childGroup = GroupBuilder.createGroup(context).withParent(parentGroup).addMember(member2).build();
+        context.commit();
         context.restoreAuthSystemState();
 
         assertTrue(
