@@ -79,6 +79,10 @@ public abstract class AbstractPackageIngester
      **/
     private Map<File, String> pkgIngestedMap = new LinkedHashMap<File, String>();
 
+    private static final int COMMIT_EVERY = 100;
+
+    private int processedCount = 0;
+
     /**
      * Recursively create one or more DSpace Objects out of the contents
      * of the ingested package (and all other referenced packages).
@@ -141,6 +145,8 @@ public abstract class AbstractPackageIngester
             try {
                 //actually ingest pkg using provided PackageIngester
                 dso = ingest(context, parent, pkgFile, params, license);
+                processedCount++;
+                commitIfNeeded(context);
             } catch (IllegalStateException ie) {
                 // NOTE: if we encounter an IllegalStateException, this means the
                 // handle is already in use and this object already exists.
@@ -423,6 +429,13 @@ public abstract class AbstractPackageIngester
             return (List) coll;
         } else {
             return new ArrayList(coll);
+        }
+    }
+
+    private void commitIfNeeded(Context context) throws SQLException {
+        if (processedCount % COMMIT_EVERY == 0) {
+            context.commit();
+            context.dispatchEvents();   // flush index queue
         }
     }
 }
