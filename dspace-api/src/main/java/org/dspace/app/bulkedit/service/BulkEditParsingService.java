@@ -17,7 +17,9 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.scripts.handler.DSpaceRunnableHandler;
 
-public interface BulkEditRegisterService<T> {
-    List<BulkEditChange> registerBulkEditChange(Context context, T source, DSpaceRunnableHandler handler)
+public interface BulkEditParsingService<T> {
+    List<BulkEditChange> parse(Context context, T source)
         throws MetadataImportException, SQLException, AuthorizeException, IOException;
+
+    void setHandler(DSpaceRunnableHandler handler);
 }

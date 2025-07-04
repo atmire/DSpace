@@ -8,22 +8,18 @@
 package org.dspace.app.bulkedit.service;
 
 import org.dspace.app.bulkedit.DSpaceCSV;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.dspace.services.factory.DSpaceServicesFactory;
 
 public class BulkEditServiceFactoryImpl extends BulkEditServiceFactory {
-    @Autowired
-    private BulkEditRegisterService<DSpaceCSV> csvBulkEditRegisterService;
-
-    @Autowired
-    private BulkEditImportService bulkEditImportService;
-
     @Override
-    public BulkEditRegisterService<DSpaceCSV> getCSVBulkEditRegisterService() {
-        return csvBulkEditRegisterService;
+    public BulkEditParsingService<DSpaceCSV> getCSVBulkEditRegisterService() {
+        return DSpaceServicesFactory.getInstance().getServiceManager()
+            .getServiceByName("csvBulkEditRegisterService", CSVBulkEditParsingServiceImpl.class);
     }
 
     @Override
-    public BulkEditImportService getBulkEditImportService() {
-        return bulkEditImportService;
+    public BulkEditService getBulkEditImportService() {
+        return DSpaceServicesFactory.getInstance().getServiceManager()
+            .getServiceByName("bulkEditImportService", BulkEditService.class);
     }
 }

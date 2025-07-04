@@ -39,12 +39,13 @@ import org.dspace.content.service.RelationshipTypeService;
 import org.dspace.content.service.WorkspaceItemService;
 import org.dspace.core.Context;
 import org.dspace.scripts.handler.DSpaceRunnableHandler;
+import org.dspace.services.ConfigurationService;
 import org.dspace.workflow.WorkflowException;
 import org.dspace.workflow.WorkflowService;
 import org.dspace.workflow.factory.WorkflowServiceFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class BulkEditImportServiceImpl implements BulkEditImportService {
+public class BulkEditServiceImpl implements BulkEditService {
     @Autowired
     protected CollectionService collectionService;
 
@@ -66,30 +67,70 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
     @Autowired
     protected InstallItemService installItemService;
 
+    @Autowired
+    protected ConfigurationService configurationService;
+
+    protected DSpaceRunnableHandler handler;
+    protected boolean useCollectionTemplate;
+    protected boolean useWorkflow;
+    protected boolean workflowNotify;
+    protected boolean archive;
+
+    /**
+     * A map containing previously imported/updated item UUIDs, mapped to their fake UUID found in their respective
+     * {@link BulkEditChange}, this way, real relationships between newly imported items can be made
+     */
+    protected final Map<UUID, UUID> fakeToRealUUIDMap = new HashMap<>();
+
     @Override
-    public BulkEditChange importBulkEditChange(Context c, DSpaceRunnableHandler handler,
-                                               BulkEditChange bechange, Map<UUID, UUID> fakeToRealUUIDMap,
-                                               boolean useCollectionTemplate, boolean useWorkflow,
-                                               boolean workflowNotify, boolean archive)
+    public List<BulkEditChange> applyBulkEditChanges(Context c, List<BulkEditChange> bulkEditChanges)
+        throws SQLException, AuthorizeException, IOException, MetadataImportException, WorkflowException {
+        c.setMode(Context.Mode.BATCH_EDIT);
+        List<BulkEditChange> modifiedChanges = new ArrayList<>();
+        int i = 1;
+        int batchSize = configurationService.getIntProperty("bulkedit.change.commit.count", 100);
+        int changeCount = bulkEditChanges.size();
+        int commitCount = 0;
+        for (BulkEditChange bechange : bulkEditChanges) {
+            modifiedChanges.add(applyBulkEditChange(c, bechange));
+
+            if (i % batchSize == 0) {
+                c.commit();
+                commitCount++;
+                if (handler != null) {
+                    handler.logInfo(String.format(
+                        "Commit %d/%d: The changes in rows %s-%s have been persisted to the database",
+                        commitCount,
+                        (int) Math.ceil((double) changeCount / batchSize),
+                        i - batchSize + 1,
+                        i
+                    ));
+                }
+            }
+
+            i++;
+        }
+        c.commit();
+        return modifiedChanges;
+    }
+
+    @Override
+    public BulkEditChange applyBulkEditChange(Context c, BulkEditChange bechange)
         throws SQLException, AuthorizeException, IOException, MetadataImportException, WorkflowException {
         if (bechange.isNewItem()) {
-            createNewItem(c, handler, bechange, fakeToRealUUIDMap,
-                useCollectionTemplate, useWorkflow, workflowNotify, archive);
+            createNewItem(c, bechange);
         } else {
             boolean deleted = performActions(c, bechange);
             if (deleted) {
                 return bechange;
             }
             updateCollections(c, bechange);
-            updateMetadata(c, handler, bechange, fakeToRealUUIDMap);
+            updateMetadata(c, bechange);
         }
         return bechange;
     }
 
-    protected void createNewItem(Context c, DSpaceRunnableHandler handler,
-                                 BulkEditChange bechange, Map<UUID, UUID> fakeToRealUUIDMap,
-                                 boolean useCollectionTemplate, boolean useWorkflow,
-                                 boolean workflowNotify, boolean archive)
+    protected void createNewItem(Context c, BulkEditChange bechange)
         throws SQLException, AuthorizeException, MetadataImportException, WorkflowException, IOException {
         // Create the item
         Collection collection = bechange.getNewOwningCollection();
@@ -99,13 +140,13 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
         // Add the metadata to the item
         for (BulkEditMetadataValue dcv : getBulkEditMetadataValueSorted(bechange.getAdds())) {
             if (!isRelationship(dcv)) {
-                addMetadata(c, item, fakeToRealUUIDMap, dcv);
+                addMetadata(c, item, dcv);
             }
         }
         //Add relations after all metadata has been processed
         for (BulkEditMetadataValue dcv : bechange.getAdds()) {
             if (isRelationship(dcv)) {
-                addRelationship(c, item, fakeToRealUUIDMap, dcv);
+                addRelationship(c, item, dcv);
             }
         }
 
@@ -196,8 +237,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
         }
     }
 
-    protected void updateMetadata(Context c, DSpaceRunnableHandler handler,
-                                  BulkEditChange bechange, Map<UUID, UUID> fakeToRealUUIDMap)
+    protected void updateMetadata(Context c, BulkEditChange bechange)
         throws SQLException, AuthorizeException, MetadataImportException {
         Item item = bechange.getItem();
 
@@ -220,9 +260,9 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
                     clearMetadataAndRelationships(c, item, schema, element, qualifier, language);
                     for (BulkEditMetadataValue dcv : list) {
                         if (isRelationship(dcv)) {
-                            addRelationship(c, item, fakeToRealUUIDMap, dcv);
+                            addRelationship(c, item, dcv);
                         } else {
-                            addMetadata(c, item, fakeToRealUUIDMap, dcv);
+                            addMetadata(c, item, dcv);
                         }
                     }
                 }
@@ -261,7 +301,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
         }
     }
 
-    protected void addMetadata(Context c, Item item, Map<UUID, UUID> fakeToRealUUIDMap, BulkEditMetadataValue dcv)
+    protected void addMetadata(Context c, Item item, BulkEditMetadataValue dcv)
         throws SQLException, AuthorizeException, MetadataImportException {
         itemService.addMetadata(c, item, dcv.getSchema(),
             dcv.getElement(),
@@ -299,9 +339,9 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
      * @throws SQLException If something goes wrong
      * @throws AuthorizeException   If something goes wrong
      */
-    protected void addRelationship(Context c, Item item, Map<UUID, UUID> fakeToRealUUIDMap, BulkEditMetadataValue dcv)
+    protected void addRelationship(Context c, Item item, BulkEditMetadataValue dcv)
         throws SQLException, AuthorizeException, MetadataImportException {
-        addRelationship(c, item, fakeToRealUUIDMap, dcv.getElement(), dcv.getValue());
+        addRelationship(c, item, dcv.getElement(), dcv.getValue());
     }
 
     /**
@@ -315,8 +355,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
      * @throws SQLException If something goes wrong
      * @throws AuthorizeException   If something goes wrong
      */
-    protected void addRelationship(Context c, Item item, Map<UUID, UUID> fakeToRealUUIDMap, String typeName,
-                                   String value)
+    protected void addRelationship(Context c, Item item, String typeName, String value)
         throws SQLException, AuthorizeException, MetadataImportException {
         if (value.isEmpty()) {
             return;
@@ -324,7 +363,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
         boolean left = false;
 
         // Get entity from target reference
-        Entity relationEntity = getEntity(c, fakeToRealUUIDMap, value);
+        Entity relationEntity = getEntity(c, value);
         // Get relationship type of entity and item
         String relationEntityRelationshipType = itemService.getMetadata(relationEntity.getItem(),
             "dspace", "entity",
@@ -405,8 +444,7 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
      * @return the entity, which is guaranteed to exist.
      * @throws MetadataImportException if the target reference is badly formed or refers to a non-existing item.
      */
-    protected Entity getEntity(Context context, Map<UUID, UUID> fakeToRealUUIDMap, String value)
-        throws MetadataImportException {
+    protected Entity getEntity(Context context, String value) throws MetadataImportException {
         Entity entity;
         UUID uuid;
         try {
@@ -429,5 +467,25 @@ public class BulkEditImportServiceImpl implements BulkEditImportService {
         } catch (SQLException sqle) {
             throw new MetadataImportException("Unable to find entity using reference: " + value, sqle);
         }
+    }
+
+    public void setHandler(DSpaceRunnableHandler handler) {
+        this.handler = handler;
+    }
+
+    public void setUseCollectionTemplate(boolean useCollectionTemplate) {
+        this.useCollectionTemplate = useCollectionTemplate;
+    }
+
+    public void setUseWorkflow(boolean useWorkflow) {
+        this.useWorkflow = useWorkflow;
+    }
+
+    public void setWorkflowNotify(boolean workflowNotify) {
+        this.workflowNotify = workflowNotify;
+    }
+
+    public void setArchive(boolean archive) {
+        this.archive = archive;
     }
 }

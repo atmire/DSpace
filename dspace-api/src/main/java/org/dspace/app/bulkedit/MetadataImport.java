@@ -11,15 +11,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Logger;
-import org.dspace.app.bulkedit.service.BulkEditImportService;
-import org.dspace.app.bulkedit.service.BulkEditRegisterService;
+import org.dspace.app.bulkedit.service.BulkEditParsingService;
+import org.dspace.app.bulkedit.service.BulkEditService;
 import org.dspace.app.bulkedit.service.BulkEditServiceFactory;
 import org.dspace.authority.factory.AuthorityServiceFactory;
 import org.dspace.authority.service.AuthorityValueService;
@@ -35,7 +33,6 @@ import org.dspace.content.service.RelationshipService;
 import org.dspace.content.service.RelationshipTypeService;
 import org.dspace.content.service.WorkspaceItemService;
 import org.dspace.core.Context;
-import org.dspace.core.LogHelper;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.factory.EPersonServiceFactory;
 import org.dspace.handle.factory.HandleServiceFactory;
@@ -86,9 +83,9 @@ public class MetadataImport extends DSpaceRunnable<MetadataImportScriptConfigura
     protected ConfigurationService configurationService
             = DSpaceServicesFactory.getInstance().getConfigurationService();
 
-    protected BulkEditRegisterService<DSpaceCSV> bulkEditRegisterService =
+    protected BulkEditParsingService<DSpaceCSV> bulkEditRegisterService =
         BulkEditServiceFactory.getInstance().getCSVBulkEditRegisterService();
-    protected BulkEditImportService bulkEditImportService =
+    protected BulkEditService bulkEditImportService =
         BulkEditServiceFactory.getInstance().getBulkEditImportService();
 
     @Override
@@ -123,8 +120,15 @@ public class MetadataImport extends DSpaceRunnable<MetadataImportScriptConfigura
 
         boolean testRun = !commandLine.hasOption('s') || validateOnly;
 
+        bulkEditRegisterService.setHandler(handler);
+        bulkEditImportService.setHandler(handler);
+        bulkEditImportService.setArchive(true);
+        bulkEditImportService.setUseWorkflow(useWorkflow);
+        bulkEditImportService.setWorkflowNotify(workflowNotify);
+        bulkEditImportService.setUseCollectionTemplate(useTemplate);
+
         // Register the changes - just highlight differences
-        List<BulkEditChange> changes = bulkEditRegisterService.registerBulkEditChange(c, csv, handler);
+        List<BulkEditChange> changes = bulkEditRegisterService.parse(c, csv);
 
         // Display the changes
         int changeCounter = displayChanges(changes, false);
@@ -146,22 +150,7 @@ public class MetadataImport extends DSpaceRunnable<MetadataImportScriptConfigura
         try {
             // If required, make the change
             if (change || (!testRun && !validateOnly)) {
-                c.setMode(Context.Mode.BATCH_EDIT);
-                int i = 1;
-                int batchSize = configurationService.getIntProperty("bulkedit.change.commit.count", 100);
-                Map<UUID, UUID> fakeToRealUUIDMap = new ConcurrentHashMap<>();
-                for (BulkEditChange bechange : changes) {
-                    bulkEditImportService.importBulkEditChange(c, handler, bechange, fakeToRealUUIDMap,
-                        useTemplate, useWorkflow, workflowNotify, true);
-
-                    if (i % batchSize == 0) {
-                        c.commit();
-                        handler.logInfo(LogHelper.getHeader(c, "metadata_import_commit", "lineNumber=" + i));
-                    }
-
-                    i++;
-                }
-                c.commit();
+                bulkEditImportService.applyBulkEditChanges(c, changes);
 
                 // Display the changes
                 displayChanges(changes, true);
