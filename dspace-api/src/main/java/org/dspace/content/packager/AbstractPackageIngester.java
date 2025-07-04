@@ -30,6 +30,7 @@ import org.dspace.core.Context;
 import org.dspace.core.LogHelper;
 import org.dspace.handle.factory.HandleServiceFactory;
 import org.dspace.handle.service.HandleService;
+import org.dspace.services.factory.DSpaceServicesFactory;
 import org.dspace.workflow.WorkflowException;
 
 /**
@@ -79,7 +80,9 @@ public abstract class AbstractPackageIngester
      **/
     private Map<File, String> pkgIngestedMap = new LinkedHashMap<File, String>();
 
-    private static final int COMMIT_EVERY = 100;
+    private static final int COMMIT_EVERY =
+        DSpaceServicesFactory.getInstance().getConfigurationService()
+                             .getIntProperty("abstract-packager-ingester.commit-batch");
 
     private int processedCount = 0;
 
@@ -436,6 +439,7 @@ public abstract class AbstractPackageIngester
         if (processedCount % COMMIT_EVERY == 0) {
             context.commit();
             context.dispatchEvents();   // flush index queue
+            log.info("Committed after processing {} items.", processedCount);
         }
     }
 }
