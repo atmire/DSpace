@@ -84,9 +84,9 @@ public class MetadataImport extends DSpaceRunnable<MetadataImportScriptConfigura
             = DSpaceServicesFactory.getInstance().getConfigurationService();
 
     protected BulkEditParsingService<DSpaceCSV> bulkEditRegisterService =
-        BulkEditServiceFactory.getInstance().getCSVBulkEditRegisterService();
+        BulkEditServiceFactory.getInstance().getCSVBulkEditParsingService();
     protected BulkEditService bulkEditImportService =
-        BulkEditServiceFactory.getInstance().getBulkEditImportService();
+        BulkEditServiceFactory.getInstance().getBulkEditService();
 
     @Override
     public void internalRun() throws Exception {

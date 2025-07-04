@@ -12,14 +12,14 @@ import org.dspace.services.factory.DSpaceServicesFactory;
 
 public class BulkEditServiceFactoryImpl extends BulkEditServiceFactory {
     @Override
-    public BulkEditParsingService<DSpaceCSV> getCSVBulkEditRegisterService() {
+    public BulkEditParsingService<DSpaceCSV> getCSVBulkEditParsingService() {
         return DSpaceServicesFactory.getInstance().getServiceManager()
-            .getServiceByName("csvBulkEditRegisterService", CSVBulkEditParsingServiceImpl.class);
+            .getServiceByName("csvBulkEditParsingService", CSVBulkEditParsingServiceImpl.class);
     }
 
     @Override
-    public BulkEditService getBulkEditImportService() {
+    public BulkEditService getBulkEditService() {
         return DSpaceServicesFactory.getInstance().getServiceManager()
-            .getServiceByName("bulkEditImportService", BulkEditService.class);
+            .getServiceByName("bulkEditService", BulkEditService.class);
     }
 }
