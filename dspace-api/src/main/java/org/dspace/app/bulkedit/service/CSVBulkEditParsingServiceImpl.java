@@ -59,6 +59,16 @@ import org.dspace.scripts.handler.DSpaceRunnableHandler;
 import org.dspace.services.ConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * Implementation of the service for parsing bulk-edit changes from a {@link DSpaceCSV} to a list of
+ * {@link BulkEditChange}s
+ *
+ * Warning: This service is stateful, in that a new instance will be created every time it is requested.
+ *          This is by design because the service will keep information about multiple related changes until
+ *          it is done parsing them all and this ensures none of the information leaks between other calls/processes.
+ *          This means the service should never be Autowired and should instead be requested through the
+ *          {@link BulkEditServiceFactory} wherever the call is made to parse and/or apply the changes.
+ */
 public class CSVBulkEditParsingServiceImpl implements BulkEditParsingService<DSpaceCSV> {
     protected static final Logger log =
         org.apache.logging.log4j.LogManager.getLogger(CSVBulkEditParsingServiceImpl.class);

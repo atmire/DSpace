@@ -18,22 +18,39 @@ import org.dspace.core.Context;
 import org.dspace.scripts.handler.DSpaceRunnableHandler;
 import org.dspace.workflow.WorkflowException;
 
+/**
+ * Service for processing and applying changes found in {@link BulkEditChange}
+ *
+ * Warning: This service and its implementation are stateful, in that a new instance will be created every time it is
+ *          requested. This is by design because the service will keep information about multiple related changes until
+ *          it is done applying them all and this ensures none of the information leaks between other calls/processes.
+ *          This means the service should never be Autowired and should instead be requested through the
+ *          {@link BulkEditServiceFactory} wherever the call is made to parse and/or apply the changes.
+ */
 public interface BulkEditService {
     /**
-     * Import or update a Items from a List of {@link BulkEditChange} in batches
+     * Import or update Items from a List of {@link BulkEditChange} in batches
+     * The {@link BulkEditChange} objects may have some of their properties updated to reflect changes that were made
+     * while applying the changes, for example attaching a newly created {@link org.dspace.content.Item}
+     *
+     * Warning: This method will process the list in batches, resulting in commits happening between each batch,
+     *          so commits outside of this method are unnecessary to persist the changes made
+     *
      * @param context               DSpace context
      * @param bulkEditChanges       List of BulkEditChanges containing information about the to-be-imported or updated
      *                              items
      */
-    List<BulkEditChange> applyBulkEditChanges(Context context, List<BulkEditChange> bulkEditChanges)
+    void applyBulkEditChanges(Context context, List<BulkEditChange> bulkEditChanges)
         throws SQLException, AuthorizeException, IOException, MetadataImportException, WorkflowException;
 
     /**
      * Import or update an Item from a {@link BulkEditChange}
+     * The {@link BulkEditChange} object may have some of their properties updated to reflect changes that were made
+     * while applying the change, for example attaching a newly created {@link org.dspace.content.Item}
      * @param context               DSpace context
      * @param bulkEditChange        BulkEditChange containing information about the to-be-imported or updated item
      */
-    BulkEditChange applyBulkEditChange(Context context, BulkEditChange bulkEditChange)
+    void applyBulkEditChange(Context context, BulkEditChange bulkEditChange)
         throws SQLException, AuthorizeException, IOException, MetadataImportException, WorkflowException;
 
     /**

@@ -45,6 +45,16 @@ import org.dspace.workflow.WorkflowService;
 import org.dspace.workflow.factory.WorkflowServiceFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * Implementation of the service for processing and applying changes found in {@link BulkEditChange}
+ * More documentation on the methods in {@link BulkEditService}
+ *
+ * Warning: This service is stateful, in that a new instance will be created every time it is requested.
+ *          This is by design because the service will keep information about multiple related changes until
+ *          it is done applying them all and this ensures none of the information leaks between other calls/processes.
+ *          This means the service should never be Autowired and should instead be requested through the
+ *          {@link BulkEditServiceFactory} wherever the call is made to parse and/or apply the changes.
+ */
 public class BulkEditServiceImpl implements BulkEditService {
     @Autowired
     protected CollectionService collectionService;
@@ -83,16 +93,15 @@ public class BulkEditServiceImpl implements BulkEditService {
     protected final Map<UUID, UUID> fakeToRealUUIDMap = new HashMap<>();
 
     @Override
-    public List<BulkEditChange> applyBulkEditChanges(Context c, List<BulkEditChange> bulkEditChanges)
+    public void applyBulkEditChanges(Context c, List<BulkEditChange> bulkEditChanges)
         throws SQLException, AuthorizeException, IOException, MetadataImportException, WorkflowException {
         c.setMode(Context.Mode.BATCH_EDIT);
-        List<BulkEditChange> modifiedChanges = new ArrayList<>();
         int i = 1;
         int batchSize = configurationService.getIntProperty("bulkedit.change.commit.count", 100);
         int changeCount = bulkEditChanges.size();
         int commitCount = 0;
         for (BulkEditChange bechange : bulkEditChanges) {
-            modifiedChanges.add(applyBulkEditChange(c, bechange));
+            applyBulkEditChange(c, bechange);
 
             if (i % batchSize == 0) {
                 c.commit();
@@ -111,23 +120,21 @@ public class BulkEditServiceImpl implements BulkEditService {
             i++;
         }
         c.commit();
-        return modifiedChanges;
     }
 
     @Override
-    public BulkEditChange applyBulkEditChange(Context c, BulkEditChange bechange)
+    public void applyBulkEditChange(Context c, BulkEditChange bechange)
         throws SQLException, AuthorizeException, IOException, MetadataImportException, WorkflowException {
         if (bechange.isNewItem()) {
             createNewItem(c, bechange);
         } else {
             boolean deleted = performActions(c, bechange);
             if (deleted) {
-                return bechange;
+                return;
             }
             updateCollections(c, bechange);
             updateMetadata(c, bechange);
         }
-        return bechange;
     }
 
     protected void createNewItem(Context c, BulkEditChange bechange)

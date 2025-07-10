@@ -10,6 +10,9 @@ package org.dspace.app.bulkedit.service;
 import org.dspace.app.bulkedit.DSpaceCSV;
 import org.dspace.services.factory.DSpaceServicesFactory;
 
+/**
+ * Implementation of {@link BulkEditServiceFactory}
+ */
 public class BulkEditServiceFactoryImpl extends BulkEditServiceFactory {
     @Override
     public BulkEditParsingService<DSpaceCSV> getCSVBulkEditParsingService() {
