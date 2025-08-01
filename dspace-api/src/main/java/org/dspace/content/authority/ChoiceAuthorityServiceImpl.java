@@ -578,7 +578,7 @@ public final class ChoiceAuthorityServiceImpl implements ChoiceAuthorityService 
                 }
                 DiscoverySearchFilterFacet matchingFacet = null;
                 for (DiscoverySearchFilterFacet facetConfig : searchConfigurationService.getAllFacetsConfig()) {
-                    boolean coversAllFieldsFromVocab = true;
+                    boolean coversAllFieldsFromFacetConfig = true;
                     for (String facetMdField: facetConfig.getMetadataFields()) {
                         boolean coversFieldFromVocab = false;
                         for (String fieldFromVocab: metadataFields) {
@@ -588,11 +588,11 @@ public final class ChoiceAuthorityServiceImpl implements ChoiceAuthorityService 
                             }
                         }
                         if (!coversFieldFromVocab) {
-                            coversAllFieldsFromVocab = false;
+                            coversAllFieldsFromFacetConfig = false;
                             break;
                         }
                     }
-                    if (coversAllFieldsFromVocab) {
+                    if (coversAllFieldsFromFacetConfig) {
                         matchingFacet = facetConfig;
                         break;
                     }
