@@ -579,9 +579,9 @@ public final class ChoiceAuthorityServiceImpl implements ChoiceAuthorityService 
                 DiscoverySearchFilterFacet matchingFacet = null;
                 for (DiscoverySearchFilterFacet facetConfig : searchConfigurationService.getAllFacetsConfig()) {
                     boolean coversAllFieldsFromVocab = true;
-                    for (String fieldFromVocab: metadataFields) {
+                    for (String facetMdField: facetConfig.getMetadataFields()) {
                         boolean coversFieldFromVocab = false;
-                        for (String facetMdField: facetConfig.getMetadataFields()) {
+                        for (String fieldFromVocab: metadataFields) {
                             if (facetMdField.startsWith(fieldFromVocab)) {
                                 coversFieldFromVocab = true;
                                 break;
