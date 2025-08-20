@@ -19,7 +19,7 @@
     <properties>
         <!--=== GENERAL / DSPACE-API DEPENDENCIES ===-->
         <java.version>11</java.version>
-        <spring.version>5.3.20</spring.version>
+        <spring.version>6.2.10</spring.version>
         <spring-boot.version>2.6.8</spring-boot.version>
         <spring-security.version>5.6.5</spring-security.version> <!-- sync with version used by spring-boot-->
         <hibernate.version>5.6.5.Final</hibernate.version>
@@ -42,7 +42,7 @@
         <pdfbox-version>2.0.27</pdfbox-version>
         <rome.version>1.18.0</rome.version>
         <slf4j.version>1.7.25</slf4j.version>
-        <tika.version>2.3.0</tika.version>
+        <tika.version>2.7.0</tika.version>
         <!-- Sync with whatever version Tika uses -->
         <bouncycastle.version>1.70</bouncycastle.version>
 
@@ -115,7 +115,7 @@
                             </goals>
                             <configuration>
                                 <rules>
-                                    <DependencyConvergence />
+                                    <DependencyConvergence/>
                                 </rules>
                             </configuration>
                         </execution>
