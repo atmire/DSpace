@@ -27,6 +27,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.logic.Filter;
@@ -103,8 +104,8 @@ public class DOIOrganiser {
 
         try {
             context.complete();
-        } catch (SQLException sqle) {
-            System.err.println("Cannot save changes to database: " + sqle.getMessage());
+        } catch (SQLException | AuthorizeException e) {
+            System.err.println("Cannot save changes to database: " + e.getMessage());
             System.exit(-1);
         }
 

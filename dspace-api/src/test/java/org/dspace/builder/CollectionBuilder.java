@@ -355,7 +355,8 @@ public class CollectionBuilder extends AbstractDSpaceObjectBuilder<Collection> {
      * @throws IOException
      * @throws SearchServiceException
      */
-    public static void deleteCollection(UUID uuid) throws SQLException, IOException, SearchServiceException {
+    public static void deleteCollection(UUID uuid)
+        throws SQLException, IOException, SearchServiceException, AuthorizeException {
        try (Context c = new Context()) {
             c.turnOffAuthorisationSystem();
             Collection collection = collectionService.find(c, uuid);

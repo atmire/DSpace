@@ -30,6 +30,7 @@ import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.security.DSpaceCsrfTokenRepository;
 import org.dspace.app.rest.utils.DSpaceConfigurationInitializer;
 import org.dspace.app.rest.utils.DSpaceKernelInitializer;
+import org.dspace.authorize.AuthorizeException;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,7 +128,7 @@ public class AbstractControllerIntegrationTest extends AbstractIntegrationTestWi
      * @return the test client.
      * @throws SQLException passed through.
      */
-    public MockMvc getClient() throws SQLException {
+    public MockMvc getClient() throws SQLException, AuthorizeException {
         return getClient(null);
     }
 
@@ -138,7 +139,7 @@ public class AbstractControllerIntegrationTest extends AbstractIntegrationTestWi
      * @return the test client.
      * @throws SQLException passed through.
      */
-    public MockMvc getClient(String authToken) throws SQLException {
+    public MockMvc getClient(String authToken) throws SQLException, AuthorizeException {
         if (context != null && context.isValid()) {
             context.commit();
         }

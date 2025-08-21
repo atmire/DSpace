@@ -507,13 +507,13 @@ public class BundleServiceImpl extends DSpaceObjectServiceImpl<Bundle> implement
     }
 
     @Override
-    public void update(Context context, Bundle bundle) throws SQLException, AuthorizeException {
+    public void forceUpdate(Context context, Bundle bundle) throws SQLException, AuthorizeException {
         // Check authorisation
         //AuthorizeManager.authorizeAction(ourContext, this, Constants.WRITE);
         log.info(LogHelper.getHeader(context, "update_bundle", "bundle_id="
                 + bundle.getID()));
 
-        super.update(context, bundle);
+        super.forceUpdate(context, bundle);
         bundleDAO.save(context, bundle);
 
         if (bundle.isModified() || bundle.isMetadataModified()) {
@@ -529,7 +529,7 @@ public class BundleServiceImpl extends DSpaceObjectServiceImpl<Bundle> implement
     }
 
     @Override
-    public void delete(Context context, Bundle bundle) throws SQLException, AuthorizeException, IOException {
+    public void deleteDso(Context context, Bundle bundle) throws SQLException, AuthorizeException, IOException {
         log.info(LogHelper.getHeader(context, "delete_bundle", "bundle_id="
                 + bundle.getID()));
 

@@ -50,7 +50,7 @@ public class Groomer {
      * @throws SQLException An exception that provides information on a database access error or other errors.
      */
     static public void main(String[] argv)
-        throws SQLException {
+        throws SQLException, AuthorizeException {
         final String USAGE = "Groomer -verb [option...]";
 
         OptionGroup verbs = new OptionGroup();
@@ -102,7 +102,7 @@ public class Groomer {
      * @param command a parsed command line.
      * @throws SQLException from callees.
      */
-    private static void aging(CommandLine command) throws SQLException {
+    private static void aging(CommandLine command) throws SQLException, AuthorizeException {
         if (!command.hasOption('b')) {
             System.err.println("A last login date is required.");
             System.exit(1);

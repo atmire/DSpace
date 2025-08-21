@@ -13,6 +13,7 @@ import java.time.Instant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Item;
 import org.dspace.core.Context;
 import org.dspace.orcid.OrcidHistory;
@@ -83,9 +84,10 @@ public class OrcidHistoryBuilder extends  AbstractBuilder<OrcidHistory, OrcidHis
      *
      * @param id                Integer of Test OrcidHistory to delete
      * @throws SQLException
+     * @throws AuthorizeException
      * @throws IOException
      */
-    public static void deleteOrcidHistory(Integer id) throws SQLException, IOException {
+    public static void deleteOrcidHistory(Integer id) throws SQLException, AuthorizeException, IOException {
         if (id == null) {
             return;
         }

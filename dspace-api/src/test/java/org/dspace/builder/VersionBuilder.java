@@ -97,7 +97,7 @@ public class VersionBuilder extends AbstractBuilder<Version, VersioningService> 
     }
 
     public static void delete(Integer id)
-            throws SQLException, IOException, SearchServiceException {
+            throws SQLException, IOException, SearchServiceException, AuthorizeException {
         try (Context context = new Context()) {
             context.turnOffAuthorisationSystem();
             Version version = versioningService.getVersion(context, id);

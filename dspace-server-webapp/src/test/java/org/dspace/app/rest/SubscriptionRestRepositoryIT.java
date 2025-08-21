@@ -1064,7 +1064,8 @@ public class SubscriptionRestRepositoryIT extends AbstractControllerIntegrationT
         String tokenAdmin = getAuthToken(admin.getEmail(), password);
         getClient(tokenAdmin).perform(get("/api/core/subscriptions/" + subscription.getID() + "/eperson"))
                              .andExpect(status().isOk())
-                             .andExpect(jsonPath("$", is(EPersonMatcher.matchEPersonEntry(eperson))));
+                             .andExpect(jsonPath("$", is(EPersonMatcher
+                                 .matchEPersonEntry(context.reloadEntity(eperson)))));
     }
 
     @Test
@@ -1082,7 +1083,8 @@ public class SubscriptionRestRepositoryIT extends AbstractControllerIntegrationT
         String tokenEPerson = getAuthToken(eperson.getEmail(), password);
         getClient(tokenEPerson).perform(get("/api/core/subscriptions/" + subscription.getID() + "/eperson"))
                                .andExpect(status().isOk())
-                               .andExpect(jsonPath("$", is(EPersonMatcher.matchEPersonEntry(eperson))));
+                               .andExpect(jsonPath("$", is(EPersonMatcher
+                                   .matchEPersonEntry(context.reloadEntity(eperson)))));
     }
 
     @Test

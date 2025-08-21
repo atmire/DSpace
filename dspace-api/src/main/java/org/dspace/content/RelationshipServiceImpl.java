@@ -88,7 +88,8 @@ public class RelationshipServiceImpl implements RelationshipService {
     @Override
     public Relationship create(
         Context c, Item leftItem, Item rightItem, RelationshipType relationshipType, int leftPlace, int rightPlace,
-        String leftwardValue, String rightwardValue, LatestVersionStatus latestVersionStatus
+        String leftwardValue, String rightwardValue, LatestVersionStatus latestVersionStatus,
+        boolean recalculateSiblingPlaces
     ) throws AuthorizeException, SQLException {
         Relationship relationship = new Relationship();
         relationship.setLeftItem(leftItem);
@@ -99,7 +100,16 @@ public class RelationshipServiceImpl implements RelationshipService {
         relationship.setLeftwardValue(leftwardValue);
         relationship.setRightwardValue(rightwardValue);
         relationship.setLatestVersionStatus(latestVersionStatus);
-        return create(c, relationship);
+        return create(c, relationship, recalculateSiblingPlaces);
+    }
+
+    @Override
+    public Relationship create(
+        Context c, Item leftItem, Item rightItem, RelationshipType relationshipType, int leftPlace, int rightPlace,
+        String leftwardValue, String rightwardValue, LatestVersionStatus latestVersionStatus
+    ) throws AuthorizeException, SQLException {
+        return create(c, leftItem, rightItem, relationshipType, leftPlace, rightPlace, leftwardValue, rightwardValue,
+            latestVersionStatus, true);
     }
 
     @Override
@@ -114,14 +124,17 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     @Override
-    public Relationship create(Context context, Relationship relationship) throws SQLException, AuthorizeException {
+    public Relationship create(Context context, Relationship relationship, boolean recalculateSiblingPlaces)
+        throws SQLException, AuthorizeException {
         if (isRelationshipValidToCreate(context, relationship)) {
             if (authorizeService.authorizeActionBoolean(context, relationship.getLeftItem(), Constants.WRITE) ||
                 authorizeService.authorizeActionBoolean(context, relationship.getRightItem(), Constants.WRITE)) {
                 // This order of execution should be handled in the creation (create, updateplace, update relationship)
                 // for a proper place allocation
                 Relationship relationshipToReturn = relationshipDAO.create(context, relationship);
-                updatePlaceInRelationship(context, relationshipToReturn, null, null, true, true);
+                if (recalculateSiblingPlaces) {
+                    updatePlaceInRelationship(context, relationshipToReturn, null, null, true, true);
+                }
                 update(context, relationshipToReturn);
                 updateItemsInRelationship(context, relationship);
                 return relationshipToReturn;
@@ -133,6 +146,11 @@ public class RelationshipServiceImpl implements RelationshipService {
         } else {
             throw new IllegalArgumentException("The relationship given was not valid");
         }
+    }
+
+    @Override
+    public Relationship create(Context context, Relationship relationship) throws SQLException, AuthorizeException {
+        return create(context, relationship, true);
     }
 
     @Override
@@ -888,7 +906,7 @@ public class RelationshipServiceImpl implements RelationshipService {
                                                      relationshipMetadataValue.getPlace());
             }
             //This will ensure the new values no longer overlap, but won't break the order
-            itemService.update(context, relationship.getLeftItem());
+            itemService.orderMetadata(context, relationship.getLeftItem());
         }
         if (copyToRightItem) {
             String entityTypeString = itemService.getEntityTypeLabel(relationship.getRightItem());
@@ -905,7 +923,7 @@ public class RelationshipServiceImpl implements RelationshipService {
                                                      relationshipMetadataValue.getValue(), null, -1,
                                                      relationshipMetadataValue.getPlace());
             }
-            itemService.update(context, relationship.getRightItem());
+            itemService.orderMetadata(context, relationship.getRightItem());
         }
     }
 

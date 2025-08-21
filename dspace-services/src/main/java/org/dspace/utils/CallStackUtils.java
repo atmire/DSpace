@@ -41,4 +41,18 @@ public class CallStackUtils {
                     callerClassName, callerMethodName, callerLine);
         }
     }
+
+    /**
+     * Check if the stacktrace of this call contains an instance assignable from the given Class
+     */
+    public static boolean wasCalledByClass(Class<?> clazz) {
+        StackWalker stack = StackWalker.getInstance(RETAIN_CLASS_REFERENCE);
+        return stack.walk(frames ->
+            frames
+                // Skip this method frame
+                .skip(1)
+                // Check if any frame's declaring class is assignable from the given class
+                .anyMatch(frame -> clazz.isAssignableFrom(frame.getDeclaringClass()))
+        );
+    }
 }

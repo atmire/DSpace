@@ -636,17 +636,19 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
     }
 
     @Override
-    public void update(Context context, Item item) throws SQLException, AuthorizeException {
-        // Check authorisation
+    protected void checkAuthorization(Context context, Item item) throws SQLException, AuthorizeException {
         // only do write authorization if user is not an editor
         if (!canEdit(context, item)) {
             authorizeService.authorizeAction(context, item, Constants.WRITE);
         }
+    }
 
+    @Override
+    public void forceUpdate(Context context, Item item) throws SQLException, AuthorizeException {
         log.info(LogHelper.getHeader(context, "update_item", "item_id="
             + item.getID()));
 
-        super.update(context, item);
+        super.forceUpdate(context, item);
 
         // Set sequence IDs for bitstreams in Item. To guarantee uniqueness,
         // sequence IDs are assigned in sequential order (starting with 1)
@@ -673,7 +675,7 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
                 if (stream.getSequenceID() < 0) {
                     stream.setSequenceID(sequence);
                     sequence++;
-                    bitstreamService.update(context, stream);
+                    bitstreamService.forceUpdate(context, stream);
 //                    modified = true;
                 }
             }
@@ -819,7 +821,7 @@ public class ItemServiceImpl extends DSpaceObjectServiceImpl<Item> implements It
     }
 
     @Override
-    public void delete(Context context, Item item) throws SQLException, AuthorizeException, IOException {
+    public void deleteDso(Context context, Item item) throws SQLException, AuthorizeException, IOException {
         authorizeService.authorizeAction(context, item, Constants.DELETE);
         rawDelete(context, item);
     }

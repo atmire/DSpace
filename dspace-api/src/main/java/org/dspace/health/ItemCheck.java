@@ -16,6 +16,7 @@ import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.dspace.app.util.CollectionDropDown;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
@@ -104,7 +105,7 @@ public class ItemCheck extends Check {
         try {
             ret += getObjectSizesInfo(context);
             context.complete();
-        } catch (SQLException e) {
+        } catch (SQLException | AuthorizeException e) {
             error(e);
         }
         return ret;

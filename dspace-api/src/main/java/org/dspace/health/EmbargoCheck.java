@@ -10,6 +10,7 @@ package org.dspace.health;
 import java.sql.SQLException;
 import java.util.Iterator;
 
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.DCDate;
 import org.dspace.content.Item;
 import org.dspace.core.Context;
@@ -52,7 +53,7 @@ public class EmbargoCheck extends Check {
                                      date != null ? date.toString() : "null");
             }
             context.complete();
-        } catch (SQLException e) {
+        } catch (SQLException | AuthorizeException e) {
             error(e);
             try {
                 context.abort();

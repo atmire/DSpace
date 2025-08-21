@@ -154,8 +154,6 @@ public class EPerson extends CacheableDSpaceObject implements DSpaceObjectLegacy
     public int hashCode() {
         int hash = 5;
         hash = 89 * hash + this.getID().hashCode();
-        hash = 89 * hash + (this.getEmail() != null ? this.getEmail().hashCode() : 0);
-        hash = 89 * hash + (this.getFullName() != null ? this.getFullName().hashCode() : 0);
         return hash;
     }
 

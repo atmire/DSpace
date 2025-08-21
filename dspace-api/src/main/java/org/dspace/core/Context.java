@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -21,8 +22,10 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.logging.log4j.Logger;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.ResourcePolicy;
 import org.dspace.content.DSpaceObject;
+import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
 import org.dspace.eperson.factory.EPersonServiceFactory;
@@ -132,6 +135,14 @@ public class Context implements AutoCloseable {
      * The default administrator group
      */
     private Group adminGroup;
+
+    /**
+     * Cached list of DSpaceObjects with pending update calls
+     * forceUpdate will be called on each of these objects whenever we commit the context
+     * Static ThreadLocal to allow cross-context updates/commits within the same thread
+     */
+    private static final ThreadLocal<LinkedHashSet<DSpaceObject>> cachedUpdateDSOs =
+        ThreadLocal.withInitial(LinkedHashSet::new);
 
     public enum Mode {
         READ_ONLY,
@@ -391,7 +402,7 @@ public class Context implements AutoCloseable {
      * @throws SQLException if there was an error completing the database transaction
      *                      or closing the connection
      */
-    public void complete() throws SQLException {
+    public void complete() throws SQLException, AuthorizeException {
         // If Context is no longer open/valid, just note that it has already been closed
         if (!isValid()) {
             log.info("complete() was called on a closed Context object. No changes to commit.");
@@ -405,6 +416,7 @@ public class Context implements AutoCloseable {
                 commit();
             }
         } finally {
+            clearUpdateCache();
             if (dbConnection != null) {
                 // Free the DB connection and invalidate the Context
                 dbConnection.closeDBConnection();
@@ -423,7 +435,7 @@ public class Context implements AutoCloseable {
      *
      * @throws SQLException When committing the transaction in the database fails.
      */
-    public void commit() throws SQLException {
+    public void commit() throws SQLException, AuthorizeException {
         // If Context is no longer open/valid, just note that it has already been closed
         if (!isValid()) {
             log.info("commit() was called on a closed Context object. No changes to commit.");
@@ -457,10 +469,12 @@ public class Context implements AutoCloseable {
      * in the EventService. This should be called prior to any commit as some consumers may add
      * to the current transaction. Once events are dispatched, the Context's event cache is cleared.
      */
-    public void dispatchEvents() {
+    public void dispatchEvents() throws SQLException, AuthorizeException {
         Dispatcher dispatcher = null;
 
         try {
+            runDSOUpdatesFromCache();
+
             if (events != null) {
 
                 if (dispName == null) {
@@ -471,6 +485,7 @@ public class Context implements AutoCloseable {
                 dispatcher.dispatch(this);
             }
         } finally {
+            clearUpdateCache();
             events = null;
             if (dispatcher != null) {
                 eventService.returnDispatcher(dispName, dispatcher);
@@ -598,6 +613,7 @@ public class Context implements AutoCloseable {
         } catch (SQLException se) {
             log.error("Error rolling back transaction during an abort()", se);
         } finally {
+            clearUpdateCache();
             try {
                 if (dbConnection != null) {
                     // Free the DB connection & invalidate the Context
@@ -987,5 +1003,46 @@ public class Context implements AutoCloseable {
         return (adminGroup == null) ? EPersonServiceFactory.getInstance()
                                                            .getGroupService()
                                                            .findByName(this, Group.ADMIN) : adminGroup;
+    }
+
+    /**
+     * Cache an object's update
+     * Updates are performed (in queue) upon context commit/complete
+     * @param dso   DSpaceObject to queue for an update
+     */
+    public void cacheUpdateDSO(DSpaceObject dso) {
+        cachedUpdateDSOs.get().add(dso);
+    }
+
+    /**
+     * Run updates (forceUpdate) for each of the objects in the cache and clear cache afterwards
+     * Authorization checks happen within the regular update calls, so authorization is disabled for these force updates
+     */
+    private void runDSOUpdatesFromCache() throws SQLException, AuthorizeException {
+        ContentServiceFactory contentServiceFactory = ContentServiceFactory.getInstance();
+        // Auth can be turned off because it has already been checked in update calls before the objects are added
+        // to the cache
+        turnOffAuthorisationSystem();
+        for (DSpaceObject dso : cachedUpdateDSOs.get()) {
+            contentServiceFactory.getDSpaceObjectService(dso).forceUpdate(this, dso);
+        }
+        restoreAuthSystemState();
+        clearUpdateCache();
+    }
+
+    /**
+     * Remove a DSO from the update cache, usually called when the object is removed, thus not being in need of an
+     * update anymore
+     * @param dso   DSpaceObject to remove from the cache
+     */
+    public void removeDSOFromUpdateCache(DSpaceObject dso) {
+        cachedUpdateDSOs.get().remove(dso);
+    }
+
+    /**
+     * Clear the update cache
+     */
+    public void clearUpdateCache() {
+        cachedUpdateDSOs.remove();
     }
 }

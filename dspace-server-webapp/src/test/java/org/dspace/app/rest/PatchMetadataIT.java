@@ -38,6 +38,7 @@ import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.model.patch.RemoveOperation;
 import org.dspace.app.rest.model.patch.ReplaceOperation;
 import org.dspace.app.rest.test.AbstractEntityIntegrationTest;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.builder.CollectionBuilder;
 import org.dspace.builder.CommunityBuilder;
 import org.dspace.builder.ItemBuilder;
@@ -272,8 +273,9 @@ public class PatchMetadataIT extends AbstractEntityIntegrationTest {
      * Clean up created Person Relationshipts
      * @throws IOException
      * @throws SQLException
+     * @throws AuthorizeException
      */
-    private void cleanupPersonRelations() throws IOException, SQLException {
+    private void cleanupPersonRelations() throws IOException, SQLException, AuthorizeException {
         if (idRef1 != null) {
             RelationshipBuilder.deleteRelationship(idRef1.get());
             idRef1 = null;

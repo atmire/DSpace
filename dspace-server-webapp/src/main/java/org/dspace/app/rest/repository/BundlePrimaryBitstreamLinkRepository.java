@@ -17,6 +17,7 @@ import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.BitstreamRest;
 import org.dspace.app.rest.model.BundleRest;
 import org.dspace.app.rest.projection.Projection;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
 import org.dspace.content.service.BundleService;
@@ -85,7 +86,7 @@ public class BundlePrimaryBitstreamLinkRepository extends AbstractDSpaceRestRepo
         try {
             Bundle bundle = setPrimaryBitstream(context, bundleId, bitstream, true);
             return converter.toRest(context.reloadEntity(bundle), projection);
-        } catch (SQLException e) {
+        } catch (SQLException | AuthorizeException e) {
             throw new RuntimeException(e);
         }
     }
@@ -105,7 +106,7 @@ public class BundlePrimaryBitstreamLinkRepository extends AbstractDSpaceRestRepo
         try {
             Bundle bundle = setPrimaryBitstream(context, bundleId, bitstream, false);
             return converter.toRest(context.reloadEntity(bundle), projection);
-        } catch (SQLException e) {
+        } catch (SQLException | AuthorizeException e) {
             throw new RuntimeException(e);
         }
     }
@@ -120,7 +121,7 @@ public class BundlePrimaryBitstreamLinkRepository extends AbstractDSpaceRestRepo
     public void deletePrimaryBitstream(Context context, UUID bundleId) {
         try {
             Bundle bundle = setPrimaryBitstream(context, bundleId, null, false);
-        } catch (SQLException e) {
+        } catch (SQLException | AuthorizeException e) {
             throw new RuntimeException(e);
         }
     }
@@ -141,7 +142,7 @@ public class BundlePrimaryBitstreamLinkRepository extends AbstractDSpaceRestRepo
      * @throws UnprocessableEntityException if the bundle does not contain the bitstream
      */
     private Bundle setPrimaryBitstream(Context context, UUID bundleId, Bitstream bitstream, boolean shouldBeSet)
-        throws SQLException {
+        throws SQLException, AuthorizeException {
         Bundle bundle = bundleService.find(context, bundleId);
         if (bundle == null) {
             throw new ResourceNotFoundException("No such bundle: " + bundleId);

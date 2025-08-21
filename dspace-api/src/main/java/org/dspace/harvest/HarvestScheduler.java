@@ -273,7 +273,7 @@ public class HarvestScheduler implements Runnable {
                 }
             } catch (InterruptedException ie) {
                 log.warn("Interrupt: " + ie.getMessage());
-            } catch (SQLException e) {
+            } catch (SQLException | AuthorizeException e) {
                 e.printStackTrace();
             }
 

@@ -37,6 +37,7 @@ import jakarta.mail.MessagingException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.itemexport.service.ItemExportService;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
 import org.dspace.content.Collection;
@@ -733,7 +734,7 @@ public class ItemExportServiceImpl implements ItemExportService {
                         // Make sure the database connection gets closed in all conditions.
                         try {
                             context.complete();
-                        } catch (SQLException sqle) {
+                        } catch (SQLException | AuthorizeException e) {
                             context.abort();
                         }
                     }

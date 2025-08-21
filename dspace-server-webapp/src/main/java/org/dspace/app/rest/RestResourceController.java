@@ -494,7 +494,7 @@ public class RestResourceController implements InitializingBean {
         "content-type=application/x-www-form-urlencoded")
     public ResponseEntity<RepresentationModel<?>> action(HttpServletRequest request, @PathVariable String apiCategory,
                                                          @PathVariable String model, @PathVariable Integer id)
-        throws HttpRequestMethodNotSupportedException, SQLException, IOException {
+        throws HttpRequestMethodNotSupportedException, SQLException, IOException, AuthorizeException {
         checkModelPluralForm(apiCategory, model);
         DSpaceRestRepository<RestAddressableModel, Integer> repository =
             utils.getResourceRepository(apiCategory, model);

@@ -119,7 +119,7 @@ public class ProcessBuilder extends AbstractBuilder<Process, ProcessService> {
         }
     }
 
-    public static void deleteProcess(Integer integer) throws SQLException, IOException {
+    public static void deleteProcess(Integer integer) throws SQLException, AuthorizeException, IOException {
         if (integer == null) {
             return;
         }

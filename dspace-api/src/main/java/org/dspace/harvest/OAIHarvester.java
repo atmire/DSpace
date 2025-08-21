@@ -456,7 +456,7 @@ public class OAIHarvester {
         ourContext.setMode(originalMode);
     }
 
-    private void intermediateCommit() throws SQLException {
+    private void intermediateCommit() throws SQLException, AuthorizeException {
         ourContext.commit();
         reloadRequiredEntities();
     }

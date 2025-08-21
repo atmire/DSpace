@@ -17,6 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.AbstractIntegrationTest;
 import org.dspace.app.scripts.handler.impl.TestDSpaceRunnableHandler;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.scripts.DSpaceRunnable;
 import org.dspace.scripts.configuration.ScriptConfiguration;
 import org.dspace.scripts.factory.ScriptServiceFactory;
@@ -67,7 +68,7 @@ public class ITRetryFailedOpenUrlTracker extends AbstractIntegrationTest {
         } finally {
             try {
                 context.complete();
-            } catch (SQLException e) {
+            } catch (SQLException | AuthorizeException e) {
                 log.error(e);
             }
         }

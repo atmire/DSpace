@@ -30,6 +30,7 @@ import java.time.Instant;
 import java.util.List;
 
 import org.dspace.AbstractIntegrationTestWithDatabase;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.builder.CollectionBuilder;
 import org.dspace.builder.CommunityBuilder;
 import org.dspace.builder.EntityTypeBuilder;
@@ -434,7 +435,8 @@ public class OrcidQueueConsumerIT extends AbstractIntegrationTestWithDatabase {
     }
 
     @Test
-    public void testNoOrcidQueueRecordCreationOccursIfProfileSynchronizationIsDisabled() throws SQLException {
+    public void testNoOrcidQueueRecordCreationOccursIfProfileSynchronizationIsDisabled()
+        throws SQLException, AuthorizeException {
         context.turnOffAuthorisationSystem();
 
         ItemBuilder.createItem(context, profileCollection)
@@ -450,7 +452,8 @@ public class OrcidQueueConsumerIT extends AbstractIntegrationTestWithDatabase {
     }
 
     @Test
-    public void testNoOrcidQueueRecordCreationOccursIfNoComplianceMetadataArePresent() throws SQLException {
+    public void testNoOrcidQueueRecordCreationOccursIfNoComplianceMetadataArePresent()
+        throws SQLException, AuthorizeException {
         context.turnOffAuthorisationSystem();
 
         ItemBuilder.createItem(context, profileCollection)

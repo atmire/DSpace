@@ -1226,7 +1226,8 @@ public class RelationshipRestRepositoryIT extends AbstractEntityIntegrationTest 
         // And ensure that the ones coming after this mdv have its place lowered by one.
         itemService.removeMetadataValues(context, publication1, listToRemove);
 
-        itemService.update(context, publication1);
+        // Force update to ensure places are calculated
+        itemService.forceUpdate(context, publication1);
         context.restoreAuthSystemState();
         list = itemService.getMetadata(publication1, "dc", "contributor", "author", Item.ANY);
 

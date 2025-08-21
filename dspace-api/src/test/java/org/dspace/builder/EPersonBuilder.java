@@ -139,7 +139,7 @@ public class EPersonBuilder extends AbstractDSpaceObjectBuilder<EPerson> {
         return this;
     }
 
-    public static void deleteEPerson(UUID uuid) throws SQLException, IOException {
+    public static void deleteEPerson(UUID uuid) throws SQLException, IOException, AuthorizeException {
         try (Context c = new Context()) {
             c.turnOffAuthorisationSystem();
             EPerson ePerson = ePersonService.find(c, uuid);

@@ -2253,7 +2253,7 @@ public class ItemImportServiceImpl implements ItemImportService, InitializingBea
                     // Make sure the database connection gets closed in all conditions.
                     try {
                         context.complete();
-                    } catch (SQLException sqle) {
+                    } catch (SQLException | AuthorizeException e) {
                         context.abort();
                     }
                 }

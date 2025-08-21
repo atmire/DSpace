@@ -16,6 +16,7 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.core.I18nUtil;
 import org.dspace.services.RequestService;
@@ -194,7 +195,7 @@ public class ContextUtil {
         if (context != null && context.isValid()) {
             try {
                 context.complete();
-            } catch (SQLException e) {
+            } catch (SQLException | AuthorizeException e) {
                 throw new ServletException(e);
             }
         }

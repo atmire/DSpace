@@ -180,7 +180,6 @@ public class Group extends CacheableDSpaceObject implements DSpaceObjectLegacySu
     public int hashCode() {
         int hash = 7;
         hash = 59 * hash + this.getID().hashCode();
-        hash = 59 * hash + (this.getName() != null ? this.getName().hashCode() : 0);
         return hash;
     }
 

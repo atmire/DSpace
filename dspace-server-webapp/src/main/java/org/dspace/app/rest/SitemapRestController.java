@@ -20,6 +20,7 @@ import org.apache.catalina.connector.ClientAbortException;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.HttpHeadersInitializer;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.services.ConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +70,8 @@ public class SitemapRestController {
      */
     @GetMapping("/{name}")
     public ResponseEntity retrieve(@PathVariable String name, HttpServletResponse response,
-                                                       HttpServletRequest request) throws IOException, SQLException {
+                                                       HttpServletRequest request)
+        throws IOException, SQLException, AuthorizeException {
         // Find sitemap with given name in dspace/sitemaps
         File foundSitemapFile = null;
         File sitemapOutputDir = new File(configurationService.getProperty("sitemap.dir"));
@@ -114,7 +116,8 @@ public class SitemapRestController {
      * @return
      */
     private ResponseEntity returnSitemapFile(File foundSitemapFile, HttpServletResponse response,
-                                             HttpServletRequest request) throws SQLException, IOException {
+                                             HttpServletRequest request)
+        throws SQLException, IOException, AuthorizeException {
         // Pipe the bits
         try (InputStream is = new FileInputStream(foundSitemapFile)) {
             HttpHeadersInitializer sender = new HttpHeadersInitializer()
