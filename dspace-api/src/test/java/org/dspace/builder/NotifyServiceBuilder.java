@@ -14,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.ldn.NotifyServiceEntity;
 import org.dspace.app.ldn.service.NotifyService;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.discovery.SearchServiceException;
 
@@ -69,7 +70,7 @@ public class NotifyServiceBuilder extends AbstractBuilder<NotifyServiceEntity, N
             context.dispatchEvents();
 
             indexingService.commit();
-        } catch (SearchServiceException | SQLException e) {
+        } catch (SearchServiceException | SQLException | AuthorizeException e) {
             log.error(e);
         }
         return notifyServiceEntity;
@@ -151,7 +152,7 @@ public class NotifyServiceBuilder extends AbstractBuilder<NotifyServiceEntity, N
      * @param id ID of NotifyServiceEntity to delete
      * @throws SQLException if error occurs
      */
-    public static void deleteNotifyService(Integer id) throws SQLException {
+    public static void deleteNotifyService(Integer id) throws SQLException, AuthorizeException {
         try (Context c = new Context()) {
             c.turnOffAuthorisationSystem();
             NotifyServiceEntity notifyServiceEntity = notifyService.find(c, id);

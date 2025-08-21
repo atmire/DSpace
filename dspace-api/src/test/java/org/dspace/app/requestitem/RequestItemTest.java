@@ -72,7 +72,7 @@ public class RequestItemTest extends AbstractUnitTest {
 
     @BeforeClass
     public static void setUpClass()
-            throws SQLException {
+            throws SQLException, AuthorizeException {
         AbstractBuilder.init(); // AbstractUnitTest doesn't do this for us.
         Context ctx = new Context();
         ctx.turnOffAuthorisationSystem();

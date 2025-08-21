@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.ldn.NotifyServiceEntity;
 import org.dspace.app.ldn.NotifyServiceInboundPattern;
 import org.dspace.app.ldn.service.NotifyServiceInboundPatternService;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.discovery.SearchServiceException;
 
@@ -70,7 +71,7 @@ public class NotifyServiceInboundPatternBuilder
             context.dispatchEvents();
 
             indexingService.commit();
-        } catch (SearchServiceException | SQLException e) {
+        } catch (SearchServiceException | SQLException | AuthorizeException e) {
             log.error(e);
         }
         return notifyServiceInboundPattern;

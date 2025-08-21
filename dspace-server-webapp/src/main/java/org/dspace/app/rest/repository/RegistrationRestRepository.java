@@ -249,7 +249,7 @@ public class RegistrationRestRepository extends DSpaceRestRepository<Registratio
         try {
             resourcePatch.patch(context, registrationDataService.find(context, id), patch.getOperations());
             context.commit();
-        } catch (SQLException e) {
+        } catch (SQLException | AuthorizeException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
         return null;

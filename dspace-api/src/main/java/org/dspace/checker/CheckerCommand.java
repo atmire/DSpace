@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.apache.commons.collections4.MapUtils;
 import org.apache.logging.log4j.Logger;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.checker.factory.CheckerServiceFactory;
 import org.dspace.checker.service.ChecksumHistoryService;
 import org.dspace.checker.service.ChecksumResultService;
@@ -105,7 +106,7 @@ public final class CheckerCommand {
      *
      * @throws SQLException if database error
      */
-    public void process() throws SQLException {
+    public void process() throws SQLException, AuthorizeException {
         LOG.debug("Begin Checker Processing");
 
         if (dispatcher == null) {

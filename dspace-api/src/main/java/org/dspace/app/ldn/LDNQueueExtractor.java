@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.ldn.factory.LDNMessageServiceFactory;
 import org.dspace.app.ldn.service.LDNMessageService;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 
 /**
@@ -40,8 +41,9 @@ public class LDNQueueExtractor {
      * @see org.dspace.app.ldn.LDNMessageEntity#getQueueAttempts()
      * @return the number of processed ldnMessages.
      * @throws SQLException
+     * @throws AuthorizeException
      */
-    public static int extractMessageFromQueue() throws SQLException {
+    public static int extractMessageFromQueue() throws SQLException, AuthorizeException {
         Context context = new Context(Context.Mode.READ_WRITE);
         int processed_messages = ldnMessageService.extractAndProcessMessageFromQueue(context);
         if (processed_messages > 0) {

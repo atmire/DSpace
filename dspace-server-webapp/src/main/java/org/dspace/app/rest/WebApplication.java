@@ -25,6 +25,7 @@ import org.dspace.app.rest.utils.DSpaceAPIRequestLoggingFilter;
 import org.dspace.app.sitemap.GenerateSitemaps;
 import org.dspace.app.solrdatabaseresync.SolrDatabaseResyncCli;
 import org.dspace.app.util.DSpaceContextListener;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.google.GoogleAsyncEventListener;
 import org.dspace.utils.servlet.DSpaceWebappServletFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +69,7 @@ public class WebApplication {
     }
 
     @Scheduled(cron = "${ldn.queue.extractor.cron:-}")
-    public void ldnExtractFromQueue() throws IOException, SQLException {
+    public void ldnExtractFromQueue() throws IOException, SQLException, AuthorizeException {
         if (!configuration.getLdnEnabled()) {
             return;
         }
@@ -76,7 +77,7 @@ public class WebApplication {
     }
 
     @Scheduled(cron = "${ldn.queue.timeout.checker.cron:-}")
-    public void ldnQueueTimeoutCheck() throws IOException, SQLException {
+    public void ldnQueueTimeoutCheck() throws IOException, SQLException, AuthorizeException {
         if (!configuration.getLdnEnabled()) {
             return;
         }

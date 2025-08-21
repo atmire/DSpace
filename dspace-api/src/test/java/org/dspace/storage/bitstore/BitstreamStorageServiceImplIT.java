@@ -186,7 +186,7 @@ public class BitstreamStorageServiceImplIT extends AbstractIntegrationTestWithDa
     }
 
     private void createBitstreams(Context context, int numBitstreams)
-        throws SQLException {
+        throws SQLException, AuthorizeException {
         context.turnOffAuthorisationSystem();
         for (int i = 0; i < numBitstreams; i++) {
             String content = "Test bitstream " + i;

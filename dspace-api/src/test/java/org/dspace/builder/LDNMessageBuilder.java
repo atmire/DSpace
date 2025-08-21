@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.ldn.LDNMessageEntity;
 import org.dspace.app.ldn.model.Notification;
 import org.dspace.app.ldn.service.LDNMessageService;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.discovery.SearchServiceException;
 
@@ -69,7 +70,7 @@ public class LDNMessageBuilder extends AbstractBuilder<LDNMessageEntity, LDNMess
             context.dispatchEvents();
 
             indexingService.commit();
-        } catch (SearchServiceException | SQLException e) {
+        } catch (SearchServiceException | SQLException | AuthorizeException e) {
             log.error(e);
         }
         return ldnMessageEntity;

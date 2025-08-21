@@ -9,6 +9,7 @@ package org.dspace.app.scheduler.eperson;
 
 import java.sql.SQLException;
 
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.eperson.RegistrationData;
 import org.dspace.eperson.service.RegistrationDataService;
@@ -40,7 +41,7 @@ public class RegistrationDataScheduler {
      *
      */
     @Scheduled(cron = "${eperson.registration-data.scheduler.expired-registration-data.cron:-}")
-    protected void deleteExpiredRegistrationData() throws SQLException {
+    protected void deleteExpiredRegistrationData() throws SQLException, AuthorizeException {
         Context context = new Context();
         context.turnOffAuthorisationSystem();
         try {

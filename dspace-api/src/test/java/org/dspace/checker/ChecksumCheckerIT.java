@@ -18,6 +18,7 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.dspace.AbstractIntegrationTestWithDatabase;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.builder.BitstreamBuilder;
 import org.dspace.builder.CollectionBuilder;
 import org.dspace.builder.CommunityBuilder;
@@ -96,7 +97,7 @@ public class ChecksumCheckerIT extends AbstractIntegrationTestWithDatabase {
     }
 
     @Test
-    public void testChecksumsRecordedWhenProcesingIsInterrupted() throws SQLException {
+    public void testChecksumsRecordedWhenProcesingIsInterrupted() throws SQLException, AuthorizeException {
         CheckerCommand checker = new CheckerCommand(context);
 
         // The start date to use for the checker process

@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.ldn.factory.LDNMessageServiceFactory;
 import org.dspace.app.ldn.service.LDNMessageService;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 
 /**
@@ -39,8 +40,9 @@ public class LDNQueueTimeoutChecker {
      * reached.
      * @return the number of managed ldnMessages.
      * @throws SQLException
+     * @throws AuthorizeException
      */
-    public static int checkQueueMessageTimeout() throws SQLException {
+    public static int checkQueueMessageTimeout() throws SQLException, AuthorizeException {
         Context context = new Context(Context.Mode.READ_WRITE);
         int fixed_messages = 0;
         fixed_messages = ldnMessageService.checkQueueMessageTimeout(context);

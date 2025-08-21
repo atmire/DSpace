@@ -231,7 +231,7 @@ public class DOIOrganiser {
                     try {
                         organiser.reserve(doi);
                         context.commit();
-                    } catch (RuntimeException e) {
+                    } catch (RuntimeException | AuthorizeException e) {
                         System.err.format("DOI %s for object %s reservation failed, skipping:  %s%n",
                                 doi.getDSpaceObject().getID().toString(),
                                 doi.getDoi(), e.getMessage());
@@ -257,7 +257,7 @@ public class DOIOrganiser {
                     try {
                         organiser.register(doi);
                         context.commit();
-                    } catch (SQLException e) {
+                    } catch (SQLException | AuthorizeException e) {
                         System.err.format("DOI %s for object %s registration failed, skipping:  %s%n",
                                 doi.getDSpaceObject().getID().toString(),
                                 doi.getDoi(), e.getMessage());
@@ -288,8 +288,8 @@ public class DOIOrganiser {
                     organiser.update(doi);
                     context.commit();
                 }
-            } catch (SQLException ex) {
-                System.err.println("Error in database connection:" + ex.getMessage());
+            } catch (SQLException | AuthorizeException ex) {
+                System.err.println("Error:" + ex.getMessage());
                 ex.printStackTrace(System.err);
             }
         }
@@ -308,7 +308,7 @@ public class DOIOrganiser {
                     try {
                         organiser.delete(doi.getDoi());
                         context.commit();
-                    } catch (SQLException e) {
+                    } catch (SQLException | AuthorizeException e) {
                         System.err.format("DOI %s for object %s deletion failed, skipping:  %s%n",
                                 doi.getDSpaceObject().getID().toString(),
                                 doi.getDoi(), e.getMessage());
