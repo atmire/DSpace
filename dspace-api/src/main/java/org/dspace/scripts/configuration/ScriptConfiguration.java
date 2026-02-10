@@ -38,6 +38,8 @@ public abstract class ScriptConfiguration<T extends DSpaceRunnable> implements B
 
     private String name;
 
+    private boolean allowImmediateStart = true;
+
     /**
      * Generic getter for the description
      * @return the description value of this ScriptConfiguration
@@ -68,6 +70,22 @@ public abstract class ScriptConfiguration<T extends DSpaceRunnable> implements B
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    /**
+     * Generic getter for the allowImmediateStart property
+     * @return the allowImmediateStart value of this ScriptConfiguration
+     */
+    public boolean isAllowImmediateStart() {
+        return allowImmediateStart;
+    }
+
+    /**
+     * Generic setter for allowImmediateStart
+     * @param allowImmediateStart   The allowImmediateStart to be set on this ScriptConfiguration
+     */
+    public void setAllowImmediateStart(boolean allowImmediateStart) {
+        this.allowImmediateStart = allowImmediateStart;
     }
 
     /**

@@ -26,6 +26,7 @@ public class ScriptRest extends BaseObjectRest<String> {
     private String description;
     @JsonProperty(value = "parameters")
     private List<ParameterRest> parameterRestList = new LinkedList<>();
+    private boolean allowImmediateStart;
 
     public String getCategory() {
         return CATEGORY;
@@ -67,4 +68,11 @@ public class ScriptRest extends BaseObjectRest<String> {
         parameterRestList.add(parameter);
     }
 
+    public boolean isAllowImmediateStart() {
+        return allowImmediateStart;
+    }
+
+    public void setAllowImmediateStart(boolean allowImmediateStart) {
+        this.allowImmediateStart = !this.name.equals("index-discovery") && allowImmediateStart;
+    }
 }

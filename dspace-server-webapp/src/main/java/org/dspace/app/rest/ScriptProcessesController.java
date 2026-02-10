@@ -71,13 +71,14 @@ public class ScriptProcessesController {
     @PreAuthorize("hasAuthority('AUTHENTICATED')")
     public ResponseEntity<RepresentationModel<?>> startProcess(
         @PathVariable(name = "name") String scriptName,
-        @RequestParam(name = "file", required = false) List<MultipartFile> files)
+        @RequestParam(name = "file", required = false) List<MultipartFile> files,
+        @RequestParam(name = "start", required = false) boolean start)
         throws Exception {
         if (log.isTraceEnabled()) {
             log.trace("Starting Process for Script with name: " + scriptName);
         }
         Context context = ContextUtil.obtainContext(requestService.getCurrentRequest().getHttpServletRequest());
-        ProcessRest processRest = scriptRestRepository.startProcess(context, scriptName, files);
+        ProcessRest processRest = scriptRestRepository.startProcess(context, scriptName, files, start);
         ProcessResource processResource = converter.toResource(processRest);
         context.complete();
         return ControllerUtils.toResponseEntity(HttpStatus.ACCEPTED, new HttpHeaders(), processResource);

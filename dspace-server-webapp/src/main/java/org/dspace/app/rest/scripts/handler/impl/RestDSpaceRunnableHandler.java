@@ -71,6 +71,7 @@ public class RestDSpaceRunnableHandler implements DSpaceRunnableHandler {
         try {
             ePersonId = ePerson.getID();
             Process process = processService.create(context, ePerson, scriptName, parameters, specialGroups);
+            process.setProcessStatus(ProcessStatus.PENDING);
             processId = process.getID();
             this.scriptName = process.getName();
 
