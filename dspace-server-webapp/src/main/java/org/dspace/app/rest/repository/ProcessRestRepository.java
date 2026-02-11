@@ -13,8 +13,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +51,7 @@ import org.springframework.stereotype.Component;
 /**
  * The repository for the Process workload
  */
-@Component(ProcessRest.CATEGORY + "." + ProcessRest.NAME)
+@Component(ProcessRest.CATEGORY + "." + ProcessRest.PLURAL_NAME)
 public class ProcessRestRepository extends DSpaceRestRepository<ProcessRest, Integer> {
 
     private static final Logger log = LogManager.getLogger();
@@ -71,6 +72,12 @@ public class ProcessRestRepository extends DSpaceRestRepository<ProcessRest, Int
     @Autowired
     private ResourcePatch<Process> resourcePatch;
 
+    @PostConstruct
+    public void init() throws SQLException, AuthorizeException, IOException {
+        Context context = new Context();
+        processService.failRunningProcesses(context);
+        context.complete();
+    }
 
     @Override
     @PreAuthorize("hasPermission(#id, 'PROCESS', 'READ')")
@@ -252,6 +259,9 @@ public class ProcessRestRepository extends DSpaceRestRepository<ProcessRest, Int
                     processQueryParameterContainer.setSortOrder(order.getDirection().name());
                 } else if (StringUtils.equalsIgnoreCase(order.getProperty(), "endTime")) {
                     processQueryParameterContainer.setSortProperty(Process_.FINISHED_TIME);
+                    processQueryParameterContainer.setSortOrder(order.getDirection().name());
+                } else if (StringUtils.equalsIgnoreCase(order.getProperty(), "creationTime")) {
+                    processQueryParameterContainer.setSortProperty(Process_.CREATION_TIME);
                     processQueryParameterContainer.setSortOrder(order.getDirection().name());
                 } else {
                     throw new DSpaceBadRequestException("The given sort option was invalid: " + order.getProperty());
