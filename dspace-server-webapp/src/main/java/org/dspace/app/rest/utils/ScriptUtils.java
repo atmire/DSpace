@@ -33,6 +33,16 @@ public class ScriptUtils {
      */
     private ScriptUtils() { }
 
+    /**
+     * Method that initializes a DSpaceRunnable and returns it
+     * @param files                         Any files that need to be passed to the script for it to run
+     * @param context                       The DSpace context
+     * @param scriptToExecute               The script configuration to execute
+     * @param restDSpaceRunnableHandler     The handler to be used for the DSpaceRunnable
+     * @param args                          Any arguments that need to be passed onto the script
+     * @param dSpaceRunnable                The DSpaceRunnable that needs to initialized
+     * @return  The initialized DSpaceRunnable
+     */
     public static DSpaceRunnable prepareDSpaceScript(
             List<MultipartFile> files, Context context, ScriptConfiguration scriptToExecute,
             RestDSpaceRunnableHandler restDSpaceRunnableHandler, List<String> args, DSpaceRunnable dSpaceRunnable)

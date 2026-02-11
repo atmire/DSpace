@@ -94,6 +94,7 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
      * This method will take a String scriptname parameter and it'll try to resolve this to a script known by DSpace.
      * If a script is found, it'll start a process for this script with the given properties to this request
      * @param scriptName    The name of the script that will try to be resolved and started
+     * @param start         Indicates whether the script should start immediately or not
      * @return A ProcessRest object representing the started process for this script
      * @throws SQLException If something goes wrong
      * @throws IOException  If something goes wrong

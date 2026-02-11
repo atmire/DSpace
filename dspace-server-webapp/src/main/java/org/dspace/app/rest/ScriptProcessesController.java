@@ -64,6 +64,7 @@ public class ScriptProcessesController {
      * This will start a process for the script that matches the given name
      * @param scriptName    The name of the script that we want to start a process for
      * @param files         (Optional) any files that need to be passed to the script for it to run
+     * @param start         (Optional) indicates whether the script should start immediately or not
      * @return              The ProcessResource object for the created process
      * @throws Exception    If something goes wrong
      */
