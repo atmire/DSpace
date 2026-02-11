@@ -87,6 +87,28 @@ public class RestDSpaceRunnableHandler implements DSpaceRunnableHandler {
         }
     }
 
+    /**
+     * This constructor will initialise the handler with a process retrieved from the given processId
+     * @param processId     The ID of the process that will be used to initialize the handler
+     */
+    public RestDSpaceRunnableHandler(int processId) {
+        Context context = new Context();
+        try {
+            Process process = processService.find(context, processId);
+            this.ePersonId = process.getEPerson().getID();
+            this.processId = process.getID();
+            this.scriptName = process.getName();
+
+            context.complete();
+        } catch (SQLException e) {
+            log.error("Something went wrong while trying to find the process with id: {}", processId);
+        } finally {
+            if (context.isValid()) {
+                context.abort();
+            }
+        }
+    }
+
     @Override
     public void start() {
         Context context = new Context();

@@ -12,7 +12,6 @@ import static org.dspace.app.rest.utils.ScriptUtils.prepareDSpaceScript;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.List;
 
 import org.dspace.app.rest.model.patch.Operation;
@@ -27,10 +26,12 @@ import org.dspace.scripts.configuration.ScriptConfiguration;
 import org.dspace.scripts.service.ProcessService;
 import org.dspace.scripts.service.ScriptService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * TODO
  */
+@Component
 public class ScheduleProcessPatchOperation extends PatchOperation<Process> {
 
     @Autowired
@@ -39,7 +40,7 @@ public class ScheduleProcessPatchOperation extends PatchOperation<Process> {
     @Autowired
     private ScriptService scriptService;
 
-    private static final String OPERATION_SCHEDULE_PROCESS = "processStatus";
+    private static final String OPERATION_SCHEDULE_PROCESS = "/processStatus";
     private static final String REQUIRED_STATUS_VALUE = "SCHEDULED";
 
     @Override
@@ -48,9 +49,7 @@ public class ScheduleProcessPatchOperation extends PatchOperation<Process> {
         List<DSpaceCommandLineParameter> parameters = processService.getParameters(resource);
         List<String> args = constructArgs(parameters);
 
-        RestDSpaceRunnableHandler restDSpaceRunnableHandler = new RestDSpaceRunnableHandler(
-                context.getCurrentUser(), scriptConfiguration.getName(), parameters,
-                new HashSet<>(context.getSpecialGroups()));
+        RestDSpaceRunnableHandler restDSpaceRunnableHandler = new RestDSpaceRunnableHandler(resource.getID());
 
         try {
             DSpaceRunnable dspaceRunnable = prepareDSpaceScript(
@@ -62,7 +61,7 @@ public class ScheduleProcessPatchOperation extends PatchOperation<Process> {
             throw new RuntimeException(e);
         }
 
-        return processService.find(context, resource.getID());
+        return restDSpaceRunnableHandler.getProcess(context);
     }
 
     @Override

@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
@@ -28,14 +27,11 @@ import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.model.ParameterValueRest;
 import org.dspace.app.rest.model.ProcessRest;
 import org.dspace.app.rest.model.ScriptRest;
-import org.dspace.app.rest.model.patch.Patch;
-import org.dspace.app.rest.repository.patch.ResourcePatch;
 import org.dspace.app.rest.scripts.handler.impl.RestDSpaceRunnableHandler;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.scripts.DSpaceCommandLineParameter;
 import org.dspace.scripts.DSpaceRunnable;
-import org.dspace.scripts.Process;
 import org.dspace.scripts.configuration.ScriptConfiguration;
 import org.dspace.scripts.service.ProcessService;
 import org.dspace.scripts.service.ScriptService;
@@ -65,9 +61,6 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
     @Autowired
     private ProcessService processService;
 
-    @Autowired
-    private ResourcePatch<Process> resourcePatch;
-
     @Override
     // authorization is verified inside the method
     @PreAuthorize("hasAuthority('AUTHENTICATED')")
@@ -95,23 +88,6 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
     @Override
     public Class<ScriptRest> getDomainClass() {
         return ScriptRest.class;
-    }
-
-    @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public void patch(Context context, HttpServletRequest request, String apiCategory, String model, String id,
-                      Patch patch) {
-        try {
-            Process process = processService.find(context, Integer.parseInt(id));
-            if (process == null) {
-                throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");
-            }
-
-            resourcePatch.patch(context, process, patch.getOperations());
-        } catch (SQLException e) {
-            throw new ResourceNotFoundException(
-                    "There was a problem while retrieving " + apiCategory + "." + model + " with id: " + id);
-        }
     }
 
     /**

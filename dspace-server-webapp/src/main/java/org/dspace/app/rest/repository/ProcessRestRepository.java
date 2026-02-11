@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -24,7 +25,9 @@ import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.model.BitstreamRest;
 import org.dspace.app.rest.model.ProcessRest;
+import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.rest.projection.Projection;
+import org.dspace.app.rest.repository.patch.ResourcePatch;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.Bitstream;
@@ -64,6 +67,9 @@ public class ProcessRestRepository extends DSpaceRestRepository<ProcessRest, Int
 
     @Autowired
     private EPersonService epersonService;
+
+    @Autowired
+    private ResourcePatch<Process> resourcePatch;
 
 
     @Override
@@ -107,6 +113,23 @@ public class ProcessRestRepository extends DSpaceRestRepository<ProcessRest, Int
             return converter.toRestPage(processes, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public void patch(Context context, HttpServletRequest request, String apiCategory, String model, Integer id,
+                      Patch patch) {
+        try {
+            Process process = processService.find(context, id);
+            if (process == null) {
+                throw new ResourceNotFoundException(apiCategory + "." + model + " with id: " + id + " not found");
+            }
+
+            resourcePatch.patch(context, process, patch.getOperations());
+        } catch (SQLException e) {
+            throw new ResourceNotFoundException(
+                    "There was a problem while retrieving " + apiCategory + "." + model + " with id: " + id);
         }
     }
 
