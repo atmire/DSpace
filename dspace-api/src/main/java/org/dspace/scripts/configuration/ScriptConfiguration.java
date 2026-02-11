@@ -39,6 +39,8 @@ public abstract class ScriptConfiguration<T extends DSpaceRunnable> implements B
 
     private String name;
 
+    private boolean isVisibleFromUI = true;
+
     private boolean allowImmediateStart = true;
 
     /**
@@ -140,5 +142,17 @@ public abstract class ScriptConfiguration<T extends DSpaceRunnable> implements B
     @Override
     public void setBeanName(String beanName) {
         this.name = beanName;
+    }
+
+    /**
+     * The getter for isVisibleFromUI, the default is true
+     * @return true if the script is visible from the UI, false otherwise.
+     */
+    public boolean getIsVisibleFromUI() {
+        return this.isVisibleFromUI;
+    }
+
+    public void setIsVisibleFromUI(boolean isVisibleFromUI) {
+        this.isVisibleFromUI = isVisibleFromUI;
     }
 }
