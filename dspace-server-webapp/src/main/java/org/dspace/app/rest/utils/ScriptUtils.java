@@ -41,7 +41,7 @@ public class ScriptUtils {
      * @param restDSpaceRunnableHandler     The handler to be used for the DSpaceRunnable
      * @param args                          Any arguments that need to be passed onto the script
      * @param dSpaceRunnable                The DSpaceRunnable that needs to initialized
-     * @return  The initialized DSpaceRunnable
+     * @return  The initialized DSpaceRunnable or null if something went wrong during initialization
      */
     public static DSpaceRunnable prepareDSpaceScript(
             List<MultipartFile> files, Context context, ScriptConfiguration scriptToExecute,
@@ -53,6 +53,7 @@ public class ScriptUtils {
                 checkFileNames(dSpaceRunnable, files);
                 processFiles(context, restDSpaceRunnableHandler, files);
             }
+            return dSpaceRunnable;
         } catch (ParseException e) {
             dSpaceRunnable.printHelp();
             try {
@@ -64,7 +65,7 @@ public class ScriptUtils {
                 // ignore re-thrown exception
             }
         }
-        return dSpaceRunnable;
+        return null;
     }
 
     /**

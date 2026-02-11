@@ -16,6 +16,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -790,6 +791,48 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
     }
 
     @Test
+    public void processShouldRunImmediatelyWhenStartIsTrue() throws Exception {
+        String token = getAuthToken(admin.getEmail(), password);
+
+        LinkedList<DSpaceCommandLineParameter> parameters = new LinkedList<>();
+        parameters.add(new DSpaceCommandLineParameter("-r", "test"));
+        parameters.add(new DSpaceCommandLineParameter("-i", null));
+        List<ParameterValueRest> list = parameters.stream()
+                                                  .map(dSpaceCommandLineParameter -> dSpaceRunnableParameterConverter
+                                                          .convert(dSpaceCommandLineParameter, Projection.DEFAULT))
+                                                  .collect(Collectors.toList());
+
+        List<ProcessStatus> acceptableProcessStatuses = new LinkedList<>(
+                Arrays.asList(ProcessStatus.SCHEDULED, ProcessStatus.RUNNING, ProcessStatus.COMPLETED)
+        );
+
+        AtomicReference<Integer> idRef = new AtomicReference<>();
+        try {
+            getClient(token)
+                    .perform(multipart("/api/system/scripts/mock-script/processes")
+                                     .param("properties", new ObjectMapper().writeValueAsString(list))
+                                     .param("start", "true"))
+                    .andExpect(status().isAccepted())
+                    .andExpect(jsonPath("$", is(
+                            ProcessMatcher.matchProcess("mock-script",
+                                                        String.valueOf(admin.getID()),
+                                                        parameters,
+                                                        acceptableProcessStatuses))))
+                    .andDo(result -> idRef
+                            .set(read(result.getResponse().getContentAsString(), "$.processId")));
+
+
+            Process process = processService.find(context, idRef.get());
+            assertNotEquals(ProcessStatus.PENDING, process.getProcessStatus());
+
+            getClient(token).perform(get("/api/system/processes/" + idRef.get() + "/output"))
+                            .andExpect(status().isOk());
+        } finally {
+            ProcessBuilder.deleteProcess(idRef.get());
+        }
+    }
+
+    @Test
     public void processShouldNotRunImmediatelyWhenStartIsFalse() throws Exception {
         String token = getAuthToken(admin.getEmail(), password);
 
@@ -819,6 +862,48 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
                             .andExpect(status().isNoContent());
         } finally {
             ProcessBuilder.deleteProcess(idRef.get());
+        }
+    }
+
+    @Test
+    public void processShouldUseScriptConfigurationStartPropertyWhenStartIsNotGiven() throws Exception {
+        String token = getAuthToken(admin.getEmail(), password);
+
+        LinkedList<DSpaceCommandLineParameter> parameters = new LinkedList<>();
+        parameters.add(new DSpaceCommandLineParameter("-r", "test"));
+        parameters.add(new DSpaceCommandLineParameter("-i", null));
+        List<ParameterValueRest> list = parameters.stream()
+                                                  .map(dSpaceCommandLineParameter -> dSpaceRunnableParameterConverter
+                                                          .convert(dSpaceCommandLineParameter, Projection.DEFAULT))
+                                                  .collect(Collectors.toList());
+
+        AtomicReference<Integer> idRef1 = new AtomicReference<>();
+        AtomicReference<Integer> idRef2 = new AtomicReference<>();
+        try {
+            getClient(token)
+                    .perform(multipart("/api/system/scripts/mock-script/processes")
+                                     .param("properties", new ObjectMapper().writeValueAsString(list)))
+                    .andExpect(status().isAccepted())
+                    .andDo(result -> idRef1
+                            .set(read(result.getResponse().getContentAsString(), "$.processId")));
+
+            Process process1 = processService.find(context, idRef1.get());
+            assertNotEquals(ProcessStatus.PENDING, process1.getProcessStatus());
+
+            getClient(token)
+                    .perform(multipart("/api/system/scripts/false-start-mock-script/processes")
+                                     .param("properties", new ObjectMapper().writeValueAsString(list)))
+                    .andExpect(status().isAccepted())
+                    .andDo(result -> idRef2
+                            .set(read(result.getResponse().getContentAsString(), "$.processId")));
+
+            Process process2 = processService.find(context, idRef2.get());
+            assertEquals(ProcessStatus.PENDING, process2.getProcessStatus());
+
+
+        } finally {
+            ProcessBuilder.deleteProcess(idRef1.get());
+            ProcessBuilder.deleteProcess(idRef2.get());
         }
     }
 
@@ -951,6 +1036,42 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
                                         .content(getPatchContent(operations))
                                         .contentType(MediaType.APPLICATION_JSON_VALUE))
                        .andExpect(status().isForbidden());
+        } finally {
+            ProcessBuilder.deleteProcess(idRef.get());
+        }
+    }
+
+    @Test
+    public void schedulingProcessWithoutPendingStatusShouldReturn422Response() throws Exception {
+        String token = getAuthToken(admin.getEmail(), password);
+
+        LinkedList<DSpaceCommandLineParameter> parameters = new LinkedList<>();
+        parameters.add(new DSpaceCommandLineParameter("-r", "test"));
+        parameters.add(new DSpaceCommandLineParameter("-i", null));
+        List<ParameterValueRest> list = parameters.stream()
+                                                  .map(dSpaceCommandLineParameter -> dSpaceRunnableParameterConverter
+                                                          .convert(dSpaceCommandLineParameter, Projection.DEFAULT))
+                                                  .collect(Collectors.toList());
+
+        AtomicReference<Integer> idRef = new AtomicReference<>();
+        try {
+            getClient(token)
+                    .perform(multipart("/api/system/scripts/mock-script/processes")
+                                     .param("properties", new ObjectMapper().writeValueAsString(list))
+                                     .param("start", "true"))
+                    .andExpect(status().isAccepted())
+                    .andDo(result -> idRef
+                            .set(read(result.getResponse().getContentAsString(), "$.processId")));
+
+            Process process = processService.find(context, idRef.get());
+            assertNotEquals(ProcessStatus.PENDING, process.getProcessStatus());
+
+            List<Operation> operations = List.of(new ReplaceOperation("/processStatus", "SCHEDULED"));
+
+            getClient(token).perform(patch("/api/system/processes/" + idRef.get())
+                                                 .content(getPatchContent(operations))
+                                                 .contentType(MediaType.APPLICATION_JSON_VALUE))
+                                .andExpect(status().isUnprocessableEntity());
         } finally {
             ProcessBuilder.deleteProcess(idRef.get());
         }

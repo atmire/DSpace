@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.scripts.handler.impl.RestDSpaceRunnableHandler;
 import org.dspace.authorize.AuthorizeException;
@@ -45,6 +46,11 @@ public class ScheduleProcessPatchOperation extends PatchOperation<Process> {
 
     @Override
     public Process perform(Context context, Process resource, Operation operation) throws SQLException {
+        if (resource.getProcessStatus() != ProcessStatus.PENDING) {
+            throw new UnprocessableEntityException(
+                    "Process with id: " + resource.getID() + " has already been scheduled");
+        }
+
         ScriptConfiguration scriptConfiguration = scriptService.getScriptConfiguration(resource.getName());
         List<DSpaceCommandLineParameter> parameters = processService.getParameters(resource);
         List<String> args = constructArgs(parameters);
@@ -67,7 +73,6 @@ public class ScheduleProcessPatchOperation extends PatchOperation<Process> {
     @Override
     public boolean supports(Object objectToMatch, Operation operation) {
         return (objectToMatch instanceof Process &&
-                ((Process) objectToMatch).getProcessStatus().equals(ProcessStatus.PENDING) &&
                 operation.getPath().equals(OPERATION_SCHEDULE_PROCESS) &&
                 operation.getValue().equals(REQUIRED_STATUS_VALUE));
     }

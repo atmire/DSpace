@@ -33,7 +33,6 @@ import org.dspace.core.Context;
 import org.dspace.scripts.DSpaceCommandLineParameter;
 import org.dspace.scripts.DSpaceRunnable;
 import org.dspace.scripts.configuration.ScriptConfiguration;
-import org.dspace.scripts.service.ProcessService;
 import org.dspace.scripts.service.ScriptService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -57,9 +56,6 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
 
     @Autowired
     private DSpaceRunnableParameterConverter dSpaceRunnableParameterConverter;
-
-    @Autowired
-    private ProcessService processService;
 
     @Override
     // authorization is verified inside the method
@@ -110,14 +106,14 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
             throw new ResourceNotFoundException("The script for name: " + scriptName + " wasn't found");
         }
         if (start == null) {
-            start = scriptToExecute.isAllowImmediateStart();
+            start = scriptToExecute.allowImmediateStart();
         }
         try {
             if (!scriptToExecute.isAllowedToExecute(context, dSpaceCommandLineParameters)) {
                 throw new AuthorizeException("Current user is not eligible to execute script with name: " + scriptName
                         + " and the specified parameters " + StringUtils.join(dSpaceCommandLineParameters, ", "));
             }
-            if (!scriptToExecute.isAllowImmediateStart() && start) {
+            if (!scriptToExecute.allowImmediateStart() && start) {
                 throw new IllegalArgumentException("The given script is not allowed to start immediately");
             }
         } catch (IllegalArgumentException e) {
@@ -130,7 +126,7 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
         DSpaceRunnable dspaceRunnable = prepareDSpaceScript(
                 files, context, scriptToExecute, restDSpaceRunnableHandler, args,
                 scriptService.createDSpaceRunnableForScriptConfiguration(scriptToExecute));
-        if (start) {
+        if (start && dspaceRunnable != null) {
             restDSpaceRunnableHandler.schedule(dspaceRunnable);
         }
         return converter.toRest(restDSpaceRunnableHandler.getProcess(context), utils.obtainProjection());

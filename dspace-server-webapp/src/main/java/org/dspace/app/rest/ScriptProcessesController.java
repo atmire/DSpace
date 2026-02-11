@@ -73,7 +73,7 @@ public class ScriptProcessesController {
     public ResponseEntity<RepresentationModel<?>> startProcess(
         @PathVariable(name = "name") String scriptName,
         @RequestParam(name = "file", required = false) List<MultipartFile> files,
-        @RequestParam(name = "start", required = false) boolean start)
+        @RequestParam(name = "start", required = false) Boolean start)
         throws Exception {
         if (log.isTraceEnabled()) {
             log.trace("Starting Process for Script with name: " + scriptName);

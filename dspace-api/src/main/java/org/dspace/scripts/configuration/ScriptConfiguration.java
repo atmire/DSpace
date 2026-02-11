@@ -76,7 +76,7 @@ public abstract class ScriptConfiguration<T extends DSpaceRunnable> implements B
      * Generic getter for the allowImmediateStart property
      * @return the allowImmediateStart value of this ScriptConfiguration
      */
-    public boolean isAllowImmediateStart() {
+    public boolean allowImmediateStart() {
         return allowImmediateStart;
     }
 
