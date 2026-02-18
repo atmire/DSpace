@@ -16,6 +16,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.dspace.api.token.ApiTokenServiceImpl;
+import org.dspace.api.token.service.ApiTokenService;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.factory.AuthorizeServiceFactory;
@@ -28,6 +30,7 @@ import org.dspace.services.ConfigurationService;
 import org.dspace.services.RequestService;
 import org.dspace.services.factory.DSpaceServicesFactory;
 import org.dspace.util.UUIDUtils;
+import org.dspace.utils.DSpace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
@@ -62,6 +65,9 @@ public class StatelessAuthenticationFilter extends BasicAuthenticationFilter {
     private EPersonService ePersonService = EPersonServiceFactory.getInstance().getEPersonService();
 
     private ConfigurationService configurationService = DSpaceServicesFactory.getInstance().getConfigurationService();
+
+    private ApiTokenService apiTokenService = new DSpace().getServiceManager().getServiceByName(
+            ApiTokenServiceImpl.class.getName(), ApiTokenServiceImpl.class);
 
     public StatelessAuthenticationFilter(AuthenticationManager authenticationManager,
                                          RestAuthenticationService restAuthenticationService,
@@ -148,6 +154,14 @@ public class StatelessAuthenticationFilter extends BasicAuthenticationFilter {
         } else {
             if (request.getHeader(ON_BEHALF_OF_REQUEST_PARAM) != null) {
                 throw new AuthorizeException("Must be logged in (as an admin) to use the 'login as' feature");
+            }
+
+            Context context = ContextUtil.obtainContext(request);
+            EPerson eperson = apiTokenService.authenticate(context, request);
+            if (eperson != null) {
+                context.setCurrentUser(eperson);
+                List<GrantedAuthority> authorities = authenticationProvider.getGrantedAuthorities(context);
+                return new DSpaceAuthentication(eperson, authorities);
             }
         }
 
