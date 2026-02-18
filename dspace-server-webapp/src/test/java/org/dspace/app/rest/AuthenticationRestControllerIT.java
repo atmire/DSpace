@@ -8,6 +8,8 @@
 package org.dspace.app.rest;
 
 import static java.lang.Thread.sleep;
+import static org.dspace.api.token.service.ApiTokenService.API_TOKEN_HEADER;
+import static org.dspace.api.token.service.ApiTokenService.API_USER_HEADER;
 import static org.dspace.app.rest.utils.RegexUtils.REGEX_UUID;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
@@ -35,6 +37,7 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Base64;
 import java.util.Map;
+import java.util.UUID;
 import javax.servlet.http.Cookie;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -1639,6 +1642,46 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
         } finally {
             orcidConfiguration.setClientId(originalClientId);
         }
+    }
+
+    @Test
+    public void testCanAccessAdminOnlyEndpointWithValidApiTokenAndUserHeaders() throws Exception {
+        configurationService.setProperty("api.token", "valid-token");
+
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testCannotAccessAdminOnlyEndpointWithEmptyApiTokenOrUserHeaders() throws Exception {
+        configurationService.setProperty("api.token", "valid-token");
+
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, "")
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isUnauthorized());
+
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, ""))
+                   .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testCannotAccessAdminOnlyEndpointWithInvalidApiTokenOrUserHeaders() throws Exception {
+        configurationService.setProperty("api.token", "valid-token");
+
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, UUID.randomUUID().toString())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isUnauthorized());
+
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "invalid-token"))
+                   .andExpect(status().isUnauthorized());
     }
 
     // Get a short-lived token based on an active login token
