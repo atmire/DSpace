@@ -23,8 +23,11 @@ import java.util.Optional;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.dspace.authorize.factory.AuthorizeServiceFactory;
+import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.ProcessStatus;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
@@ -35,36 +38,70 @@ import org.dspace.scripts.service.ProcessService;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
 
+/**
+ * Schedules all processes that currently have the PENDING status
+ *
+ * @author Bram Maegerman bram.maegerman@atmire.com
+ */
 public class SchedulePendingProcessesScript {
 
     private static final ProcessService processService = ScriptServiceFactory.getInstance().getProcessService();
     private static final EPersonService epersonService = EPersonServiceFactory.getInstance().getEPersonService();
-
+    private static final AuthorizeService authorizeService =
+            AuthorizeServiceFactory.getInstance().getAuthorizeService();
     private static final ConfigurationService configurationService =
             DSpaceServicesFactory.getInstance().getConfigurationService();
 
     private SchedulePendingProcessesScript () {}
 
-    public static void main(String[] args) {
+    public static void main(String[] argv) {
+        schedulePendingProcesses(argv);
+    }
+
+    /**
+     * Run the schedule-pending-processes logic.
+     * This method is called by main() for CLI usage and directly by tests.
+     *
+     * @param argv the command line arguments
+     * @throws RuntimeException if an error occurs during processing
+     */
+    public static void schedulePendingProcesses(String[] argv) {
         try {
-            CommandLine line = parseArgs(args);
+            CommandLine line = parseArgs(argv);
+            if (line == null) {
+                return;
+            }
+
             Context context = new Context(Context.Mode.READ_ONLY);
 
             List<Process> pendingProcesses = processService.findByStatusAndCreationTimeOlderThan(
                     context, List.of(ProcessStatus.PENDING), new Date());
             if (pendingProcesses.isEmpty()) {
-                System.out.println("no processes with a PENDING status found");
-                System.exit(0);
+                System.out.println("No processes with a PENDING status found");
+                return;
             }
 
             EPerson eperson = epersonService.findByEmail(context, line.getOptionValue('e'));
             if  (eperson == null) {
-                System.out.println("no eperson found with email " + line.getOptionValue('e'));
-                System.exit(0);
+                System.out.println("No EPerson found with email " + line.getOptionValue('e'));
+                return;
+            }
+            if (!authorizeService.isAdmin(context, eperson)) {
+                System.out.println("Provided EPerson is not an admin");
+                return;
             }
 
             String apiToken = configurationService.getProperty("api.token");
+            if (apiToken == null) {
+                System.out.println("No API token found");
+                return;
+            }
+
             String dspaceServerUrl = configurationService.getProperty("dspace.server.url");
+            if (dspaceServerUrl == null) {
+                System.out.println("No server URL configured");
+                return;
+            }
 
             HttpClient client = HttpClient.newHttpClient();
             String csrfToken = getCsrfToken(client, dspaceServerUrl);
@@ -86,7 +123,7 @@ public class SchedulePendingProcessesScript {
                     HttpResponse<String> response =
                             client.send(request, HttpResponse.BodyHandlers.ofString());
 
-                    if (response.statusCode() - 200 > 99) {
+                    if (response.statusCode() != 200) {
                         System.out.println("failed to start process \"" + process.getID() +
                                                    "\" with status " + response.statusCode());
                         System.out.println(response.body());
@@ -94,8 +131,8 @@ public class SchedulePendingProcessesScript {
                         System.out.println("started process: " + process.getID());
                     }
                 } catch (IOException | InterruptedException e) {
-                    System.out.println("error while sending patch request for process: " + process.getID() + "\n" +
-                            "reason: " + e.getMessage());
+                    System.out.println("Error while sending patch request for process \"" + process.getID() + "\"" +
+                                               ", reason:\n\n" + e.getMessage());
                 }
             }
         } catch (ParseException | SQLException e) {
@@ -103,21 +140,23 @@ public class SchedulePendingProcessesScript {
         }
     }
 
-    private static CommandLine parseArgs(String[] args) throws ParseException {
+    private static CommandLine parseArgs(String[] argv) throws ParseException {
         CommandLineParser parser = new DefaultParser();
         Options options = new Options();
 
         options.addOption("e", "eperson", true, "email of eperson scheduling the processes");
-        options.addOption("h", "help", false, "help");
+        options.addOption("h", "help", false, "prints this help message");
 
-        CommandLine line = parser.parse(options, args);
+        CommandLine line = parser.parse(options, argv);
         if (line.hasOption('h')) {
-            System.out.println(options);
-            System.exit(0);
+            new HelpFormatter().printHelp("ds schedule-pending-processes [options]",
+                                      "Schedule all processes that currently have a PENDING status",
+                                      options, "");
+            return null;
         }
         if (!line.hasOption('e')) {
-            System.out.println("missing required argument \"--eperson\"");
-            System.exit(0);
+            System.out.println("Missing required argument \"--eperson\"");
+            return null;
         }
 
         return line;
@@ -139,10 +178,8 @@ public class SchedulePendingProcessesScript {
                 throw new RuntimeException("No CSRF cookie found");
             }
         } catch (IOException | InterruptedException | RuntimeException e) {
-            System.out.println("failed to retrieve a csrf token\n" +
-                                       "reason: " + e.getMessage());
-            System.exit(0);
+            System.out.println("Failed to retrieve a csrf token, reason:\n\n" + e.getMessage());
         }
-        return null;
+        return "";
     }
 }

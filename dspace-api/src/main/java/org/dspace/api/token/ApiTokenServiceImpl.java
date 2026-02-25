@@ -37,7 +37,7 @@ public class ApiTokenServiceImpl implements ApiTokenService {
             String apiUser = request.getHeader(API_USER_HEADER);
             String apiToken = request.getHeader(API_TOKEN_HEADER);
 
-            if (apiUser != null && apiToken != null) {
+            if (!(apiUser == null || apiUser.isEmpty()) && !(apiToken == null || apiToken.isEmpty())) {
                 if (apiToken.equals(getToken(context))) {
                     return epersonService.find(context, UUID.fromString(apiUser));
                 }
