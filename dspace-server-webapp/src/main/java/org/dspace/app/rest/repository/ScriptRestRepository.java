@@ -11,11 +11,17 @@ import static org.dspace.app.rest.utils.ScriptUtils.constructArgs;
 import static org.dspace.app.rest.utils.ScriptUtils.prepareDSpaceScript;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,15 +30,21 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.converter.DSpaceRunnableParameterConverter;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
+import org.dspace.app.rest.exception.DuplicateProcessException;
 import org.dspace.app.rest.model.ParameterValueRest;
 import org.dspace.app.rest.model.ProcessRest;
 import org.dspace.app.rest.model.ScriptRest;
 import org.dspace.app.rest.scripts.handler.impl.RestDSpaceRunnableHandler;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.Bitstream;
+import org.dspace.content.ProcessStatus;
 import org.dspace.core.Context;
+import org.dspace.core.Utils;
 import org.dspace.scripts.DSpaceCommandLineParameter;
 import org.dspace.scripts.DSpaceRunnable;
+import org.dspace.scripts.Process;
 import org.dspace.scripts.configuration.ScriptConfiguration;
+import org.dspace.scripts.service.ProcessService;
 import org.dspace.scripts.service.ScriptService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -53,6 +65,9 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
 
     @Autowired
     private ScriptService scriptService;
+
+    @Autowired
+    private ProcessService processService;
 
     @Autowired
     private DSpaceRunnableParameterConverter dSpaceRunnableParameterConverter;
@@ -119,6 +134,9 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
         } catch (IllegalArgumentException e) {
             throw new DSpaceBadRequestException("Illegal argoument " + e.getMessage(), e);
         }
+        if (!canCreateProcess(context, scriptName, dSpaceCommandLineParameters, files)) {
+            throw new DuplicateProcessException();
+        }
         RestDSpaceRunnableHandler restDSpaceRunnableHandler = new RestDSpaceRunnableHandler(
             context.getCurrentUser(), scriptToExecute.getName(), dSpaceCommandLineParameters,
             new HashSet<>(context.getSpecialGroups()));
@@ -146,4 +164,89 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
                                   .collect(Collectors.toList()));
         return dSpaceCommandLineParameters;
     }
+
+    private boolean canCreateProcess(Context context, String scriptName,
+                                     List<DSpaceCommandLineParameter> parameters, List<MultipartFile> files)
+            throws SQLException, IOException {
+        List<Process> inProgressProcesses = processService.findByStatusAndCreationTimeOlderThan(
+                context, Arrays.asList(ProcessStatus.PENDING, ProcessStatus.SCHEDULED, ProcessStatus.RUNNING),
+                new Date());
+        if (inProgressProcesses.isEmpty()) {
+            return true;
+        }
+
+        for (Process process:  inProgressProcesses) {
+            if (!process.getName().equals(scriptName)) {
+                continue;
+            }
+
+            // Checks all parameters of a currently existing process equal new parameters
+            List<DSpaceCommandLineParameter> processParameters = processService.getParameters(process);
+            Set<String> existingParamSet = processParameters.stream().map(param -> param.getName().equals("-f") ?
+                                            param.getName() : param.getName() + ":" + param.getValue())
+                                    .collect(Collectors.toSet());
+            Set<String> newParamSet = parameters.stream().map(param -> param.getName().equals("-f") ?
+                                                            param.getName() : param.getName() + ":" + param.getValue())
+                                                .collect(Collectors.toSet());
+            // TODO: might be better to remove this and leave it up to the input file count check?
+            // Ensure both either have a file parameter or not
+            if (existingParamSet.contains("-f") != newParamSet.contains("-f")) {
+                continue;
+            }
+            // Ensure all parameters outside of file are the same
+            existingParamSet.remove("-f");
+            newParamSet.remove("-f");
+            if (!existingParamSet.equals(newParamSet)) {
+                continue;
+            }
+
+            // Check if the amount of input files of the process match the amount of given files
+            Set<String> parameterNames = processParameters.stream()
+                                                          .map(DSpaceCommandLineParameter::getValue)
+                                                          .collect(Collectors.toSet());
+            Set<String> processInputBitstreamChecksums = processService.getBitstreams(context, process).stream().filter(
+                bitstream -> parameterNames.contains(bitstream.getName()))
+                    .map(Bitstream::getChecksum).collect(Collectors.toSet());
+            if (processInputBitstreamChecksums.size() != files.size()) {
+                continue;
+            }
+
+            // Compare new file checksums with existing checksums
+            for (MultipartFile file : files) {
+                try {
+                    String fileChecksum = Utils.toHex(this.generateChecksumFrom(file.getInputStream()));
+                    // If there are any new files, allow the new process to be created
+                    if (!processInputBitstreamChecksums.contains(fileChecksum)) {
+                        return true;
+                    }
+                } catch (NoSuchAlgorithmException e) {
+                    throw new IOException(e);
+                }
+
+            }
+
+
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private byte[] generateChecksumFrom(InputStream is) throws IOException, NoSuchAlgorithmException {
+        try (DigestInputStream dis = new DigestInputStream(is, MessageDigest.getInstance("MD5"))) {
+            final int BUFFER_SIZE = 1024 * 4;
+            final byte[] buffer = new byte[BUFFER_SIZE];
+            while (true) {
+                final int count = dis.read(buffer, 0, BUFFER_SIZE);
+                if (count == -1) {
+                    break;
+                }
+            }
+            return dis.getMessageDigest().digest();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IOException(e);
+        }
+    }
+
 }
