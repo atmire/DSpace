@@ -182,13 +182,17 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
 
             // Checks all parameters of a currently existing process equal new parameters
             List<DSpaceCommandLineParameter> processParameters = processService.getParameters(process);
+            // Processes are equal when name matches and both parameter lists are empty
+            if (processParameters.isEmpty() && (parameters == null || parameters.isEmpty())) {
+                return false;
+            }
+
             Set<String> existingParamSet = processParameters.stream().map(param -> param.getName().equals("-f") ?
                                             param.getName() : param.getName() + ":" + param.getValue())
                                     .collect(Collectors.toSet());
             Set<String> newParamSet = parameters.stream().map(param -> param.getName().equals("-f") ?
                                                             param.getName() : param.getName() + ":" + param.getValue())
                                                 .collect(Collectors.toSet());
-            // TODO: might be better to remove this and leave it up to the input file count check?
             // Ensure both either have a file parameter or not
             if (existingParamSet.contains("-f") != newParamSet.contains("-f")) {
                 continue;
@@ -207,7 +211,10 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
             Set<String> processInputBitstreamChecksums = processService.getBitstreams(context, process).stream().filter(
                 bitstream -> parameterNames.contains(bitstream.getName()))
                     .map(Bitstream::getChecksum).collect(Collectors.toSet());
-            if (processInputBitstreamChecksums.size() != files.size()) {
+            if (files == null && processInputBitstreamChecksums.isEmpty()) {
+                return false;
+            }
+            if (files == null || processInputBitstreamChecksums.size() != files.size()) {
                 continue;
             }
 
@@ -224,9 +231,6 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
                 }
 
             }
-
-
-
             return false;
         }
 
