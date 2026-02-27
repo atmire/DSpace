@@ -37,6 +37,7 @@ import org.dspace.scripts.factory.ScriptServiceFactory;
 import org.dspace.scripts.service.ProcessService;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
+import org.dspace.util.HttpClientFactory;
 
 /**
  * Schedules all processes that currently have the PENDING status
@@ -103,8 +104,11 @@ public class SchedulePendingProcessesScript {
                 return;
             }
 
-            HttpClient client = HttpClient.newHttpClient();
+            HttpClient client = HttpClientFactory.getHttpClient();
             String csrfToken = getCsrfToken(client, dspaceServerUrl);
+            if (csrfToken == null) {
+                return;
+            }
 
             String patchBody = "[{ \"op\": \"replace\", \"path\": \"/processStatus\", \"value\":\"SCHEDULED\"}]";
             for (Process process : pendingProcesses) {
@@ -180,6 +184,6 @@ public class SchedulePendingProcessesScript {
         } catch (IOException | InterruptedException | RuntimeException e) {
             System.out.println("Failed to retrieve a csrf token, reason:\n\n" + e.getMessage());
         }
-        return "";
+        return null;
     }
 }
