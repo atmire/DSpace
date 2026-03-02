@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -1073,6 +1074,67 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
                                                  .content(getPatchContent(operations))
                                                  .contentType(MediaType.APPLICATION_JSON_VALUE))
                                 .andExpect(status().isUnprocessableEntity());
+        } finally {
+            ProcessBuilder.deleteProcess(idRef.get());
+        }
+    }
+
+    @Test
+    public void creatingDuplicateProcessShouldOnlyReturn422WhenExistingProcessHasNotCompletedOrFailed()
+            throws Exception {
+        context.turnOffAuthorisationSystem();
+        Process completedProcess = ProcessBuilder
+                .createProcess(context, admin, "index-discovery", new ArrayList<>())
+                .withProcessStatus(ProcessStatus.COMPLETED)
+                .build();
+
+        Process failedProcess = ProcessBuilder
+                .createProcess(context, admin, "index-discovery", new ArrayList<>())
+                .withProcessStatus(ProcessStatus.COMPLETED)
+                .build();
+
+        Process pendingProcess = ProcessBuilder
+                .createProcess(context, admin, "retry-tracker", new ArrayList<>())
+                .withProcessStatus(ProcessStatus.PENDING)
+                .build();
+
+        Process scheduledProcess = ProcessBuilder
+                .createProcess(context, admin, "metadata-deletion", new ArrayList<>())
+                .withProcessStatus(ProcessStatus.SCHEDULED)
+                .build();
+
+        Process runningProcess = ProcessBuilder
+                .createProcess(context, admin, "filter-media", new ArrayList<>())
+                .withProcessStatus(ProcessStatus.RUNNING)
+                .build();
+        context.restoreAuthSystemState();
+        context.commit();
+
+        String token = getAuthToken(admin.getEmail(), password);
+
+        AtomicReference<Integer> idRef = new AtomicReference<>();
+        try {
+            getClient(token)
+                    .perform(multipart("/api/system/scripts/index-discovery/processes")
+                                     .param("start", "false"))
+                    .andExpect(status().isAccepted())
+                    .andDo(result -> idRef
+                            .set(read(result.getResponse().getContentAsString(), "$.processId")));
+
+            getClient(token)
+                    .perform(multipart("/api/system/scripts/retry-tracker/processes")
+                                     .param("start", "false"))
+                    .andExpect(status().isUnprocessableEntity());
+
+            getClient(token)
+                    .perform(multipart("/api/system/scripts/metadata-deletion/processes")
+                                     .param("start", "false"))
+                    .andExpect(status().isUnprocessableEntity());
+
+            getClient(token)
+                    .perform(multipart("/api/system/scripts/filter-media/processes")
+                                     .param("start", "false"))
+                    .andExpect(status().isUnprocessableEntity());
         } finally {
             ProcessBuilder.deleteProcess(idRef.get());
         }
