@@ -33,7 +33,6 @@ import org.dspace.scripts.factory.ScriptServiceFactory;
 import org.dspace.scripts.service.ProcessService;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
-import org.dspace.util.HttpClientFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -111,8 +110,8 @@ public class SchedulePendingProcessesScriptIT extends AbstractIntegrationTestWit
     public void testScriptShouldSendHttpRequestWithCorrectHeaders() throws Exception {
         String[] args = new String[] { "schedule-pending-processes", "-e", admin.getEmail() };
 
-        try (MockedStatic<HttpClientFactory> mocked = mockStatic(HttpClientFactory.class)) {
-            mocked.when(HttpClientFactory::getHttpClient).thenReturn(mockHttpClient);
+        try (MockedStatic<HttpClient> mocked = mockStatic(HttpClient.class)) {
+            mocked.when(HttpClient::newHttpClient).thenReturn(mockHttpClient);
             runDSpaceScript(args);
         }
 
@@ -141,8 +140,8 @@ public class SchedulePendingProcessesScriptIT extends AbstractIntegrationTestWit
 
         String[] args = new String[] { "schedule-pending-processes", "-e", admin.getEmail() };
 
-        try (MockedStatic<HttpClientFactory> mocked = mockStatic(HttpClientFactory.class)) {
-            mocked.when(HttpClientFactory::getHttpClient).thenReturn(mockHttpClient);
+        try (MockedStatic<HttpClient> mocked = mockStatic(HttpClient.class)) {
+            mocked.when(HttpClient::newHttpClient).thenReturn(mockHttpClient);
             runDSpaceScript(args);
         }
 
@@ -158,8 +157,8 @@ public class SchedulePendingProcessesScriptIT extends AbstractIntegrationTestWit
         when(mockResponse.headers()).thenReturn(HttpHeaders.of(
                 Map.of("Set-Cookie", List.of("NO-CSRF-TOKEN")), (name, value) -> true));
         when(mockHttpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(mockResponse);
-        try (MockedStatic<HttpClientFactory> mocked = mockStatic(HttpClientFactory.class)) {
-            mocked.when(HttpClientFactory::getHttpClient).thenReturn(mockHttpClient);
+        try (MockedStatic<HttpClient> mocked = mockStatic(HttpClient.class)) {
+            mocked.when(HttpClient::newHttpClient).thenReturn(mockHttpClient);
             runDSpaceScript(args);
         }
 

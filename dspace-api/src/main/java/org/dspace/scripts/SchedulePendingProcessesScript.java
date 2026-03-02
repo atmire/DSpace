@@ -37,7 +37,6 @@ import org.dspace.scripts.factory.ScriptServiceFactory;
 import org.dspace.scripts.service.ProcessService;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
-import org.dspace.util.HttpClientFactory;
 
 /**
  * Schedules all processes that currently have the PENDING status
@@ -104,7 +103,7 @@ public class SchedulePendingProcessesScript {
                 return;
             }
 
-            HttpClient client = HttpClientFactory.getHttpClient();
+            HttpClient client = HttpClient.newHttpClient();
             String csrfToken = getCsrfToken(client, dspaceServerUrl);
             if (csrfToken == null) {
                 return;
