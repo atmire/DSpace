@@ -22,11 +22,16 @@ import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.Flow;
 
 import org.dspace.AbstractIntegrationTestWithDatabase;
+import org.dspace.app.rest.model.patch.ReplaceOperation;
 import org.dspace.builder.ProcessBuilder;
 import org.dspace.content.ProcessStatus;
 import org.dspace.scripts.factory.ScriptServiceFactory;
@@ -165,5 +170,44 @@ public class SchedulePendingProcessesScriptIT extends AbstractIntegrationTestWit
         // Verify HttpClient.send() gets called once and stops when it fails to retrieve CSRF token
         verify(mockHttpClient, times(1))
                 .send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+    }
+
+    @Test
+    public void testScriptShouldSendCorrectPatchRequest() throws Exception {
+        String[] args = new String[] { "schedule-pending-processes", "-e", admin.getEmail() };
+
+        when(mockHttpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(mockResponse);
+        try (MockedStatic<HttpClient> mocked = mockStatic(HttpClient.class)) {
+            mocked.when(HttpClient::newHttpClient).thenReturn(mockHttpClient);
+            runDSpaceScript(args);
+        }
+
+        ArgumentCaptor<HttpRequest> requestCaptor =
+                ArgumentCaptor.forClass(HttpRequest.class);
+        verify(mockHttpClient, times(4)).send(requestCaptor.capture(), any());
+
+        // Verify results for the first sent request after CSRF token retrieval
+        assertEquals("PATCH", requestCaptor.getAllValues().get(1).method());
+
+        Optional<HttpRequest.BodyPublisher> bodyPublisher = requestCaptor.getAllValues().get(1).bodyPublisher();
+        assertTrue(bodyPublisher.isPresent());
+
+        StringBuilder builder = new StringBuilder();
+        bodyPublisher.get().subscribe(new Flow.Subscriber<ByteBuffer>() {
+            public void onSubscribe(Flow.Subscription s) {
+                s.request(Long.MAX_VALUE);
+            }
+            public void onNext(ByteBuffer b) {
+                builder.append(StandardCharsets.UTF_8.decode(b));
+            }
+            public void onError(Throwable t) {}
+            public void onComplete() {}
+        });
+        String patchBody = builder.toString();
+        ReplaceOperation replaceOp = new ReplaceOperation("/processStatus", "SCHEDULED");
+
+        assertTrue(patchBody.contains("\"op\": \"" + replaceOp.getOp() + "\""));
+        assertTrue(patchBody.contains("\"path\": \"" + replaceOp.getPath() + "\""));
+        assertTrue(patchBody.contains("\"value\":\"" + replaceOp.getValue() + "\""));
     }
 }
