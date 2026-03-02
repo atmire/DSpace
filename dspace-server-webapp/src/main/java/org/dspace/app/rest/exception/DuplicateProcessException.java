@@ -7,6 +7,8 @@
  */
 package org.dspace.app.rest.exception;
 
+import java.text.MessageFormat;
+
 import org.dspace.core.I18nUtil;
 
 /**
@@ -21,12 +23,25 @@ public class DuplicateProcessException extends UnprocessableEntityException impl
 
     public static final String MESSAGE_KEY = "org.dspace.app.rest.exception.DuplicateProcessException.message";
 
-    public DuplicateProcessException() {
-        super(I18nUtil.getMessage(MESSAGE_KEY));
+    public DuplicateProcessException(int processID) {
+        super(formatMessage(I18nUtil.getMessage(MESSAGE_KEY), processID));
     }
 
     @Override
     public String getMessageKey() {
         return MESSAGE_KEY;
+    }
+
+    /**
+     * @param formatStr string with placeholders, ideally obtained using {@link I18nUtil}
+     * @param processID The processId of the existing process that is getting duplicated
+     * @return message with the processId filled in
+     */
+    private static String formatMessage(String formatStr, int processID) {
+        MessageFormat fmt = new MessageFormat(formatStr);
+        String[] values = {
+                String.valueOf(processID) // {0} in formatStr
+        };
+        return fmt.format(values);
     }
 }

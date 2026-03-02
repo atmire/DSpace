@@ -135,9 +135,7 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
         } catch (IllegalArgumentException e) {
             throw new DSpaceBadRequestException("Illegal argoument " + e.getMessage(), e);
         }
-        if (!canCreateProcess(context, scriptName, dSpaceCommandLineParameters, files)) {
-            throw new DuplicateProcessException();
-        }
+        checkNewProcessForExistingDuplicates(context, scriptName, dSpaceCommandLineParameters, files);
         RestDSpaceRunnableHandler restDSpaceRunnableHandler = new RestDSpaceRunnableHandler(
             context.getCurrentUser(), scriptToExecute.getName(), dSpaceCommandLineParameters,
             new HashSet<>(context.getSpecialGroups()));
@@ -166,17 +164,31 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
         return dSpaceCommandLineParameters;
     }
 
-    private boolean canCreateProcess(Context context, String scriptName,
+    /**
+     * This method compares a new script against all PENDING, SCHEDULED or RUNNING processes
+     * and throws a {@link DuplicateProcessException} if it finds a match
+     * @param context           The current DSpace context
+     * @param scriptName        The name of the new script
+     * @param parameters        The parameters of the new script
+     * @param files             The files of the new script
+     * @throws SQLException     When something goes wrong while retrieving the existing processes
+     * @throws IOException      When something goes wrong during comparing of file contents
+     */
+    private void checkNewProcessForExistingDuplicates(Context context, String scriptName,
                                      List<DSpaceCommandLineParameter> parameters, List<MultipartFile> files)
             throws SQLException, IOException {
+        // Retrieve all existing processes with a PENDING, SCHEDULED or RUNNING ("in progress") status
         List<Process> inProgressProcesses = processService.findByStatusAndCreationTimeOlderThan(
                 context, Arrays.asList(ProcessStatus.PENDING, ProcessStatus.SCHEDULED, ProcessStatus.RUNNING),
                 new Date());
+        // No duplicates found when nu processes are "in progress"
         if (inProgressProcesses.isEmpty()) {
-            return true;
+            return;
         }
 
+        // Compare the new script against every "in progress" process
         for (Process process: inProgressProcesses) {
+            // Script name is different -> no duplicate
             if (!process.getName().equals(scriptName)) {
                 continue;
             }
@@ -185,7 +197,7 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
             List<DSpaceCommandLineParameter> processParameters = processService.getParameters(process);
             // Processes are equal when name matches and both parameter lists are empty
             if (processParameters.isEmpty() && (parameters == null || parameters.isEmpty())) {
-                return false;
+                throw new DuplicateProcessException(process.getID());
             }
 
             // Extract file arguments by comparing file names to parameter values
@@ -196,6 +208,7 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
                     .map(DSpaceCommandLineParameter::getName)
                     .collect(Collectors.toSet());
 
+            // Map parameters of both processes to Set<String> (excluding file parameters) to make it easier to compare
             Set<String> existingParamSet = processParameters
                     .stream()
                     .filter(param -> !fileArguments.contains(param.getName()))
@@ -207,6 +220,7 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
                     .map(param -> param.getName() + ":" + param.getValue())
                     .collect(Collectors.toSet());
 
+            // Parameters (excluding files) are different -> no duplicate
             if (!existingParamSet.equals(newParamSet)) {
                 continue;
             }
@@ -224,9 +238,12 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
                     .map(Bitstream::getChecksum)
                     .collect(Collectors.toSet());
 
+            // If files of the new and existing process are empty -> duplicate
             if (files == null && processInputBitstreamChecksums.isEmpty()) {
-                return false;
+                throw new DuplicateProcessException(process.getID());
             }
+
+            // If file amount is different -> no duplicates
             if (files == null || processInputBitstreamChecksums.size() != files.size()) {
                 continue;
             }
@@ -235,19 +252,18 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
             for (MultipartFile file : files) {
                 try {
                     String fileChecksum = Utils.toHex(this.generateChecksumFrom(file.getInputStream()));
-                    // If there are any new files, allow the new process to be created
+                    // If the new script has any new files -> no duplicates
                     if (!processInputBitstreamChecksums.contains(fileChecksum)) {
-                        return true;
+                        return;
                     }
                 } catch (NoSuchAlgorithmException e) {
                     throw new IOException(e);
                 }
-
             }
-            return false;
-        }
 
-        return true;
+            // When all checks are done -> duplicates
+            throw new DuplicateProcessException(process.getID());
+        }
     }
 
     private byte[] generateChecksumFrom(InputStream is) throws IOException, NoSuchAlgorithmException {
