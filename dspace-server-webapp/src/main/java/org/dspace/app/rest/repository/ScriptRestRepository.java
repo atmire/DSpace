@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -175,7 +176,7 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
             return true;
         }
 
-        for (Process process:  inProgressProcesses) {
+        for (Process process: inProgressProcesses) {
             if (!process.getName().equals(scriptName)) {
                 continue;
             }
@@ -187,30 +188,42 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
                 return false;
             }
 
-            Set<String> existingParamSet = processParameters.stream().map(param -> param.getName().equals("-f") ?
-                                            param.getName() : param.getName() + ":" + param.getValue())
-                                    .collect(Collectors.toSet());
-            Set<String> newParamSet = parameters.stream().map(param -> param.getName().equals("-f") ?
-                                                            param.getName() : param.getName() + ":" + param.getValue())
-                                                .collect(Collectors.toSet());
-            // Ensure both either have a file parameter or not
-            if (existingParamSet.contains("-f") != newParamSet.contains("-f")) {
-                continue;
-            }
-            // Ensure all parameters outside of file are the same
-            existingParamSet.remove("-f");
-            newParamSet.remove("-f");
+            // Extract file arguments by comparing file names to parameter values
+            Set<String> fileArguments = files == null ? new HashSet<>() : parameters
+                    .stream()
+                    .filter(param -> files.stream()
+                                          .anyMatch(f -> Objects.equals(f.getOriginalFilename(), param.getValue())))
+                    .map(DSpaceCommandLineParameter::getName)
+                    .collect(Collectors.toSet());
+
+            Set<String> existingParamSet = processParameters
+                    .stream()
+                    .filter(param -> !fileArguments.contains(param.getName()))
+                    .map(param -> param.getName() + ":" + param.getValue())
+                    .collect(Collectors.toSet());
+            Set<String> newParamSet = parameters
+                    .stream()
+                    .filter(param -> !fileArguments.contains(param.getName()))
+                    .map(param -> param.getName() + ":" + param.getValue())
+                    .collect(Collectors.toSet());
+
             if (!existingParamSet.equals(newParamSet)) {
                 continue;
             }
 
             // Check if the amount of input files of the process match the amount of given files
-            Set<String> parameterNames = processParameters.stream()
-                                                          .map(DSpaceCommandLineParameter::getValue)
-                                                          .collect(Collectors.toSet());
-            Set<String> processInputBitstreamChecksums = processService.getBitstreams(context, process).stream().filter(
-                bitstream -> parameterNames.contains(bitstream.getName()))
-                    .map(Bitstream::getChecksum).collect(Collectors.toSet());
+            Set<String> parameterNames = processParameters
+                    .stream()
+                    .map(DSpaceCommandLineParameter::getValue)
+                    .collect(Collectors.toSet());
+
+            Set<String> processInputBitstreamChecksums = processService
+                    .getBitstreams(context, process)
+                    .stream()
+                    .filter(bitstream -> parameterNames.contains(bitstream.getName()))
+                    .map(Bitstream::getChecksum)
+                    .collect(Collectors.toSet());
+
             if (files == null && processInputBitstreamChecksums.isEmpty()) {
                 return false;
             }
