@@ -9,6 +9,7 @@ package org.dspace.app.rest.exception;
 
 import java.text.MessageFormat;
 
+import org.dspace.core.Context;
 import org.dspace.core.I18nUtil;
 
 /**
@@ -23,13 +24,21 @@ public class DuplicateProcessException extends UnprocessableEntityException impl
 
     public static final String MESSAGE_KEY = "org.dspace.app.rest.exception.DuplicateProcessException.message";
 
+    private final int processID;
+
     public DuplicateProcessException(int processID) {
         super(formatMessage(I18nUtil.getMessage(MESSAGE_KEY), processID));
+        this.processID = processID;
     }
 
     @Override
     public String getMessageKey() {
         return MESSAGE_KEY;
+    }
+
+    @Override
+    public String getLocalizedMessage(Context context) {
+        return formatMessage(I18nUtil.getMessage(MESSAGE_KEY, context), processID);
     }
 
     /**
@@ -38,10 +47,6 @@ public class DuplicateProcessException extends UnprocessableEntityException impl
      * @return message with the processId filled in
      */
     private static String formatMessage(String formatStr, int processID) {
-        MessageFormat fmt = new MessageFormat(formatStr);
-        String[] values = {
-                String.valueOf(processID) // {0} in formatStr
-        };
-        return fmt.format(values);
+        return new MessageFormat(formatStr).format(new String[]{String.valueOf(processID)});
     }
 }
