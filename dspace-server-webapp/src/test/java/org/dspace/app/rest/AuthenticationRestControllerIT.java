@@ -1647,6 +1647,7 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
     @Test
     public void testCanAccessAdminOnlyEndpointWithValidApiTokenAndUserHeaders() throws Exception {
         configurationService.setProperty("api.token", "valid-token");
+        configurationService.setProperty("api.token.limit-permissions", "false");
 
         getClient().perform(get("/api/core/items")
                                     .header(API_USER_HEADER, admin.getID())
@@ -1657,6 +1658,7 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
     @Test
     public void testCannotAccessAdminOnlyEndpointWithEmptyApiTokenOrUserHeaders() throws Exception {
         configurationService.setProperty("api.token", "valid-token");
+        configurationService.setProperty("api.token.limit-permissions", "false");
 
         getClient().perform(get("/api/core/items")
                                     .header(API_USER_HEADER, "")
@@ -1672,6 +1674,7 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
     @Test
     public void testCannotAccessAdminOnlyEndpointWithInvalidApiTokenOrUserHeaders() throws Exception {
         configurationService.setProperty("api.token", "valid-token");
+        configurationService.setProperty("api.token.limit-permissions", "false");
 
         getClient().perform(get("/api/core/items")
                                     .header(API_USER_HEADER, UUID.randomUUID().toString())
@@ -1682,6 +1685,47 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
                                     .header(API_USER_HEADER, admin.getID())
                                     .header(API_TOKEN_HEADER, "invalid-token"))
                    .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testCanOnlyAccessAdminOnlyEndpointWhenEmailIsConfiguredOrPropertyIsEmpty() throws Exception {
+        configurationService.setProperty("api.token", "valid-token");
+        configurationService.setProperty("api.token.limit-permissions", "false");
+
+        configurationService.setProperty("api.token.email", "");
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isOk());
+
+        configurationService.setProperty("api.token.email", admin.getEmail());
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isOk());
+
+        configurationService.setProperty("api.token.email", eperson.getEmail());
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testCanOnlyAccessAdminOnlyEndpointWhenPermissionsAreNotLimitedOnApiToken() throws Exception {
+        configurationService.setProperty("api.token", "valid-token");
+
+        configurationService.setProperty("api.token.limit-permissions", "false");
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isOk());
+
+        configurationService.setProperty("api.token.limit-permissions", "true");
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isForbidden());
     }
 
     // Get a short-lived token based on an active login token

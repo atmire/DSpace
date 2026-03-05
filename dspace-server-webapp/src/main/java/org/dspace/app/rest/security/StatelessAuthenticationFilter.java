@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -37,6 +38,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
@@ -161,6 +163,13 @@ public class StatelessAuthenticationFilter extends BasicAuthenticationFilter {
             if (eperson != null) {
                 context.setCurrentUser(eperson);
                 List<GrantedAuthority> authorities = authenticationProvider.getGrantedAuthorities(context);
+                if (configurationService.getBooleanProperty("api.token.limit-permissions")) {
+                    authorities = authorities
+                            .stream()
+                            .map(grantedAuthority ->
+                                         new SimpleGrantedAuthority("TOKEN_" + grantedAuthority.getAuthority()))
+                            .collect(Collectors.toList());
+                }
                 return new DSpaceAuthentication(eperson, authorities);
             }
         }
