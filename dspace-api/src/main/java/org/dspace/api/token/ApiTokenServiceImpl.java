@@ -8,17 +8,28 @@
 package org.dspace.api.token;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.logging.log4j.Logger;
 import org.dspace.api.token.service.ApiTokenService;
+import org.dspace.authenticate.IPMatcher;
+import org.dspace.authenticate.IPMatcherException;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.service.EPersonService;
+import org.dspace.service.ClientInfoService;
 import org.dspace.services.ConfigurationService;
+import org.dspace.services.factory.DSpaceServicesFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class ApiTokenServiceImpl implements ApiTokenService {
+
+    private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(ApiTokenServiceImpl.class);
 
     @Autowired
     private ConfigurationService configurationService;
@@ -26,20 +37,43 @@ public class ApiTokenServiceImpl implements ApiTokenService {
     @Autowired
     private EPersonService epersonService;
 
+    @Autowired
+    private ClientInfoService clientInfoService;
+
+    /**
+     * All the IP matchers
+     */
+    protected List<IPMatcher> ipMatchers;
+
+    /**
+     * All the negative IP matchers
+     */
+    protected List<IPMatcher> ipNegativeMatchers;
+
+    protected ApiTokenServiceImpl() {
+        this.parseApiTokenIpMatchers();
+    }
+
     @Override
     public String getToken(Context context) {
         return configurationService.getProperty("api.token");
     }
 
     @Override
-    public EPerson authenticate(Context context, HttpServletRequest request) throws SQLException {
+    public EPerson authenticate(Context context, HttpServletRequest request) throws SQLException, AuthorizeException {
         try {
             String apiUser = request.getHeader(API_USER_HEADER);
             String apiToken = request.getHeader(API_TOKEN_HEADER);
 
             if (!(apiUser == null || apiUser.isEmpty()) && !(apiToken == null || apiToken.isEmpty())) {
                 if (apiToken.equals(getToken(context))) {
-                    return epersonService.find(context, UUID.fromString(apiUser));
+                    if (!isIpAllowed(request)) {
+                        return null;
+                    }
+                    EPerson eperson = epersonService.find(context, UUID.fromString(apiUser));
+                    if (eperson != null && isEPersonAllowed(eperson)) {
+                        return eperson;
+                    }
                 }
             }
         } catch (IllegalArgumentException e) {
@@ -47,5 +81,72 @@ public class ApiTokenServiceImpl implements ApiTokenService {
             return null;
         }
         return null;
+    }
+
+    private void parseApiTokenIpMatchers() {
+        String[] ipRanges = DSpaceServicesFactory.getInstance().getConfigurationService()
+                                                   .getArrayProperty("api.token.ipranges");
+
+        if (ipRanges != null) {
+            this.ipMatchers = new ArrayList<>();
+            this.ipNegativeMatchers = new ArrayList<>();
+
+            for (String ipRange : ipRanges) {
+                IPMatcher ipm;
+                try {
+                    if (ipRange.startsWith("-")) {
+                        ipm = new IPMatcher(ipRange.substring(1));
+                        ipNegativeMatchers.add(ipm);
+                    } else {
+                        ipm = new IPMatcher(ipRange);
+                        ipMatchers.add(ipm);
+                    }
+                } catch (IPMatcherException ipme) {
+                    log.warn("Malformed API token IP range", ipme);
+                }
+
+            }
+        } else  {
+            this.ipMatchers = null;
+            this.ipNegativeMatchers = null;
+        }
+    }
+
+    private boolean isIpAllowed(HttpServletRequest request) throws AuthorizeException {
+        if (this.ipMatchers == null && this.ipNegativeMatchers == null) {
+            return true;
+        } else if (
+                (this.ipMatchers == null || this.ipMatchers.isEmpty()) &&
+                (this.ipNegativeMatchers == null || this.ipNegativeMatchers.isEmpty())
+        ) {
+            return false;
+        }
+
+        String clientIP = clientInfoService.getClientIp(request);
+        try {
+            for (IPMatcher ipm : this.ipMatchers) {
+                if (ipm.match(clientIP)) {
+                    return true;
+                }
+            }
+            for (IPMatcher ipm : this.ipNegativeMatchers) {
+                if (ipm.match(clientIP)) {
+                    return false;
+                }
+            }
+        } catch (IPMatcherException ipme) {
+            throw new AuthorizeException("Malformed IP address found attached to request: " + clientIP);
+        }
+
+        return false;
+    }
+
+    private boolean isEPersonAllowed(EPerson eperson) {
+        String[] allowedEPersons = configurationService.getArrayProperty("api.token.email");
+        if (allowedEPersons == null || allowedEPersons.length == 0) {
+            return true;
+        }
+        return Arrays.stream(allowedEPersons)
+                     .anyMatch(allowedEPersonEmail -> allowedEPersonEmail.equals(eperson.getEmail()));
     }
 }
