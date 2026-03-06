@@ -83,9 +83,16 @@ public class ApiTokenServiceImpl implements ApiTokenService {
         return null;
     }
 
+    /**
+     * This method calls the private parseApiTokenIpMatchers method
+     * Is used to read new IP ranges from the configuration and parse them into {@link IPMatcher}s
+     */
+    public void resetIpMatchersCache() {
+        this.parseApiTokenIpMatchers();
+    }
+
     private void parseApiTokenIpMatchers() {
-        String[] ipRanges = DSpaceServicesFactory.getInstance().getConfigurationService()
-                                                   .getArrayProperty("api.token.ipranges");
+        String[] ipRanges = this.getIpRanges();
 
         if (ipRanges != null) {
             this.ipMatchers = new ArrayList<>();
@@ -104,12 +111,23 @@ public class ApiTokenServiceImpl implements ApiTokenService {
                 } catch (IPMatcherException ipme) {
                     log.warn("Malformed API token IP range", ipme);
                 }
-
             }
         } else  {
             this.ipMatchers = null;
             this.ipNegativeMatchers = null;
         }
+    }
+
+    private String[] getIpRanges() {
+        ConfigurationService configurationService = DSpaceServicesFactory.getInstance().getConfigurationService();
+        String[] ipRanges = configurationService.getArrayProperty("api.token.ipranges");
+
+        // Array properties return an empty list when not configured
+        // When this happens check if it is configured by retrieving the configuration property as a regular property
+        if (ipRanges.length == 0 && configurationService.getProperty("api.token.ipranges") == null) {
+            ipRanges = null;
+        }
+        return ipRanges;
     }
 
     private boolean isIpAllowed(HttpServletRequest request) throws AuthorizeException {
