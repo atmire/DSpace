@@ -75,12 +75,17 @@ import org.dspace.content.Community;
 import org.dspace.content.Item;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.WorkspaceItem;
+import org.dspace.content.authority.factory.ContentAuthorityServiceFactory;
+import org.dspace.content.authority.service.ChoiceAuthorityService;
+import org.dspace.content.authority.service.MetadataAuthorityService;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.BundleService;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.WorkspaceItemService;
 import org.dspace.core.CrisConstants;
+import org.dspace.core.factory.CoreServiceFactory;
+import org.dspace.core.service.PluginService;
 import org.dspace.discovery.DiscoverQuery;
 import org.dspace.discovery.DiscoverResult;
 import org.dspace.discovery.IndexableObject;
@@ -144,7 +149,13 @@ public class BulkImportIT extends AbstractIntegrationTestWithDatabase {
 
     private ConfigurationService configurationService = DSpaceServicesFactory.getInstance().getConfigurationService();
 
-    private final ScriptService scriptService = ScriptServiceFactory.getInstance().getScriptService();
+    private PluginService pluginService = CoreServiceFactory.getInstance().getPluginService();
+
+    private ChoiceAuthorityService choiceAuthorityService = ContentAuthorityServiceFactory
+        .getInstance().getChoiceAuthorityService();
+
+    private MetadataAuthorityService metadataAuthorityService = ContentAuthorityServiceFactory
+        .getInstance().getMetadataAuthorityService();
 
     private Community community;
 
@@ -152,6 +163,8 @@ public class BulkImportIT extends AbstractIntegrationTestWithDatabase {
 
     @Before
     public void beforeTests() throws SQLException, AuthorizeException {
+        configurationService.setProperty("uploads.local-folder", System.getProperty("java.io.tmpdir"));
+
         context.turnOffAuthorisationSystem();
         community = createCommunity(context).build();
         collection = createCollection(context, community).withAdminGroup(eperson).build();
@@ -2010,6 +2023,30 @@ public class BulkImportIT extends AbstractIntegrationTestWithDatabase {
     @Test
     public void testCreatePublicationInWorkspaceItemsWithBitstreams() throws Exception {
 
+        choiceAuthorityService.getChoiceAuthoritiesNames(); // initialize the ChoiceAuthorityService
+
+        configurationService.setProperty("plugin.named.org.dspace.content.authority.ChoiceAuthority",
+                                            new String[] {
+                                                "org.dspace.content.authority.OrcidAuthority = AuthorAuthority",
+                                                "org.dspace.content.authority.ItemAuthority = OrgUnitAuthority"
+                                            });
+
+        configurationService.setProperty("choices.plugin.dc.contributor.author", "AuthorAuthority");
+        configurationService.setProperty("choices.presentation.dc.contributor.author", "suggest");
+        configurationService.setProperty("authority.controlled.dc.contributor.author", "true");
+
+        configurationService.setProperty("choices.plugin.dc.contributor.editor", "AuthorAuthority");
+        configurationService.setProperty("choices.presentation.dc.contributor.editor", "suggest");
+        configurationService.setProperty("authority.controlled.dc.contributor.editor", "true");
+
+        configurationService.setProperty("choices.plugin.oairecerif.author.affiliation", "OrgUnitAuthority");
+        configurationService.setProperty("choices.presentation.oairecerif.author.affiliation", "suggest");
+        configurationService.setProperty("authority.controlled.oairecerif.author.affiliation", "true");
+
+        pluginService.clearNamedPluginClasses();
+        choiceAuthorityService.clearCache();
+        metadataAuthorityService.clearCache();
+
         context.turnOffAuthorisationSystem();
 
         Collection publication = createCollection(context, community)
@@ -2346,6 +2383,30 @@ public class BulkImportIT extends AbstractIntegrationTestWithDatabase {
     @Test
     public void testCreatePublicationWithSecurityLevel() throws Exception {
 
+        choiceAuthorityService.getChoiceAuthoritiesNames(); // initialize the ChoiceAuthorityService
+
+        configurationService.setProperty("plugin.named.org.dspace.content.authority.ChoiceAuthority",
+                                         new String[] {
+                                             "org.dspace.content.authority.OrcidAuthority = AuthorAuthority",
+                                             "org.dspace.content.authority.ItemAuthority = OrgUnitAuthority"
+                                         });
+
+        configurationService.setProperty("choices.plugin.dc.contributor.author", "AuthorAuthority");
+        configurationService.setProperty("choices.presentation.dc.contributor.author", "suggest");
+        configurationService.setProperty("authority.controlled.dc.contributor.author", "true");
+
+        configurationService.setProperty("choices.plugin.dc.contributor.editor", "AuthorAuthority");
+        configurationService.setProperty("choices.presentation.dc.contributor.editor", "suggest");
+        configurationService.setProperty("authority.controlled.dc.contributor.editor", "true");
+
+        configurationService.setProperty("choices.plugin.oairecerif.author.affiliation", "OrgUnitAuthority");
+        configurationService.setProperty("choices.presentation.oairecerif.author.affiliation", "suggest");
+        configurationService.setProperty("authority.controlled.oairecerif.author.affiliation", "true");
+
+        pluginService.clearNamedPluginClasses();
+        choiceAuthorityService.clearCache();
+        metadataAuthorityService.clearCache();
+
         context.turnOffAuthorisationSystem();
         Collection publications = createCollection(context, community)
             .withSubmissionDefinition("publication")
@@ -2387,6 +2448,31 @@ public class BulkImportIT extends AbstractIntegrationTestWithDatabase {
 
     @Test
     public void testUpdatePublicationWithSecurityLevel() throws Exception {
+
+
+        choiceAuthorityService.getChoiceAuthoritiesNames(); // initialize the ChoiceAuthorityService
+
+        configurationService.setProperty("plugin.named.org.dspace.content.authority.ChoiceAuthority",
+                                         new String[] {
+                                             "org.dspace.content.authority.OrcidAuthority = AuthorAuthority",
+                                             "org.dspace.content.authority.ItemAuthority = PublicationAuthority"
+                                         });
+
+        configurationService.setProperty("choices.plugin.dc.contributor.author", "AuthorAuthority");
+        configurationService.setProperty("choices.presentation.dc.contributor.author", "suggest");
+        configurationService.setProperty("authority.controlled.dc.contributor.author", "true");
+
+        configurationService.setProperty("choices.plugin.dc.contributor.editor", "AuthorAuthority");
+        configurationService.setProperty("choices.presentation.dc.contributor.editor", "suggest");
+        configurationService.setProperty("authority.controlled.dc.contributor.editor", "true");
+
+        configurationService.setProperty("choices.plugin.dc.relation.publication", "PublicationAuthority");
+        configurationService.setProperty("choices.presentation.dc.relation.publication", "suggest");
+        configurationService.setProperty("authority.controlled.dc.relation.publication", "true");
+
+        pluginService.clearNamedPluginClasses();
+        choiceAuthorityService.clearCache();
+        metadataAuthorityService.clearCache();
 
         context.turnOffAuthorisationSystem();
 
