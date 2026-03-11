@@ -22,7 +22,6 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -236,7 +235,7 @@ public class CrisConsumerIT extends AbstractControllerIntegrationTest {
         assertThat("dc.title value of the related item should be equals to the text value of the original metadata",
                    relatedItemtitle.getValue(), equalTo("Mario Rossi"));
 
-        MetadataValueRest crisSourceId = findSingleMetadata(relatedItem, "cris.sourceId");
+        MetadataValueRest crisSourceId = findSingleMetadata(relatedItem, "dspace.sourceId");
         assertThat("cris.sourceId value and author md5 hash should be equals", crisSourceId.getValue(),
                    equalTo(generateMd5Hash("Mario Rossi")));
 
@@ -289,7 +288,7 @@ public class CrisConsumerIT extends AbstractControllerIntegrationTest {
         // search the related journal item
         ItemRest relatedItem = getItemViaRestByID(authToken, UUID.fromString(journalAuthority));
 
-        MetadataValueRest crisSourceId = findSingleMetadata(relatedItem, "cris.sourceId");
+        MetadataValueRest crisSourceId = findSingleMetadata(relatedItem, "dspace.sourceId");
         assertThat("cris.sourceId and journal md5 hash should be equals",
                    crisSourceId.getValue(), equalTo(generateMd5Hash("The Journal")));
 
@@ -463,7 +462,7 @@ public class CrisConsumerIT extends AbstractControllerIntegrationTest {
         // verify the two created items metadata values (one for the author and the other for the project)
         ItemRest authorItem = getItemViaRestByID(authToken, UUID.fromString(authorAuthority));
 
-        MetadataValueRest crisSourceId = findSingleMetadata(authorItem, "cris.sourceId");
+        MetadataValueRest crisSourceId = findSingleMetadata(authorItem, "dspace.sourceId");
         assertThat("cris.sourceId value and author md5 hash should be equals",
                    crisSourceId.getValue(), equalTo(generateMd5Hash("Same Name")));
 
@@ -472,7 +471,7 @@ public class CrisConsumerIT extends AbstractControllerIntegrationTest {
 
         ItemRest projectItem = getItemViaRestByID(authToken, UUID.fromString(projectAuthority));
 
-        crisSourceId = findSingleMetadata(projectItem, "cris.sourceId");
+        crisSourceId = findSingleMetadata(projectItem, "dspace.sourceId");
         assertThat("cris.sourceId value and project md5 hash should be equals",
                    crisSourceId.getValue(), equalTo(generateMd5Hash("Same Name")));
 
@@ -642,7 +641,7 @@ public class CrisConsumerIT extends AbstractControllerIntegrationTest {
         ItemRest authorItem = getItemViaRestByID(authToken, UUID.fromString(authorAuthority));
         assertThat("The author related item should not be archived", authorItem.getInArchive(), is(false));
 
-        MetadataValueRest crisSourceId = findSingleMetadata(authorItem, "cris.sourceId");
+        MetadataValueRest crisSourceId = findSingleMetadata(authorItem, "dspace.sourceId");
         assertThat("cris.sourceId value and author md5 hash should be equals", crisSourceId.getValue(),
                    equalTo(generateMd5Hash("Mario Rossi")));
 
@@ -653,7 +652,7 @@ public class CrisConsumerIT extends AbstractControllerIntegrationTest {
         ItemRest projectItem = getItemViaRestByID(authToken, UUID.fromString(projectAuthority));
         assertThat("The project related item should be archived", projectItem.getInArchive(), is(true));
 
-        crisSourceId = findSingleMetadata(projectItem, "cris.sourceId");
+        crisSourceId = findSingleMetadata(projectItem, "dspace.sourceId");
         assertThat("cris.sourceId value and author md5 hash should be equals", crisSourceId.getValue(),
                    equalTo(generateMd5Hash("Test project")));
 
@@ -708,7 +707,7 @@ public class CrisConsumerIT extends AbstractControllerIntegrationTest {
             assertThat("The related item should be archived", relatedItem.getInArchive(), is(true));
 
             String expectedName = author.getPlace() == 0 ? "Mario Rossi" : "Luigi Rossi";
-            MetadataValueRest crisSourceId = findSingleMetadata(relatedItem, "cris.sourceId");
+            MetadataValueRest crisSourceId = findSingleMetadata(relatedItem, "dspace.sourceId");
             assertThat("cris.sourceId value and author md5 hash should be equals", crisSourceId.getValue(),
                        equalTo(generateMd5Hash(expectedName)));
 
@@ -1139,8 +1138,7 @@ public class CrisConsumerIT extends AbstractControllerIntegrationTest {
         orcidV3AuthorDataProvider.setOrcidRestConnector(mockOrcidConnector);
 
         String orcid = "0000-0002-9029-1854";
-
-        when(mockOrcidConnector.get(matches("^\\d{4}-\\d{4}-\\d{4}-\\d{4}/person$"), any()))
+        when(mockOrcidConnector.get(eq(orcid), any()))
             .thenAnswer(i -> orcidPersonRecord.getInputStream());
 
         try {
@@ -1158,7 +1156,7 @@ public class CrisConsumerIT extends AbstractControllerIntegrationTest {
 
             context.restoreAuthSystemState();
 
-            verify(mockOrcidConnector).get(eq(orcid + "/person"), any());
+            verify(mockOrcidConnector).get(eq(orcid), any());
             verifyNoMoreInteractions(mockOrcidConnector);
 
             String authToken = getAuthToken(submitter.getEmail(), password);
@@ -1172,12 +1170,21 @@ public class CrisConsumerIT extends AbstractControllerIntegrationTest {
             Item author = itemService.find(context, authorId);
             assertThat(author, notNullValue());
             assertThat(author.getOwningCollection(), is(persons));
+
+            // Verify metadata fields populated from ORCID import
             assertThat(author.getMetadata(), hasItems(
                 with("dc.title", "Bollini, Andrea"),
                 with("person.familyName", "Bollini"),
                 with("person.givenName", "Andrea"),
+                with("person.email", "andrea.bollini@4science.it"),
                 with("person.identifier.orcid", orcid),
-                with("cris.sourceId", "ORCID::" + orcid)));
+                with("person.affiliation.name", "4Science"),
+                with("dspace.sourceId", "ORCID::" + orcid)));
+
+            // Verify researcher URLs were imported from ORCID
+            List<MetadataValue> researcherUrls = itemService.getMetadataByMetadataString(author,
+                "oairecerif.identifier.url");
+            assertThat("Should have 4 researcher URLs from ORCID", researcherUrls, hasSize(4));
 
             context.turnOffAuthorisationSystem();
 
@@ -1242,7 +1249,7 @@ public class CrisConsumerIT extends AbstractControllerIntegrationTest {
             assertThat(journal.getMetadata(), hasItems(
                 with("dc.title", "Nature Synthesis"),
                 with("creativeworkseries.issn", issn),
-                with("cris.sourceId", "ISSN::" + issn)));
+                with("dspace.sourceId", "ISSN::" + issn)));
 
             context.turnOffAuthorisationSystem();
 
