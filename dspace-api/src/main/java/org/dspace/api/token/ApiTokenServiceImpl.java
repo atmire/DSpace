@@ -7,6 +7,8 @@
  */
 package org.dspace.api.token;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,7 +68,8 @@ public class ApiTokenServiceImpl implements ApiTokenService {
             String apiToken = request.getHeader(API_TOKEN_HEADER);
 
             if (!(apiUser == null || apiUser.isEmpty()) && !(apiToken == null || apiToken.isEmpty())) {
-                if (apiToken.equals(getToken(context))) {
+                if (MessageDigest.isEqual(apiToken.getBytes(StandardCharsets.UTF_8),
+                                          getToken(context).getBytes(StandardCharsets.UTF_8))) {
                     if (!isIpAllowed(request)) {
                         return null;
                     }
