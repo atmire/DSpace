@@ -10,6 +10,7 @@ package org.dspace.api.token.service;
 import java.sql.SQLException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 
@@ -35,5 +36,5 @@ public interface ApiTokenService {
      * @return The EPerson that matches the request headers
      * @throws SQLException When something goes wrong while retrieving the EPerson
      */
-    EPerson authenticate(Context context, HttpServletRequest request) throws SQLException;
+    EPerson authenticate(Context context, HttpServletRequest request) throws SQLException, AuthorizeException;
 }
