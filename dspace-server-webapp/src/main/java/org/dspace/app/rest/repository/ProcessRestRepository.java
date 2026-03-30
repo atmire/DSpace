@@ -117,7 +117,7 @@ public class ProcessRestRepository extends DSpaceRestRepository<ProcessRest, Int
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'TOKEN_ADMIN')")
     public void patch(Context context, HttpServletRequest request, String apiCategory, String model, Integer id,
                       Patch patch) {
         try {
