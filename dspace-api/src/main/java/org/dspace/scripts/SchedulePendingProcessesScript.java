@@ -168,7 +168,10 @@ public class SchedulePendingProcessesScript {
     private static String getCsrfToken(HttpClient client, String baseUrl) {
         try {
             HttpResponse<String> csrfCookieResponse = client.send(
-                    HttpRequest.newBuilder().uri(URI.create(baseUrl + "/api/authn/status")).GET().build(),
+                    HttpRequest.newBuilder()
+                               .uri(URI.create(baseUrl + "/api/security/csrf"))
+                               .POST(HttpRequest.BodyPublishers.noBody())
+                               .build(),
                     HttpResponse.BodyHandlers.ofString());
 
             Optional<String> csrfCookie = csrfCookieResponse.headers().allValues("Set-Cookie").stream()
