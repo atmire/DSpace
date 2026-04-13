@@ -1554,6 +1554,79 @@ public class ScriptRestRepositoryIT extends AbstractControllerIntegrationTest {
         }
     }
 
+    @Test
+    public void creatingScriptDuplicateShouldCheckAllPendingBeforeSucceeding() throws Exception {
+        String token = getAuthToken(admin.getEmail(), password);
+
+        AtomicReference<Integer> idRef1 = new AtomicReference<>();
+        AtomicReference<Integer> idRef2 = new AtomicReference<>();
+        try {
+            LinkedList<DSpaceCommandLineParameter> parameters = new LinkedList<>();
+            parameters.add(new DSpaceCommandLineParameter("-r", "test"));
+            parameters.add(new DSpaceCommandLineParameter("-i", null));
+            MockMultipartFile file1 = new MockMultipartFile("file",
+                                                            "file_1.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                            "file_1".getBytes());
+            parameters.add(new DSpaceCommandLineParameter("-f", "file_1.txt"));
+            List<ParameterValueRest> list = parameters.stream()
+                                                      .map(dsCommandLineParameter -> dSpaceRunnableParameterConverter
+                                                              .convert(dsCommandLineParameter, Projection.DEFAULT))
+                                                      .collect(Collectors.toList());
+            getClient(token)
+                    .perform(multipart("/api/system/scripts/mock-script/processes")
+                                     .file(file1)
+                                     .characterEncoding("UTF-8")
+                                     .param("properties", new ObjectMapper().writeValueAsString(list))
+                                     .param("start", "false"))
+                    .andExpect(status().isAccepted())
+                    .andDo(result -> idRef1
+                            .set(read(result.getResponse().getContentAsString(), "$.processId")));
+
+            parameters = new LinkedList<>();
+            parameters.add(new DSpaceCommandLineParameter("-r", "test"));
+            parameters.add(new DSpaceCommandLineParameter("-i", null));
+            MockMultipartFile file2 = new MockMultipartFile("file",
+                                                            "file_2.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                            "file_2".getBytes());
+            parameters.add(new DSpaceCommandLineParameter("-f", "file_2.txt"));
+            list = parameters.stream()
+                             .map(dsCommandLineParameter -> dSpaceRunnableParameterConverter
+                                     .convert(dsCommandLineParameter, Projection.DEFAULT))
+                             .collect(Collectors.toList());
+            getClient(token)
+                    .perform(multipart("/api/system/scripts/mock-script/processes")
+                                     .file(file2)
+                                     .characterEncoding("UTF-8")
+                                     .param("properties", new ObjectMapper().writeValueAsString(list))
+                                     .param("start", "false"))
+                    .andExpect(status().isAccepted())
+                    .andDo(result -> idRef2
+                            .set(read(result.getResponse().getContentAsString(), "$.processId")));
+
+            parameters = new LinkedList<>();
+            parameters.add(new DSpaceCommandLineParameter("-r", "test"));
+            parameters.add(new DSpaceCommandLineParameter("-i", null));
+            MockMultipartFile file3 = new MockMultipartFile("file",
+                                                            "file_2.txt", MediaType.TEXT_PLAIN_VALUE,
+                                                            "file_2".getBytes());
+            parameters.add(new DSpaceCommandLineParameter("-f", "file_2.txt"));
+            list = parameters.stream()
+                             .map(dsCommandLineParameter -> dSpaceRunnableParameterConverter
+                                     .convert(dsCommandLineParameter, Projection.DEFAULT))
+                             .collect(Collectors.toList());
+            getClient(token)
+                    .perform(multipart("/api/system/scripts/mock-script/processes")
+                                     .file(file3)
+                                     .characterEncoding("UTF-8")
+                                     .param("properties", new ObjectMapper().writeValueAsString(list))
+                                     .param("start", "false"))
+                    .andExpect(status().isUnprocessableEntity());
+        } finally {
+            ProcessBuilder.deleteProcess(idRef1.get());
+            ProcessBuilder.deleteProcess(idRef2.get());
+        }
+    }
+
     @After
     public void destroy() throws Exception {
         context.turnOffAuthorisationSystem();

@@ -249,20 +249,24 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
             }
 
             // Compare new file checksums with existing checksums
+            boolean hasNewFile = false;
             for (MultipartFile file : files) {
                 try {
                     String fileChecksum = Utils.toHex(this.generateChecksumFrom(file.getInputStream()));
                     // If the new script has any new files -> no duplicates
                     if (!processInputBitstreamChecksums.contains(fileChecksum)) {
-                        return;
+                        hasNewFile = true;
+                        break;
                     }
                 } catch (NoSuchAlgorithmException e) {
                     throw new IOException(e);
                 }
             }
 
-            // When all checks are done -> duplicates
-            throw new DuplicateProcessException(process.getID());
+            // When a process doesn't have any new files -> duplicate
+            if (!hasNewFile) {
+                throw new DuplicateProcessException(process.getID());
+            }
         }
     }
 
