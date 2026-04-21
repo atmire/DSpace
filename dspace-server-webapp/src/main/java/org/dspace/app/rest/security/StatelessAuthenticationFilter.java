@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,6 +19,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.dspace.api.token.ApiTokenServiceImpl;
+import org.dspace.api.token.service.ApiTokenService;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.factory.AuthorizeServiceFactory;
@@ -30,10 +33,12 @@ import org.dspace.services.ConfigurationService;
 import org.dspace.services.RequestService;
 import org.dspace.services.factory.DSpaceServicesFactory;
 import org.dspace.util.UUIDUtils;
+import org.dspace.utils.DSpace;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
@@ -65,6 +70,9 @@ public class StatelessAuthenticationFilter extends BasicAuthenticationFilter {
 
     private final ConfigurationService configurationService
             = DSpaceServicesFactory.getInstance().getConfigurationService();
+
+    private ApiTokenService apiTokenService = new DSpace().getServiceManager().getServiceByName(
+            ApiTokenServiceImpl.class.getName(), ApiTokenServiceImpl.class);
 
     public StatelessAuthenticationFilter(AuthenticationManager authenticationManager,
                                          RestAuthenticationService restAuthenticationService,
@@ -151,6 +159,21 @@ public class StatelessAuthenticationFilter extends BasicAuthenticationFilter {
         } else {
             if (request.getHeader(ON_BEHALF_OF_REQUEST_PARAM) != null) {
                 throw new AuthorizeException("Must be logged in (as an admin) to use the 'login as' feature");
+            }
+
+            Context context = ContextUtil.obtainContext(request);
+            EPerson eperson = apiTokenService.authenticate(context, request);
+            if (eperson != null) {
+                context.setCurrentUser(eperson);
+                List<GrantedAuthority> authorities = authenticationProvider.getGrantedAuthorities(context);
+                if (configurationService.getBooleanProperty("api.token.limit-permissions")) {
+                    authorities = authorities
+                            .stream()
+                            .map(grantedAuthority ->
+                                         new SimpleGrantedAuthority("TOKEN_" + grantedAuthority.getAuthority()))
+                            .collect(Collectors.toUnmodifiableList());
+                }
+                return new DSpaceAuthentication(eperson, authorities);
             }
         }
 

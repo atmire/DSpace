@@ -345,4 +345,11 @@
             <class>org.dspace.iiif.canvasdimension.CanvasDimensionCLI</class>
         </step>
     </command>
+    <command>
+        <name>schedule-pending-processes</name>
+        <description>Start all processes that currently have a pending status</description>
+        <step>
+            <class>org.dspace.scripts.SchedulePendingProcessesScript</class>
+        </step>
+    </command>
 </commands>
