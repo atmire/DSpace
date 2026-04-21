@@ -8,6 +8,8 @@
 package org.dspace.app.rest;
 
 import static java.lang.Thread.sleep;
+import static org.dspace.api.token.service.ApiTokenService.API_TOKEN_HEADER;
+import static org.dspace.api.token.service.ApiTokenService.API_USER_HEADER;
 import static org.dspace.app.rest.matcher.GroupMatcher.matchGroupWithName;
 import static org.dspace.app.rest.utils.RegexUtils.REGEX_UUID;
 import static org.hamcrest.Matchers.containsString;
@@ -35,6 +37,7 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Base64;
 import java.util.Map;
+import java.util.UUID;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -42,6 +45,7 @@ import com.nimbusds.jwt.SignedJWT;
 import jakarta.servlet.http.Cookie;
 import org.apache.commons.codec.CharEncoding;
 import org.apache.commons.io.IOUtils;
+import org.dspace.api.token.ApiTokenServiceImpl;
 import org.dspace.app.rest.authorization.Authorization;
 import org.dspace.app.rest.authorization.AuthorizationFeature;
 import org.dspace.app.rest.authorization.AuthorizationFeatureService;
@@ -75,6 +79,7 @@ import org.dspace.orcid.client.OrcidClient;
 import org.dspace.orcid.client.OrcidConfiguration;
 import org.dspace.orcid.model.OrcidTokenResponseDTO;
 import org.dspace.services.ConfigurationService;
+import org.dspace.utils.DSpace;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -113,6 +118,9 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
     @Autowired
     private ObjectMapper mapper;
 
+    private ApiTokenServiceImpl apiTokenService = new DSpace().getServiceManager().getServiceByName(
+            ApiTokenServiceImpl.class.getName(), ApiTokenServiceImpl.class);
+
     public static final String[] PASS_ONLY = {"org.dspace.authenticate.PasswordAuthentication"};
     public static final String[] SHIB_ONLY = {"org.dspace.authenticate.ShibAuthentication"};
     public static final String[] ORCID_ONLY = { "org.dspace.authenticate.OrcidAuthentication" };
@@ -149,6 +157,11 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
 
         // Default all tests to Password Authentication only
         configurationService.setProperty("plugin.sequence.org.dspace.authenticate.AuthenticationMethod", PASS_ONLY);
+
+        // Default configuration for ApiTokenService
+        configurationService.setProperty("api.token.limit-permissions", "false");
+        configurationService.setProperty("api.token.ipranges", null);
+        apiTokenService.resetIpMatchersCache();
     }
 
     @Test
@@ -1707,6 +1720,119 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
             .andExpect(content().contentType(contentType))
             .andExpect(jsonPath("$._embedded.specialGroups",
                 Matchers.containsInAnyOrder(matchGroupWithName("specialGroupShib"))));
+    }
+
+    @Test
+    public void testCanAccessAdminOnlyEndpointWithValidApiTokenAndUserHeaders() throws Exception {
+        configurationService.setProperty("api.token", "valid-token");
+
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testCannotAccessAdminOnlyEndpointWithEmptyApiTokenOrUserHeaders() throws Exception {
+        configurationService.setProperty("api.token", "valid-token");
+
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, "")
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isUnauthorized());
+
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, ""))
+                   .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testCannotAccessAdminOnlyEndpointWithInvalidApiTokenOrUserHeaders() throws Exception {
+        configurationService.setProperty("api.token", "valid-token");
+
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, UUID.randomUUID().toString())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isUnauthorized());
+
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "invalid-token"))
+                   .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testCanOnlyAccessAdminOnlyEndpointWhenEmailIsConfiguredOrPropertyIsEmpty() throws Exception {
+        configurationService.setProperty("api.token", "valid-token");
+
+        configurationService.setProperty("api.token.email", "");
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isOk());
+
+        configurationService.setProperty("api.token.email", admin.getEmail());
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isOk());
+
+        configurationService.setProperty("api.token.email", eperson.getEmail());
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testCanOnlyAccessAdminOnlyEndpointWhenIpIsAllowedByConfiguredRanges() throws Exception {
+        configurationService.setProperty("api.token", "valid-token");
+
+        configurationService.setProperty("api.token.ipranges", "127.0.0.1");
+        apiTokenService.resetIpMatchersCache();
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isOk());
+
+        configurationService.setProperty("api.token.ipranges", "-127.0.0.1");
+        apiTokenService.resetIpMatchersCache();
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isUnauthorized());
+
+        configurationService.setProperty("api.token.ipranges", "");
+        apiTokenService.resetIpMatchersCache();
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isUnauthorized());
+
+        configurationService.setProperty("api.token.ipranges", null);
+        apiTokenService.resetIpMatchersCache();
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testCanOnlyAccessAdminOnlyEndpointWhenPermissionsAreNotLimitedOnApiToken() throws Exception {
+        configurationService.setProperty("api.token", "valid-token");
+
+        configurationService.setProperty("api.token.limit-permissions", "false");
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isOk());
+
+        configurationService.setProperty("api.token.limit-permissions", "true");
+        getClient().perform(get("/api/core/items")
+                                    .header(API_USER_HEADER, admin.getID())
+                                    .header(API_TOKEN_HEADER, "valid-token"))
+                   .andExpect(status().isForbidden());
     }
 
     // Get a short-lived token based on an active login token

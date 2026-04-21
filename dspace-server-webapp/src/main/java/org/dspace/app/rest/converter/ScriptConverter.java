@@ -33,6 +33,7 @@ public class ScriptConverter implements DSpaceConverter<ScriptConfiguration, Scr
         scriptRest.setDescription(scriptConfiguration.getDescription());
         scriptRest.setId(scriptConfiguration.getName());
         scriptRest.setName(scriptConfiguration.getName());
+        scriptRest.setAllowImmediateStart(scriptConfiguration.allowImmediateStart());
 
         List<ParameterRest> parameterRestList = new LinkedList<>();
         for (Option option : CollectionUtils.emptyIfNull(scriptConfiguration.getOptions().getOptions())) {
