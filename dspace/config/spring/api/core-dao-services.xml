@@ -7,6 +7,8 @@
     <!-- **************** -->
     <!-- DAO declarations -->
     <!-- **************** -->
+    <bean class="org.dspace.api.token.dao.impl.ApiTokenDAOImpl"/>
+
     <bean class="org.dspace.app.requestitem.dao.impl.RequestItemDAOImpl"/>
     <bean class="org.dspace.app.util.dao.impl.WebAppDAOImpl"/>
 
