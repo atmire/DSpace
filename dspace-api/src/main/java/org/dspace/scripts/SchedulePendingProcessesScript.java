@@ -16,6 +16,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,9 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.dspace.api.token.ApiToken;
+import org.dspace.api.token.ApiTokenServiceImpl;
+import org.dspace.api.token.service.ApiTokenService;
 import org.dspace.authorize.factory.AuthorizeServiceFactory;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.ProcessStatus;
@@ -37,6 +41,7 @@ import org.dspace.scripts.factory.ScriptServiceFactory;
 import org.dspace.scripts.service.ProcessService;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
+import org.dspace.utils.DSpace;
 
 /**
  * Schedules all processes that currently have the PENDING status
@@ -51,6 +56,8 @@ public class SchedulePendingProcessesScript {
             AuthorizeServiceFactory.getInstance().getAuthorizeService();
     private static final ConfigurationService configurationService =
             DSpaceServicesFactory.getInstance().getConfigurationService();
+    private static final ApiTokenService apiTokenService = new DSpace()
+            .getServiceManager().getServiceByName(ApiTokenServiceImpl.class.getName(), ApiTokenServiceImpl.class);
 
     private SchedulePendingProcessesScript () {}
 
@@ -91,9 +98,10 @@ public class SchedulePendingProcessesScript {
                 return;
             }
 
-            String apiToken = configurationService.getProperty("api.token");
+            ApiToken apiToken = apiTokenService
+                    .create(context, eperson, Date.from(Instant.now().plusSeconds(10 * 60)));
             if (apiToken == null) {
-                System.out.println("No API token found");
+                System.out.println("Failed to create api token for this script instance");
                 return;
             }
 
@@ -118,7 +126,7 @@ public class SchedulePendingProcessesScript {
                             .method("PATCH", HttpRequest.BodyPublishers.ofString(patchBody))
                             .header("Content-Type", "application/json")
                             .header(API_USER_HEADER, eperson.getID().toString())
-                            .header(API_TOKEN_HEADER, apiToken)
+                            .header(API_TOKEN_HEADER, apiToken.getToken())
                             .header("X-XSRF-TOKEN", csrfToken)
                             .header("Cookie", "DSPACE-XSRF-COOKIE=" + csrfToken)
                             .build();
@@ -138,6 +146,8 @@ public class SchedulePendingProcessesScript {
                                                ", reason:\n\n" + e.getMessage());
                 }
             }
+            // Delete created API token after script execution
+            apiTokenService.delete(context, apiToken);
         } catch (ParseException | SQLException e) {
             throw new RuntimeException(e);
         }
