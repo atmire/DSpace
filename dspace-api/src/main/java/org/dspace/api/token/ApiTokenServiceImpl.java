@@ -124,14 +124,18 @@ public class ApiTokenServiceImpl implements ApiTokenService {
 
         UUID apiUserId;
         try {
-            apiUserId = UUID.fromString(apiUser);
+            if (!(apiUser == null || apiUser.isBlank())) {
+                apiUserId = UUID.fromString(apiUser);
+            } else {
+                return null;
+            }
         } catch (IllegalArgumentException e) {
             // This exception means UUID.fromString() was not able to parse the value inside the request header
             // Meaning the request header contained an invalid UUID
             return null;
         }
 
-        if (!(apiToken == null || apiToken.isEmpty())) {
+        if (!(apiToken == null || apiToken.isBlank())) {
             // Check if the given EPerson exists & the given is allowed to use an API token
             EPerson eperson = epersonService.find(context, apiUserId);
             if (eperson == null) {
