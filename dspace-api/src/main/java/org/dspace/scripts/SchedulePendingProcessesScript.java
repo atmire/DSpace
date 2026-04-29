@@ -79,7 +79,7 @@ public class SchedulePendingProcessesScript {
                 return;
             }
 
-            Context context = new Context(Context.Mode.READ_ONLY);
+            Context context = new Context(Context.Mode.READ_WRITE);
 
             List<Process> pendingProcesses = processService.findByStatusAndCreationTimeOlderThan(
                     context, List.of(ProcessStatus.PENDING), new Date());
@@ -100,6 +100,7 @@ public class SchedulePendingProcessesScript {
 
             ApiToken apiToken = apiTokenService
                     .create(context, eperson, Date.from(Instant.now().plusSeconds(10 * 60)));
+            context.commit();
             if (apiToken == null) {
                 System.out.println("Failed to create api token for this script instance");
                 return;
