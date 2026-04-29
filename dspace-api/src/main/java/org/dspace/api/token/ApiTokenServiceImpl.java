@@ -138,11 +138,8 @@ public class ApiTokenServiceImpl implements ApiTokenService {
         if (!(apiToken == null || apiToken.isBlank())) {
             // Check if the given EPerson exists & the given is allowed to use an API token
             EPerson eperson = epersonService.find(context, apiUserId);
-            if (eperson == null) {
+            if (eperson == null || !isEPersonAllowed(eperson)) {
                 return null;
-            }
-            if (isEPersonAllowed(eperson)) {
-                return eperson;
             }
 
             // Check if the request IP is allowed to use an API token
