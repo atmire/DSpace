@@ -102,6 +102,7 @@ public class SchedulePendingProcessesScript {
                 return;
             }
 
+            context.setCurrentUser(eperson);
             apiToken = apiTokenService
                     .create(context, eperson, Date.from(Instant.now().plusSeconds(10 * 60)));
             context.commit();
