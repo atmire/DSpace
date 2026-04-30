@@ -73,13 +73,17 @@ public class SchedulePendingProcessesScript {
      * @throws RuntimeException if an error occurs during processing
      */
     public static void schedulePendingProcesses(String[] argv) {
+
+        Context context = null;
+        ApiToken apiToken = null;
+
         try {
             CommandLine line = parseArgs(argv);
             if (line == null) {
                 return;
             }
 
-            Context context = new Context(Context.Mode.READ_WRITE);
+            context = new Context(Context.Mode.READ_WRITE);
 
             List<Process> pendingProcesses = processService.findByStatusAndCreationTimeOlderThan(
                     context, List.of(ProcessStatus.PENDING), new Date());
@@ -98,7 +102,7 @@ public class SchedulePendingProcessesScript {
                 return;
             }
 
-            ApiToken apiToken = apiTokenService
+            apiToken = apiTokenService
                     .create(context, eperson, Date.from(Instant.now().plusSeconds(10 * 60)));
             context.commit();
             if (apiToken == null) {
@@ -147,10 +151,19 @@ public class SchedulePendingProcessesScript {
                                                ", reason:\n\n" + e.getMessage());
                 }
             }
-            // Delete created API token after script execution
-            apiTokenService.delete(context, apiToken);
+
         } catch (ParseException | SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            if (context != null && apiToken != null) {
+                try {
+                    apiTokenService.delete(context, apiToken);
+                    context.complete();
+                } catch (SQLException e) {
+                    System.out.println("Error while removing API token with hash \"" + apiToken.getHash() + "\"\n"
+                                               + "Please remove this token manually");
+                }
+            }
         }
     }
 

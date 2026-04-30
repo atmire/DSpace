@@ -24,6 +24,7 @@ import org.dspace.api.token.service.ApiTokenService;
 import org.dspace.authenticate.IPMatcher;
 import org.dspace.authenticate.IPMatcherException;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.PasswordHash;
@@ -39,6 +40,9 @@ public class ApiTokenServiceImpl implements ApiTokenService {
 
     @Autowired
     private ConfigurationService configurationService;
+
+    @Autowired
+    private AuthorizeService authorizeService;
 
     @Autowired
     private EPersonService epersonService;
@@ -87,6 +91,10 @@ public class ApiTokenServiceImpl implements ApiTokenService {
     @Override
     public ApiToken create(Context context, EPerson ePerson, Date expiry)
             throws SQLException {
+        if (!this.authorizeWrite(context) || !isEPersonAllowed(ePerson)) {
+            return null;
+        }
+
         SecureRandom rng = new SecureRandom();
         byte [] salt = new byte[32];
         rng.nextBytes(salt);
@@ -107,6 +115,10 @@ public class ApiTokenServiceImpl implements ApiTokenService {
 
     @Override
     public void delete(Context context, ApiToken apiToken) throws SQLException {
+        if (!this.authorizeWrite(context)) {
+            return;
+        }
+
         apiTokenDAO.delete(context, apiToken);
     }
 
@@ -154,6 +166,15 @@ public class ApiTokenServiceImpl implements ApiTokenService {
             }
         }
         return null;
+    }
+
+    /**
+     *
+     * @param context
+     * @return
+     */
+    protected boolean authorizeWrite(Context context) throws SQLException {
+        return authorizeService.isAdmin(context);
     }
 
     /**
