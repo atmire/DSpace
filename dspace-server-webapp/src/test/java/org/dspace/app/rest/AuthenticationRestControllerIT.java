@@ -35,7 +35,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.InputStream;
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 import javax.servlet.http.Cookie;
@@ -45,6 +47,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.commons.codec.CharEncoding;
 import org.apache.commons.io.IOUtils;
+import org.dspace.api.token.ApiToken;
 import org.dspace.api.token.ApiTokenServiceImpl;
 import org.dspace.app.rest.authorization.Authorization;
 import org.dspace.app.rest.authorization.AuthorizationFeature;
@@ -1656,115 +1659,163 @@ public class AuthenticationRestControllerIT extends AbstractControllerIntegratio
 
     @Test
     public void testCanAccessAdminOnlyEndpointWithValidApiTokenAndUserHeaders() throws Exception {
-        configurationService.setProperty("api.token", "valid-token");
+        try {
+            context.setCurrentUser(admin);
+            ApiToken validToken = apiTokenService.create(
+                    context, admin, Date.from(Instant.now().plusSeconds(60)));
+            context.commit();
 
-        getClient().perform(get("/api/core/items")
-                                    .header(API_USER_HEADER, admin.getID())
-                                    .header(API_TOKEN_HEADER, "valid-token"))
-                   .andExpect(status().isOk());
+            getClient().perform(get("/api/core/items")
+                                        .header(API_USER_HEADER, admin.getID())
+                                        .header(API_TOKEN_HEADER, validToken.getToken()))
+                       .andExpect(status().isOk());
+        } finally {
+            apiTokenService.deleteAllByEPerson(context, admin);
+            context.commit();
+        }
     }
 
     @Test
     public void testCannotAccessAdminOnlyEndpointWithEmptyApiTokenOrUserHeaders() throws Exception {
-        configurationService.setProperty("api.token", "valid-token");
+        try {
+            context.setCurrentUser(admin);
+            ApiToken validToken = apiTokenService.create(
+                    context, admin, Date.from(Instant.now().plusSeconds(60)));
+            context.commit();
 
-        getClient().perform(get("/api/core/items")
-                                    .header(API_USER_HEADER, "")
-                                    .header(API_TOKEN_HEADER, "valid-token"))
-                   .andExpect(status().isUnauthorized());
+            getClient().perform(get("/api/core/items")
+                                        .header(API_USER_HEADER, "")
+                                        .header(API_TOKEN_HEADER, validToken.getToken()))
+                       .andExpect(status().isUnauthorized());
 
-        getClient().perform(get("/api/core/items")
-                                    .header(API_USER_HEADER, admin.getID())
-                                    .header(API_TOKEN_HEADER, ""))
-                   .andExpect(status().isUnauthorized());
+            getClient().perform(get("/api/core/items")
+                                        .header(API_USER_HEADER, admin.getID())
+                                        .header(API_TOKEN_HEADER, ""))
+                       .andExpect(status().isUnauthorized());
+        } finally {
+            apiTokenService.deleteAllByEPerson(context, admin);
+            context.commit();
+        }
     }
 
     @Test
     public void testCannotAccessAdminOnlyEndpointWithInvalidApiTokenOrUserHeaders() throws Exception {
-        configurationService.setProperty("api.token", "valid-token");
+        try {
+            context.setCurrentUser(admin);
+            ApiToken validToken = apiTokenService.create(
+                    context, admin, Date.from(Instant.now().plusSeconds(60)));
+            context.commit();
 
-        getClient().perform(get("/api/core/items")
-                                    .header(API_USER_HEADER, UUID.randomUUID().toString())
-                                    .header(API_TOKEN_HEADER, "valid-token"))
-                   .andExpect(status().isUnauthorized());
+            getClient().perform(get("/api/core/items")
+                                        .header(API_USER_HEADER, UUID.randomUUID().toString())
+                                        .header(API_TOKEN_HEADER, validToken.getToken()))
+                       .andExpect(status().isUnauthorized());
 
-        getClient().perform(get("/api/core/items")
-                                    .header(API_USER_HEADER, admin.getID())
-                                    .header(API_TOKEN_HEADER, "invalid-token"))
-                   .andExpect(status().isUnauthorized());
+            getClient().perform(get("/api/core/items")
+                                        .header(API_USER_HEADER, admin.getID())
+                                        .header(API_TOKEN_HEADER, "invalid-token"))
+                       .andExpect(status().isUnauthorized());
+        } finally {
+            apiTokenService.deleteAllByEPerson(context, admin);
+            context.commit();
+        }
     }
 
     @Test
     public void testCanOnlyAccessAdminOnlyEndpointWhenEmailIsConfiguredOrPropertyIsEmpty() throws Exception {
-        configurationService.setProperty("api.token", "valid-token");
+        try {
+            context.setCurrentUser(admin);
+            ApiToken validToken = apiTokenService.create(
+                    context, admin, Date.from(Instant.now().plusSeconds(60)));
+            context.commit();
 
-        configurationService.setProperty("api.token.email", "");
-        getClient().perform(get("/api/core/items")
-                                    .header(API_USER_HEADER, admin.getID())
-                                    .header(API_TOKEN_HEADER, "valid-token"))
-                   .andExpect(status().isOk());
+            configurationService.setProperty("api.token.email", "");
+            getClient().perform(get("/api/core/items")
+                                        .header(API_USER_HEADER, admin.getID())
+                                        .header(API_TOKEN_HEADER, validToken.getToken()))
+                       .andExpect(status().isOk());
 
-        configurationService.setProperty("api.token.email", admin.getEmail());
-        getClient().perform(get("/api/core/items")
-                                    .header(API_USER_HEADER, admin.getID())
-                                    .header(API_TOKEN_HEADER, "valid-token"))
-                   .andExpect(status().isOk());
+            configurationService.setProperty("api.token.email", admin.getEmail());
+            getClient().perform(get("/api/core/items")
+                                        .header(API_USER_HEADER, admin.getID())
+                                        .header(API_TOKEN_HEADER, validToken.getToken()))
+                       .andExpect(status().isOk());
 
-        configurationService.setProperty("api.token.email", eperson.getEmail());
-        getClient().perform(get("/api/core/items")
-                                    .header(API_USER_HEADER, admin.getID())
-                                    .header(API_TOKEN_HEADER, "valid-token"))
-                   .andExpect(status().isUnauthorized());
+            configurationService.setProperty("api.token.email", eperson.getEmail());
+            getClient().perform(get("/api/core/items")
+                                        .header(API_USER_HEADER, admin.getID())
+                                        .header(API_TOKEN_HEADER, validToken.getToken()))
+                       .andExpect(status().isUnauthorized());
+        } finally {
+            apiTokenService.deleteAllByEPerson(context, admin);
+            context.commit();
+        }
     }
 
     @Test
     public void testCanOnlyAccessAdminOnlyEndpointWhenIpIsAllowedByConfiguredRanges() throws Exception {
-        configurationService.setProperty("api.token", "valid-token");
+        try {
+            context.setCurrentUser(admin);
+            ApiToken validToken = apiTokenService.create(
+                    context, admin, Date.from(Instant.now().plusSeconds(60)));
+            context.commit();
 
-        configurationService.setProperty("api.token.ipranges", "127.0.0.1");
-        apiTokenService.resetIpMatchersCache();
-        getClient().perform(get("/api/core/items")
-                                    .header(API_USER_HEADER, admin.getID())
-                                    .header(API_TOKEN_HEADER, "valid-token"))
-                   .andExpect(status().isOk());
+            configurationService.setProperty("api.token.ipranges", "127.0.0.1");
+            apiTokenService.resetIpMatchersCache();
+            getClient().perform(get("/api/core/items")
+                                        .header(API_USER_HEADER, admin.getID())
+                                        .header(API_TOKEN_HEADER, validToken.getToken()))
+                       .andExpect(status().isOk());
 
-        configurationService.setProperty("api.token.ipranges", "-127.0.0.1");
-        apiTokenService.resetIpMatchersCache();
-        getClient().perform(get("/api/core/items")
-                                    .header(API_USER_HEADER, admin.getID())
-                                    .header(API_TOKEN_HEADER, "valid-token"))
-                   .andExpect(status().isUnauthorized());
+            configurationService.setProperty("api.token.ipranges", "-127.0.0.1");
+            apiTokenService.resetIpMatchersCache();
+            getClient().perform(get("/api/core/items")
+                                        .header(API_USER_HEADER, admin.getID())
+                                        .header(API_TOKEN_HEADER, validToken.getToken()))
+                       .andExpect(status().isUnauthorized());
 
-        configurationService.setProperty("api.token.ipranges", "");
-        apiTokenService.resetIpMatchersCache();
-        getClient().perform(get("/api/core/items")
-                                    .header(API_USER_HEADER, admin.getID())
-                                    .header(API_TOKEN_HEADER, "valid-token"))
-                   .andExpect(status().isUnauthorized());
+            configurationService.setProperty("api.token.ipranges", "");
+            apiTokenService.resetIpMatchersCache();
+            getClient().perform(get("/api/core/items")
+                                        .header(API_USER_HEADER, admin.getID())
+                                        .header(API_TOKEN_HEADER, validToken.getToken()))
+                       .andExpect(status().isUnauthorized());
 
-        configurationService.setProperty("api.token.ipranges", null);
-        apiTokenService.resetIpMatchersCache();
-        getClient().perform(get("/api/core/items")
-                                    .header(API_USER_HEADER, admin.getID())
-                                    .header(API_TOKEN_HEADER, "valid-token"))
-                   .andExpect(status().isOk());
+            configurationService.setProperty("api.token.ipranges", null);
+            apiTokenService.resetIpMatchersCache();
+            getClient().perform(get("/api/core/items")
+                                        .header(API_USER_HEADER, admin.getID())
+                                        .header(API_TOKEN_HEADER, validToken.getToken()))
+                       .andExpect(status().isOk());
+        } finally {
+            apiTokenService.deleteAllByEPerson(context, admin);
+            context.commit();
+        }
     }
 
     @Test
     public void testCanOnlyAccessAdminOnlyEndpointWhenPermissionsAreNotLimitedOnApiToken() throws Exception {
-        configurationService.setProperty("api.token", "valid-token");
+        try {
+            context.setCurrentUser(admin);
+            ApiToken validToken = apiTokenService.create(
+                    context, admin, Date.from(Instant.now().plusSeconds(60)));
+            context.commit();
 
-        configurationService.setProperty("api.token.limit-permissions", "false");
-        getClient().perform(get("/api/core/items")
-                                    .header(API_USER_HEADER, admin.getID())
-                                    .header(API_TOKEN_HEADER, "valid-token"))
-                   .andExpect(status().isOk());
+            configurationService.setProperty("api.token.limit-permissions", "false");
+            getClient().perform(get("/api/core/items")
+                                        .header(API_USER_HEADER, admin.getID())
+                                        .header(API_TOKEN_HEADER, validToken.getToken()))
+                       .andExpect(status().isOk());
 
-        configurationService.setProperty("api.token.limit-permissions", "true");
-        getClient().perform(get("/api/core/items")
-                                    .header(API_USER_HEADER, admin.getID())
-                                    .header(API_TOKEN_HEADER, "valid-token"))
-                   .andExpect(status().isForbidden());
+            configurationService.setProperty("api.token.limit-permissions", "true");
+            getClient().perform(get("/api/core/items")
+                                        .header(API_USER_HEADER, admin.getID())
+                                        .header(API_TOKEN_HEADER, validToken.getToken()))
+                       .andExpect(status().isForbidden());
+        } finally {
+            apiTokenService.deleteAllByEPerson(context, admin);
+            context.commit();
+        }
     }
 
     // Get a short-lived token based on an active login token
