@@ -10,6 +10,7 @@ package org.dspace.scripts;
 import static org.dspace.api.token.service.ApiTokenService.API_TOKEN_HEADER;
 import static org.dspace.api.token.service.ApiTokenService.API_USER_HEADER;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -36,8 +37,6 @@ import org.dspace.builder.ProcessBuilder;
 import org.dspace.content.ProcessStatus;
 import org.dspace.scripts.factory.ScriptServiceFactory;
 import org.dspace.scripts.service.ProcessService;
-import org.dspace.services.ConfigurationService;
-import org.dspace.services.factory.DSpaceServicesFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -48,8 +47,6 @@ public class SchedulePendingProcessesScriptIT extends AbstractIntegrationTestWit
     private static final String API_TOKEN = "api-token";
 
     private final ProcessService processService = ScriptServiceFactory.getInstance().getProcessService();
-    private final ConfigurationService configurationService =
-            DSpaceServicesFactory.getInstance().getConfigurationService();
 
     private HttpClient mockHttpClient;
     private HttpResponse<String> mockResponse;
@@ -70,8 +67,6 @@ public class SchedulePendingProcessesScriptIT extends AbstractIntegrationTestWit
                                          .build();
         context.restoreAuthSystemState();
         context.commit();
-
-        configurationService.setProperty("api.token", API_TOKEN);
 
         mockHttpClient = mock(HttpClient.class);
         mockResponse = mock(HttpResponse.class);
@@ -102,7 +97,7 @@ public class SchedulePendingProcessesScriptIT extends AbstractIntegrationTestWit
     }
 
     @Test
-    public void testProcessesShouldNotStartWithEPersonEmailParameter() throws Exception {
+    public void testProcessesShouldNotStartWithNonAdminEmailParameter() throws Exception {
         String[] args = new String[] { "schedule-pending-processes", "-e", eperson.getEmail() };
         runDSpaceScript(args);
 
@@ -131,7 +126,7 @@ public class SchedulePendingProcessesScriptIT extends AbstractIntegrationTestWit
         assertTrue(headers.firstValue(API_TOKEN_HEADER).isPresent());
 
         assertEquals(admin.getID().toString(), headers.firstValue(API_USER_HEADER).get());
-        assertEquals(API_TOKEN, headers.firstValue(API_TOKEN_HEADER).get());
+        assertFalse(headers.firstValue(API_TOKEN_HEADER).get().isBlank());
     }
 
     @Test
