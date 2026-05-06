@@ -7,22 +7,27 @@
  */
 package org.dspace.api.token;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.Logger;
+import org.dspace.api.token.dao.ApiTokenDAO;
 import org.dspace.api.token.service.ApiTokenService;
 import org.dspace.authenticate.IPMatcher;
 import org.dspace.authenticate.IPMatcherException;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
+import org.dspace.eperson.PasswordHash;
 import org.dspace.eperson.service.EPersonService;
 import org.dspace.service.ClientInfoService;
 import org.dspace.services.ConfigurationService;
@@ -37,10 +42,16 @@ public class ApiTokenServiceImpl implements ApiTokenService {
     private ConfigurationService configurationService;
 
     @Autowired
+    private AuthorizeService authorizeService;
+
+    @Autowired
     private EPersonService epersonService;
 
     @Autowired
     private ClientInfoService clientInfoService;
+
+    @Autowired
+    private ApiTokenDAO apiTokenDAO;
 
     /**
      * All the IP matchers
@@ -57,33 +68,113 @@ public class ApiTokenServiceImpl implements ApiTokenService {
     }
 
     @Override
-    public String getToken(Context context) {
-        return configurationService.getProperty("api.token");
+    public ApiToken find(Context context, EPerson ePerson, String token) throws SQLException {
+        List<ApiToken> userApiTokens = apiTokenDAO.findAllByEPerson(context, ePerson, -1, 0);
+        for (ApiToken apiToken : userApiTokens) {
+            PasswordHash apiTokenHash = null;
+            try {
+                apiTokenHash = new PasswordHash(
+                        apiToken.getDigestAlgorithm(),
+                        apiToken.getSalt(),
+                        apiToken.getHash());
+            } catch (DecoderException ex) {
+                log.error(ex.getMessage());
+            }
+
+            if (apiTokenHash != null && apiTokenHash.matches(token)) {
+                return apiToken;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public ApiToken create(Context context, EPerson ePerson, Instant expiry)
+            throws SQLException {
+        if (!this.authorizeWrite(context) || !isEPersonAllowed(ePerson)) {
+            return null;
+        }
+
+        SecureRandom rng = new SecureRandom();
+        byte [] salt = new byte[32];
+        rng.nextBytes(salt);
+        String randomApiToken = Base64.encodeBase64String(salt);
+        PasswordHash hash = new PasswordHash(randomApiToken);
+
+        ApiToken apiToken = new ApiToken(randomApiToken);
+
+        apiToken.setHash(hash.getHashString());
+        apiToken.setDigestAlgorithm(hash.getAlgorithm());
+        apiToken.setSalt(hash.getSaltString());
+        apiToken.setEPerson(ePerson);
+        apiToken.setCreated(Instant.now());
+        apiToken.setExpiry(expiry);
+
+        return apiTokenDAO.create(context, apiToken);
+    }
+
+    @Override
+    public void delete(Context context, ApiToken apiToken) throws SQLException {
+        if (!this.authorizeWrite(context)) {
+            return;
+        }
+
+        apiTokenDAO.delete(context, apiToken);
+    }
+
+    @Override
+    public void deleteAllByEPerson(Context context, EPerson ePerson) throws SQLException {
+        for (ApiToken apiToken: apiTokenDAO.findAllByEPerson(context, ePerson, -1, 0)) {
+            this.delete(context, apiToken);
+        }
     }
 
     @Override
     public EPerson authenticate(Context context, HttpServletRequest request) throws SQLException, AuthorizeException {
-        try {
-            String apiUser = request.getHeader(API_USER_HEADER);
-            String apiToken = request.getHeader(API_TOKEN_HEADER);
+        String apiUser = request.getHeader(API_USER_HEADER);
+        String apiToken = request.getHeader(API_TOKEN_HEADER);
 
-            if (!(apiUser == null || apiUser.isEmpty()) && !(apiToken == null || apiToken.isEmpty())) {
-                if (MessageDigest.isEqual(apiToken.getBytes(StandardCharsets.UTF_8),
-                                          getToken(context).getBytes(StandardCharsets.UTF_8))) {
-                    if (!isIpAllowed(request)) {
-                        return null;
-                    }
-                    EPerson eperson = epersonService.find(context, UUID.fromString(apiUser));
-                    if (eperson != null && isEPersonAllowed(eperson)) {
-                        return eperson;
-                    }
-                }
+        UUID apiUserId;
+        try {
+            if (!(apiUser == null || apiUser.isBlank())) {
+                apiUserId = UUID.fromString(apiUser);
+            } else {
+                return null;
             }
         } catch (IllegalArgumentException e) {
-            // This error means UUID.fromString() was not able to parse the value inside apiUser
+            // This exception means UUID.fromString() was not able to parse the value inside the request header
+            // Meaning the request header contained an invalid UUID
             return null;
         }
+
+        if (!(apiToken == null || apiToken.isBlank())) {
+            // Check if the given EPerson exists & the given is allowed to use an API token
+            EPerson eperson = epersonService.find(context, apiUserId);
+            if (eperson == null || !isEPersonAllowed(eperson)) {
+                return null;
+            }
+
+            // Check if the request IP is allowed to use an API token
+            if (!isIpAllowed(request)) {
+                return null;
+            }
+
+            // Check if the given token exists for the given EPerson & the token is not expired
+            ApiToken foundToken = this.find(context, eperson, apiToken);
+            if (foundToken != null && foundToken.getExpiry().isAfter(Instant.now())) {
+                return eperson;
+            }
+        }
         return null;
+    }
+
+    /**
+     *
+     * @param context
+     * @return
+     */
+    protected boolean authorizeWrite(Context context) throws SQLException {
+        return authorizeService.isAdmin(context);
     }
 
     /**

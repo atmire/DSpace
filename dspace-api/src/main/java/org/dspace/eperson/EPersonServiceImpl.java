@@ -26,6 +26,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.apache.logging.log4j.Logger;
+import org.dspace.api.token.service.ApiTokenService;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.factory.AuthorizeServiceFactory;
 import org.dspace.authorize.service.AuthorizeService;
@@ -112,6 +113,8 @@ public class EPersonServiceImpl extends DSpaceObjectServiceImpl<EPerson> impleme
     protected OrcidTokenService orcidTokenService;
     @Autowired
     protected QAEventsDAO qaEventsDao;
+    @Autowired
+    protected ApiTokenService apiTokenService;
 
     protected EPersonServiceImpl() {
         super();
@@ -495,6 +498,9 @@ public class EPersonServiceImpl extends DSpaceObjectServiceImpl<EPerson> impleme
         }
 
         orcidTokenService.deleteByEPerson(context, ePerson);
+
+        // Remove any API tokens
+        apiTokenService.deleteAllByEPerson(context, ePerson);
 
         // Remove any subscriptions
         subscribeService.deleteByEPerson(context, ePerson);

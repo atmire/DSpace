@@ -26,6 +26,9 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.dspace.api.token.ApiToken;
+import org.dspace.api.token.ApiTokenServiceImpl;
+import org.dspace.api.token.service.ApiTokenService;
 import org.dspace.authorize.factory.AuthorizeServiceFactory;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.ProcessStatus;
@@ -37,6 +40,7 @@ import org.dspace.scripts.factory.ScriptServiceFactory;
 import org.dspace.scripts.service.ProcessService;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.factory.DSpaceServicesFactory;
+import org.dspace.utils.DSpace;
 
 /**
  * Schedules all processes that currently have the PENDING status
@@ -51,6 +55,8 @@ public class SchedulePendingProcessesScript {
             AuthorizeServiceFactory.getInstance().getAuthorizeService();
     private static final ConfigurationService configurationService =
             DSpaceServicesFactory.getInstance().getConfigurationService();
+    private static final ApiTokenService apiTokenService = new DSpace()
+            .getServiceManager().getServiceByName(ApiTokenServiceImpl.class.getName(), ApiTokenServiceImpl.class);
 
     private SchedulePendingProcessesScript () {}
 
@@ -66,13 +72,17 @@ public class SchedulePendingProcessesScript {
      * @throws RuntimeException if an error occurs during processing
      */
     public static void schedulePendingProcesses(String[] argv) {
+
+        Context context = null;
+        ApiToken apiToken = null;
+
         try {
             CommandLine line = parseArgs(argv);
             if (line == null) {
                 return;
             }
 
-            Context context = new Context(Context.Mode.READ_ONLY);
+            context = new Context(Context.Mode.READ_WRITE);
 
             List<Process> pendingProcesses = processService.findByStatusAndCreationTimeOlderThan(
                     context, List.of(ProcessStatus.PENDING), Instant.now());
@@ -91,9 +101,12 @@ public class SchedulePendingProcessesScript {
                 return;
             }
 
-            String apiToken = configurationService.getProperty("api.token");
+            context.setCurrentUser(eperson);
+            apiToken = apiTokenService
+                    .create(context, eperson, Instant.now().plusSeconds(10 * 60));
+            context.commit();
             if (apiToken == null) {
-                System.out.println("No API token found");
+                System.out.println("Failed to create api token for this script instance");
                 return;
             }
 
@@ -118,7 +131,7 @@ public class SchedulePendingProcessesScript {
                             .method("PATCH", HttpRequest.BodyPublishers.ofString(patchBody))
                             .header("Content-Type", "application/json")
                             .header(API_USER_HEADER, eperson.getID().toString())
-                            .header(API_TOKEN_HEADER, apiToken)
+                            .header(API_TOKEN_HEADER, apiToken.getToken())
                             .header("X-XSRF-TOKEN", csrfToken)
                             .header("Cookie", "DSPACE-XSRF-COOKIE=" + csrfToken)
                             .build();
@@ -138,8 +151,19 @@ public class SchedulePendingProcessesScript {
                                                ", reason:\n\n" + e.getMessage());
                 }
             }
+
         } catch (ParseException | SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            if (context != null && apiToken != null) {
+                try {
+                    apiTokenService.delete(context, apiToken);
+                    context.complete();
+                } catch (SQLException e) {
+                    System.out.println("Error while removing API token with hash \"" + apiToken.getHash() + "\"\n"
+                                               + "Please remove this token manually");
+                }
+            }
         }
     }
 
