@@ -345,4 +345,11 @@
             <class>org.dspace.iiif.canvasdimension.CanvasDimensionCLI</class>
         </step>
     </command>
+    <command>
+        <name>api-token</name>
+        <description>Create or delete API tokens.</description>
+        <step>
+            <class>org.dspace.api.token.script.ApiTokenCLI</class>
+        </step>
+    </command>
 </commands>
