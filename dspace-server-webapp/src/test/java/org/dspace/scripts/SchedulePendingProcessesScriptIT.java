@@ -56,6 +56,14 @@ public class SchedulePendingProcessesScriptIT extends AbstractIntegrationTestWit
     public void setUp() throws Exception {
         super.setUp();
         context.turnOffAuthorisationSystem();
+        // Remove any lingering processes from other tests and create 3 new processes with PENDING status for testing
+        processService.findAll(context).forEach(process -> {
+            try {
+                processService.delete(context, process);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
         Process process1 = ProcessBuilder.createProcess(context, admin, "false-start-mock-script", new ArrayList<>())
                                          .withProcessStatus(ProcessStatus.PENDING)
                                          .build();
