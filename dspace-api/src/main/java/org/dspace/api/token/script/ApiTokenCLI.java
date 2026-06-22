@@ -33,7 +33,7 @@ import org.dspace.utils.DSpace;
  */
 public class ApiTokenCLI {
 
-    private static final int DEFAULT_EXPIRY_HOURS = 1;
+    protected static final int DEFAULT_EXPIRY_HOURS = 1;
 
     private static final EPersonService epersonService = EPersonServiceFactory.getInstance().getEPersonService();
 
