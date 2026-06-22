@@ -20,8 +20,6 @@ import java.io.Writer;
 import java.sql.SQLException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -62,11 +60,6 @@ public class ClassicDSpaceLogConverter {
      * {@link org.dspace.usage.LoggerUsageEventListener}.
      */
     private boolean newEvents = false;
-
-    /**
-     * A regular expression for extracting the IP address from a log line
-     */
-    private final Pattern ipaddrPattern = Pattern.compile("ip_addr=(\\d*\\.\\d*\\.\\d*\\.\\d*):");
 
     /**
      * Date format (in) from the log line
@@ -173,13 +166,8 @@ public class ClassicDSpaceLogConverter {
                     continue;
                 }
 
-                // Get the IP address of the user
-                Matcher matcher = ipaddrPattern.matcher(line);
-                if (matcher.find()) {
-                    ip = matcher.group(1);
-                } else {
-                    ip = "unknown";
-                }
+                // Get the IP address of the user (IPv4 or IPv6, no DNS lookup)
+                ip = IpAddressUtils.extractIpFromLogLine(line);
 
                 // Get and format the date
                 // We can use lline.getDate() as this strips the time element

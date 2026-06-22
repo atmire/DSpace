@@ -212,13 +212,12 @@ public class StatisticsImporter {
             Instant date;
             String user;
             String ip;
-
-            String continent = "";
-            String country = "";
-            String countryCode = "";
-            double longitude = 0f;
-            double latitude = 0f;
-            String city = "";
+            String continent;
+            String country;
+            String countryCode;
+            double longitude;
+            double latitude;
+            String city;
             String dns;
 
             DNSCache dnsCache = new DNSCache(2500, 0.75f, 2500);
@@ -242,9 +241,16 @@ public class StatisticsImporter {
                 user = parts[4];
                 ip = parts[5];
 
-                // Resolve the dns (if applicable) to get rid of search engine bots early on in the processing chain
+                continent = "";
+                country = "";
+                countryCode = "";
+                longitude = 0;
+                latitude = 0;
+                city = "";
                 dns = "";
-                if (!skipReverseDNS) {
+
+                // Resolve the dns (if applicable) to get rid of search engine bots early on in the processing chain
+                if (!skipReverseDNS && IpAddressUtils.isIpLiteral(ip)) {
                     // Is the IP address in the cache?
                     fromCache = dnsCache.get(ip);
                     if (fromCache != null) {
@@ -273,29 +279,31 @@ public class StatisticsImporter {
                 }
 
                 // Get the geo information for the user
-                try {
-                    InetAddress ipAddress = InetAddress.getByName(ip);
-                    CityResponse cityResponse = geoipLookup.city(ipAddress);
-                    city = cityResponse.getCity().getName();
-                    country = cityResponse.getCountry().getName();
-                    countryCode = cityResponse.getCountry().getIsoCode();
-                    longitude = cityResponse.getLocation().getLongitude();
-                    latitude = cityResponse.getLocation().getLatitude();
-                    if (verbose) {
-                        data += (", country = " + country);
-                        data += (", city = " + city);
-                        System.out.println(data);
-                    }
+                if (geoipLookup != null && IpAddressUtils.isIpLiteral(ip)) {
                     try {
-                        continent = LocationUtils.getContinentCode(countryCode);
-                    } catch (Exception e) {
+                        InetAddress ipAddress = IpAddressUtils.parseIpLiteral(ip);
+                        CityResponse cityResponse = geoipLookup.city(ipAddress);
+                        city = cityResponse.getCity().getName();
+                        country = cityResponse.getCountry().getName();
+                        countryCode = cityResponse.getCountry().getIsoCode();
+                        longitude = cityResponse.getLocation().getLongitude();
+                        latitude = cityResponse.getLocation().getLatitude();
                         if (verbose) {
-                            System.out.println("Unknown country code: " + countryCode);
+                            data += (", country = " + country);
+                            data += (", city = " + city);
+                            System.out.println(data);
                         }
-                        continue;
+                        try {
+                            continent = LocationUtils.getContinentCode(countryCode);
+                        } catch (Exception e) {
+                            if (verbose) {
+                                System.out.println("Unknown country code: " + countryCode);
+                            }
+                            continue;
+                        }
+                    } catch (GeoIp2Exception e) {
+                        // No problem - just can't look them up
                     }
-                } catch (GeoIp2Exception | IOException e) {
-                    // No problem - just can't look them up
                 }
 
                 // Now find our dso
