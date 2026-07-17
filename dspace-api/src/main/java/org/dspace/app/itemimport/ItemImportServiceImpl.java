@@ -77,6 +77,7 @@ import org.dspace.content.BitstreamFormat;
 import org.dspace.content.Bundle;
 import org.dspace.content.Collection;
 import org.dspace.content.DSpaceObject;
+import org.dspace.content.DSpaceObjectServiceImpl;
 import org.dspace.content.Item;
 import org.dspace.content.MetadataField;
 import org.dspace.content.MetadataSchema;
@@ -744,8 +745,14 @@ public class ItemImportServiceImpl implements ItemImportService, InitializingBea
         }
 
         // now fill out dublin core for item
-        loadMetadata(c, myitem, path + File.separatorChar + itemname
-            + File.separatorChar);
+        Collection authorityCollection = mycollections.iterator().next();
+        try {
+            DSpaceObjectServiceImpl.setIngestCollection(authorityCollection);
+            loadMetadata(c, myitem, path + File.separatorChar + itemname
+                + File.separatorChar);
+        } finally {
+            DSpaceObjectServiceImpl.clearIngestCollection();
+        }
 
         // and the bitstreams from the contents file
         // process contents file, add bistreams and bundles, return any
