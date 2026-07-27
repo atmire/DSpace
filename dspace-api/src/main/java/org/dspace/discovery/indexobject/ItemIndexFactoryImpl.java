@@ -490,30 +490,15 @@ public class ItemIndexFactoryImpl extends DSpaceObjectIndexFactoryImpl<Indexable
                     }
                 }
 
-                if ((sortFields.get(field) != null || recentSubmissionsConfigurationMap
-                        .get(field) != null) && !sortFieldsAdded.contains(field)) {
-                    //Only add sort value once
-                    String type;
-                    if (sortFields.get(field) != null) {
-                        type = sortFields.get(field).getType();
-                    } else {
-                        type = recentSubmissionsConfigurationMap.get(field).getType();
-                    }
-
-                    if (type.equals(DiscoveryConfigurationParameters.TYPE_DATE)) {
-                        ZonedDateTime date = MultiFormatDateParser.parse(value);
-                        if (date != null) {
-                            String stringDate = SolrUtils.getDateFormatter().format(date);
-                            doc.addField(field + "_dt", stringDate);
-                        } else {
-                            log.warn("Error while indexing sort date field, item: " + item
-                                    .getHandle() + " metadata field: " + field + " date value: " + date);
-                        }
-                    } else {
-                        doc.addField(field + "_sort", value);
-                    }
-                    sortFieldsAdded.add(field);
-                }
+                addSortFields(
+                    sortFields,
+                    field,
+                    recentSubmissionsConfigurationMap,
+                    sortFieldsAdded,
+                    doc,
+                    value,
+                    item
+                );
 
                 if (hitHighlightingFields.contains(field) || hitHighlightingFields
                         .contains("*") || hitHighlightingFields.contains(unqualifiedField + "." + Item.ANY)) {
@@ -815,6 +800,44 @@ public class ItemIndexFactoryImpl extends DSpaceObjectIndexFactoryImpl<Indexable
                 doc.addField(searchFilter.getIndexFieldName() + SOLR_FIELD_SUFFIX_FACET_PREFIXES,
                              currentPart.toLowerCase() + separator + value);
             }
+        }
+    }
+
+    /**
+     * Adds the sort value for the given field to the Solr document
+     */
+    private void addSortFields(
+        Map<String, DiscoverySortFieldConfiguration> sortFields,
+        String field,
+        Map<String, DiscoveryRecentSubmissionsConfiguration> recentSubmissionsConfigurationMap,
+        List<String> sortFieldsAdded,
+        SolrInputDocument doc,
+        String value,
+        Item item
+    ) {
+        if ((sortFields.get(field) != null || recentSubmissionsConfigurationMap
+            .get(field) != null) && !sortFieldsAdded.contains(field)) {
+            //Only add sort value once
+            String type;
+            if (sortFields.get(field) != null) {
+                type = sortFields.get(field).getType();
+            } else {
+                type = recentSubmissionsConfigurationMap.get(field).getType();
+            }
+
+            if (type.equals(DiscoveryConfigurationParameters.TYPE_DATE)) {
+                ZonedDateTime date = MultiFormatDateParser.parse(value);
+                if (date != null) {
+                    String stringDate = SolrUtils.getDateFormatter().format(date);
+                    doc.addField(field + "_dt", stringDate);
+                } else {
+                    log.warn("Error while indexing sort date field, item: " + item
+                        .getHandle() + " metadata field: " + field + " date value: " + date);
+                }
+            } else {
+                doc.addField(field + "_sort", value);
+            }
+            sortFieldsAdded.add(field);
         }
     }
 }
