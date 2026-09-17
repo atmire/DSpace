@@ -185,13 +185,19 @@ public class AuthorityBackedRelationshipServiceImpl implements AuthorityBackedRe
     @Override
     public void removeRelationshipAndMetadata(Context context, Relationship relationship)
         throws SQLException, AuthorizeException {
+        removeRelationshipAndMetadata(context, relationship, null);
+    }
+
+    private void removeRelationshipAndMetadata(Context context, Relationship relationship,
+                                               DSpaceObject metadataOwnerWithActiveIterator)
+        throws SQLException, AuthorizeException {
         requireConfiguredRelationship(relationship);
         List<MetadataValue> values = metadataValueService.findByRelationship(context, relationship);
         authorizeProjections(context, values);
         // Relationship deletion checks write access even if there are no projections.
         assertWriteOnRelationship(context, relationship);
         for (MetadataValue value : values) {
-            deleteProjection(context, value);
+            deleteProjection(context, value, metadataOwnerWithActiveIterator);
         }
         relationshipService.delete(context, relationship);
     }
@@ -199,20 +205,33 @@ public class AuthorityBackedRelationshipServiceImpl implements AuthorityBackedRe
     @Override
     public void removeMetadataProjection(Context context, MetadataValue value)
         throws SQLException, AuthorizeException {
+        removeMetadataProjection(context, value, null);
+    }
+
+    private void removeMetadataProjection(Context context, MetadataValue value,
+                                          DSpaceObject metadataOwnerWithActiveIterator)
+        throws SQLException, AuthorizeException {
         authorizeService.authorizeAction(context, value.getDSpaceObject(), Constants.WRITE);
         if (value.isRelationshipBacked() && isFinalAnchor(context, value)) {
             throw new IllegalArgumentException("Use removeMetadataValue or detach for the final relationship anchor");
         }
-        deleteProjection(context, value);
+        deleteProjection(context, value, metadataOwnerWithActiveIterator);
     }
 
     @Override
     public void removeMetadataValue(Context context, MetadataValue value)
         throws SQLException, AuthorizeException {
+        removeMetadataValue(context, value, null);
+    }
+
+    @Override
+    public void removeMetadataValue(Context context, MetadataValue value,
+                                    DSpaceObject metadataOwnerWithActiveIterator)
+        throws SQLException, AuthorizeException {
         if (value.isRelationshipBacked() && isFinalAnchor(context, value)) {
-            removeRelationshipAndMetadata(context, value.getRelationship());
+            removeRelationshipAndMetadata(context, value.getRelationship(), metadataOwnerWithActiveIterator);
         } else {
-            removeMetadataProjection(context, value);
+            removeMetadataProjection(context, value, metadataOwnerWithActiveIterator);
         }
     }
 
@@ -239,13 +258,17 @@ public class AuthorityBackedRelationshipServiceImpl implements AuthorityBackedRe
                 && RelationshipConfigurationServiceImpl.fieldName(other).equals(field));
     }
 
-    private void deleteProjection(Context context, MetadataValue value) throws SQLException, AuthorizeException {
+    private void deleteProjection(Context context, MetadataValue value,
+                                  DSpaceObject metadataOwnerWithActiveIterator)
+        throws SQLException, AuthorizeException {
         DSpaceObject owner = value.getDSpaceObject();
         owner.addMetadataEventDetails(new MetadataEvent(value, MetadataEvent.REMOVE));
         value.setRelationship(null);
-        owner.getMetadata().remove(value);
-        metadataValueService.delete(context, value);
-        itemService.update(context, (Item) owner);
+        if (metadataOwnerWithActiveIterator == null
+            || !owner.getID().equals(metadataOwnerWithActiveIterator.getID())) {
+            owner.getMetadata().remove(value);
+            metadataValueService.delete(context, value);
+        }
     }
 
     private void authorizeProjections(Context context, List<MetadataValue> values)

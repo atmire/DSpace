@@ -524,28 +524,24 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
     @Override
     public void clearMetadata(Context context, T dso, String schema, String element, String qualifier, String lang)
         throws SQLException {
+        List<MetadataValue> relationshipValuesToRemove = new ArrayList<>();
         Iterator<MetadataValue> metadata = dso.getMetadata().iterator();
         while (metadata.hasNext()) {
             MetadataValue metadataValue = metadata.next();
+            if (relationshipValuesToRemove.remove(metadataValue)) {
+                metadata.remove();
+                continue;
+            }
             // If this value matches, delete it
             if (match(schema, element, qualifier, lang, metadataValue)) {
-                dso.addMetadataEventDetails(new MetadataEvent(metadataValue, MetadataEvent.REMOVE));
-                metadata.remove();
-                metadataValueService.delete(context, metadataValue);
-            }
-        }
-        dso.setMetadataModified();
-    }
-
-    @Override
-    public void removeMetadataValues(Context context, T dso, List<MetadataValue> values) throws SQLException {
-        Iterator<MetadataValue> metadata = dso.getMetadata().iterator();
-        while (metadata.hasNext()) {
-            MetadataValue metadataValue = metadata.next();
-            if (values.contains(metadataValue)) {
                 if (metadataValue.isRelationshipBacked()) {
                     try {
-                        authorityBackedRelationshipService.removeMetadataValue(context, metadataValue);
+                        List<MetadataValue> relationshipValues = metadataValueService.findByRelationship(
+                            context, metadataValue.getRelationship());
+                        authorityBackedRelationshipService.removeMetadataValue(context, metadataValue, dso);
+                        metadata.remove();
+                        collectRemovedRelationshipValues(dso, metadataValue, relationshipValues,
+                                                         relationshipValuesToRemove);
                     } catch (AuthorizeException e) {
                         throw new SQLException("Not authorized to remove relationship-bound metadata", e);
                     }
@@ -556,7 +552,51 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
                 }
             }
         }
+        dso.getMetadata().removeAll(relationshipValuesToRemove);
         dso.setMetadataModified();
+    }
+
+    @Override
+    public void removeMetadataValues(Context context, T dso, List<MetadataValue> values) throws SQLException {
+        List<MetadataValue> relationshipValuesToRemove = new ArrayList<>();
+        Iterator<MetadataValue> metadata = dso.getMetadata().iterator();
+        while (metadata.hasNext()) {
+            MetadataValue metadataValue = metadata.next();
+            if (relationshipValuesToRemove.remove(metadataValue)) {
+                metadata.remove();
+                continue;
+            }
+            if (values.contains(metadataValue)) {
+                if (metadataValue.isRelationshipBacked()) {
+                    try {
+                        List<MetadataValue> relationshipValues = metadataValueService.findByRelationship(
+                            context, metadataValue.getRelationship());
+                        authorityBackedRelationshipService.removeMetadataValue(context, metadataValue, dso);
+                        metadata.remove();
+                        collectRemovedRelationshipValues(dso, metadataValue, relationshipValues,
+                                                         relationshipValuesToRemove);
+                    } catch (AuthorizeException e) {
+                        throw new SQLException("Not authorized to remove relationship-bound metadata", e);
+                    }
+                } else {
+                    dso.addMetadataEventDetails(new MetadataEvent(metadataValue, MetadataEvent.REMOVE));
+                    metadata.remove();
+                    metadataValueService.delete(context, metadataValue);
+                }
+            }
+        }
+        dso.getMetadata().removeAll(relationshipValuesToRemove);
+        dso.setMetadataModified();
+    }
+
+    private void collectRemovedRelationshipValues(T dso, MetadataValue removedValue,
+                                                   List<MetadataValue> relationshipValues,
+                                                   List<MetadataValue> relationshipValuesToRemove) {
+        relationshipValues.stream()
+            .filter(value -> value != removedValue)
+            .filter(value -> value.getRelationship() == null)
+            .filter(value -> value.getDSpaceObject().getID().equals(dso.getID()))
+            .forEach(relationshipValuesToRemove::add);
     }
 
     /**

@@ -790,15 +790,27 @@ public class RelationshipServiceImpl implements RelationshipService {
      */
     private void deleteTypeLessRelationship(Context context, Relationship relationship)
         throws SQLException, AuthorizeException {
+        deleteTypeLessRelationship(context, relationship, true);
+    }
+
+    /**
+     * Detach stored projections before removing a configured link.
+     *
+     * @param clearInternalAuthority whether UUID authority references to either endpoint should be cleared
+     */
+    private void deleteTypeLessRelationship(Context context, Relationship relationship, boolean clearInternalAuthority)
+        throws SQLException, AuthorizeException {
         assertWriteOnEitherItem(context, relationship.getLeftItem(), relationship.getRightItem());
         for (MetadataValue value : metadataValueDAO.findByRelationship(context, relationship)) {
             value.setRelationship(null);
-            String authority = value.getAuthority();
-            if (authority != null && (authority.equals(relationship.getLeftItem().getID().toString())
-                || authority.equals(relationship.getRightItem().getID().toString()))) {
-                value.setAuthority(null);
+            if (clearInternalAuthority) {
+                String authority = value.getAuthority();
+                if (authority != null && (authority.equals(relationship.getLeftItem().getID().toString())
+                    || authority.equals(relationship.getRightItem().getID().toString()))) {
+                    value.setAuthority(null);
+                }
+                value.setConfidence(Choices.CF_UNSET);
             }
-            value.setConfidence(Choices.CF_REJECTED);
             value.getDSpaceObject().setMetadataModified();
         }
         relationshipDAO.delete(context, relationship);
@@ -837,9 +849,10 @@ public class RelationshipServiceImpl implements RelationshipService {
                                                           "copyMetadataValuesToLeftItem=" + copyToLeftItem + "&" +
                                                           "copyMetadataValuesToRightItem=" + copyToRightItem));
         if (relationship.isConfigurationBacked() || relationship.getRelationshipType() == null) {
-            // Configured relationships do not use legacy copy-to-item / place logic.
-            // This is hit e.g. during full-item delete via ItemServiceImpl.rawDelete.
-            deleteTypeLessRelationship(context, relationship);
+            // Item deletion already applies the configured authority-cleanup policy before relationships are removed.
+            // Preserve authority/confidence here so force deletion cannot override that policy
+            //      (including disabled mode).
+            deleteTypeLessRelationship(context, relationship, false);
             return;
         }
         if (copyToItemPermissionCheck(context, relationship, copyToLeftItem, copyToRightItem)) {
@@ -1283,7 +1296,7 @@ public class RelationshipServiceImpl implements RelationshipService {
             //           configuration.
             for (Relationship relationship : findByItem(context, item)) {
                 if (relationship.isConfigurationBacked() || relationship.getRelationshipType() == null) {
-                    deleteTypeLessRelationship(context, relationship);
+                    forceDelete(context, relationship, false, false);
                     continue;
                 }
                 boolean copyToLeft = relationship.getRelationshipType().isCopyToLeft();
