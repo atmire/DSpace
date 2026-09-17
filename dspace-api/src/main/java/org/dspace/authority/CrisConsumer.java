@@ -227,7 +227,8 @@ public class CrisConsumer implements Consumer {
             String authority = metadata.getAuthority();
 
             if (isMetadataSkippable(metadata)) {
-                mintRelationshipForUserSelectedAuthority(context, item, metadata, fieldKey);
+                //TODO: needs to be replaced by a Service
+                //mintRelationshipForUserSelectedAuthority(context, item, metadata, fieldKey);
                 continue;
             }
 
@@ -265,7 +266,8 @@ public class CrisConsumer implements Consumer {
 
             choiceAuthorityService.setReferenceWithAuthority(metadata, relatedItem);
 
-            mintRelationshipIfTargetArchived(context, item, metadata, relatedItem);
+            //TODO: needs to be replaced by a Service
+            //mintRelationshipIfTargetArchived(context, item, metadata, relatedItem);
         }
 
     }

@@ -245,7 +245,6 @@ public class AuthorityBackedRelationshipServiceImpl implements AuthorityBackedRe
         value.setRelationship(null);
         owner.getMetadata().remove(value);
         metadataValueService.delete(context, value);
-        itemService.update(context, (Item) owner);
     }
 
     private void authorizeProjections(Context context, List<MetadataValue> values)
