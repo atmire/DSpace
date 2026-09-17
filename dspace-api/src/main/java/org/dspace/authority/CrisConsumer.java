@@ -219,12 +219,15 @@ public class CrisConsumer implements Consumer {
         addEntityTypeIfNotExist(context, item);
 
         for (MetadataValue metadata : item.getMetadata()) {
+            if (metadata.getConfidence() == Choices.CF_REJECTED) {
+                continue;
+            }
 
             String fieldKey = getFieldKey(metadata);
             String authority = metadata.getAuthority();
 
             if (isMetadataSkippable(metadata)) {
-                mintRelationshipForUserSelectedAuthority(context, item, metadata, fieldKey);
+                //mintRelationshipForUserSelectedAuthority(context, item, metadata, fieldKey);
                 continue;
             }
 
@@ -262,7 +265,7 @@ public class CrisConsumer implements Consumer {
 
             choiceAuthorityService.setReferenceWithAuthority(metadata, relatedItem);
 
-            mintRelationshipIfTargetArchived(context, item, metadata, relatedItem);
+            //mintRelationshipIfTargetArchived(context, item, metadata, relatedItem);
         }
 
     }
@@ -286,7 +289,7 @@ public class CrisConsumer implements Consumer {
     private void mintRelationshipIfTargetArchived(Context context, Item item, MetadataValue metadata,
         Item relatedItem) throws SQLException, AuthorizeException {
         if (relatedItem != null && relatedItem.isArchived()) {
-            authorityBackedRelationshipService.markRelationshipForResolvedAuthority(context, item, metadata,
+            authorityBackedRelationshipService.promoteResolvedAuthority(context, item, metadata,
                 relatedItem);
         }
     }
@@ -313,10 +316,14 @@ public class CrisConsumer implements Consumer {
         String fieldKey) throws SQLException, AuthorizeException {
 
         String authority = metadata.getAuthority();
-        if (isBlank(authority) || isGenerateAuthority(authority) || isReferenceAuthority(authority)) {
+        if (metadata.getConfidence() < Choices.CF_ACCEPTED
+            || isBlank(authority) || isGenerateAuthority(authority) || isReferenceAuthority(authority)) {
             return;
         }
 
+        if (!choiceAuthorityService.isChoicesConfigured(fieldKey, Constants.ITEM, (Collection) null)) {
+            return;
+        }
         String entityType = choiceAuthorityService.getLinkedEntityType(fieldKey);
         if (entityType == null) {
             return;

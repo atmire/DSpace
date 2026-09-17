@@ -12,47 +12,58 @@ import java.sql.SQLException;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Item;
 import org.dspace.content.MetadataValue;
+import org.dspace.content.Relationship;
 import org.dspace.core.Context;
 
 /**
- * Service that marks a metadata value as authority-backed once its authority has
- * been resolved to a related item. This is the single place where such values are
- * stamped, so that the system path (reference-token resolution) and the user path
- * (directly-picked UUID) cannot drift apart.
- * <p>
- * The stamped relationship is not a separate entity: the two sides are held on the
- * metadata value itself (see {@link MetadataValue#setLeftItem} and
- * {@link MetadataValue#setRightItem}) and are written by Hibernate into the
- * {@code relationship} secondary table together with the value's own {@code INSERT}.
- * The row therefore lives and dies with the metadata value it belongs to.
+ * Compound operations for stored metadata and real internal relationships.
+ * Every operation participates in the caller's Context transaction; none commits.
+ * Relationships can have multiple projections. Matching endpoints alone never
+ * causes two independent relationship occurrences to be merged.
  *
- * @author Adamo Fapohunda (adamo.fapohunda at 4science.com)
- * @author Vincenzo Mecca (vins01-4science - vincenzo.mecca at 4science.com)
+ * @author Ben Bosman (ben . bosman at atmire.com)
  */
 public interface AuthorityBackedRelationshipService {
+    /**
+     * Promote a resolved reference, returning null while either endpoint is unarchived or the field is unmapped.
+     */
+    Relationship promoteResolvedAuthority(Context context, Item owner, MetadataValue value, Item target)
+        throws SQLException, AuthorizeException;
 
     /**
-     * Stamp the given owning metadata value as authority-backed towards the resolved
-     * related item, by setting its relationship sides (owner item &rarr; left,
-     * related item &rarr; right).
-     * <p>
-     * The method is idempotent: if the value already carries both sides (see
-     * {@link MetadataValue#isRelationshipBacked()}), it is left untouched and
-     * {@code false} is returned. This method never modifies the owning metadata
-     * value's {@code value} or {@code authority}; stamping the authority is the
-     * caller's concern.
-     * </p>
-     *
-     * @param context            the DSpace context
-     * @param ownerItem          the item that owns the metadata value; becomes the left side
-     * @param ownerMetadataValue the owning metadata value, stamped in place
-     * @param relatedItem        the resolved target item; becomes the right side
-     * @return {@code true} if the value was stamped, {@code false} if it already was
-     *         (or if there is nothing to stamp)
-     * @throws SQLException       if a database error occurs
-     * @throws AuthorizeException if the current user may not write on either item
+     * Associate an additional stored projection with an existing relationship.
      */
-    boolean markRelationshipForResolvedAuthority(Context context, Item ownerItem,
-        MetadataValue ownerMetadataValue, Item relatedItem) throws SQLException, AuthorizeException;
+    void attachMetadataToRelationship(Context context, MetadataValue value, Relationship relationship)
+        throws SQLException, AuthorizeException;
 
+    /**
+     * Replace the opposite endpoint, keeping the owner and the relationship's identity.
+     */
+    void replaceRelatedObject(Context context, Item owner, Relationship relationship, Item newTarget)
+        throws SQLException, AuthorizeException;
+
+    /**
+     * Remove the relationship but retain its metadata; prevent automatic re-resolution.
+     */
+    void detachRelationshipKeepMetadata(Context context, Relationship relationship)
+        throws SQLException, AuthorizeException;
+
+    /**
+     * Remove the relationship and all its stored projections as one logical operation.
+     */
+    void removeRelationshipAndMetadata(Context context, Relationship relationship)
+        throws SQLException, AuthorizeException;
+
+    /**
+     * Remove only a dependent projection; removing the final anchor requires a logical deletion instead.
+     */
+    void removeMetadataProjection(Context context, MetadataValue value)
+        throws SQLException, AuthorizeException;
+
+    /**
+     * Metadata-editing entry point. Removing the final configured anchor on either
+     * side removes the logical relationship; other projections are removed alone.
+     */
+    void removeMetadataValue(Context context, MetadataValue value)
+        throws SQLException, AuthorizeException;
 }

@@ -31,6 +31,7 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.audit.MetadataEvent;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.authority.Choices;
+import org.dspace.content.authority.service.AuthorityBackedRelationshipService;
 import org.dspace.content.authority.service.ChoiceAuthorityService;
 import org.dspace.content.authority.service.MetadataAuthorityService;
 import org.dspace.content.factory.ContentServiceFactory;
@@ -46,6 +47,7 @@ import org.dspace.handle.service.HandleService;
 import org.dspace.identifier.service.IdentifierService;
 import org.dspace.utils.DSpace;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 
 /**
  * Service implementation class for the DSpaceObject.
@@ -57,6 +59,10 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author kevinvandevelde at atmire.com
  */
 public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements DSpaceObjectService<T> {
+
+    @Autowired
+    @Lazy
+    private AuthorityBackedRelationshipService authorityBackedRelationshipService;
 
     /**
      * log4j category
@@ -537,9 +543,17 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
         while (metadata.hasNext()) {
             MetadataValue metadataValue = metadata.next();
             if (values.contains(metadataValue)) {
-                dso.addMetadataEventDetails(new MetadataEvent(metadataValue, MetadataEvent.REMOVE));
-                metadata.remove();
-                metadataValueService.delete(context, metadataValue);
+                if (metadataValue.isRelationshipBacked()) {
+                    try {
+                        authorityBackedRelationshipService.removeMetadataValue(context, metadataValue);
+                    } catch (AuthorizeException e) {
+                        throw new SQLException("Not authorized to remove relationship-bound metadata", e);
+                    }
+                } else {
+                    dso.addMetadataEventDetails(new MetadataEvent(metadataValue, MetadataEvent.REMOVE));
+                    metadata.remove();
+                    metadataValueService.delete(context, metadataValue);
+                }
             }
         }
         dso.setMetadataModified();

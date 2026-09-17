@@ -7,8 +7,6 @@
  */
 package org.dspace.content;
 
-import java.util.UUID;
-
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,8 +16,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -44,10 +40,6 @@ import org.hibernate.Length;
  */
 @Entity
 @Table(name = "metadatavalue")
-@SecondaryTable(
-    name = "relationship",
-    pkJoinColumns = @PrimaryKeyJoinColumn(name = "metadata_value_id", referencedColumnName = "metadata_value_id")
-)
 public class MetadataValue implements ReloadableEntity<Integer> {
     /**
      * The reference to the metadata field
@@ -107,50 +99,14 @@ public class MetadataValue implements ReloadableEntity<Integer> {
     protected DSpaceObject dSpaceObject;
 
     /**
-     * The left item (usually the owner of the metadata value) of the authority-backed
-     * {@code relationship} row joined through the {@link SecondaryTable}.
-     * <p>
-     * Both {@link #leftItem} and {@link #rightItem} are written together when the value
-     * is minted. They are only persisted into the secondary table on the value's own
-     * {@code INSERT}: the authority-backed relationship lives and dies with the
-     * metadata value it belongs to.
-     * </p>
+     * Optional durable internal relationship described by this value. Multiple values
+     * can reference the same relationship. There is deliberately no cascade: deleting
+     * one projection must not implicitly delete the shared relationship or its items.
+     * TODO: we may want to make this EAGER, while making the relationship left and right item LAZY
      */
-    @Column(table = "relationship", name = "left_id", nullable = false)
-    private UUID leftItem;
-
-    /**
-     * The right item (usually the resolved target) of the authority-backed
-     * {@code relationship} row joined through the {@link SecondaryTable}.
-     */
-    @Column(table = "relationship", name = "right_id", nullable = false)
-    private UUID rightItem;
-
-    /*
-     * NOTE: the generated {@code relationship.id} of the joined row is intentionally NOT mapped.
-     *
-     * It was previously mapped read-only, so Hibernate would read the DB-generated value back
-     * after each insert:
-     *
-     *     @Column(table = "relationship", name = "id", insertable = false, updatable = false)
-     *     @Generated
-     *     private Integer relationshipRowId;
-     *
-     * That read-only mapping is not needed here:
-     * - {@code relationship.id} is populated by the database default
-     *   ({@code nextval('relationship_id_seq')}); the secondary row insert omits the column and the
-     *   value is never written by, nor read into, the domain model.
-     * - Keeping the mapping forced Hibernate to run an extra read-back SELECT after *every*
-     *   metadatavalue insert, whether or not a relationship row exists. That is one extra
-     *   round-trip per metadata value with no functional benefit.
-     * - The id is also not required for lifecycle management: the joined row is inserted, updated
-     *   and deleted together with the metadata value (Hibernate wraps the optional secondary table
-     *   in an upsert that deletes the row when both sides are cleared), and the
-     *   {@code relationship_metadata_value_id_fk ... ON DELETE CASCADE} is the final safeguard.
-     *
-     * If the generated id is ever needed again, restoring the mapping above is enough, but the
-     * read-back cost per inserted metadata value must be taken into account.
-     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "relationship_id")
+    private Relationship relationship;
 
     /**
      * Protected constructor, create object using:
@@ -362,54 +318,24 @@ public class MetadataValue implements ReloadableEntity<Integer> {
     }
 
     /**
-     * Get the left item UUID of the authority-backed relationship owned by this value.
-     *
-     * @return the left item (owner) UUID, or {@code null} if this value owns no relationship
+     * @return the durable internal relationship, or null for ordinary/authority metadata
      */
     @Nullable
-    public UUID getLeftItem() {
-        return leftItem;
+    public Relationship getRelationship() {
+        return relationship;
     }
 
     /**
-     * Set the left item UUID of the authority-backed relationship owned by this value.
+     * Persistence setter. Application changes should use the compound relationship service.
      *
-     * @param leftItem the owner item UUID
-     * @return this, to allow fluent usage
+     * @param relationship the relationship represented by this metadata value
      */
-    public MetadataValue setLeftItem(UUID leftItem) {
-        this.leftItem = leftItem;
-        return this;
+    public void setRelationship(Relationship relationship) {
+        this.relationship = relationship;
     }
 
-    /**
-     * Get the right item UUID of the authority-backed relationship owned by this value.
-     *
-     * @return the right item (target) UUID, or {@code null} if this value owns no relationship
-     */
-    @Nullable
-    public UUID getRightItem() {
-        return rightItem;
-    }
-
-    /**
-     * Set the right item UUID of the authority-backed relationship owned by this value.
-     *
-     * @param rightItem the target item UUID
-     * @return this, to allow fluent usage
-     */
-    public MetadataValue setRightItem(UUID rightItem) {
-        this.rightItem = rightItem;
-        return this;
-    }
-
-    /**
-     * Return {@code true} when this value carries the two items of an authority-backed relationship.
-     *
-     * @return {@code true} if both the left and right item UUIDs are set
-     */
     @Transient
     public boolean isRelationshipBacked() {
-        return leftItem != null && rightItem != null;
+        return relationship != null;
     }
 }

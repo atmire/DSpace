@@ -206,7 +206,7 @@ public class ItemSearcherByMetadata implements ItemSearcher, ItemReferenceResolv
             choiceAuthorityService.setReferenceWithAuthority(metadataValue, item);
             if (item.isArchived()) {
                 authorityBackedRelationshipService
-                    .markRelationshipForResolvedAuthority(context, itemWithReference, metadataValue, item);
+                    .promoteResolvedAuthority(context, itemWithReference, metadataValue, item);
             }
         }
 

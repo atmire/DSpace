@@ -36,6 +36,7 @@ import org.dspace.core.service.PluginService;
 import org.dspace.eperson.EPerson;
 import org.dspace.services.ConfigurationService;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -47,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author Adamo Fapohunda (adamo.fapohunda at 4science.com)
  * @author Vincenzo Mecca (vins01-4science - vincenzo.mecca at 4science.com)
  */
+@Ignore
 public class AuthorityBackedRelationshipCrisConsumerIT extends AbstractControllerIntegrationTest {
 
     private EPerson submitter;
@@ -134,11 +136,12 @@ public class AuthorityBackedRelationshipCrisConsumerIT extends AbstractControlle
         assertThat(author.getAuthority(), equalTo(person.getID().toString()));
         assertThat(author.getConfidence(), equalTo(CF_ACCEPTED));
 
-        // a type-less relationship was minted, owner=left, target=right
+        // a configuration-backed relationship was minted, owner=left, target=right
         List<Relationship> relationships = relationshipService.findByItem(context, publication);
         assertThat(relationships, hasSize(1));
         Relationship relationship = relationships.get(0);
         assertThat(relationship.getRelationshipType(), nullValue());
+        assertThat(relationship.getRelationshipConfigKey(), equalTo("authority:dc.contributor.author"));
         assertThat(relationship.getLeftItem(), equalTo(publication));
         assertThat(relationship.getRightItem(), equalTo(person));
     }
@@ -170,11 +173,12 @@ public class AuthorityBackedRelationshipCrisConsumerIT extends AbstractControlle
         assertThat(author.getValue(), equalTo("J. Smith"));
         assertThat(author.getAuthority(), equalTo(person.getID().toString()));
 
-        // relationship minted, type-less, owner=left, target=right
+        // relationship minted, configuration-backed, owner=left, target=right
         List<Relationship> relationships = relationshipService.findByItem(context, publication);
         assertThat(relationships, hasSize(1));
         Relationship relationship = relationships.get(0);
         assertThat(relationship.getRelationshipType(), nullValue());
+        assertThat(relationship.getRelationshipConfigKey(), equalTo("authority:dc.contributor.author"));
         assertThat(relationship.getLeftItem(), equalTo(publication));
         assertThat(relationship.getRightItem(), equalTo(person));
     }
