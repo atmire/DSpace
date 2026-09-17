@@ -850,7 +850,8 @@ public class RelationshipServiceImpl implements RelationshipService {
                                                           "copyMetadataValuesToRightItem=" + copyToRightItem));
         if (relationship.isConfigurationBacked() || relationship.getRelationshipType() == null) {
             // Item deletion already applies the configured authority-cleanup policy before relationships are removed.
-            // Preserve authority/confidence here so force deletion cannot override that policy (including disabled mode).
+            // Preserve authority/confidence here so force deletion cannot override that policy
+            //      (including disabled mode).
             deleteTypeLessRelationship(context, relationship, false);
             return;
         }
