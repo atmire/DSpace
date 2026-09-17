@@ -10,6 +10,7 @@ package org.dspace.content.authority.service;
 import java.sql.SQLException;
 
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.DSpaceObject;
 import org.dspace.content.Item;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.Relationship;
@@ -65,5 +66,20 @@ public interface AuthorityBackedRelationshipService {
      * side removes the logical relationship; other projections are removed alone.
      */
     void removeMetadataValue(Context context, MetadataValue value)
+        throws SQLException, AuthorizeException;
+
+    /**
+     * Metadata-editing entry point for callers which are iterating an owner's metadata list.
+     * The service will not mutate the in-memory metadata list of that owner; the caller must
+     * remove affected values through its iterator instead. Metadata lists of other owners are
+     * still kept in sync by this service.
+     *
+     * @param context                         current DSpace context
+     * @param value                           metadata value to remove
+     * @param metadataOwnerWithActiveIterator owner whose metadata list is currently being iterated
+     * @throws SQLException                   if a database error occurs
+     * @throws AuthorizeException             if the current user is not authorized to perform the removal
+     */
+    void removeMetadataValue(Context context, MetadataValue value, DSpaceObject metadataOwnerWithActiveIterator)
         throws SQLException, AuthorizeException;
 }
