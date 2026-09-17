@@ -32,7 +32,6 @@ import org.dspace.core.service.PluginService;
 import org.dspace.eperson.EPerson;
 import org.dspace.services.ConfigurationService;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -44,7 +43,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author Adamo Fapohunda (adamo.fapohunda at 4science.com)
  * @author Vincenzo Mecca (vins01-4science - vincenzo.mecca at 4science.com)
  */
-@Ignore
 public class AuthorityBackedRelationshipReverseResolveIT extends AbstractControllerIntegrationTest {
 
     private EPerson submitter;
