@@ -798,7 +798,7 @@ public class RelationshipServiceImpl implements RelationshipService {
                 || authority.equals(relationship.getRightItem().getID().toString()))) {
                 value.setAuthority(null);
             }
-            value.setConfidence(Choices.CF_REJECTED);
+            value.setConfidence(Choices.CF_UNSET);
             value.getDSpaceObject().setMetadataModified();
         }
         relationshipDAO.delete(context, relationship);

@@ -529,9 +529,17 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
             MetadataValue metadataValue = metadata.next();
             // If this value matches, delete it
             if (match(schema, element, qualifier, lang, metadataValue)) {
-                dso.addMetadataEventDetails(new MetadataEvent(metadataValue, MetadataEvent.REMOVE));
-                metadata.remove();
-                metadataValueService.delete(context, metadataValue);
+                if (metadataValue.isRelationshipBacked()) {
+                    try {
+                        authorityBackedRelationshipService.removeMetadataValue(context, metadataValue);
+                    } catch (AuthorizeException e) {
+                        throw new SQLException("Not authorized to remove relationship-bound metadata", e);
+                    }
+                } else {
+                    dso.addMetadataEventDetails(new MetadataEvent(metadataValue, MetadataEvent.REMOVE));
+                    metadata.remove();
+                    metadataValueService.delete(context, metadataValue);
+                }
             }
         }
         dso.setMetadataModified();
