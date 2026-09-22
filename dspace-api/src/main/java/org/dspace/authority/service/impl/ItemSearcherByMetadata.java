@@ -30,9 +30,9 @@ import org.dspace.authority.service.ItemSearcher;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Item;
 import org.dspace.content.MetadataValue;
-import org.dspace.content.authority.service.AuthorityBackedRelationshipService;
 import org.dspace.content.authority.service.ChoiceAuthorityService;
 import org.dspace.content.service.ItemService;
+import org.dspace.content.service.MetadataRelationshipService;
 import org.dspace.core.Context;
 import org.dspace.discovery.DiscoverQuery;
 import org.dspace.discovery.DiscoverResult;
@@ -74,7 +74,7 @@ public class ItemSearcherByMetadata implements ItemSearcher, ItemReferenceResolv
     private ChoiceAuthorityService choiceAuthorityService;
 
     @Autowired
-    private AuthorityBackedRelationshipService authorityBackedRelationshipService;
+    private MetadataRelationshipService metadataRelationshipService;
 
     private static final Logger log = LogManager.getLogger(ItemSearcherByMetadata.class);
     private final String metadata;
@@ -205,8 +205,8 @@ public class ItemSearcherByMetadata implements ItemSearcher, ItemReferenceResolv
             // system / reference path: stamp the authority first, then mark the relationship
             choiceAuthorityService.setReferenceWithAuthority(metadataValue, item);
             if (item.isArchived()) {
-                authorityBackedRelationshipService
-                    .promoteResolvedAuthority(context, itemWithReference, metadataValue, item);
+                metadataRelationshipService
+                    .promoteToInternalRelationship(context, itemWithReference, metadataValue, item);
             }
         }
 

@@ -31,18 +31,18 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.Collection;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.Item;
+import org.dspace.content.MetadataRelationshipServiceImpl;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.WorkspaceItem;
-import org.dspace.content.authority.AuthorityBackedRelationshipServiceImpl;
 import org.dspace.content.authority.Choices;
 import org.dspace.content.authority.factory.ContentAuthorityServiceFactory;
-import org.dspace.content.authority.service.AuthorityBackedRelationshipService;
 import org.dspace.content.authority.service.ChoiceAuthorityService;
 import org.dspace.content.authority.service.MetadataAuthorityService;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.InstallItemService;
 import org.dspace.content.service.ItemService;
+import org.dspace.content.service.MetadataRelationshipService;
 import org.dspace.content.service.WorkspaceItemService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
@@ -126,7 +126,7 @@ public class CrisConsumer implements Consumer {
 
     private ItemSearchService itemSearchService;
 
-    private AuthorityBackedRelationshipService authorityBackedRelationshipService;
+    private MetadataRelationshipService metadataRelationshipService;
 
     /**
      * Initializes the CrisConsumer by retrieving service instances from their
@@ -153,9 +153,9 @@ public class CrisConsumer implements Consumer {
         workflowService = WorkflowServiceFactory.getInstance().getWorkflowService();
         authorityImportFillerService = AuthorityServiceFactory.getInstance().getAuthorityImportFillerService();
         itemSearchService = new DSpace().getSingletonService(ItemSearchService.class);
-        authorityBackedRelationshipService = new DSpace().getServiceManager().getServiceByName(
-            AuthorityBackedRelationshipServiceImpl.class.getCanonicalName(),
-            AuthorityBackedRelationshipService.class);
+        metadataRelationshipService = new DSpace().getServiceManager().getServiceByName(
+            MetadataRelationshipServiceImpl.class.getCanonicalName(),
+            MetadataRelationshipService.class);
     }
 
     /**
@@ -291,8 +291,7 @@ public class CrisConsumer implements Consumer {
     private void mintRelationshipIfTargetArchived(Context context, Item item, MetadataValue metadata,
         Item relatedItem) throws SQLException, AuthorizeException {
         if (relatedItem != null && relatedItem.isArchived()) {
-            authorityBackedRelationshipService.promoteResolvedAuthority(context, item, metadata,
-                relatedItem);
+            metadataRelationshipService.promoteToInternalRelationship(context, item, metadata, relatedItem);
         }
     }
 
