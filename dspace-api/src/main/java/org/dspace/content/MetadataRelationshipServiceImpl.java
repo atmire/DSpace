@@ -64,6 +64,7 @@ public class MetadataRelationshipServiceImpl implements MetadataRelationshipServ
 
         Relationship relationship = relationshipService.createConfigBackedRelationship(
             context, left, right, configuration.getId());
+        validateRelationshipOwner(metadataValue, relationship);
         metadataValue.setRelationship(relationship);
         metadataValueService.update(context, metadataValue);
         itemService.update(context, ownerItem);
@@ -267,6 +268,14 @@ public class MetadataRelationshipServiceImpl implements MetadataRelationshipServ
             return true;
         } catch (IllegalArgumentException e) {
             return false;
+        }
+    }
+
+    public void validateRelationshipOwner(MetadataValue metadataValue, Relationship relationship) {
+        UUID owner = metadataValue.getDSpaceObject().getID();
+        if (!owner.equals(relationship.getLeftItem().getID())
+            && !owner.equals(relationship.getRightItem().getID())) {
+            throw new IllegalArgumentException("Metadata owner must be an endpoint of its relationship");
         }
     }
 }

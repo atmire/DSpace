@@ -89,6 +89,7 @@ public class AuthorityBackedRelationshipServiceImpl implements AuthorityBackedRe
         validateAuthorityTarget(value, target);
         Relationship relationship = relationshipService.createConfigBackedRelationship(
             context, left, right, configuration.getId());
+        validateRelationshipOwner(value, relationship);
         value.setRelationship(relationship);
         metadataValueService.update(context, value);
         itemService.update(context, owner);
@@ -111,6 +112,7 @@ public class AuthorityBackedRelationshipServiceImpl implements AuthorityBackedRe
             throw new IllegalArgumentException("Metadata is already associated with another relationship");
         }
         validateAuthority(value, relationship);
+        validateRelationshipOwner(value, relationship);
         value.setRelationship(relationship);
         metadataValueService.update(context, value);
         itemService.update(context, (Item) value.getDSpaceObject());
@@ -343,6 +345,14 @@ public class AuthorityBackedRelationshipServiceImpl implements AuthorityBackedRe
             return true;
         } catch (IllegalArgumentException e) {
             return false;
+        }
+    }
+
+    public void validateRelationshipOwner(MetadataValue metadataValue, Relationship relationship) {
+        UUID owner = metadataValue.getDSpaceObject().getID();
+        if (!owner.equals(relationship.getLeftItem().getID())
+            && !owner.equals(relationship.getRightItem().getID())) {
+            throw new IllegalArgumentException("Metadata owner must be an endpoint of its relationship");
         }
     }
 }
