@@ -31,13 +31,13 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.audit.MetadataEvent;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.authority.Choices;
-import org.dspace.content.authority.service.AuthorityBackedRelationshipService;
 import org.dspace.content.authority.service.ChoiceAuthorityService;
 import org.dspace.content.authority.service.MetadataAuthorityService;
 import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.DSpaceObjectService;
 import org.dspace.content.service.MetadataFieldService;
+import org.dspace.content.service.MetadataRelationshipService;
 import org.dspace.content.service.MetadataValueService;
 import org.dspace.content.service.RelationshipService;
 import org.dspace.core.Constants;
@@ -62,7 +62,7 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
 
     @Autowired
     @Lazy
-    private AuthorityBackedRelationshipService authorityBackedRelationshipService;
+    private MetadataRelationshipService metadataRelationshipService;
 
     /**
      * log4j category
@@ -524,79 +524,52 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
     @Override
     public void clearMetadata(Context context, T dso, String schema, String element, String qualifier, String lang)
         throws SQLException {
-        List<MetadataValue> relationshipValuesToRemove = new ArrayList<>();
-        Iterator<MetadataValue> metadata = dso.getMetadata().iterator();
-        while (metadata.hasNext()) {
-            MetadataValue metadataValue = metadata.next();
-            if (relationshipValuesToRemove.remove(metadataValue)) {
-                metadata.remove();
-                continue;
-            }
+        // Iterate over a snapshot so relationship removal can safely modify the managed metadata collection.
+        List<MetadataValue> values = new ArrayList<>(dso.getMetadata());
+
+        for (MetadataValue metadataValue : values) {
             // If this value matches, delete it
             if (match(schema, element, qualifier, lang, metadataValue)) {
                 if (metadataValue.isRelationshipBacked()) {
+                    // Delegate relationship-backed metadata lifecycle and cleanup to MetadataRelationshipService.
                     try {
-                        List<MetadataValue> relationshipValues = metadataValueService.findByRelationship(
-                            context, metadataValue.getRelationship());
-                        authorityBackedRelationshipService.removeMetadataValue(context, metadataValue, dso);
-                        metadata.remove();
-                        collectRemovedRelationshipValues(dso, metadataValue, relationshipValues,
-                                                         relationshipValuesToRemove);
+                        metadataRelationshipService.removeMetadataValue(context, metadataValue);
                     } catch (AuthorizeException e) {
                         throw new SQLException("Not authorized to remove relationship-bound metadata", e);
                     }
                 } else {
+                    // Ordinary metadata removal
                     dso.addMetadataEventDetails(new MetadataEvent(metadataValue, MetadataEvent.REMOVE));
-                    metadata.remove();
+                    dso.getMetadata().remove(metadataValue); // Keep in-memory metadata in sync.
                     metadataValueService.delete(context, metadataValue);
                 }
             }
         }
-        dso.getMetadata().removeAll(relationshipValuesToRemove);
         dso.setMetadataModified();
     }
 
     @Override
     public void removeMetadataValues(Context context, T dso, List<MetadataValue> values) throws SQLException {
-        List<MetadataValue> relationshipValuesToRemove = new ArrayList<>();
-        Iterator<MetadataValue> metadata = dso.getMetadata().iterator();
-        while (metadata.hasNext()) {
-            MetadataValue metadataValue = metadata.next();
-            if (relationshipValuesToRemove.remove(metadataValue)) {
-                metadata.remove();
-                continue;
-            }
+        List<MetadataValue> metadataValues = new ArrayList<>(dso.getMetadata());
+        for (MetadataValue metadataValue : metadataValues) {
+            // If this managed value was requested for removal, delete it
             if (values.contains(metadataValue)) {
                 if (metadataValue.isRelationshipBacked()) {
+                    // Delegate relationship-backed metadata lifecycle and cleanup to MetadataRelationshipService.
                     try {
-                        List<MetadataValue> relationshipValues = metadataValueService.findByRelationship(
-                            context, metadataValue.getRelationship());
-                        authorityBackedRelationshipService.removeMetadataValue(context, metadataValue, dso);
-                        metadata.remove();
-                        collectRemovedRelationshipValues(dso, metadataValue, relationshipValues,
-                                                         relationshipValuesToRemove);
+                        metadataRelationshipService.removeMetadataValue(context, metadataValue);
                     } catch (AuthorizeException e) {
                         throw new SQLException("Not authorized to remove relationship-bound metadata", e);
                     }
                 } else {
+                    // Ordinary metadata removal
                     dso.addMetadataEventDetails(new MetadataEvent(metadataValue, MetadataEvent.REMOVE));
-                    metadata.remove();
+                    dso.getMetadata().remove(metadataValue);  // Keep in-memory metadata in sync.
                     metadataValueService.delete(context, metadataValue);
                 }
             }
         }
-        dso.getMetadata().removeAll(relationshipValuesToRemove);
         dso.setMetadataModified();
-    }
-
-    private void collectRemovedRelationshipValues(T dso, MetadataValue removedValue,
-                                                   List<MetadataValue> relationshipValues,
-                                                   List<MetadataValue> relationshipValuesToRemove) {
-        relationshipValues.stream()
-            .filter(value -> value != removedValue)
-            .filter(value -> value.getRelationship() == null)
-            .filter(value -> value.getDSpaceObject().getID().equals(dso.getID()))
-            .forEach(relationshipValuesToRemove::add);
     }
 
     /**
