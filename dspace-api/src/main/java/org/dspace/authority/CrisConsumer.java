@@ -34,8 +34,10 @@ import org.dspace.content.Item;
 import org.dspace.content.MetadataRelationshipServiceImpl;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.WorkspaceItem;
+import org.dspace.content.authority.AuthorityBackedRelationshipServiceImpl;
 import org.dspace.content.authority.Choices;
 import org.dspace.content.authority.factory.ContentAuthorityServiceFactory;
+import org.dspace.content.authority.service.AuthorityBackedRelationshipService;
 import org.dspace.content.authority.service.ChoiceAuthorityService;
 import org.dspace.content.authority.service.MetadataAuthorityService;
 import org.dspace.content.factory.ContentServiceFactory;
@@ -126,6 +128,8 @@ public class CrisConsumer implements Consumer {
 
     private ItemSearchService itemSearchService;
 
+    private AuthorityBackedRelationshipService authorityBackedRelationshipService;
+
     private MetadataRelationshipService metadataRelationshipService;
 
     /**
@@ -153,6 +157,9 @@ public class CrisConsumer implements Consumer {
         workflowService = WorkflowServiceFactory.getInstance().getWorkflowService();
         authorityImportFillerService = AuthorityServiceFactory.getInstance().getAuthorityImportFillerService();
         itemSearchService = new DSpace().getSingletonService(ItemSearchService.class);
+        authorityBackedRelationshipService = new DSpace().getServiceManager().getServiceByName(
+            AuthorityBackedRelationshipServiceImpl.class.getCanonicalName(),
+            AuthorityBackedRelationshipService.class);
         metadataRelationshipService = new DSpace().getServiceManager().getServiceByName(
             MetadataRelationshipServiceImpl.class.getCanonicalName(),
             MetadataRelationshipService.class);
@@ -291,7 +298,7 @@ public class CrisConsumer implements Consumer {
     private void mintRelationshipIfTargetArchived(Context context, Item item, MetadataValue metadata,
         Item relatedItem) throws SQLException, AuthorizeException {
         if (relatedItem != null && relatedItem.isArchived()) {
-            metadataRelationshipService.promoteToInternalRelationship(context, item, metadata, relatedItem);
+            authorityBackedRelationshipService.promoteResolvedAuthority(context, item, metadata, relatedItem);
         }
     }
 

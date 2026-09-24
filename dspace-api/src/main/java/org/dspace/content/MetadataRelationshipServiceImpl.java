@@ -9,6 +9,7 @@ package org.dspace.content;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
@@ -64,62 +65,95 @@ public class MetadataRelationshipServiceImpl implements MetadataRelationshipServ
 
         Relationship relationship = relationshipService.createConfigBackedRelationship(
             context, left, right, configuration.getId());
+
         validateRelationshipOwner(metadataValue, relationship);
         metadataValue.setRelationship(relationship);
+
         metadataValueService.update(context, metadataValue);
         itemService.update(context, ownerItem);
         log.debug("Linked metadata {} to relationship {} using configuration {}",
                   metadataValue.getID(), relationship.getID(), configuration.getId());
+
         return relationship;
-    }
-
-    @Override
-    public Relationship promoteToInternalRelationship(Context context, Item ownerItem, MetadataValue metadataValue,
-                                                      Item targetItem) throws SQLException, AuthorizeException {
-        if (metadataValue == null || targetItem == null) {
-            return null;
-        }
-
-        requireOwner(metadataValue, ownerItem);
-
-        if (!ownerItem.isArchived() || !targetItem.isArchived() ||
-            metadataValue.getConfidence() == Choices.CF_REJECTED) {
-            return null;
-        }
-
-        Relationship existing = metadataValue.getRelationship();
-        if (existing != null) {
-            // Never silently accept a stale or different authority as idempotency.
-            if (!opposite(existing, ownerItem).getID().equals(targetItem.getID())) {
-                throw new IllegalArgumentException(
-                    "Use replaceTarget to change an existing relationship target");
-            }
-            validateAuthority(metadataValue, existing);
-            return existing;
-        }
-
-        // Validate before persistence, so invalid input does not leave a half-created link.
-        validateAuthorityTarget(metadataValue, targetItem);
-
-        return createInternalRelationship(
-            context,
-            ownerItem,
-            metadataValue,
-            targetItem
-        );
     }
 
     @Override
     public void attachMetadata(Context context, Relationship relationship, MetadataValue metadataValue)
         throws SQLException, AuthorizeException {
-        // TO BE IMPLEMENTED LATER
+        requirePersistentRelationship(relationship);
+
+        if (metadataValue == null || metadataValue.getDSpaceObject() == null) {
+            throw new IllegalArgumentException("A stored metadata value and owner are required");
+        }
+
+        Item target = opposite(relationship, metadataValue.getDSpaceObject());
+
+        authorizeService.authorizeAction(context, metadataValue.getDSpaceObject(), Constants.WRITE);
+        authorizeService.authorizeAction(context, target, Constants.READ);
+
+        if (metadataValue.getRelationship() != null &&
+            !sameRelationship(metadataValue.getRelationship(), relationship)) {
+            throw new IllegalArgumentException("Metadata is already associated with another relationship");
+        }
+
+        validateRelationshipOwner(metadataValue, relationship);
+        metadataValue.setRelationship(relationship);
+
+        metadataValueService.update(context, metadataValue);
+        itemService.update(context, (Item) metadataValue.getDSpaceObject());
     }
 
     @Override
-    public Relationship replaceTarget(Context context, Relationship relationship, Item newTarget)
+    public Relationship replaceTarget(Context context, Relationship relationship, Item retainedItem,
+                                      Item newRelatedItem)
         throws SQLException, AuthorizeException {
-        // TO BE IMPLEMENTED LATER
-        return null;
+        requireConfiguredRelationship(relationship);
+
+        if (newRelatedItem == null) {
+            throw new IllegalArgumentException("A new target item is required");
+        }
+
+        Item oldTarget = opposite(relationship, retainedItem);
+
+        List<MetadataValue> values = metadataValueService.findByRelationship(context, relationship);
+
+        authorizeService.authorizeAction(context, retainedItem, Constants.WRITE);
+        authorizeService.authorizeAction(context, newRelatedItem, Constants.READ);
+
+        authorizeProjections(context, values);
+
+        boolean ownerOnLeft = retainedItem.getID().equals(relationship.getLeftItem().getID());
+
+        RelationshipTypeConfiguration configuration = relationshipConfigurationService.getByKey(
+            relationship.getRelationshipConfigKey());
+        relationshipConfigurationService.validate(context, configuration,
+                                                  ownerOnLeft ? retainedItem : newRelatedItem,
+                                                  ownerOnLeft ? newRelatedItem : retainedItem);
+
+        // Moving opposite-side metadata to a different owning item needs a policy of
+        // its own. Reject BEFORE changing anything rather than orphaning those rows.
+        for (MetadataValue value : values) {
+            if (!value.getDSpaceObject().getID().equals(retainedItem.getID())) {
+                throw new IllegalArgumentException(
+                    "Relinking a two-sided projection requires an explicit transfer policy");
+            }
+            String anchor = ownerOnLeft ? configuration.getLeftMetadataField() : configuration.getRightMetadataField();
+            if (!RelationshipConfigurationServiceImpl.fieldName(value).equals(anchor)) {
+                throw new IllegalArgumentException("Relinking dependent projections requires a refresh policy");
+            }
+        }
+        if (ownerOnLeft) {
+            relationship.setRightItem(newRelatedItem);
+        } else {
+            relationship.setLeftItem(newRelatedItem);
+        }
+
+        relationshipService.update(context, relationship);
+        itemService.update(context, retainedItem);
+        itemService.update(context, oldTarget);
+        itemService.update(context, newRelatedItem);
+
+        return relationship;
     }
 
     @Override
@@ -139,6 +173,7 @@ public class MetadataRelationshipServiceImpl implements MetadataRelationshipServ
 
         for (MetadataValue value : values) {
             value.setRelationship(null);
+            // TODO: Revisit authority/confidence handling when the detach workflow is revised.
             if (isUuid(value.getAuthority())) {
                 value.setAuthority(null);
             }
@@ -157,7 +192,11 @@ public class MetadataRelationshipServiceImpl implements MetadataRelationshipServ
     @Override
     public void removeMetadataValue(Context context, MetadataValue metadataValue)
         throws SQLException, AuthorizeException {
-        // TO BE IMPLEMENTED LATER
+        if (metadataValue.isRelationshipBacked() && isFinalAnchor(context, metadataValue)) {
+            removeRelationship(context, metadataValue.getRelationship());
+        } else {
+            removeMetadataProjection(context, metadataValue);
+        }
     }
 
     @Override
@@ -187,6 +226,38 @@ public class MetadataRelationshipServiceImpl implements MetadataRelationshipServ
     @Override
     public boolean isRelationshipBacked(MetadataValue metadataValue) {
         return metadataValue.isRelationshipBacked();
+    }
+
+    private boolean isFinalAnchor(Context context, MetadataValue value) throws SQLException {
+        Relationship relationship = value.getRelationship();
+        if (!relationship.isConfigurationBacked()) {
+            // Legacy typed projections require explicit migration/policy first.
+            throw new IllegalArgumentException(
+                "Migrate this legacy relationship before editing its stored projections");
+        }
+        RelationshipTypeConfiguration configuration = relationshipConfigurationService.getByKey(
+            relationship.getRelationshipConfigKey());
+        String field = RelationshipConfigurationServiceImpl.fieldName(value);
+        boolean ownerOnLeft = value.getDSpaceObject().getID().equals(relationship.getLeftItem().getID());
+        String anchor = ownerOnLeft ? configuration.getLeftMetadataField() : configuration.getRightMetadataField();
+        if (!field.equals(anchor)) {
+            return false;
+        }
+        // One language-specific value may be removed without destroying another
+        // variant of the same anchor. Association, not place, identifies the group.
+        return metadataValueService.findByRelationship(context, relationship).stream().noneMatch(other ->
+            !other.getID().equals(value.getID())
+                && other.getDSpaceObject().getID().equals(value.getDSpaceObject().getID())
+                && RelationshipConfigurationServiceImpl.fieldName(other).equals(field));
+    }
+
+    private void removeMetadataProjection(Context context, MetadataValue value)
+        throws SQLException, AuthorizeException {
+        authorizeService.authorizeAction(context, value.getDSpaceObject(), Constants.WRITE);
+        if (value.isRelationshipBacked() && isFinalAnchor(context, value)) {
+            throw new IllegalArgumentException("Use removeMetadataValue or detach for the final relationship anchor");
+        }
+        deleteProjection(context, value);
     }
 
     private void deleteProjection(Context context, MetadataValue value)
@@ -249,14 +320,8 @@ public class MetadataRelationshipServiceImpl implements MetadataRelationshipServ
         throw new IllegalArgumentException("Metadata owner must be an endpoint of its relationship");
     }
 
-    private void validateAuthority(MetadataValue value, Relationship relationship) {
-        validateAuthorityTarget(value, opposite(relationship, value.getDSpaceObject()));
-    }
-
-    private void validateAuthorityTarget(MetadataValue value, Item target) {
-        if (isUuid(value.getAuthority()) && !UUID.fromString(value.getAuthority()).equals(target.getID())) {
-            throw new IllegalArgumentException("UUID authority cache disagrees with the durable relationship");
-        }
+    private boolean sameRelationship(Relationship first, Relationship second) {
+        return first == second || first.getID() != null && Objects.equals(first.getID(), second.getID());
     }
 
     private boolean isUuid(String value) {
@@ -271,7 +336,7 @@ public class MetadataRelationshipServiceImpl implements MetadataRelationshipServ
         }
     }
 
-    public void validateRelationshipOwner(MetadataValue metadataValue, Relationship relationship) {
+    private void validateRelationshipOwner(MetadataValue metadataValue, Relationship relationship) {
         UUID owner = metadataValue.getDSpaceObject().getID();
         if (!owner.equals(relationship.getLeftItem().getID())
             && !owner.equals(relationship.getRightItem().getID())) {

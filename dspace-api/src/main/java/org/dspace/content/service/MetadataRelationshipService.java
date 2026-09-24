@@ -108,66 +108,6 @@ public interface MetadataRelationshipService {
 
 
     /**
-     * Promotes an authority-backed metadata value to a concrete internal
-     * relationship.
-     * <p>
-     * This method is intended primarily for authority-resolution workflows.
-     * A metadata value may initially contain an external or unresolved
-     * authority. Once that authority resolves to an archived DSpace Item, this
-     * method creates the corresponding durable relationship and links the
-     * metadata value to it.
-     * </p>
-     *
-     * <p>
-     * For example:
-     * </p>
-     *
-     * <pre>
-     * dc.contributor.author
-     *     value     = "Smith, Jane"
-     *     authority = UUID of Person
-     *
-     *             becomes
-     *
-     * dc.contributor.author
-     *     value           = "Smith, Jane"
-     *     authority       = UUID of Person
-     *     relationship_id = 123
-     *
-     * Relationship 123
-     *     Publication -> Person
-     * </pre>
-     *
-     * <p>
-     * The operation should be idempotent. If the metadata value is already
-     * associated with the appropriate relationship, the existing relationship
-     * should be returned rather than creating a duplicate.
-     * </p>
-     *
-     * <p>
-     * This method must not silently change an existing relationship to point
-     * to another target. Explicit relinking should be performed through
-     * {@link #replaceTarget(Context, Relationship, Item)}.
-     * </p>
-     *
-     * @param context       current DSpace context
-     * @param ownerItem     Item which owns the metadata value
-     * @param metadataValue authority-backed metadata value being promoted
-     * @param targetItem    resolved internal Item
-     * @return the existing or newly created relationship
-     * @throws SQLException       if the relationship cannot be persisted
-     * @throws AuthorizeException if the current user is not authorized to
-     *                            create the relationship
-     */
-    Relationship promoteToInternalRelationship(
-            Context context,
-            Item ownerItem,
-            MetadataValue metadataValue,
-            Item targetItem
-    ) throws SQLException, AuthorizeException;
-
-
-    /**
      * Associates an additional metadata value with an existing relationship.
      * <p>
      * A relationship may have more than one metadata projection. For example,
@@ -246,15 +186,16 @@ public interface MetadataRelationshipService {
      * </p>
      *
      * <p>
-     * Where additional metadata projections depend on the old target, the
+     * Where additional metadata projections depend on the old related Item, the
      * implementation must either update those projections according to
      * configuration or reject the operation until it can be performed safely.
      * It must not silently leave target-dependent metadata inconsistent.
      * </p>
      *
-     * @param context      current DSpace context
-     * @param relationship relationship whose target should be replaced
-     * @param newTarget    new Item which should become the related object
+     * @param context        current DSpace context
+     * @param relationship   relationship whose endpoint should be replaced
+     * @param retainedItem   relationship endpoint which should remain unchanged
+     * @param newRelatedItem new Item which should replace the endpoint opposite the retained Item
      * @return the updated relationship
      * @throws SQLException       if the relationship cannot be updated
      * @throws AuthorizeException if the current user is not authorized to
@@ -263,7 +204,8 @@ public interface MetadataRelationshipService {
     Relationship replaceTarget(
             Context context,
             Relationship relationship,
-            Item newTarget
+            Item retainedItem,
+            Item newRelatedItem
     ) throws SQLException, AuthorizeException;
 
 

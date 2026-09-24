@@ -528,6 +528,11 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
         List<MetadataValue> values = new ArrayList<>(dso.getMetadata());
 
         for (MetadataValue metadataValue : values) {
+            if (!dso.getMetadata().contains(metadataValue)) {
+                // Previous removeMetadataValue() call may remove the entire logical relationship, including other
+                // projections. If this snapshot value is no longer present in the owner's managed collection, SKIP.
+                continue;
+            }
             // If this value matches, delete it
             if (match(schema, element, qualifier, lang, metadataValue)) {
                 if (metadataValue.isRelationshipBacked()) {
@@ -550,8 +555,15 @@ public abstract class DSpaceObjectServiceImpl<T extends DSpaceObject> implements
 
     @Override
     public void removeMetadataValues(Context context, T dso, List<MetadataValue> values) throws SQLException {
+        // Iterate over a snapshot so relationship removal can safely modify the managed metadata collection.
         List<MetadataValue> metadataValues = new ArrayList<>(dso.getMetadata());
+
         for (MetadataValue metadataValue : metadataValues) {
+            if (!dso.getMetadata().contains(metadataValue)) {
+                // Previous removeMetadataValue() call may remove the entire logical relationship, including other
+                // projections. If this snapshot value is no longer present in the owner's managed collection, SKIP.
+                continue;
+            }
             // If this managed value was requested for removal, delete it
             if (values.contains(metadataValue)) {
                 if (metadataValue.isRelationshipBacked()) {
