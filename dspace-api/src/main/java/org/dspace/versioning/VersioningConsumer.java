@@ -10,17 +10,19 @@ package org.dspace.versioning;
 import static org.dspace.versioning.utils.RelationshipVersioningUtils.LatestVersionStatusChangelog.NO_CHANGES;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Strings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.content.EntityType;
 import org.dspace.content.Item;
+import org.dspace.content.MetadataValue;
 import org.dspace.content.Relationship;
 import org.dspace.content.RelationshipType;
 import org.dspace.content.factory.ContentServiceFactory;
@@ -218,9 +220,10 @@ public class VersioningConsumer implements Consumer {
             return;
         }
 
-        // get all relationship types that are linked to the given entity type
+        // get all relationship types that are linked to the given entity type.
+        // An empty list of legacy relationship types must not prevent processing configuration-backed relationships.
         List<RelationshipType> relationshipTypes = getRelationshipTypes(ctx, entityType);
-        if (CollectionUtils.isEmpty(relationshipTypes)) {
+        if (relationshipTypes == null) {
             return;
         }
 
@@ -286,6 +289,131 @@ public class VersioningConsumer implements Consumer {
                     reindexRelationship(ctx, changelog, latestItemRelationship);
                 }
             }
+        }
+        // Update the latest-version status of configuration-backed relationships separately from legacy relationships.
+        updateConfigBackedRelationships(ctx, latestItem, previousItem);
+    }
+
+    /**
+     * Updates the latest-version status of configuration-backed relationships when a new Item version is archived.
+     *
+     * Matches each relationship of the previous Item version to its corresponding relationship on the new version,
+     * using the configuration key and endpoints. Associated metadata values are also compared when available,
+     * to distinguish relationships sharing the same configuration key and endpoints.
+     *
+     * The previous relationship is marked as no longer latest on the versioned Item's side, while the matching
+     * relationship on the new version is marked as latest. Both relationships are reindexed when their status changes.
+     *
+     * @param ctx          current DSpace context
+     * @param latestItem   newly archived Item version
+     * @param previousItem previous Item version
+     */
+    protected void updateConfigBackedRelationships(Context ctx, Item latestItem, Item previousItem) {
+        try {
+            // Retrieve configuration-backed relationships from both Item versions, including non-latest relationships.
+            List<Relationship> previousRelationships =
+                relationshipService.findByItem(ctx, previousItem, -1, -1, false, false)
+                                   .stream()
+                                   .filter(Relationship::isConfigurationBacked)
+                                   .toList();
+
+            // Keep a mutable list so each new relationship can only be matched once.
+            List<Relationship> latestRelationships = new ArrayList<>(
+                relationshipService.findByItem(ctx, latestItem, -1, -1, false, false)
+                                   .stream()
+                                   .filter(Relationship::isConfigurationBacked)
+                                   .toList()
+            );
+
+            for (Relationship previousRelationship : previousRelationships) {
+                // Determine which side contains the versioned Item and preserve the opposite endpoint.
+                boolean isLeft = previousItem.equals(previousRelationship.getLeftItem());
+
+                Item otherItem = isLeft
+                    ? previousRelationship.getRightItem()
+                    : previousRelationship.getLeftItem();
+
+                // Find metadata values associated with this specific relationship on the previous Item version.
+                List<MetadataValue> previousMetadata = previousItem.getMetadata().stream()
+                                                                   .filter(value -> previousRelationship.equals(
+                                                                       value.getRelationship()))
+                                                                   .toList();
+
+                // Match by configuration key and endpoints, using metadata to distinguish relationships when available.
+                // Relationships without associated metadata can match only other relationships without associated
+                // metadata.
+                List<Relationship> matches =
+                    latestRelationships.stream()
+                                       .filter(relationship -> Objects.equals(
+                                           previousRelationship.getRelationshipConfigKey(),
+                                           relationship.getRelationshipConfigKey()))
+                                       .filter(relationship -> otherItem.equals(
+                                           isLeft ? relationship.getRightItem() : relationship.getLeftItem()))
+                                       .filter(relationship -> isLeft
+                                           ? latestItem.equals(relationship.getLeftItem())
+                                           : latestItem.equals(relationship.getRightItem()))
+                                       .filter(relationship -> {
+                                           if (previousMetadata.isEmpty()) {
+                                               return latestItem.getMetadata().stream()
+                                                                .noneMatch(value -> relationship.equals(
+                                                                    value.getRelationship()));
+                                           }
+
+                                           return previousMetadata.stream().anyMatch(
+                                               oldValue -> latestItem.getMetadata().stream().anyMatch(
+                                                   newValue -> relationship.equals(
+                                                       newValue.getRelationship())
+                                                       &&
+                                                       oldValue.getMetadataField()
+                                                               .equals(
+                                                                   newValue.getMetadataField())
+                                                       &&
+                                                       oldValue.getPlace() ==
+                                                           newValue.getPlace()
+                                                       &&
+                                                       Objects.equals(
+                                                           oldValue.getValue(),
+                                                           newValue.getValue())
+                                                       &&
+                                                       Objects.equals(
+                                                           oldValue.getAuthority(),
+                                                           newValue.getAuthority())));
+                                       })
+                                       .toList();
+
+                // A previous relationship must not match multiple relationships on the new version.
+                if (matches.size() > 1) {
+                    throw new IllegalStateException(
+                        "Multiple configuration-backed relationships match previous relationship "
+                            + previousRelationship.getID());
+                }
+
+                Relationship matchingRelationship = matches.isEmpty() ? null : matches.get(0);
+
+                // Mark the previous relationship as no longer latest on the versioned Item's side.
+                // Only update it when the opposite side is still considered latest.
+                if (relationshipVersioningUtils.otherSideIsLatest(
+                    isLeft, previousRelationship.getLatestVersionStatus())) {
+
+                    LatestVersionStatusChangelog changelog =
+                        relationshipVersioningUtils.updateLatestVersionStatus(
+                            previousRelationship, isLeft, false);
+                    reindexRelationship(ctx, changelog, previousRelationship);
+                }
+
+                if (matchingRelationship != null) {
+                    // Mark the corresponding relationship on the new Item version as latest.
+                    LatestVersionStatusChangelog changelog =
+                        relationshipVersioningUtils.updateLatestVersionStatus(
+                            matchingRelationship, isLeft, true);
+                    reindexRelationship(ctx, changelog, matchingRelationship);
+
+                    // Do not reuse this relationship for another previous relationship.
+                    latestRelationships.remove(matchingRelationship);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 

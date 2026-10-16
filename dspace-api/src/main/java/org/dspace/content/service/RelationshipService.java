@@ -548,4 +548,12 @@ public interface RelationshipService extends DSpaceCRUDService<Relationship> {
     Relationship createConfigBackedRelationship(Context context, Item leftItem, Item rightItem,
                                                String relationshipConfigKey)
         throws SQLException, AuthorizeException;
+
+    /**
+     * Copy a configuration-backed relationship when creating a new item version.
+     */
+    Relationship createConfigBackedRelationshipForVersion(Context context, Item leftItem, Item rightItem,
+                                                          String relationshipConfigKey,
+                                                          LatestVersionStatus latestVersionStatus)
+        throws SQLException, AuthorizeException;
 }
