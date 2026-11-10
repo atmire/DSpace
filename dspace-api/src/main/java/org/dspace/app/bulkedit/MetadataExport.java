@@ -101,7 +101,7 @@ public class MetadataExport extends DSpaceRunnable<MetadataExportScriptConfigura
     protected String getFileNameForExportFile() throws ParseException {
         Context context = new Context();
         try {
-            DSpaceObject dso = null;
+            DSpaceObject dso;
             if (StringUtils.isNotBlank(identifier)) {
                 dso = HandleServiceFactory.getInstance().getHandleService().resolveToObject(context, identifier);
                 if (dso == null) {
