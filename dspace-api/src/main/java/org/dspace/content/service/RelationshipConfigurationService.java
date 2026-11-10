@@ -8,10 +8,13 @@
 package org.dspace.content.service;
 
 import java.sql.SQLException;
+import java.util.Optional;
+import java.util.Set;
 
 import org.dspace.content.Item;
 import org.dspace.content.MetadataValue;
 import org.dspace.content.RelationshipTypeConfiguration;
+import org.dspace.content.authority.ItemAuthorityExtraMetadataGenerator;
 import org.dspace.core.Context;
 
 /**
@@ -32,23 +35,27 @@ public interface RelationshipConfigurationService {
      * The metadata field is used to determine whether it participates in a configured relationship. If no
      * relationship configuration applies to the metadata value, this method returns {@code null}.
      *
+     * @param context       current DSpace context
      * @param value metadata value for which relationship configuration should be resolved
      * @return the matching relationship configuration, or {@code null} if the metadata value is not mapped to a
      * configured relationship
      * @throws IllegalArgumentException if multiple configurations match the metadata field
+     * @throws SQLException if an error occurs while accessing the metadata registry
      */
-    RelationshipTypeConfiguration findForMetadataValue(MetadataValue value);
+    RelationshipTypeConfiguration findForMetadataValue(Context context, MetadataValue value) throws SQLException;
 
     /**
      * Resolves a relationship configuration by its stable configuration key.
      *
      * The key identifies configured relationship semantics; it is not itself a persisted relationship type definition.
      *
+     * @param context       current DSpace context
      * @param key stable identifier of the relationship configuration
      * @return the relationship configuration identified by the supplied key
      * @throws IllegalArgumentException if the key is missing, unknown or ambiguous
+     * @throws SQLException if an error occurs while accessing the metadata registry
      */
-    RelationshipTypeConfiguration getByKey(String key);
+    RelationshipTypeConfiguration getByKey(Context context, String key) throws SQLException;
 
     /**
      * Validates that the supplied Items can be used as the left and right endpoints of a relationship using the given
@@ -86,4 +93,91 @@ public interface RelationshipConfigurationService {
      */
     void validate(Context context, RelationshipTypeConfiguration configuration, Item left, Item right,
                   boolean allowUnarchivedItems) throws SQLException;
+
+    /**
+     * Returns the primary metadata field configured for the specified relationship endpoint.
+     * A relationship endpoint may have no primary metadata field configured.
+     *
+     * @param context          current DSpace context
+     * @param configurationKey stable identifier of the relationship configuration
+     * @param left             whether to retrieve the field for the left endpoint ({@code true})
+     *                         or the right endpoint ({@code false})
+     * @return the configured primary metadata field, or {@link Optional#empty()} if none is configured
+     * @throws IllegalArgumentException if the relationship configuration key is missing, unknown or ambiguous
+     * @throws SQLException             if an error occurs while accessing the metadata registry
+     */
+    Optional<String> getPrimaryMetadataField(Context context, String configurationKey, boolean left)
+        throws SQLException;
+
+    /**
+     * Checks whether the supplied metadata field is the primary metadata field
+     * configured for the specified relationship endpoint.
+     *
+     * @param context          current DSpace context
+     * @param configurationKey stable identifier of the relationship configuration
+     * @param left             whether to check the left endpoint ({@code true})
+     *                         or the right endpoint ({@code false})
+     * @param metadataField    metadata field to check, in schema.element.qualifier format
+     * @return {@code true} if the metadata field is primary on the specified endpoint,
+     * {@code false} otherwise
+     * @throws IllegalArgumentException if the relationship configuration key is missing, unknown or ambiguous
+     * @throws SQLException             if an error occurs while accessing the metadata registry
+     */
+    boolean isPrimaryMetadata(Context context, String configurationKey, boolean left, String metadataField)
+        throws SQLException;
+
+    /**
+     * Checks whether the supplied metadata field is configured as additional
+     * relationship metadata on the specified endpoint.
+     *
+     * Additional metadata fields are derived from the keys of the metadata generator
+     * map configured for that endpoint.
+     *
+     * @param context          current DSpace context
+     * @param configurationKey stable identifier of the relationship configuration
+     * @param left             whether to check the left endpoint ({@code true})
+     *                         or the right endpoint ({@code false})
+     * @param metadataField    metadata field to check, in schema.element.qualifier format
+     * @return {@code true} if the metadata field is additional on the specified endpoint,
+     * {@code false} otherwise
+     * @throws IllegalArgumentException if the relationship configuration key is missing, unknown or ambiguous
+     * @throws SQLException             if an error occurs while accessing the metadata registry
+     */
+    boolean isAdditionalMetadata(Context context, String configurationKey, boolean left, String metadataField)
+        throws SQLException;
+
+    /**
+     * Returns the additional metadata fields configured for the specified relationship endpoint.
+     *
+     * The fields are derived from the keys of the metadata generator map configured
+     * for that endpoint.
+     *
+     * @param context          current DSpace context
+     * @param configurationKey stable identifier of the relationship configuration
+     * @param left             whether to retrieve fields for the left endpoint ({@code true})
+     *                         or the right endpoint ({@code false})
+     * @return the configured additional metadata fields, or an empty set if none are configured
+     * @throws IllegalArgumentException if the relationship configuration key is missing, unknown or ambiguous
+     * @throws SQLException             if an error occurs while accessing the metadata registry
+     */
+    Set<String> getAdditionalMetadataFields(Context context, String configurationKey, boolean left) throws SQLException;
+
+    /**
+     * Resolves the metadata generator configured for an additional metadata field
+     * on the specified relationship endpoint.
+     *
+     * @param context          current DSpace context
+     * @param configurationKey stable identifier of the relationship configuration
+     * @param left             whether to retrieve the generator for the left endpoint ({@code true})
+     *                         or the right endpoint ({@code false})
+     * @param metadataField    additional metadata field for which to retrieve the generator,
+     *                         in schema.element.qualifier format
+     * @return the configured metadata generator, or {@link Optional#empty()} if none is configured
+     * for the supplied field and endpoint
+     * @throws IllegalArgumentException if the relationship configuration key is missing, unknown or ambiguous
+     * @throws SQLException             if an error occurs while accessing the metadata registry
+     */
+    Optional<ItemAuthorityExtraMetadataGenerator> getMetadataGenerator(Context context, String configurationKey,
+                                                                       boolean left, String metadataField)
+        throws SQLException;
 }
