@@ -638,15 +638,65 @@ public class RelationshipConfigurationServiceImplTest extends AbstractIntegratio
     }
 
     @Test
-    public void testExplicitAuthorityKeyPreventsIncompatibleFallback() throws SQLException {
+    public void testAuthorityFallbackWithSharedKeyUsesEndpointTypes() throws SQLException {
         enableAuthority("dc.contributor.author", "Person");
+        registerMetadataFields();
         Item dataset = mock(Item.class);
         when(itemService.getEntityTypeLabel(dataset)).thenReturn("DataSet");
+        when(itemService.getEntityTypeLabel(rightItem)).thenReturn("Person");
 
-        // A Publication-only explicit bean reserves the authority key. The generic authority fallback
-        // must not create a DataSet relationship which would later resolve to that Publication bean.
-        assertNull(service.findForMetadataValue(context,
+        // A Publication-specific explicit bean may share its key with a generic authority fallback.
+        // A DataSet must select the fallback, and the persisted Relationship must resolve to that fallback.
+        RelationshipTypeConfiguration fallback = service.findForMetadataValue(context,
+            metadataValue("dc", "contributor", "author", dataset));
+        assertEquals("authority:dc.contributor.author", fallback.getId());
+        assertTrue(fallback.getLeftEntityTypes().isEmpty());
+        assertEquals(Set.of("Person"), fallback.getRightEntityTypes());
+
+        service.validateForCreation(context, fallback, dataset, rightItem, true);
+        Relationship datasetRelationship = mock(Relationship.class);
+        when(datasetRelationship.getRelationshipConfigKey()).thenReturn("authority:dc.contributor.author");
+        when(datasetRelationship.getLeftItem()).thenReturn(dataset);
+        when(datasetRelationship.getRightItem()).thenReturn(rightItem);
+        when(dataset.getID()).thenReturn(UUID.randomUUID());
+        assertEquals(fallback.getLeftEntityTypes(),
+                     service.getRelationshipConfig(context, datasetRelationship).getLeftEntityTypes());
+        assertTrue(service.isPrimaryMetadata(context, datasetRelationship,
             metadataValue("dc", "contributor", "author", dataset)));
+    }
+
+    @Test
+    public void testExplicitAuthorityConfigurationStillWinsForMatchingEndpointTypes() throws SQLException {
+        enableAuthority("dc.contributor.author", "Person");
+        registerMetadataFields();
+        when(itemService.getEntityTypeLabel(leftItem)).thenReturn("Publication");
+        when(itemService.getEntityTypeLabel(rightItem)).thenReturn("Person");
+
+        assertSame(configuration, service.findForMetadataValue(context,
+            metadataValue("dc", "contributor", "author", leftItem)));
+        assertSame(configuration, service.getRelationshipConfig(context, relationship));
+
+        RelationshipTypeConfiguration fallback = new RelationshipTypeConfiguration();
+        fallback.setId("authority:dc.contributor.author");
+        fallback.setLeftPrimaryMetadataField("dc.contributor.author");
+        fallback.setRightEntityTypes(Set.of("Person"));
+        assertThrows(IllegalArgumentException.class,
+            () -> service.validateForCreation(context, fallback, leftItem, rightItem, true));
+    }
+
+    @Test
+    public void testValidateForCreationSupportsAuthorityWithoutSpringConfiguration() throws SQLException {
+        setConfigurations();
+        enableAuthority("dc.contributor.author", "Person");
+        registerMetadataFields();
+        when(itemService.getEntityTypeLabel(rightItem)).thenReturn("Person");
+
+        RelationshipTypeConfiguration authorityOnly = service.findForMetadataValue(context,
+            metadataValue("dc", "contributor", "author", leftItem));
+        assertEquals("authority:dc.contributor.author", authorityOnly.getId());
+        service.validateForCreation(context, authorityOnly, leftItem, rightItem, true);
+        assertEquals(authorityOnly.getLeftPrimaryMetadataField(),
+                     service.getRelationshipConfig(context, relationship).getLeftPrimaryMetadataField());
     }
 
     @Test

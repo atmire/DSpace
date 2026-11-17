@@ -237,24 +237,38 @@ public class AuthorityBackedRelationshipServiceIT extends AbstractIntegrationTes
     }
 
     @Test
-    public void testDoesNotPromoteIncompatibleAuthorityFallbackWithExplicitKey() throws Exception {
+    public void testAuthorityFallbackWithExplicitKeyOnDifferentEntityType() throws Exception {
         context.turnOffAuthorisationSystem();
         Item dataset = ItemBuilder.createItem(context, collection).withTitle("dataset")
             .withEntityType("DataSet").withAuthor("Someone").build();
         MetadataValue author = itemService.getMetadata(dataset, "dc", "contributor", "author", Item.ANY).get(0);
 
-        // The production Publication -> Person bean reserves the authority key, so a DataSet must not
-        // create an unrestricted fallback relationship under that same persisted key.
-        assertThat(service.promoteResolvedAuthority(context, dataset, author, target), nullValue());
-        assertThat(author.getRelationship(), nullValue());
-        assertThat(relationshipService.findByItem(context, dataset), hasSize(0));
+        // The explicit bean only covers Publication -> Person. A DataSet can still use the linked-entity
+        // authority fallback with the same key, provided persisted resolution uses its endpoint types.
+        Relationship relationship = service.promoteResolvedAuthority(context, dataset, author, target);
+        assertThat(relationship, notNullValue());
+        assertThat(relationship.getRelationshipConfigKey(), equalTo("authority:dc.contributor.author"));
+        assertThat(author.getRelationship().getID(), equalTo(relationship.getID()));
+        RelationshipConfigurationServiceImpl configurations = new DSpace().getServiceManager().getServiceByName(
+            RelationshipConfigurationServiceImpl.class.getCanonicalName(), RelationshipConfigurationServiceImpl.class);
+        RelationshipTypeConfiguration resolved = configurations.getRelationshipConfig(context, relationship);
+        assertThat(resolved.getLeftEntityTypes().isEmpty(), is(true));
+        assertThat(resolved.getRightEntityTypes(), equalTo(Set.of("Person")));
+    }
 
-        RelationshipTypeConfiguration fallback = new RelationshipTypeConfiguration();
-        fallback.setId("authority:dc.contributor.author");
-        fallback.setLeftPrimaryMetadataField("dc.contributor.author");
-        fallback.setRightEntityTypes(Set.of("Person"));
-        assertThrows(IllegalArgumentException.class,
-            () -> relationshipService.createConfigBackedRelationship(context, dataset, target, fallback));
+    @Test
+    public void testAuthorityOnlyEditorRelationshipWithoutSpringConfiguration() throws Exception {
+        context.turnOffAuthorisationSystem();
+        itemService.addMetadata(context, owner, "dc", "contributor", "editor", null, "Smith, John");
+        MetadataValue editor = itemService.getMetadata(owner, "dc", "contributor", "editor", Item.ANY).get(0);
+
+        Relationship relationship = service.promoteResolvedAuthority(context, owner, editor, target);
+        assertThat(relationship, notNullValue());
+        assertThat(relationship.getRelationshipConfigKey(), equalTo("authority:dc.contributor.editor"));
+        RelationshipConfigurationServiceImpl configurations = new DSpace().getServiceManager().getServiceByName(
+            RelationshipConfigurationServiceImpl.class.getCanonicalName(), RelationshipConfigurationServiceImpl.class);
+        assertThat(configurations.getRelationshipConfig(context, relationship).getLeftPrimaryMetadataField()
+            .orElse(null), equalTo("dc.contributor.editor"));
     }
 
     @Test
