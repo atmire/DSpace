@@ -244,4 +244,50 @@ public class RelationshipTypeConfigurationTest {
             assertTrue(configuration.getRightMetadataGenerators().isEmpty());
         }
     }
+
+    /**
+     * Verifies that name variants are disabled by default on both endpoints.
+     */
+    @Test
+    public void testNameVariantsDisabledByDefault() {
+        assertFalse(configuration.isLeftNameVariantsAllowed());
+        assertFalse(configuration.isRightNameVariantsAllowed());
+    }
+
+    /**
+     * Verifies that name variants can be configured independently for each endpoint.
+     */
+    @Test
+    public void testNameVariantsCanBeConfiguredIndependently() {
+        configuration.setLeftNameVariantsAllowed(true);
+
+        assertTrue(configuration.isLeftNameVariantsAllowed());
+        assertFalse(configuration.isRightNameVariantsAllowed());
+
+        configuration.setRightNameVariantsAllowed(true);
+        configuration.setLeftNameVariantsAllowed(false);
+
+        assertFalse(configuration.isLeftNameVariantsAllowed());
+        assertTrue(configuration.isRightNameVariantsAllowed());
+    }
+
+    /**
+     * Verifies that Spring XML enables name variants only on the configured endpoint.
+     */
+    @Test
+    public void testNameVariantConfigurationLoadedFromSpringXml() {
+        try (ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(
+            "org/dspace/content/relationship-configuration-test.xml")) {
+
+            RelationshipTypeConfiguration configuration =
+                context.getBean("testPublicationAuthorRelationship", RelationshipTypeConfiguration.class);
+
+            assertEquals("ds11rel.contributor.author",
+                         configuration.getLeftPrimaryMetadataField().orElse(null));
+            assertTrue(configuration.getRightPrimaryMetadataField().isEmpty());
+
+            assertTrue(configuration.isLeftNameVariantsAllowed());
+            assertFalse(configuration.isRightNameVariantsAllowed());
+        }
+    }
 }

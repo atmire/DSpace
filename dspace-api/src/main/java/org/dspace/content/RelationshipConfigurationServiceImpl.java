@@ -106,25 +106,36 @@ public class RelationshipConfigurationServiceImpl implements RelationshipConfigu
         }
 
         // Validate the primary metadata field and additional metadata generator mappings for each endpoint.
-        validateEndpointConfiguration(id, "left", leftPrimary, configuration.getLeftMetadataGenerators());
-        validateEndpointConfiguration(id, "right", rightPrimary, configuration.getRightMetadataGenerators());
+        validateEndpointConfiguration(id, "left", leftPrimary, configuration.getLeftMetadataGenerators(),
+                                      configuration.isLeftNameVariantsAllowed());
+        validateEndpointConfiguration(id, "right", rightPrimary, configuration.getRightMetadataGenerators(),
+                                      configuration.isRightNameVariantsAllowed());
     }
 
     /**
      * Validates the primary metadata field and additional metadata generators of an endpoint.
      *
-     * @param configurationId stable identifier of the relationship configuration
-     * @param side            endpoint being validated
-     * @param primaryField    optional primary metadata field for the endpoint
-     * @param generators      additional metadata generators keyed by metadata field
+     * @param configurationId     stable identifier of the relationship configuration
+     * @param side                endpoint being validated
+     * @param primaryField        optional primary metadata field for the endpoint
+     * @param generators          additional metadata generators keyed by metadata field
+     * @param nameVariantsAllowed whether name variants are allowed for the endpoint's primary metadata field
      * @throws RelationshipConfigurationException if a configured metadata field has invalid syntax
-     * @throws IllegalArgumentException if a primary field is also configured as additional metadata
+     * @throws IllegalArgumentException           if a primary field is also configured as additional metadata
      */
     private void validateEndpointConfiguration(
         String configurationId,
         String side,
         Optional<String> primaryField,
-        Map<String, ItemAuthorityExtraMetadataGenerator> generators) {
+        Map<String, ItemAuthorityExtraMetadataGenerator> generators,
+        boolean nameVariantsAllowed) {
+
+        // Name variants require a primary metadata field on the same endpoint.
+        if (nameVariantsAllowed && primaryField.isEmpty()) {
+            throw new IllegalArgumentException(
+                "Name variants require a primary metadata field in relationship configuration "
+                    + configurationId + " on the " + side + " endpoint");
+        }
 
         // Validate the primary metadata field, if configured.
         primaryField.ifPresent(field -> validateMetadataField(configurationId, side, field, true));
@@ -209,6 +220,8 @@ public class RelationshipConfigurationServiceImpl implements RelationshipConfigu
         filtered.setRightEntityTypes(configuration.getRightEntityTypes());
         filtered.setLeftPrimaryMetadataField(configuration.getLeftPrimaryMetadataField().orElse(null));
         filtered.setRightPrimaryMetadataField(configuration.getRightPrimaryMetadataField().orElse(null));
+        filtered.setLeftNameVariantsAllowed(configuration.isLeftNameVariantsAllowed());
+        filtered.setRightNameVariantsAllowed(configuration.isRightNameVariantsAllowed());
         filtered.setLeftMetadataGenerators(leftGenerators);
         filtered.setRightMetadataGenerators(rightGenerators);
 
@@ -450,5 +463,14 @@ public class RelationshipConfigurationServiceImpl implements RelationshipConfigu
     public static String fieldName(MetadataValue value) {
         return value.getSchema() + "." + value.getElement()
             + (value.getQualifier() == null ? "" : "." + value.getQualifier());
+    }
+
+    @Override
+    public boolean isNameVariantAllowed(Context context, Relationship relationship, Item endpoint)
+        throws SQLException {
+        RelationshipTypeConfiguration configuration = getByKey(context, relationship.getRelationshipConfigKey());
+        return isLeftEndpoint(relationship, endpoint)
+            ? configuration.isLeftNameVariantsAllowed()
+            : configuration.isRightNameVariantsAllowed();
     }
 }

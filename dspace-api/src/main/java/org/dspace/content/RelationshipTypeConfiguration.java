@@ -19,8 +19,9 @@ import org.dspace.content.authority.ItemAuthorityExtraMetadataGenerator;
 /**
  * Spring-configurable definition of a relationship between two Item entity types.
  *
- * Defines the primary metadata field on each endpoint and the generators
- * responsible for additional metadata associated with the relationship.
+ * Defines the primary metadata field on each endpoint, whether name variants are
+ * allowed for that field, and the generators responsible for additional metadata
+ * associated with the relationship.
  * The configuration is identified by a stable key persisted on the Relationship.
  *
  * @author Ben Bosman (ben . bosman at atmire.com)
@@ -36,6 +37,9 @@ public class RelationshipTypeConfiguration {
 
     private Map<String, ItemAuthorityExtraMetadataGenerator> leftMetadataGenerators = new HashMap<>();
     private Map<String, ItemAuthorityExtraMetadataGenerator> rightMetadataGenerators = new HashMap<>();
+
+    private boolean leftNameVariantsAllowed = false;
+    private boolean rightNameVariantsAllowed = false;
 
     public String getId() {
         return id;
@@ -127,5 +131,21 @@ public class RelationshipTypeConfiguration {
 
     public Set<String> getRightAdditionalMetadataFields() {
         return Set.copyOf(rightMetadataGenerators.keySet());
+    }
+
+    public boolean isLeftNameVariantsAllowed() {
+        return leftNameVariantsAllowed;
+    }
+
+    public void setLeftNameVariantsAllowed(boolean leftNameVariantsAllowed) {
+        this.leftNameVariantsAllowed = leftNameVariantsAllowed;
+    }
+
+    public boolean isRightNameVariantsAllowed() {
+        return rightNameVariantsAllowed;
+    }
+
+    public void setRightNameVariantsAllowed(boolean rightNameVariantsAllowed) {
+        this.rightNameVariantsAllowed = rightNameVariantsAllowed;
     }
 }

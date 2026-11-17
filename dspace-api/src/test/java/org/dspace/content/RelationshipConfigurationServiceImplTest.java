@@ -541,4 +541,169 @@ public class RelationshipConfigurationServiceImplTest extends AbstractIntegratio
         assertTrue(exception.getMessage().contains("authority:dc.contributor.author"));
         assertTrue(exception.getMessage().contains("dc.contributor.author"));
     }
+
+    /**
+     * Verifies that existing relationship configurations have name variants disabled by default.
+     */
+    @Test
+    public void testNameVariantsDisabledByDefault() throws SQLException {
+        registerMetadataFields();
+
+        assertFalse(service.isNameVariantAllowed(context, relationship, leftItem));
+        assertFalse(service.isNameVariantAllowed(context, relationship, rightItem));
+    }
+
+    /**
+     * Verifies that name variants can be enabled on the Publication endpoint only.
+     */
+    @Test
+    public void testNameVariantsAllowedOnLeftEndpointOnly() throws SQLException {
+        configuration.setRightPrimaryMetadataField(null);
+        configuration.setLeftNameVariantsAllowed(true);
+        registerMetadataFields();
+
+        service.validateConfigurations();
+
+        assertTrue(service.isNameVariantAllowed(context, relationship, leftItem));
+        assertFalse(service.isNameVariantAllowed(context, relationship, rightItem));
+    }
+
+    /**
+     * Verifies that name variants can be configured independently on both endpoints.
+     */
+    @Test
+    public void testNameVariantsConfiguredIndependentlyOnBothEndpoints() throws SQLException {
+        configuration.setLeftNameVariantsAllowed(false);
+        configuration.setRightNameVariantsAllowed(true);
+        registerMetadataFields();
+
+        service.validateConfigurations();
+
+        assertFalse(service.isNameVariantAllowed(context, relationship, leftItem));
+        assertTrue(service.isNameVariantAllowed(context, relationship, rightItem));
+
+        configuration.setLeftNameVariantsAllowed(true);
+        configuration.setRightNameVariantsAllowed(false);
+
+        assertTrue(service.isNameVariantAllowed(context, relationship, leftItem));
+        assertFalse(service.isNameVariantAllowed(context, relationship, rightItem));
+    }
+
+    /**
+     * Verifies that name variants are disabled for authority-derived configurations by default.
+     */
+    @Test
+    public void testNameVariantsDisabledForAuthorityFallback() throws SQLException {
+        setConfigurations();
+        enableAuthority("dc.contributor.author", "Person");
+        relationship.setRelationshipConfigKey("authority:dc.contributor.author");
+        registerMetadataFields();
+
+        assertFalse(service.isNameVariantAllowed(context, relationship, leftItem));
+        assertFalse(service.isNameVariantAllowed(context, relationship, rightItem));
+    }
+
+    /**
+     * Verifies that name-variant lookup rejects an Item outside the Relationship.
+     */
+    @Test
+    public void testNameVariantsRejectUnrelatedEndpoint() throws SQLException {
+        Item unrelatedItem = mock(Item.class);
+        when(unrelatedItem.getID()).thenReturn(UUID.randomUUID());
+        registerMetadataFields();
+
+        assertThrows(IllegalArgumentException.class,
+                     () -> service.isNameVariantAllowed(context, relationship, unrelatedItem));
+    }
+
+    /**
+     * Verifies that name variants require primary metadata on the left endpoint.
+     */
+    @Test
+    public void testLeftNameVariantsRequirePrimaryMetadataField() {
+        configuration.setLeftPrimaryMetadataField(null);
+        configuration.setLeftNameVariantsAllowed(true);
+
+        IllegalArgumentException exception =
+            assertThrows(IllegalArgumentException.class, () -> service.validateConfigurations());
+
+        assertTrue(exception.getMessage().contains("authority:dc.contributor.author"));
+        assertTrue(exception.getMessage().contains("left endpoint"));
+    }
+
+    /**
+     * Verifies that name variants require primary metadata on the right endpoint.
+     */
+    @Test
+    public void testRightNameVariantsRequirePrimaryMetadataField() {
+        configuration.setRightPrimaryMetadataField(null);
+        configuration.setRightNameVariantsAllowed(true);
+
+        IllegalArgumentException exception =
+            assertThrows(IllegalArgumentException.class, () -> service.validateConfigurations());
+
+        assertTrue(exception.getMessage().contains("authority:dc.contributor.author"));
+        assertTrue(exception.getMessage().contains("right endpoint"));
+    }
+
+    /**
+     * Verifies that a one-sided name-variant configuration is valid.
+     */
+    @Test
+    public void testValidOneSidedNameVariantConfiguration() {
+        configuration.setRightPrimaryMetadataField(null);
+        configuration.setLeftNameVariantsAllowed(true);
+
+        service.validateConfigurations();
+    }
+
+    /**
+     * Verifies that filtering invalid additional metadata generators preserves name-variant settings.
+     */
+    @Test
+    public void testNameVariantsPreservedWhenAdditionalMetadataIsFiltered() throws SQLException {
+        ItemAuthorityExtraMetadataGenerator generator = mock(ItemAuthorityExtraMetadataGenerator.class);
+
+        configuration.setLeftNameVariantsAllowed(true);
+        configuration.setRightNameVariantsAllowed(true);
+        configuration.setLeftMetadataGenerators(Map.of("person.identifier.orcid", generator));
+
+        when(metadataFieldService.findByElement(
+            eq(context), any(String.class), any(String.class),
+            org.mockito.ArgumentMatchers.nullable(String.class)))
+            .thenAnswer(invocation -> {
+                String schema = invocation.getArgument(1);
+                return "person".equals(schema) ? null : mock(MetadataField.class);
+            });
+
+        RelationshipTypeConfiguration resolved = service.getByKey(context, "authority:dc.contributor.author");
+
+        assertTrue(resolved.getLeftMetadataGenerators().isEmpty());
+        assertTrue(resolved.isLeftNameVariantsAllowed());
+        assertTrue(resolved.isRightNameVariantsAllowed());
+
+        assertTrue(service.isNameVariantAllowed(context, relationship, leftItem));
+        assertTrue(service.isNameVariantAllowed(context, relationship, rightItem));
+    }
+
+    /**
+     * Verifies that a Spring-configured relationship exposes its name-variant settings through the service.
+     */
+    @Test
+    public void testSpringConfiguredNameVariantsThroughService() throws SQLException {
+        try (org.springframework.context.support.ClassPathXmlApplicationContext springContext =
+                 new org.springframework.context.support.ClassPathXmlApplicationContext(
+                     "org/dspace/content/relationship-configuration-test.xml")) {
+
+            RelationshipTypeConfiguration springConfiguration =
+                springContext.getBean("testPublicationAuthorRelationship", RelationshipTypeConfiguration.class);
+
+            relationship.setRelationshipConfigKey("authority:ds11rel.contributor.author");
+            setConfigurations(springConfiguration);
+            registerMetadataFields();
+
+            assertTrue(service.isNameVariantAllowed(context, relationship, leftItem));
+            assertFalse(service.isNameVariantAllowed(context, relationship, rightItem));
+        }
+    }
 }

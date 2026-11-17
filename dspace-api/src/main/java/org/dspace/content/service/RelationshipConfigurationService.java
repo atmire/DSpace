@@ -180,4 +180,19 @@ public interface RelationshipConfigurationService {
     Optional<ItemAuthorityExtraMetadataGenerator> getMetadataGenerator(Context context, Relationship relationship,
                                                                        Item endpoint, String metadataField)
         throws SQLException;
+
+    /**
+     * Checks whether name variants are allowed for the primary metadata field
+     * configured on the specified relationship endpoint.
+     *
+     * @param context      current DSpace context
+     * @param relationship relationship containing the endpoint
+     * @param endpoint     Item for which to check whether name variants are allowed
+     * @return {@code true} if name variants are enabled for the endpoint's primary metadata field,
+     * {@code false} otherwise
+     * @throws IllegalArgumentException if the relationship configuration is invalid or the Item
+     *                                  is not an endpoint of the relationship
+     * @throws SQLException             if an error occurs while accessing the metadata registry
+     */
+    boolean isNameVariantAllowed(Context context, Relationship relationship, Item endpoint) throws SQLException;
 }

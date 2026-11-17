@@ -40,6 +40,7 @@
                 </entry>
             </map>
         </property>
+        <property name="leftNameVariantsAllowed" value="true"/>
     </bean>
 
 </beans>
