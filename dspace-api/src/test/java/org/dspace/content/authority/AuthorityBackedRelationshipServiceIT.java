@@ -15,6 +15,8 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -677,8 +679,8 @@ public class AuthorityBackedRelationshipServiceIT extends AbstractIntegrationTes
      * Creates the relationship configuration used by the configuration-backed creation tests.
      */
     private RelationshipTypeConfiguration authorRelationshipConfiguration() throws SQLException {
-        Relationship lookup = new Relationship();
-        lookup.setRelationshipConfigKey("authority:dc.contributor.author");
+        Relationship lookup = mock(Relationship.class);
+        when(lookup.getRelationshipConfigKey()).thenReturn("authority:dc.contributor.author");
         RelationshipConfigurationService configurations = new DSpace().getServiceManager().getServiceByName(
             RelationshipConfigurationServiceImpl.class.getCanonicalName(), RelationshipConfigurationService.class);
         return configurations.getRelationshipConfig(context, lookup);
