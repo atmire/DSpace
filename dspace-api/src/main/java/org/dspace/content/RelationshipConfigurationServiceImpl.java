@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -330,7 +331,19 @@ public class RelationshipConfigurationServiceImpl implements RelationshipConfigu
             }
         }
 
-        RelationshipTypeConfiguration configuration = match != null ? match : fromLinkedEntityAuthority(field);
+        RelationshipTypeConfiguration configuration = match;
+        if (configuration == null) {
+            RelationshipTypeConfiguration fallback = fromLinkedEntityAuthority(field);
+            if (fallback != null) {
+                // An explicit bean takes precedence for its persisted key even if its entity types do not
+                // match this owner. Do not create a fallback link that later resolves to that explicit bean.
+                boolean keyIsExplicit = configurations.stream()
+                    .anyMatch(candidate -> fallback.getId().equals(candidate.getId()));
+                if (!keyIsExplicit) {
+                    configuration = fallback;
+                }
+            }
+        }
 
         // Validate metadata fields against the registry before returning an explicit or authority-derived
         // configuration.
@@ -434,6 +447,32 @@ public class RelationshipConfigurationServiceImpl implements RelationshipConfigu
         }
         validateType(configuration.getLeftEntityTypes(), left, "left");
         validateType(configuration.getRightEntityTypes(), right, "right");
+    }
+
+    @Override
+    public void validateForCreation(Context context, RelationshipTypeConfiguration configuration, Item left, Item right,
+                                    boolean allowUnarchivedItems) throws SQLException {
+        if (configuration == null || configuration.getId() == null) {
+            throw new IllegalArgumentException("A registered relationship configuration is required for creation");
+        }
+
+        // Creation may receive a configuration resolved earlier from a MetadataValue, but the persisted key
+        // must resolve to the same endpoint and primary-field semantics. This is particularly important for
+        // authority:* keys, where an explicit bean can override a legacy authority-derived configuration.
+        RelationshipTypeConfiguration registered = resolveConfiguration(context, configuration.getId());
+        if (!configuration.getLeftEntityTypes().equals(registered.getLeftEntityTypes())
+            || !configuration.getRightEntityTypes().equals(registered.getRightEntityTypes())
+            || !Objects.equals(configuration.getLeftPrimaryMetadataField(),
+                               registered.getLeftPrimaryMetadataField())
+            || !Objects.equals(configuration.getRightPrimaryMetadataField(),
+                               registered.getRightPrimaryMetadataField())) {
+            throw new IllegalArgumentException(
+                "Relationship configuration " + configuration.getId()
+                    + " does not match the registered configuration for its persisted key");
+        }
+
+        // Use the registered definition for endpoint validation, not an arbitrary caller-provided object.
+        validate(context, registered, left, right, allowUnarchivedItems);
     }
 
     @Override

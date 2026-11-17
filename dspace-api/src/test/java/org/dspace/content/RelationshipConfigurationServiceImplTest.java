@@ -638,6 +638,42 @@ public class RelationshipConfigurationServiceImplTest extends AbstractIntegratio
     }
 
     @Test
+    public void testExplicitAuthorityKeyPreventsIncompatibleFallback() throws SQLException {
+        enableAuthority("dc.contributor.author", "Person");
+        Item dataset = mock(Item.class);
+        when(itemService.getEntityTypeLabel(dataset)).thenReturn("DataSet");
+
+        // A Publication-only explicit bean reserves the authority key. The generic authority fallback
+        // must not create a DataSet relationship which would later resolve to that Publication bean.
+        assertNull(service.findForMetadataValue(context,
+            metadataValue("dc", "contributor", "author", dataset)));
+    }
+
+    @Test
+    public void testValidateForCreationRejectsUnknownKey() {
+        RelationshipTypeConfiguration unknown = configuration("unknown-key", "dc.contributor.author", null);
+        assertThrows(IllegalArgumentException.class,
+            () -> service.validateForCreation(context, unknown, leftItem, rightItem, false));
+    }
+
+    @Test
+    public void testValidateForCreationRejectsMismatchedSemantics() throws SQLException {
+        registerMetadataFields();
+        RelationshipTypeConfiguration incompatible =
+            configuration("authority:dc.contributor.author", "dc.contributor.author", null);
+        incompatible.setLeftEntityTypes(Set.of("DataSet"));
+        assertThrows(IllegalArgumentException.class,
+            () -> service.validateForCreation(context, incompatible, leftItem, rightItem, false));
+    }
+
+    @Test
+    public void testValidateForCreationChecksRegisteredPrimaryFields() {
+        // The supplied configuration is known, but its primary metadata field is not in the registry.
+        assertThrows(RelationshipConfigurationException.class,
+            () -> service.validateForCreation(context, configuration, leftItem, rightItem, false));
+    }
+
+    @Test
     public void testGetRelationshipConfigResolvesAuthorityDerivedConfiguration() throws SQLException {
         setConfigurations();
         enableAuthority("dc.contributor.author", "Person");
